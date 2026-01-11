@@ -65,9 +65,10 @@
 - [ ] Share functionality
 
 #### Artist Features
-- [ ] Detailed analytics dashboard
+- [x] Detailed analytics dashboard (streams, listeners, top tracks, time period filters)
 - [ ] Download/purchase option for albums
-- [ ] Artist banner image upload
+- [x] Artist banner image upload
+- [x] Album/track editing and deletion
 - [ ] Release scheduling (set future release date)
 - [ ] Pre-save functionality
 
@@ -119,3 +120,28 @@ All migrations should be run in Supabase SQL Editor in order:
 2. `20260111160000_add_storage_keys.sql` - R2 storage columns
 3. `20260111170000_listening_history.sql` - Listening history table
 4. `20260111180000_add_avatar_banner_keys.sql` - Avatar/banner keys for bands
+
+---
+
+## Development Tools
+
+### Seed Endpoint
+`POST /api/dev/seed` - Development-only endpoint to populate sample data
+
+**Requires:**
+- `SUPABASE_SERVICE_KEY` in `.env` (service role key from Supabase dashboard)
+- User must be logged in
+
+**Creates:**
+- 5 sample bands with avatars, banners, and theme colors
+- 8 albums with cover images
+- ~35 tracks
+
+**Usage:**
+```javascript
+fetch('/api/dev/seed', { method: 'POST', credentials: 'include' })
+  .then(r => r.json())
+  .then(console.log)
+```
+
+Note: Re-running the seed will delete and recreate the sample data.

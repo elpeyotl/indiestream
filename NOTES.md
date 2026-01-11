@@ -54,8 +54,16 @@ Indiestream is a Bandcamp-clone music streaming platform focused on fair artist 
 
 ### Key Columns
 - `bands.avatar_key` / `banner_key` - R2 storage keys for images
+- `bands.avatar_url` / `banner_url` - Direct URLs (fallback for external images)
 - `albums.cover_key` - R2 key for album artwork
+- `albums.cover_url` - Direct URL (fallback for external images)
 - `tracks.audio_key` - R2 key for audio file
+
+### Image URL Resolution
+Pages support both R2 storage keys and direct URLs:
+1. If `avatar_key`/`cover_key` exists: Generate presigned R2 URL
+2. Otherwise: Use `avatar_url`/`cover_url` directly from database
+This allows seeded data with external image URLs to work alongside uploaded files.
 
 ## Composables
 
@@ -75,9 +83,11 @@ Album and track management, including R2 URL generation
 ## Important Files
 - `server/api/stream/[key].get.ts` - Generates presigned R2 URLs
 - `server/api/upload/presign.post.ts` - Generates upload URLs
+- `server/api/dev/seed.post.ts` - Development seed endpoint for sample data
 - `composables/usePlayer.ts` - Audio player logic
 - `components/AudioPlayer.vue` - Player UI component
 - `components/GlobalSearch.vue` - Command palette search (Cmd+K)
+- `pages/dashboard/artist/[id].vue` - Artist dashboard (releases, analytics, settings)
 
 ## Supabase Configuration
 - Site URL must include both localhost and production URL
