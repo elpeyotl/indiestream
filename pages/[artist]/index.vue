@@ -249,7 +249,7 @@ onMounted(async () => {
       // Load albums
       albums.value = await getBandAlbums(band.value.id)
 
-      // Load cover URLs for albums with covers
+      // Load cover URLs for albums (use cover_key if available, otherwise use cover_url)
       for (const album of albums.value) {
         if (album.cover_key) {
           try {
@@ -257,6 +257,8 @@ onMounted(async () => {
           } catch (e) {
             console.error('Failed to load cover for album:', album.id, e)
           }
+        } else if (album.cover_url) {
+          albumCovers.value[album.id] = album.cover_url
         }
       }
     }

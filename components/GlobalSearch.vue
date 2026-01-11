@@ -242,6 +242,7 @@ const performSearch = async () => {
         title,
         slug,
         cover_key,
+        cover_url,
         band:bands!inner (
           id,
           name,
@@ -281,13 +282,13 @@ const performSearch = async () => {
       const processed: any = {
         ...album,
         band: Array.isArray(album.band) ? album.band[0] : album.band,
-        cover_url: null,
+        cover_url: album.cover_url || null,
       }
       if (album.cover_key) {
         try {
           processed.cover_url = await getStreamUrl(album.cover_key)
         } catch (e) {
-          // Skip
+          // Skip - use cover_url from DB as fallback
         }
       }
       processedAlbums.push(processed)

@@ -161,14 +161,14 @@ const loadFeaturedArtists = async () => {
     // Featured = verified artists with most streams
     const { data, error } = await client
       .from('bands')
-      .select('id, name, slug, theme_color, total_streams, is_verified, avatar_key')
+      .select('id, name, slug, theme_color, total_streams, is_verified, avatar_key, avatar_url')
       .eq('is_verified', true)
       .order('total_streams', { ascending: false })
       .limit(6)
 
     if (error) throw error
 
-    // Load avatar URLs from keys
+    // Load avatar URLs from keys (or use direct URL if no key)
     const artists = (data || []) as any[]
     for (const artist of artists) {
       if (artist.avatar_key) {
@@ -178,6 +178,7 @@ const loadFeaturedArtists = async () => {
           console.error('Failed to load avatar:', e)
         }
       }
+      // avatar_url from DB is used as fallback if no avatar_key
     }
     featuredArtists.value = artists as Band[]
   } catch (e) {
@@ -196,6 +197,7 @@ const loadNewReleases = async () => {
         release_type,
         release_date,
         cover_key,
+        cover_url,
         band:bands!inner (
           id,
           name,
@@ -212,7 +214,7 @@ const loadNewReleases = async () => {
       band: Array.isArray(album.band) ? album.band[0] : album.band
     }))
 
-    // Load cover URLs
+    // Load cover URLs (use direct URL as fallback if no key)
     for (const album of newReleases.value) {
       if (album.cover_key) {
         try {
@@ -220,6 +222,8 @@ const loadNewReleases = async () => {
         } catch (e) {
           console.error('Failed to load cover:', e)
         }
+      } else if (album.cover_url) {
+        albumCovers.value[album.id] = album.cover_url
       }
     }
   } catch (e) {
@@ -236,13 +240,13 @@ const loadAllArtists = async (reset = false) => {
   try {
     const { data, error } = await client
       .from('bands')
-      .select('id, name, slug, theme_color, total_streams, avatar_key')
+      .select('id, name, slug, theme_color, total_streams, avatar_key, avatar_url')
       .order('total_streams', { ascending: false })
       .range(artistPage.value * pageSize, (artistPage.value + 1) * pageSize - 1)
 
     if (error) throw error
 
-    // Load avatar URLs from keys
+    // Load avatar URLs from keys (or use direct URL if no key)
     const artists = (data || []) as any[]
     for (const artist of artists) {
       if (artist.avatar_key) {
@@ -252,6 +256,7 @@ const loadAllArtists = async (reset = false) => {
           console.error('Failed to load avatar:', e)
         }
       }
+      // avatar_url from DB is used as fallback if no avatar_key
     }
     allArtists.value = reset ? (artists as Band[]) : [...allArtists.value, ...(artists as Band[])]
     hasMoreArtists.value = artists.length === pageSize

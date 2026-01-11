@@ -175,7 +175,7 @@ const loadArtists = async (reset = false) => {
   try {
     let query = client
       .from('bands')
-      .select('id, name, slug, theme_color, avatar_key, total_streams, is_verified, genres')
+      .select('id, name, slug, theme_color, avatar_key, avatar_url, total_streams, is_verified, genres')
 
     // Search filter
     if (searchQuery.value.trim()) {
@@ -203,7 +203,7 @@ const loadArtists = async (reset = false) => {
 
     if (error) throw error
 
-    // Load avatar URLs from keys
+    // Load avatar URLs from keys (or use direct URL if no key)
     const newArtists = (data || []) as any[]
     for (const artist of newArtists) {
       if (artist.avatar_key) {
@@ -213,6 +213,7 @@ const loadArtists = async (reset = false) => {
           console.error('Failed to load avatar:', e)
         }
       }
+      // avatar_url from DB is used as fallback if no avatar_key
     }
     artists.value = reset ? (newArtists as Band[]) : [...artists.value, ...(newArtists as Band[])]
     hasMore.value = newArtists.length === pageSize

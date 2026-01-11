@@ -299,13 +299,13 @@ const loadFeaturedArtists = async () => {
   try {
     const { data, error } = await client
       .from('bands')
-      .select('id, name, slug, theme_color, total_streams, avatar_key')
+      .select('id, name, slug, theme_color, total_streams, avatar_key, avatar_url')
       .order('total_streams', { ascending: false })
       .limit(6)
 
     if (error) throw error
 
-    // Load avatar URLs from keys
+    // Load avatar URLs from keys (or use direct URL if no key)
     const artists = (data || []) as any[]
     for (const artist of artists) {
       if (artist.avatar_key) {
@@ -315,6 +315,7 @@ const loadFeaturedArtists = async () => {
           // Skip failed avatars
         }
       }
+      // avatar_url from DB is used as fallback if no avatar_key
     }
     featuredArtists.value = artists as Band[]
   } catch (e) {

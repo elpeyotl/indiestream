@@ -276,9 +276,11 @@ onMounted(async () => {
       return
     }
 
-    // Load cover URL if exists
+    // Load cover URL if exists (use cover_key if available, otherwise use cover_url)
     if (album.value.cover_key) {
       coverUrl.value = await getStreamUrl(album.value.cover_key)
+    } else if (album.value.cover_url) {
+      coverUrl.value = album.value.cover_url
     }
 
     // Load other albums from same artist

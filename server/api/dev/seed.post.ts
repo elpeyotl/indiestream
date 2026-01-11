@@ -2,6 +2,12 @@
 // Only works in development mode
 import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 
+// Use picsum.photos for random placeholder images
+// Each seed ID generates a consistent image
+const getAvatarUrl = (seed: number) => `https://picsum.photos/seed/avatar${seed}/400/400`
+const getBannerUrl = (seed: number) => `https://picsum.photos/seed/banner${seed}/1500/500`
+const getCoverUrl = (seed: number) => `https://picsum.photos/seed/cover${seed}/600/600`
+
 const SAMPLE_BANDS = [
   {
     name: 'Midnight Echoes',
@@ -10,12 +16,15 @@ const SAMPLE_BANDS = [
     location: 'Berlin, Germany',
     genres: ['Electronic', 'Ambient', 'Downtempo'],
     theme_color: '#6366F1',
+    avatar_seed: 101,
+    banner_seed: 201,
     albums: [
       {
         title: 'Neon Dreams',
         slug: 'neon-dreams',
         description: 'A journey through the city at night.',
         release_type: 'album',
+        cover_seed: 301,
         tracks: [
           { title: 'City Lights', duration: 245 },
           { title: 'Neon Rain', duration: 312 },
@@ -29,6 +38,7 @@ const SAMPLE_BANDS = [
         slug: 'digital-sunset',
         description: 'Warm analog sounds meet digital production.',
         release_type: 'ep',
+        cover_seed: 302,
         tracks: [
           { title: 'Golden Hour', duration: 287 },
           { title: 'Analog Warmth', duration: 234 },
@@ -44,12 +54,15 @@ const SAMPLE_BANDS = [
     location: 'Portland, OR',
     genres: ['Indie Rock', 'Shoegaze', 'Alternative'],
     theme_color: '#EC4899',
+    avatar_seed: 102,
+    banner_seed: 202,
     albums: [
       {
         title: 'Frequency',
         slug: 'frequency',
         description: 'Our debut album exploring love, loss, and feedback.',
         release_type: 'album',
+        cover_seed: 303,
         tracks: [
           { title: 'White Noise', duration: 198 },
           { title: 'Frequency', duration: 267 },
@@ -69,12 +82,15 @@ const SAMPLE_BANDS = [
     location: 'Los Angeles, CA',
     genres: ['Dream Pop', 'Synth Pop', 'Indie'],
     theme_color: '#8B5CF6',
+    avatar_seed: 103,
+    banner_seed: 203,
     albums: [
       {
         title: 'Tidal',
         slug: 'tidal',
         description: 'Songs inspired by the ocean and the moon.',
         release_type: 'album',
+        cover_seed: 304,
         tracks: [
           { title: 'Moonrise', duration: 223 },
           { title: 'Tidal', duration: 278 },
@@ -89,6 +105,7 @@ const SAMPLE_BANDS = [
         slug: 'celestial',
         description: 'Looking up at the stars.',
         release_type: 'single',
+        cover_seed: 305,
         tracks: [
           { title: 'Celestial', duration: 298 },
         ],
@@ -102,12 +119,15 @@ const SAMPLE_BANDS = [
     location: 'Manchester, UK',
     genres: ['Post-Punk', 'Industrial', 'Darkwave'],
     theme_color: '#14B8A6',
+    avatar_seed: 104,
+    banner_seed: 204,
     albums: [
       {
         title: 'Urban Decay',
         slug: 'urban-decay',
         description: 'Songs about modern life in dying cities.',
         release_type: 'album',
+        cover_seed: 306,
         tracks: [
           { title: 'Concrete Jungle', duration: 234 },
           { title: 'Factory Floor', duration: 289 },
@@ -126,12 +146,15 @@ const SAMPLE_BANDS = [
     location: 'Austin, TX',
     genres: ['Psychedelic', 'Folk Rock', 'Indie Folk'],
     theme_color: '#F59E0B',
+    avatar_seed: 105,
+    banner_seed: 205,
     albums: [
       {
         title: 'Sunflower Dreams',
         slug: 'sunflower-dreams',
         description: 'A warm, hazy afternoon in musical form.',
         release_type: 'album',
+        cover_seed: 307,
         tracks: [
           { title: 'Sunflower', duration: 256 },
           { title: 'Haze', duration: 312 },
@@ -146,6 +169,7 @@ const SAMPLE_BANDS = [
         slug: 'morning-dew',
         description: 'Early morning acoustic sessions.',
         release_type: 'ep',
+        cover_seed: 308,
         tracks: [
           { title: 'First Light', duration: 234 },
           { title: 'Morning Dew', duration: 267 },
@@ -185,18 +209,25 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    for (const bandData of SAMPLE_BANDS) {
-      // Check if band already exists
-      const { data: existingBand } = await supabase
-        .from('bands')
-        .select('id')
-        .eq('slug', bandData.slug)
-        .maybeSingle()
+    // Delete existing seeded bands first (by slug)
+    const slugsToDelete = SAMPLE_BANDS.map(b => b.slug)
+    const { data: existingBands } = await supabase
+      .from('bands')
+      .select('id')
+      .in('slug', slugsToDelete)
 
-      if (existingBand) {
-        console.log(`Band ${bandData.name} already exists, skipping...`)
-        continue
-      }
+    if (existingBands && existingBands.length > 0) {
+      const bandIds = existingBands.map(b => b.id)
+
+      // Delete tracks, albums, then bands (due to foreign keys)
+      await supabase.from('tracks').delete().in('band_id', bandIds)
+      await supabase.from('albums').delete().in('band_id', bandIds)
+      await supabase.from('bands').delete().in('id', bandIds)
+
+      console.log(`Deleted ${existingBands.length} existing seeded bands`)
+    }
+
+    for (const bandData of SAMPLE_BANDS) {
 
       // Create band
       const { data: band, error: bandError } = await supabase
@@ -209,6 +240,8 @@ export default defineEventHandler(async (event) => {
           location: bandData.location,
           genres: bandData.genres,
           theme_color: bandData.theme_color,
+          avatar_url: getAvatarUrl(bandData.avatar_seed),
+          banner_url: getBannerUrl(bandData.banner_seed),
         })
         .select()
         .single()
@@ -235,6 +268,7 @@ export default defineEventHandler(async (event) => {
             release_type: albumData.release_type,
             release_date: releaseDate.toISOString().split('T')[0],
             is_published: true,
+            cover_url: getCoverUrl(albumData.cover_seed),
           })
           .select()
           .single()
