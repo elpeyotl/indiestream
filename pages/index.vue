@@ -299,12 +299,24 @@ const loadFeaturedArtists = async () => {
   try {
     const { data, error } = await client
       .from('bands')
-      .select('id, name, slug, theme_color, total_streams, avatar_url')
+      .select('id, name, slug, theme_color, total_streams, avatar_key')
       .order('total_streams', { ascending: false })
       .limit(6)
 
     if (error) throw error
-    featuredArtists.value = data || []
+
+    // Load avatar URLs from keys
+    const artists = (data || []) as any[]
+    for (const artist of artists) {
+      if (artist.avatar_key) {
+        try {
+          artist.avatar_url = await getStreamUrl(artist.avatar_key)
+        } catch (e) {
+          // Skip failed avatars
+        }
+      }
+    }
+    featuredArtists.value = artists as Band[]
   } catch (e) {
     console.error('Failed to load artists:', e)
   }

@@ -161,13 +161,25 @@ const loadFeaturedArtists = async () => {
     // Featured = verified artists with most streams
     const { data, error } = await client
       .from('bands')
-      .select('id, name, slug, theme_color, total_streams, is_verified, avatar_url')
+      .select('id, name, slug, theme_color, total_streams, is_verified, avatar_key')
       .eq('is_verified', true)
       .order('total_streams', { ascending: false })
       .limit(6)
 
     if (error) throw error
-    featuredArtists.value = data || []
+
+    // Load avatar URLs from keys
+    const artists = (data || []) as any[]
+    for (const artist of artists) {
+      if (artist.avatar_key) {
+        try {
+          artist.avatar_url = await getStreamUrl(artist.avatar_key)
+        } catch (e) {
+          console.error('Failed to load avatar:', e)
+        }
+      }
+    }
+    featuredArtists.value = artists as Band[]
   } catch (e) {
     console.error('Failed to load featured artists:', e)
   }
@@ -224,14 +236,24 @@ const loadAllArtists = async (reset = false) => {
   try {
     const { data, error } = await client
       .from('bands')
-      .select('id, name, slug, theme_color, total_streams, avatar_url')
+      .select('id, name, slug, theme_color, total_streams, avatar_key')
       .order('total_streams', { ascending: false })
       .range(artistPage.value * pageSize, (artistPage.value + 1) * pageSize - 1)
 
     if (error) throw error
 
-    const artists = data || []
-    allArtists.value = reset ? artists : [...allArtists.value, ...artists]
+    // Load avatar URLs from keys
+    const artists = (data || []) as any[]
+    for (const artist of artists) {
+      if (artist.avatar_key) {
+        try {
+          artist.avatar_url = await getStreamUrl(artist.avatar_key)
+        } catch (e) {
+          console.error('Failed to load avatar:', e)
+        }
+      }
+    }
+    allArtists.value = reset ? (artists as Band[]) : [...allArtists.value, ...(artists as Band[])]
     hasMoreArtists.value = artists.length === pageSize
   } catch (e) {
     console.error('Failed to load artists:', e)

@@ -9,7 +9,9 @@ export interface Band {
   location: string | null
   website: string | null
   avatar_url: string | null
+  avatar_key: string | null
   banner_url: string | null
+  banner_key: string | null
   theme_color: string
   genres: string[]
   is_verified: boolean
@@ -33,7 +35,9 @@ export interface UpdateBandInput {
   location?: string
   website?: string
   avatar_url?: string
+  avatar_key?: string
   banner_url?: string
+  banner_key?: string
   theme_color?: string
   genres?: string[]
 }

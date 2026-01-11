@@ -490,14 +490,12 @@ const handleAvatarSelect = async (e: Event) => {
       throw new Error('Upload failed')
     }
 
-    // Get the URL for the uploaded avatar
-    const avatarUrl = await getStreamUrl(key)
+    // Store the key (not the signed URL) so we can generate fresh URLs later
+    await updateBand(band.value.id, { avatar_key: key })
 
-    // Update band with new avatar URL (store the key, not the signed URL)
-    await updateBand(band.value.id, { avatar_url: avatarUrl })
-
-    // Update local state
-    band.value.avatar_url = avatarUrl
+    // Update local state with fresh URL for display
+    band.value.avatar_key = key
+    band.value.avatar_url = await getStreamUrl(key)
 
     saveSuccess.value = true
     setTimeout(() => { saveSuccess.value = false }, 3000)
@@ -583,6 +581,15 @@ onMounted(async () => {
       editForm.website = band.value.website || ''
       editForm.theme_color = band.value.theme_color || '#8B5CF6'
       editForm.genres = [...(band.value.genres || [])]
+
+      // Load avatar URL from key if available
+      if (band.value.avatar_key) {
+        try {
+          band.value.avatar_url = await getStreamUrl(band.value.avatar_key)
+        } catch (e) {
+          console.error('Failed to load avatar:', e)
+        }
+      }
 
       // Load albums (including unpublished drafts)
       albums.value = await getBandAlbums(band.value.id, true)

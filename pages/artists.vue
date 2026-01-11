@@ -123,6 +123,7 @@
 import type { Band } from '~/composables/useBand'
 
 const client = useSupabaseClient()
+const { getStreamUrl } = useAlbum()
 
 const loading = ref(true)
 const loadingMore = ref(false)
@@ -174,7 +175,7 @@ const loadArtists = async (reset = false) => {
   try {
     let query = client
       .from('bands')
-      .select('id, name, slug, theme_color, avatar_url, total_streams, is_verified, genres')
+      .select('id, name, slug, theme_color, avatar_key, total_streams, is_verified, genres')
 
     // Search filter
     if (searchQuery.value.trim()) {
@@ -202,8 +203,18 @@ const loadArtists = async (reset = false) => {
 
     if (error) throw error
 
-    const newArtists = data || []
-    artists.value = reset ? newArtists : [...artists.value, ...newArtists]
+    // Load avatar URLs from keys
+    const newArtists = (data || []) as any[]
+    for (const artist of newArtists) {
+      if (artist.avatar_key) {
+        try {
+          artist.avatar_url = await getStreamUrl(artist.avatar_key)
+        } catch (e) {
+          console.error('Failed to load avatar:', e)
+        }
+      }
+    }
+    artists.value = reset ? (newArtists as Band[]) : [...artists.value, ...(newArtists as Band[])]
     hasMore.value = newArtists.length === pageSize
   } catch (e) {
     console.error('Failed to load artists:', e)

@@ -225,6 +225,15 @@ onMounted(async () => {
     band.value = await getBandBySlug(slug)
 
     if (band.value) {
+      // Load avatar URL from key if available
+      if (band.value.avatar_key) {
+        try {
+          band.value.avatar_url = await getStreamUrl(band.value.avatar_key)
+        } catch (e) {
+          console.error('Failed to load avatar:', e)
+        }
+      }
+
       // Load albums
       albums.value = await getBandAlbums(band.value.id)
 
