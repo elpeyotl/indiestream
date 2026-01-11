@@ -1,0 +1,85 @@
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: '2024-11-01',
+  devtools: { enabled: true },
+
+  modules: [
+    '@nuxtjs/supabase',
+    '@nuxt/eslint',
+    '@nuxt/ui',
+  ],
+
+  // Supabase configuration
+  supabase: {
+    url: process.env.SUPABASE_URL,
+    key: process.env.SUPABASE_KEY,
+    redirect: false,
+    redirectOptions: {
+      login: '/login',
+      callback: '/confirm',
+      exclude: ['/', '/register'],
+    },
+    cookieOptions: {
+      maxAge: 60 * 60 * 8, // 8 hours
+      sameSite: 'lax',
+      secure: false, // Set to true in production
+    },
+  },
+
+  // Color mode (dark theme default)
+  colorMode: {
+    preference: 'dark',
+    fallback: 'dark',
+  },
+
+  // App configuration
+  app: {
+    head: {
+      title: 'Indiestream - Stream Fair. Support Direct.',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        {
+          name: 'description',
+          content: 'The streaming platform where your subscription directly supports the artists you listen to.'
+        },
+        { name: 'theme-color', content: '#0F0D0B' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap'
+        },
+      ],
+    },
+  },
+
+  // TypeScript configuration
+  typescript: {
+    strict: false,  // Disable strict mode for now
+    typeCheck: false,  // Disable type checking for dev speed
+  },
+
+  // CSS configuration
+  css: [],  // Remove custom CSS for now, use only Nuxt UI
+
+  // Runtime config
+  runtimeConfig: {
+    // Private keys (server-side only)
+    stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    r2AccessKeyId: process.env.R2_ACCESS_KEY_ID,
+    r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    r2BucketName: process.env.R2_BUCKET_NAME,
+    r2AccountId: process.env.R2_ACCOUNT_ID,
+
+    // Public keys (exposed to client)
+    public: {
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      appUrl: process.env.APP_URL || 'https://indiestream.art',
+    },
+  },
+})

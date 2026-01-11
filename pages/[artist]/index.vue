@@ -1,0 +1,248 @@
+<template>
+  <div v-if="band">
+    <!-- Hero Banner -->
+    <div class="relative h-64 md:h-80 overflow-hidden">
+      <!-- Banner Image or Gradient -->
+      <div
+        v-if="band.banner_url"
+        class="absolute inset-0 bg-cover bg-center"
+        :style="{ backgroundImage: `url(${band.banner_url})` }"
+      />
+      <div
+        v-else
+        class="absolute inset-0"
+        :style="{ background: `linear-gradient(135deg, ${band.theme_color}40 0%, #09090b 100%)` }"
+      />
+      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
+    </div>
+
+    <!-- Profile Info -->
+    <div class="container mx-auto px-4 -mt-24 relative z-10">
+      <div class="flex flex-col md:flex-row gap-6 items-start">
+        <!-- Avatar -->
+        <div
+          class="w-32 h-32 md:w-40 md:h-40 rounded-xl shadow-2xl overflow-hidden shrink-0 ring-4 ring-zinc-950"
+          :style="{ background: `linear-gradient(135deg, ${band.theme_color} 0%, #c026d3 100%)` }"
+        >
+          <img
+            v-if="band.avatar_url"
+            :src="band.avatar_url"
+            :alt="band.name"
+            class="w-full h-full object-cover"
+          />
+          <div v-else class="w-full h-full flex items-center justify-center">
+            <span class="text-5xl font-bold text-white">
+              {{ band.name.charAt(0).toUpperCase() }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="flex-1 pt-4">
+          <div class="flex items-center gap-3 mb-2">
+            <h1 class="text-3xl md:text-4xl font-bold text-zinc-100">{{ band.name }}</h1>
+            <UIcon
+              v-if="band.is_verified"
+              name="i-heroicons-check-badge"
+              class="w-7 h-7 text-violet-400"
+            />
+          </div>
+
+          <div class="flex flex-wrap items-center gap-4 text-sm text-zinc-400 mb-4">
+            <span v-if="band.location" class="flex items-center gap-1">
+              <UIcon name="i-heroicons-map-pin" class="w-4 h-4" />
+              {{ band.location }}
+            </span>
+            <span class="flex items-center gap-1">
+              <UIcon name="i-heroicons-musical-note" class="w-4 h-4" />
+              {{ formatNumber(band.total_streams) }} streams
+            </span>
+          </div>
+
+          <!-- Genres -->
+          <div v-if="band.genres?.length" class="flex flex-wrap gap-2 mb-4">
+            <UBadge
+              v-for="genre in band.genres"
+              :key="genre"
+              color="violet"
+              variant="soft"
+            >
+              {{ genre }}
+            </UBadge>
+          </div>
+
+          <!-- Bio -->
+          <p v-if="band.bio" class="text-zinc-300 max-w-2xl mb-6">
+            {{ band.bio }}
+          </p>
+
+          <!-- Actions -->
+          <div class="flex gap-3">
+            <UButton color="violet" size="lg">
+              <UIcon name="i-heroicons-play" class="w-5 h-5 mr-1" />
+              Play All
+            </UButton>
+            <UButton color="gray" variant="outline" size="lg">
+              <UIcon name="i-heroicons-heart" class="w-5 h-5 mr-1" />
+              Follow
+            </UButton>
+            <UButton
+              v-if="band.website"
+              color="gray"
+              variant="ghost"
+              size="lg"
+              :to="band.website"
+              target="_blank"
+            >
+              <UIcon name="i-heroicons-globe-alt" class="w-5 h-5" />
+            </UButton>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Tabs -->
+    <div class="container mx-auto px-4 py-12">
+      <UTabs :items="tabs" class="w-full">
+        <template #item="{ item }">
+          <!-- Releases Tab -->
+          <div v-if="item.key === 'releases'" class="py-6">
+            <div v-if="albums.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <NuxtLink
+                v-for="album in albums"
+                :key="album.id"
+                :to="`/${band?.slug}/${album.slug}`"
+                class="group"
+              >
+                <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
+                  <img
+                    v-if="albumCovers[album.id]"
+                    :src="albumCovers[album.id]"
+                    :alt="album.title"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center">
+                    <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+                  </div>
+                </div>
+                <h3 class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
+                  {{ album.title }}
+                </h3>
+                <p class="text-sm text-zinc-400">
+                  {{ album.release_type === 'ep' ? 'EP' : album.release_type === 'single' ? 'Single' : 'Album' }}
+                  <span v-if="album.release_date"> · {{ new Date(album.release_date).getFullYear() }}</span>
+                </p>
+              </NuxtLink>
+            </div>
+            <div v-else class="text-center py-12 text-zinc-400">
+              <UIcon name="i-heroicons-musical-note" class="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No releases yet</p>
+            </div>
+          </div>
+
+          <!-- About Tab -->
+          <div v-else-if="item.key === 'about'" class="py-6 max-w-2xl">
+            <h3 class="text-lg font-semibold text-zinc-100 mb-4">About {{ band.name }}</h3>
+            <p v-if="band.bio" class="text-zinc-300 whitespace-pre-line">{{ band.bio }}</p>
+            <p v-else class="text-zinc-400">No bio available.</p>
+
+            <div v-if="band.location || band.website" class="mt-6 space-y-3">
+              <div v-if="band.location" class="flex items-center gap-2 text-zinc-400">
+                <UIcon name="i-heroicons-map-pin" class="w-5 h-5" />
+                <span>{{ band.location }}</span>
+              </div>
+              <div v-if="band.website" class="flex items-center gap-2">
+                <UIcon name="i-heroicons-globe-alt" class="w-5 h-5 text-zinc-400" />
+                <a :href="band.website" target="_blank" class="text-violet-400 hover:text-violet-300">
+                  {{ band.website }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </template>
+      </UTabs>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div v-else-if="loading" class="min-h-screen flex items-center justify-center">
+    <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+  </div>
+
+  <!-- Not Found -->
+  <div v-else class="min-h-screen flex items-center justify-center">
+    <div class="text-center">
+      <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-zinc-800 flex items-center justify-center">
+        <UIcon name="i-heroicons-user" class="w-10 h-10 text-zinc-500" />
+      </div>
+      <h1 class="text-2xl font-bold text-zinc-100 mb-2">Artist Not Found</h1>
+      <p class="text-zinc-400 mb-6">This artist profile doesn't exist or has been removed.</p>
+      <UButton color="violet" to="/">
+        Back to Home
+      </UButton>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { Band } from '~/composables/useBand'
+import type { Album } from '~/composables/useAlbum'
+
+const route = useRoute()
+const { getBandBySlug } = useBand()
+const { getBandAlbums, getStreamUrl } = useAlbum()
+
+const band = ref<Band | null>(null)
+const albums = ref<Album[]>([])
+const albumCovers = ref<Record<string, string>>({})
+const loading = ref(true)
+
+const tabs = [
+  { key: 'releases', label: 'Releases' },
+  { key: 'about', label: 'About' },
+]
+
+const formatNumber = (num: number): string => {
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+  return num.toString()
+}
+
+// Set page meta based on band
+useHead(() => ({
+  title: band.value ? `${band.value.name} | Indiestream` : 'Artist | Indiestream',
+  meta: [
+    {
+      name: 'description',
+      content: band.value?.bio || `Listen to ${band.value?.name || 'this artist'} on Indiestream`,
+    },
+  ],
+}))
+
+onMounted(async () => {
+  try {
+    const slug = route.params.artist as string
+    band.value = await getBandBySlug(slug)
+
+    if (band.value) {
+      // Load albums
+      albums.value = await getBandAlbums(band.value.id)
+
+      // Load cover URLs for albums with covers
+      for (const album of albums.value) {
+        if (album.cover_key) {
+          try {
+            albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
+          } catch (e) {
+            console.error('Failed to load cover for album:', album.id, e)
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load band:', e)
+  } finally {
+    loading.value = false
+  }
+})
+</script>

@@ -1,0 +1,43 @@
+{
+  "name": "indiestream",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.966.0",
+    "@aws-sdk/s3-request-presigner": "^3.966.0",
+    "@nuxt/ui": "2.18.4",
+    "@supabase/supabase-js": "^2.45.4",
+    "nuxt": "3.13.2",
+    "vue": "^3.5.10"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^0.5.7",
+    "@nuxtjs/supabase": "^1.4.0",
+    "@nuxtjs/tailwindcss": "6.12.1",
+    "@types/node": "^22.7.5",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "3.4.14",
+    "typescript": "^5.6.2",
+    "vite": "5.4.14",
+    "vue-tsc": "^2.1.6"
+  },
+  "overrides": {
+    "vite": "5.4.14",
+    "tailwindcss": "3.4.14",
+    "@nuxtjs/tailwindcss": "6.12.1"
+  },
+  "resolutions": {
+    "tailwindcss": "3.4.14"
+  }
+}
