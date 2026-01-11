@@ -17,7 +17,9 @@
     "@aws-sdk/s3-request-presigner": "^3.966.0",
     "@nuxt/ui": "2.18.4",
     "@supabase/supabase-js": "^2.45.4",
+    "@types/three": "^0.182.0",
     "nuxt": "3.13.2",
+    "three": "^0.182.0",
     "vue": "^3.5.10"
   },
   "devDependencies": {

@@ -163,6 +163,54 @@
       <template #settings>
         <div class="py-6 max-w-2xl">
           <form @submit.prevent="saveSettings" class="space-y-6">
+            <!-- Banner Upload -->
+            <UFormGroup label="Banner Image">
+              <div class="space-y-3">
+                <!-- Preview -->
+                <div
+                  class="w-full h-32 md:h-40 rounded-xl overflow-hidden"
+                  :style="{ background: bannerPreview || band?.banner_url ? 'transparent' : `linear-gradient(135deg, ${editForm.theme_color}40 0%, #09090b 100%)` }"
+                >
+                  <img
+                    v-if="bannerPreview || band?.banner_url"
+                    :src="bannerPreview || band?.banner_url || ''"
+                    alt="Artist banner"
+                    class="w-full h-full object-cover"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center">
+                    <div class="text-center text-zinc-500">
+                      <UIcon name="i-heroicons-photo" class="w-8 h-8 mx-auto mb-2" />
+                      <p class="text-sm">No banner image</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Upload Button -->
+                <div>
+                  <input
+                    ref="bannerInput"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    class="hidden"
+                    @change="handleBannerSelect"
+                  />
+                  <UButton
+                    color="gray"
+                    variant="outline"
+                    :loading="uploadingBanner"
+                    :disabled="saving"
+                    @click="bannerInput?.click()"
+                  >
+                    <UIcon name="i-heroicons-photo" class="w-4 h-4 mr-2" />
+                    {{ band?.banner_url ? 'Change Banner' : 'Upload Banner' }}
+                  </UButton>
+                  <p class="text-xs text-zinc-500 mt-2">
+                    Recommended: Wide image (16:9), at least 1920x1080px. JPG, PNG, or WebP.
+                  </p>
+                </div>
+              </div>
+            </UFormGroup>
+
             <!-- Avatar Upload -->
             <UFormGroup label="Artist Photo">
               <div class="flex items-center gap-6">
@@ -408,6 +456,11 @@ const avatarInput = ref<HTMLInputElement | null>(null)
 const avatarPreview = ref<string | null>(null)
 const uploadingAvatar = ref(false)
 
+// Banner upload
+const bannerInput = ref<HTMLInputElement | null>(null)
+const bannerPreview = ref<string | null>(null)
+const uploadingBanner = ref(false)
+
 const editForm = reactive({
   name: '',
   bio: '',
@@ -512,6 +565,77 @@ const handleAvatarSelect = async (e: Event) => {
   }
 }
 
+const handleBannerSelect = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !band.value) return
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    saveError.value = 'Please upload a JPEG, PNG, or WebP image'
+    return
+  }
+
+  // Validate file size (max 10MB for banners)
+  if (file.size > 10 * 1024 * 1024) {
+    saveError.value = 'Banner image must be smaller than 10MB'
+    return
+  }
+
+  uploadingBanner.value = true
+  saveError.value = ''
+
+  try {
+    // Create preview
+    bannerPreview.value = URL.createObjectURL(file)
+
+    // Get presigned URL for upload
+    const { uploadUrl, key } = await $fetch('/api/upload/presign', {
+      method: 'POST',
+      body: {
+        type: 'banner',
+        bandId: band.value.id,
+        filename: file.name,
+        contentType: file.type,
+      },
+    })
+
+    // Upload to R2
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    })
+
+    if (!uploadResponse.ok) {
+      throw new Error('Upload failed')
+    }
+
+    // Store the key (not the signed URL) so we can generate fresh URLs later
+    await updateBand(band.value.id, { banner_key: key })
+
+    // Update local state with fresh URL for display
+    band.value.banner_key = key
+    band.value.banner_url = await getStreamUrl(key)
+
+    saveSuccess.value = true
+    setTimeout(() => { saveSuccess.value = false }, 3000)
+  } catch (e: any) {
+    console.error('Banner upload failed:', e)
+    saveError.value = e.message || 'Failed to upload banner'
+    bannerPreview.value = null
+  } finally {
+    uploadingBanner.value = false
+    // Reset input
+    if (bannerInput.value) {
+      bannerInput.value.value = ''
+    }
+  }
+}
+
 const saveSettings = async () => {
   if (!band.value) return
 
@@ -588,6 +712,15 @@ onMounted(async () => {
           band.value.avatar_url = await getStreamUrl(band.value.avatar_key)
         } catch (e) {
           console.error('Failed to load avatar:', e)
+        }
+      }
+
+      // Load banner URL from key if available
+      if (band.value.banner_key) {
+        try {
+          band.value.banner_url = await getStreamUrl(band.value.banner_key)
+        } catch (e) {
+          console.error('Failed to load banner:', e)
         }
       }
 

@@ -29,6 +29,8 @@ interface PlayerState {
   // Preview mode for non-logged-in users
   isPreviewMode: boolean
   previewEnded: boolean
+  // Audio analyser data for visualizations
+  audioData: Uint8Array | null
 }
 
 // Preview limit in seconds for non-logged-in users
@@ -48,9 +50,16 @@ const state = reactive<PlayerState>({
   trackStartTime: 0,
   isPreviewMode: false,
   previewEnded: false,
+  audioData: null,
 })
 
 let audio: HTMLAudioElement | null = null
+
+// Audio context and analyser for visualizations
+let audioContext: AudioContext | null = null
+let analyser: AnalyserNode | null = null
+let sourceNode: MediaElementAudioSourceNode | null = null
+let analyserAnimationId: number | null = null
 
 // Track total listening time across tracks
 let listeningStartTime = 0
@@ -108,6 +117,36 @@ export const usePlayer = () => {
     }
   }
 
+  // Initialize audio analyser for visualizations
+  const initAudioAnalyser = () => {
+    if (!audio || audioContext) return
+
+    try {
+      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      analyser = audioContext.createAnalyser()
+      analyser.fftSize = 256
+      analyser.smoothingTimeConstant = 0.8
+
+      sourceNode = audioContext.createMediaElementSource(audio)
+      sourceNode.connect(analyser)
+      analyser.connect(audioContext.destination)
+
+      // Initialize the audio data array
+      state.audioData = new Uint8Array(analyser.frequencyBinCount)
+
+      // Start the analyser update loop
+      const updateAnalyser = () => {
+        if (analyser && state.audioData) {
+          analyser.getByteFrequencyData(state.audioData as Uint8Array)
+        }
+        analyserAnimationId = requestAnimationFrame(updateAnalyser)
+      }
+      updateAnalyser()
+    } catch (e) {
+      console.error('Failed to initialize audio analyser:', e)
+    }
+  }
+
   // Initialize audio element (client-side only)
   const initAudio = () => {
     if (import.meta.server) return
@@ -115,6 +154,7 @@ export const usePlayer = () => {
 
     audio = new Audio()
     audio.volume = state.volume
+    audio.crossOrigin = 'anonymous' // Required for audio analyser
 
     audio.addEventListener('timeupdate', () => {
       state.currentTime = audio!.currentTime
@@ -172,6 +212,9 @@ export const usePlayer = () => {
     initAudio()
     if (!audio || !track.audio_key) return
 
+    // Initialize audio analyser on first play
+    initAudioAnalyser()
+
     // Reset tracking for new track
     resetStreamTracking()
     state.isLoading = true
@@ -208,6 +251,9 @@ export const usePlayer = () => {
   ) => {
     initAudio()
     if (!audio || !album.tracks?.length) return
+
+    // Initialize audio analyser on first play
+    initAudioAnalyser()
 
     // Build queue from album tracks
     const tracks = album.tracks.filter(t => t.audio_key)
@@ -371,6 +417,8 @@ export const usePlayer = () => {
     previewLimit: PREVIEW_LIMIT_SECONDS,
     effectiveDuration,
     previewProgress,
+    // Audio analyser data for visualizations
+    audioData: computed(() => state.audioData),
 
     // Actions
     playTrack,

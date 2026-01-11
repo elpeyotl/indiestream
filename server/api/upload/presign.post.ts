@@ -1,9 +1,9 @@
 // API endpoint to generate presigned URLs for file uploads
 import { serverSupabaseUser } from '#supabase/server'
-import { getUploadUrl, generateAudioKey, generateCoverKey, generateAvatarKey } from '~/server/utils/r2'
+import { getUploadUrl, generateAudioKey, generateCoverKey, generateAvatarKey, generateBannerKey } from '~/server/utils/r2'
 
 interface PresignRequest {
-  type: 'audio' | 'cover' | 'avatar'
+  type: 'audio' | 'cover' | 'avatar' | 'banner'
   bandId: string
   albumId?: string
   trackId?: string
@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  if ((body.type === 'cover' || body.type === 'avatar') && !allowedImageTypes.includes(body.contentType)) {
+  if ((body.type === 'cover' || body.type === 'avatar' || body.type === 'banner') && !allowedImageTypes.includes(body.contentType)) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid image file type. Allowed: JPEG, PNG, WebP',
@@ -69,6 +69,8 @@ export default defineEventHandler(async (event) => {
     key = generateAudioKey(body.bandId, body.albumId!, body.trackId, body.filename)
   } else if (body.type === 'cover') {
     key = generateCoverKey(body.bandId, body.albumId!, body.filename)
+  } else if (body.type === 'banner') {
+    key = generateBannerKey(body.bandId, body.filename)
   } else {
     // avatar
     key = generateAvatarKey(body.bandId, body.filename)

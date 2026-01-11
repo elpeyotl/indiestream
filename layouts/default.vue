@@ -1,5 +1,8 @@
 <template>
   <div class="min-h-screen bg-zinc-950 text-zinc-50">
+    <!-- Bokeh Background -->
+    <BokehBackground :audio-data="audioData" />
+
     <!-- Header -->
     <header class="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50">
       <div class="container mx-auto px-4 py-4">
@@ -121,8 +124,11 @@
 </template>
 
 <script setup lang="ts">
+import BokehBackground from '~/components/backgrounds/BokehBackground.vue'
+
 const user = useSupabaseUser()
 const { signOut } = useAuth()
+const { audioData } = usePlayer()
 
 const displayName = computed(() => {
   if (!user.value) return ''

@@ -85,3 +85,9 @@ export const generateAvatarKey = (bandId: string, filename: string): string => {
   const extension = filename.split('.').pop()?.toLowerCase() || 'jpg'
   return `avatars/${bandId}/avatar.${extension}`
 }
+
+// Generate a unique key for artist banner
+export const generateBannerKey = (bandId: string, filename: string): string => {
+  const extension = filename.split('.').pop()?.toLowerCase() || 'jpg'
+  return `banners/${bandId}/banner.${extension}`
+}

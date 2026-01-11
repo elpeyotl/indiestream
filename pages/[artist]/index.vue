@@ -1,27 +1,30 @@
 <template>
   <div v-if="band">
     <!-- Hero Banner -->
-    <div class="relative h-64 md:h-80 overflow-hidden">
-      <!-- Banner Image or Gradient -->
+    <div class="relative h-72 md:h-96 lg:h-[28rem] overflow-hidden">
+      <!-- Banner Image -->
       <div
         v-if="band.banner_url"
-        class="absolute inset-0 bg-cover bg-center"
+        class="absolute inset-0 bg-cover bg-center scale-105"
         :style="{ backgroundImage: `url(${band.banner_url})` }"
       />
+      <!-- Fallback: Large gradient with theme color -->
       <div
         v-else
         class="absolute inset-0"
-        :style="{ background: `linear-gradient(135deg, ${band.theme_color}40 0%, #09090b 100%)` }"
+        :style="{ background: `radial-gradient(ellipse at top, ${band.theme_color}30 0%, transparent 50%), linear-gradient(180deg, ${band.theme_color}20 0%, #09090b 100%)` }"
       />
-      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
+      <!-- Overlay gradients for readability -->
+      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/20" />
+      <div class="absolute inset-0 bg-gradient-to-r from-zinc-950/50 via-transparent to-zinc-950/50" />
     </div>
 
     <!-- Profile Info -->
-    <div class="container mx-auto px-4 -mt-24 relative z-10">
+    <div class="container mx-auto px-4 -mt-32 md:-mt-40 relative z-10">
       <div class="flex flex-col md:flex-row gap-6 items-start">
         <!-- Avatar -->
         <div
-          class="w-32 h-32 md:w-40 md:h-40 rounded-xl shadow-2xl overflow-hidden shrink-0 ring-4 ring-zinc-950"
+          class="w-36 h-36 md:w-48 md:h-48 rounded-2xl shadow-2xl overflow-hidden shrink-0 ring-4 ring-zinc-950"
           :style="{ background: `linear-gradient(135deg, ${band.theme_color} 0%, #c026d3 100%)` }"
         >
           <img
@@ -231,6 +234,15 @@ onMounted(async () => {
           band.value.avatar_url = await getStreamUrl(band.value.avatar_key)
         } catch (e) {
           console.error('Failed to load avatar:', e)
+        }
+      }
+
+      // Load banner URL from key if available
+      if (band.value.banner_key) {
+        try {
+          band.value.banner_url = await getStreamUrl(band.value.banner_key)
+        } catch (e) {
+          console.error('Failed to load banner:', e)
         }
       }
 

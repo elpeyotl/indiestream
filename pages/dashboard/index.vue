@@ -205,6 +205,7 @@ definePageMeta({
 const user = useSupabaseUser()
 const client = useSupabaseClient()
 const { getUserBands } = useBand()
+const { getStreamUrl } = useAlbum()
 
 const bands = ref<Band[]>([])
 const bandsLoading = ref(true)
@@ -256,6 +257,17 @@ const loadListeningStats = async () => {
 onMounted(async () => {
   try {
     bands.value = await getUserBands()
+
+    // Load fresh avatar URLs from keys
+    for (const band of bands.value) {
+      if (band.avatar_key) {
+        try {
+          band.avatar_url = await getStreamUrl(band.avatar_key)
+        } catch (e) {
+          console.error('Failed to load avatar for band:', band.id, e)
+        }
+      }
+    }
   } catch (e) {
     console.error('Failed to load bands:', e)
   } finally {
