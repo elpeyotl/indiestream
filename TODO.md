@@ -1,0 +1,111 @@
+# Indiestream - TODO
+
+## Completed Features
+
+### Core Functionality
+- [x] User authentication (email/password, email confirmation)
+- [x] Artist profile creation and management
+- [x] Album/EP/Single upload with cover art
+- [x] Track upload with audio files to R2
+- [x] Audio player with queue management
+- [x] Stream tracking (counts after 30 seconds)
+- [x] Listening history for logged-in users
+
+### Discovery & Navigation
+- [x] Home page with featured artists and new releases
+- [x] Discover page with artist grid
+- [x] Artists page with search and genre filters
+- [x] Global search (Cmd+K) for artists, albums, tracks
+- [x] Artist public profile pages
+- [x] Album detail pages with track listing
+
+### Preview System
+- [x] 30-second preview for non-logged-in users
+- [x] Preview UI (badge, progress marker, sign-up prompt)
+- [x] Public access to album covers and artist avatars
+
+### Static Pages
+- [x] Pricing page (Free, Listener $9.99/mo, Artist tiers)
+- [x] About page
+- [x] How It Works page
+- [x] For Artists landing page
+- [x] Terms of Service
+- [x] Privacy Policy
+- [x] Contact page (UI only, no backend)
+
+### Infrastructure
+- [x] Vercel deployment
+- [x] Supabase database with RLS
+- [x] Cloudflare R2 file storage
+- [x] Presigned URL generation for files
+
+---
+
+## Pending Features
+
+### High Priority
+
+#### Payments & Subscriptions
+- [ ] Stripe integration for subscriptions
+- [ ] Subscription management (upgrade/downgrade/cancel)
+- [ ] Payment history page
+- [ ] Artist payout system (Stripe Connect)
+- [ ] Revenue dashboard for artists
+
+#### Contact Form
+- [ ] Backend for contact form (Formspree, Resend, or Supabase function)
+- [ ] Email notifications
+
+### Medium Priority
+
+#### Social Features
+- [ ] Follow artists
+- [ ] User playlists (create, edit, share)
+- [ ] Like/favorite tracks and albums
+- [ ] Share functionality
+
+#### Artist Features
+- [ ] Detailed analytics dashboard
+- [ ] Download/purchase option for albums
+- [ ] Artist banner image upload
+- [ ] Release scheduling (set future release date)
+- [ ] Pre-save functionality
+
+#### User Features
+- [ ] User profile page
+- [ ] Listening stats/wrapped
+- [ ] "Where your money went" monthly breakdown
+
+### Lower Priority
+
+#### Admin
+- [ ] Admin panel for content moderation
+- [ ] Artist verification system
+- [ ] Track approval workflow
+
+#### Platform
+- [ ] Mobile responsive improvements
+- [ ] PWA support
+- [ ] Offline playback (for subscribers)
+- [ ] Social login (Google, Apple)
+- [ ] Email notifications (new releases from followed artists)
+
+#### Discovery
+- [ ] Genre pages
+- [ ] Curated playlists
+- [ ] "Similar artists" recommendations
+- [ ] Charts/trending
+
+---
+
+## Known Issues
+- None currently tracked
+
+---
+
+## Database Migrations to Run
+All migrations should be run in Supabase SQL Editor in order:
+1. `20260111150000_initial_schema.sql` - Core tables
+2. `20260111160000_add_storage_keys.sql` - R2 storage columns
+3. `20260111170000_listening_history.sql` - Listening history table
+4. `20260111180000_add_avatar_banner_keys.sql` - Avatar/banner keys for bands
