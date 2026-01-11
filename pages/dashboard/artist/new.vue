@@ -122,15 +122,6 @@
           </div>
         </UFormGroup>
 
-        <!-- Error Message -->
-        <UAlert
-          v-if="error"
-          color="red"
-          variant="soft"
-          :title="error"
-          icon="i-heroicons-exclamation-triangle"
-        />
-
         <!-- Submit -->
         <div class="flex justify-end gap-3 pt-4">
           <UButton
@@ -163,6 +154,7 @@ definePageMeta({
 
 const { createBand, isSlugAvailable, generateSlug } = useBand()
 const router = useRouter()
+const toast = useToast()
 
 const form = reactive({
   name: '',
@@ -174,7 +166,6 @@ const form = reactive({
 
 const genreInput = ref('')
 const loading = ref(false)
-const error = ref('')
 const slugStatus = ref<'idle' | 'checking' | 'available' | 'taken'>('idle')
 
 let slugCheckTimeout: ReturnType<typeof setTimeout> | null = null
@@ -236,7 +227,6 @@ const handleSubmit = async () => {
   if (!isValid.value) return
 
   loading.value = true
-  error.value = ''
 
   try {
     const band = await createBand({
@@ -247,10 +237,11 @@ const handleSubmit = async () => {
       genres: form.genres,
     })
 
+    toast.add({ title: 'Artist profile created', color: 'green', icon: 'i-heroicons-check-circle' })
     // Redirect to the new band's management page
     router.push(`/dashboard/artist/${band.id}`)
   } catch (e: any) {
-    error.value = e.message || 'Failed to create artist profile'
+    toast.add({ title: 'Creation failed', description: e.message || 'Failed to create artist profile', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
   } finally {
     loading.value = false
   }

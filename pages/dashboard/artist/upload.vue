@@ -272,16 +272,6 @@
           <p>No tracks added yet. Drop some audio files above!</p>
         </div>
 
-        <!-- Error Message -->
-        <UAlert
-          v-if="error"
-          color="red"
-          variant="soft"
-          :title="error"
-          icon="i-heroicons-exclamation-triangle"
-          class="mt-4"
-        />
-
         <!-- Actions -->
         <div class="flex justify-between pt-6 border-t border-zinc-800 mt-6">
           <div class="text-sm text-zinc-400">
@@ -333,13 +323,13 @@ definePageMeta({
 
 const { getUserBands } = useBand()
 const { createAlbum, createTrack, updateTrack, updateAlbum, getUploadUrl } = useAlbum()
+const toast = useToast()
 
 // State
 const bands = ref<Band[]>([])
 const bandsLoading = ref(true)
 const selectedBand = ref<Band | null>(null)
 const step = ref(1)
-const error = ref('')
 const uploading = ref(false)
 const isDragging = ref(false)
 const createdAlbum = ref<Album | null>(null)
@@ -474,7 +464,6 @@ const startUpload = async () => {
   if (!selectedBand.value || !coverFile.value || tracks.value.length === 0) return
 
   uploading.value = true
-  error.value = ''
 
   try {
     // 1. Create the album in database
@@ -550,15 +539,16 @@ const startUpload = async () => {
     if (allTracksUploaded) {
       await updateAlbum(album.id, { is_published: true })
       createdAlbum.value = album
+      toast.add({ title: 'Release published!', description: `"${albumForm.title}" is now live`, color: 'green', icon: 'i-heroicons-check-circle' })
       step.value = 3
     } else {
       // Some tracks failed - keep as draft
       createdAlbum.value = album
-      error.value = 'Some tracks failed to upload. The album has been saved as a draft. You can retry from your dashboard.'
+      toast.add({ title: 'Partial upload', description: 'Some tracks failed. Album saved as draft.', color: 'amber', icon: 'i-heroicons-exclamation-triangle' })
     }
 
   } catch (e: any) {
-    error.value = e.message || 'Upload failed'
+    toast.add({ title: 'Upload failed', description: e.message || 'Failed to upload release', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
     console.error('Upload failed:', e)
   } finally {
     uploading.value = false
@@ -640,6 +630,5 @@ const resetForm = () => {
   coverPreview.value = null
   tracks.value = []
   createdAlbum.value = null
-  error.value = ''
 }
 </script>

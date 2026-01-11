@@ -137,9 +137,13 @@
                 </p>
               </NuxtLink>
 
-              <!-- Draft Actions -->
-              <div v-if="!album.is_published" class="mt-2 flex gap-2">
-                <UButton color="red" variant="ghost" size="xs" @click="handleDeleteAlbum(album)">
+              <!-- Album Actions -->
+              <div class="mt-2 flex gap-2">
+                <UButton color="gray" variant="ghost" size="xs" @click="openEditAlbum(album)">
+                  <UIcon name="i-heroicons-pencil" class="w-4 h-4" />
+                  Edit
+                </UButton>
+                <UButton color="red" variant="ghost" size="xs" @click="confirmDeleteAlbum(album)">
                   <UIcon name="i-heroicons-trash" class="w-4 h-4" />
                   Delete
                 </UButton>
@@ -340,22 +344,6 @@
               </div>
             </UFormGroup>
 
-            <!-- Success/Error Messages -->
-            <UAlert
-              v-if="saveSuccess"
-              color="green"
-              variant="soft"
-              title="Settings saved successfully"
-              icon="i-heroicons-check-circle"
-            />
-            <UAlert
-              v-if="saveError"
-              color="red"
-              variant="soft"
-              :title="saveError"
-              icon="i-heroicons-exclamation-triangle"
-            />
-
             <!-- Submit -->
             <div class="flex justify-between pt-4">
               <UButton
@@ -379,7 +367,7 @@
       </template>
     </UTabs>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Artist Confirmation Modal -->
     <UModal v-model="showDeleteModal">
       <UCard>
         <template #header>
@@ -408,6 +396,183 @@
         </template>
       </UCard>
     </UModal>
+
+    <!-- Edit Album Modal -->
+    <UModal v-model="showEditAlbumModal" :ui="{ width: 'sm:max-w-2xl' }">
+      <UCard>
+        <template #header>
+          <h3 class="text-lg font-semibold text-zinc-100">Edit Album</h3>
+        </template>
+
+        <div class="space-y-6">
+          <!-- Album Details -->
+          <div class="space-y-4">
+            <UFormGroup label="Title" required>
+              <UInput
+                v-model="editAlbumForm.title"
+                placeholder="Album title"
+                size="lg"
+                :disabled="savingAlbum"
+              />
+            </UFormGroup>
+
+            <UFormGroup label="Description">
+              <UTextarea
+                v-model="editAlbumForm.description"
+                placeholder="Album description..."
+                :rows="3"
+                size="lg"
+                :disabled="savingAlbum"
+              />
+            </UFormGroup>
+
+            <div class="grid grid-cols-2 gap-4">
+              <UFormGroup label="Release Type">
+                <USelect
+                  v-model="editAlbumForm.release_type"
+                  :options="releaseTypeOptions"
+                  size="lg"
+                  :disabled="savingAlbum"
+                />
+              </UFormGroup>
+
+              <UFormGroup label="Release Date">
+                <UInput
+                  v-model="editAlbumForm.release_date"
+                  type="date"
+                  size="lg"
+                  :disabled="savingAlbum"
+                />
+              </UFormGroup>
+            </div>
+
+            <UFormGroup label="Published">
+              <UToggle
+                v-model="editAlbumForm.is_published"
+                :disabled="savingAlbum"
+              />
+              <template #help>
+                <span class="text-zinc-500">{{ editAlbumForm.is_published ? 'Album is visible to the public' : 'Album is saved as a draft' }}</span>
+              </template>
+            </UFormGroup>
+          </div>
+
+          <!-- Tracks Section -->
+          <div class="border-t border-zinc-800 pt-4">
+            <h4 class="text-sm font-medium text-zinc-300 mb-3">Tracks</h4>
+
+            <div v-if="editAlbumTracks.length === 0" class="text-center py-4 text-zinc-500 text-sm">
+              No tracks in this album
+            </div>
+
+            <div v-else class="space-y-2">
+              <div
+                v-for="(track, index) in editAlbumTracks"
+                :key="track.id"
+                class="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg"
+              >
+                <span class="text-zinc-500 text-sm w-6 text-center">{{ index + 1 }}</span>
+
+                <UInput
+                  v-model="track.title"
+                  placeholder="Track title"
+                  size="sm"
+                  class="flex-1"
+                  :disabled="savingAlbum"
+                />
+
+                <UCheckbox
+                  v-model="track.is_explicit"
+                  label="Explicit"
+                  :disabled="savingAlbum"
+                />
+
+                <UButton
+                  color="red"
+                  variant="ghost"
+                  size="xs"
+                  :disabled="savingAlbum"
+                  @click="confirmDeleteTrack(track)"
+                >
+                  <UIcon name="i-heroicons-trash" class="w-4 h-4" />
+                </UButton>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <UButton color="gray" variant="ghost" @click="showEditAlbumModal = false" :disabled="savingAlbum">
+              Cancel
+            </UButton>
+            <UButton color="violet" :loading="savingAlbum" @click="handleSaveAlbum">
+              Save Changes
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
+
+    <!-- Delete Track Confirmation Modal -->
+    <UModal v-model="showDeleteTrackModal">
+      <UCard>
+        <template #header>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-500" />
+            </div>
+            <h3 class="text-lg font-semibold text-zinc-100">Delete Track</h3>
+          </div>
+        </template>
+
+        <p class="text-zinc-300">
+          Are you sure you want to delete <strong>{{ trackToDelete?.title }}</strong>? This will permanently delete the track and its listening data.
+        </p>
+        <p class="text-red-400 text-sm mt-2">This action cannot be undone.</p>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <UButton color="gray" variant="ghost" @click="showDeleteTrackModal = false" :disabled="deletingTrack">
+              Cancel
+            </UButton>
+            <UButton color="red" :loading="deletingTrack" @click="handleDeleteTrack">
+              Delete Track
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
+
+    <!-- Delete Album Confirmation Modal -->
+    <UModal v-model="showDeleteAlbumModal">
+      <UCard>
+        <template #header>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-500" />
+            </div>
+            <h3 class="text-lg font-semibold text-zinc-100">Delete Album</h3>
+          </div>
+        </template>
+
+        <p class="text-zinc-300">
+          Are you sure you want to delete <strong>{{ albumToDelete?.title }}</strong>? This will permanently delete all tracks and listening data.
+        </p>
+        <p class="text-red-400 text-sm mt-2">This action cannot be undone.</p>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <UButton color="gray" variant="ghost" @click="showDeleteAlbumModal = false" :disabled="deletingAlbum">
+              Cancel
+            </UButton>
+            <UButton color="red" :loading="deletingAlbum" @click="handleDeleteAlbum">
+              Delete Album
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
   </div>
 
   <!-- Loading -->
@@ -429,7 +594,7 @@
 
 <script setup lang="ts">
 import type { Band } from '~/composables/useBand'
-import type { Album } from '~/composables/useAlbum'
+import type { Album, Track } from '~/composables/useAlbum'
 
 definePageMeta({
   middleware: 'auth',
@@ -437,8 +602,9 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
 const { getBandById, updateBand, deleteBand } = useBand()
-const { getBandAlbums, getStreamUrl, deleteAlbum } = useAlbum()
+const { getBandAlbums, getStreamUrl, deleteAlbum, updateAlbum, updateTrack, deleteTrack } = useAlbum()
 
 const band = ref<Band | null>(null)
 const albums = ref<Album[]>([])
@@ -446,8 +612,6 @@ const albumCovers = ref<Record<string, string>>({})
 const loading = ref(true)
 const saving = ref(false)
 const deleting = ref(false)
-const saveSuccess = ref(false)
-const saveError = ref('')
 const showDeleteModal = ref(false)
 const genreInput = ref('')
 
@@ -469,6 +633,34 @@ const editForm = reactive({
   theme_color: '#8B5CF6',
   genres: [] as string[],
 })
+
+// Album edit/delete state
+const showEditAlbumModal = ref(false)
+const showDeleteAlbumModal = ref(false)
+const savingAlbum = ref(false)
+const deletingAlbum = ref(false)
+const albumToEdit = ref<Album | null>(null)
+const albumToDelete = ref<Album | null>(null)
+
+const editAlbumForm = reactive({
+  title: '',
+  description: '',
+  release_type: 'album' as 'album' | 'ep' | 'single',
+  release_date: '',
+  is_published: false,
+})
+
+const releaseTypeOptions = [
+  { label: 'Album', value: 'album' },
+  { label: 'EP', value: 'ep' },
+  { label: 'Single', value: 'single' },
+]
+
+// Track edit/delete state
+const editAlbumTracks = ref<Track[]>([])
+const showDeleteTrackModal = ref(false)
+const deletingTrack = ref(false)
+const trackToDelete = ref<Track | null>(null)
 
 const tabs = [
   { label: 'Releases', slot: 'releases' },
@@ -502,18 +694,17 @@ const handleAvatarSelect = async (e: Event) => {
   // Validate file type
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
-    saveError.value = 'Please upload a JPEG, PNG, or WebP image'
+    toast.add({ title: 'Invalid file type', description: 'Please upload a JPEG, PNG, or WebP image', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
     return
   }
 
   // Validate file size (max 5MB)
   if (file.size > 5 * 1024 * 1024) {
-    saveError.value = 'Image must be smaller than 5MB'
+    toast.add({ title: 'File too large', description: 'Image must be smaller than 5MB', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
     return
   }
 
   uploadingAvatar.value = true
-  saveError.value = ''
 
   try {
     // Create preview
@@ -550,11 +741,10 @@ const handleAvatarSelect = async (e: Event) => {
     band.value.avatar_key = key
     band.value.avatar_url = await getStreamUrl(key)
 
-    saveSuccess.value = true
-    setTimeout(() => { saveSuccess.value = false }, 3000)
+    toast.add({ title: 'Photo updated', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch (e: any) {
     console.error('Avatar upload failed:', e)
-    saveError.value = e.message || 'Failed to upload avatar'
+    toast.add({ title: 'Upload failed', description: e.message || 'Failed to upload photo', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
     avatarPreview.value = null
   } finally {
     uploadingAvatar.value = false
@@ -573,18 +763,17 @@ const handleBannerSelect = async (e: Event) => {
   // Validate file type
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
-    saveError.value = 'Please upload a JPEG, PNG, or WebP image'
+    toast.add({ title: 'Invalid file type', description: 'Please upload a JPEG, PNG, or WebP image', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
     return
   }
 
   // Validate file size (max 10MB for banners)
   if (file.size > 10 * 1024 * 1024) {
-    saveError.value = 'Banner image must be smaller than 10MB'
+    toast.add({ title: 'File too large', description: 'Banner must be smaller than 10MB', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
     return
   }
 
   uploadingBanner.value = true
-  saveError.value = ''
 
   try {
     // Create preview
@@ -621,11 +810,10 @@ const handleBannerSelect = async (e: Event) => {
     band.value.banner_key = key
     band.value.banner_url = await getStreamUrl(key)
 
-    saveSuccess.value = true
-    setTimeout(() => { saveSuccess.value = false }, 3000)
+    toast.add({ title: 'Banner updated', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch (e: any) {
     console.error('Banner upload failed:', e)
-    saveError.value = e.message || 'Failed to upload banner'
+    toast.add({ title: 'Upload failed', description: e.message || 'Failed to upload banner', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
     bannerPreview.value = null
   } finally {
     uploadingBanner.value = false
@@ -640,8 +828,6 @@ const saveSettings = async () => {
   if (!band.value) return
 
   saving.value = true
-  saveSuccess.value = false
-  saveError.value = ''
 
   try {
     const updated = await updateBand(band.value.id, {
@@ -653,10 +839,9 @@ const saveSettings = async () => {
       genres: editForm.genres,
     })
     band.value = updated
-    saveSuccess.value = true
-    setTimeout(() => { saveSuccess.value = false }, 3000)
+    toast.add({ title: 'Settings saved', color: 'green', icon: 'i-heroicons-check-circle' })
   } catch (e: any) {
-    saveError.value = e.message || 'Failed to save settings'
+    toast.add({ title: 'Save failed', description: e.message || 'Failed to save settings', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
   } finally {
     saving.value = false
   }
@@ -672,23 +857,126 @@ const handleDelete = async () => {
   deleting.value = true
   try {
     await deleteBand(band.value.id)
+    toast.add({ title: 'Artist profile deleted', color: 'green', icon: 'i-heroicons-check-circle' })
     router.push('/dashboard')
   } catch (e: any) {
-    saveError.value = e.message || 'Failed to delete artist profile'
+    toast.add({ title: 'Delete failed', description: e.message || 'Failed to delete artist profile', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
     showDeleteModal.value = false
   } finally {
     deleting.value = false
   }
 }
 
-const handleDeleteAlbum = async (album: Album) => {
-  if (!confirm(`Delete "${album.title}"? This action cannot be undone.`)) return
+// Album edit functions
+const openEditAlbum = (album: Album) => {
+  albumToEdit.value = album
+  editAlbumForm.title = album.title
+  editAlbumForm.description = album.description || ''
+  editAlbumForm.release_type = album.release_type
+  editAlbumForm.release_date = album.release_date?.split('T')[0] || ''
+  editAlbumForm.is_published = album.is_published
+  // Deep copy tracks for editing
+  editAlbumTracks.value = (album.tracks || []).map(t => ({ ...t }))
+  showEditAlbumModal.value = true
+}
 
+const handleSaveAlbum = async () => {
+  if (!albumToEdit.value || !editAlbumForm.title.trim()) return
+
+  savingAlbum.value = true
   try {
-    await deleteAlbum(album.id)
-    albums.value = albums.value.filter(a => a.id !== album.id)
+    // Update album details
+    const updated = await updateAlbum(albumToEdit.value.id, {
+      title: editAlbumForm.title.trim(),
+      description: editAlbumForm.description.trim() || undefined,
+      release_type: editAlbumForm.release_type,
+      release_date: editAlbumForm.release_date || undefined,
+      is_published: editAlbumForm.is_published,
+    })
+
+    // Update tracks
+    for (const track of editAlbumTracks.value) {
+      const originalTrack = albumToEdit.value.tracks?.find(t => t.id === track.id)
+      if (originalTrack && (originalTrack.title !== track.title || originalTrack.is_explicit !== track.is_explicit)) {
+        await updateTrack(track.id, {
+          title: track.title,
+          is_explicit: track.is_explicit,
+        })
+      }
+    }
+
+    // Update local albums array with updated data including tracks
+    const index = albums.value.findIndex(a => a.id === albumToEdit.value!.id)
+    if (index !== -1) {
+      albums.value[index] = { ...albums.value[index], ...updated, tracks: editAlbumTracks.value }
+    }
+
+    toast.add({ title: 'Album updated', color: 'green', icon: 'i-heroicons-check-circle' })
+    showEditAlbumModal.value = false
   } catch (e: any) {
-    saveError.value = e.message || 'Failed to delete album'
+    toast.add({ title: 'Update failed', description: e.message || 'Failed to update album', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
+  } finally {
+    savingAlbum.value = false
+  }
+}
+
+// Track delete functions
+const confirmDeleteTrack = (track: Track) => {
+  trackToDelete.value = track
+  showDeleteTrackModal.value = true
+}
+
+const handleDeleteTrack = async () => {
+  if (!trackToDelete.value) return
+
+  deletingTrack.value = true
+  try {
+    await deleteTrack(trackToDelete.value.id)
+
+    // Remove from editAlbumTracks
+    editAlbumTracks.value = editAlbumTracks.value.filter(t => t.id !== trackToDelete.value!.id)
+
+    // Update track numbers
+    editAlbumTracks.value.forEach((t, idx) => {
+      t.track_number = idx + 1
+    })
+
+    // Also update in the main albums array if the modal is closed later
+    if (albumToEdit.value) {
+      const albumIndex = albums.value.findIndex(a => a.id === albumToEdit.value!.id)
+      if (albumIndex !== -1 && albums.value[albumIndex].tracks) {
+        albums.value[albumIndex].tracks = albums.value[albumIndex].tracks!.filter(t => t.id !== trackToDelete.value!.id)
+      }
+    }
+
+    toast.add({ title: 'Track deleted', color: 'green', icon: 'i-heroicons-check-circle' })
+    showDeleteTrackModal.value = false
+  } catch (e: any) {
+    toast.add({ title: 'Delete failed', description: e.message || 'Failed to delete track', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
+  } finally {
+    deletingTrack.value = false
+  }
+}
+
+// Album delete functions
+const confirmDeleteAlbum = (album: Album) => {
+  albumToDelete.value = album
+  showDeleteAlbumModal.value = true
+}
+
+const handleDeleteAlbum = async () => {
+  if (!albumToDelete.value) return
+
+  deletingAlbum.value = true
+  try {
+    await deleteAlbum(albumToDelete.value.id)
+    albums.value = albums.value.filter(a => a.id !== albumToDelete.value!.id)
+    toast.add({ title: 'Album deleted', color: 'green', icon: 'i-heroicons-check-circle' })
+    showDeleteAlbumModal.value = false
+  } catch (e: any) {
+    toast.add({ title: 'Delete failed', description: e.message || 'Failed to delete album', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
+  } finally {
+    deletingAlbum.value = false
   }
 }
 

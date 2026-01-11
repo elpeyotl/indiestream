@@ -129,11 +129,20 @@ import BokehBackground from '~/components/backgrounds/BokehBackground.vue'
 const user = useSupabaseUser()
 const { signOut } = useAuth()
 const { audioData } = usePlayer()
+const toast = useToast()
 
 const displayName = computed(() => {
   if (!user.value) return ''
   return user.value.user_metadata?.display_name || user.value.email?.split('@')[0] || 'User'
 })
+
+const handleSignOut = async () => {
+  try {
+    await signOut()
+  } catch (e: any) {
+    toast.add({ title: 'Sign out failed', description: e.message || 'Please try again', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
+  }
+}
 
 const userMenuItems = [
   [{
@@ -152,7 +161,7 @@ const userMenuItems = [
   [{
     label: 'Sign out',
     icon: 'i-heroicons-arrow-right-on-rectangle',
-    click: () => signOut(),
+    click: handleSignOut,
   }],
 ]
 </script>

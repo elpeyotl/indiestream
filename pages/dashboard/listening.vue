@@ -188,6 +188,7 @@ definePageMeta({
 })
 
 const client = useSupabaseClient()
+const { getStreamUrl } = useAlbum()
 
 interface ListeningItem {
   id: string
@@ -196,6 +197,7 @@ interface ListeningItem {
   artist_name: string
   artist_slug: string
   cover_url: string | null
+  cover_key?: string | null
   duration_seconds: number
   completed: boolean
   listened_at: string
@@ -305,7 +307,8 @@ const loadHistory = async (reset = false) => {
     track_title: item.tracks?.title || 'Unknown Track',
     artist_name: item.tracks?.albums?.bands?.name || 'Unknown Artist',
     artist_slug: item.tracks?.albums?.bands?.slug || '',
-    cover_url: null, // We'll skip loading cover URLs for now to keep it simple
+    cover_url: null,
+    cover_key: item.tracks?.albums?.cover_key || null,
     duration_seconds: item.duration_seconds,
     completed: item.completed,
     listened_at: item.listened_at,
@@ -313,6 +316,17 @@ const loadHistory = async (reset = false) => {
 
   history.value = reset ? items : [...history.value, ...items]
   hasMore.value = items.length === pageSize
+
+  // Load cover URLs for items with cover keys
+  for (const item of items) {
+    if (item.cover_key) {
+      try {
+        item.cover_url = await getStreamUrl(item.cover_key)
+      } catch (e) {
+        console.error('Failed to load cover:', e)
+      }
+    }
+  }
 }
 
 const loadStats = async () => {
