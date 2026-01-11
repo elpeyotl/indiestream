@@ -96,6 +96,16 @@
 - [ ] "Similar artists" recommendations
 - [ ] Charts/trending
 
+#### Merchandise / Store (Nice to Have)
+- [ ] Digital downloads (albums, stems, sample packs)
+- [ ] Physical merch via Printful/Gelato integration
+- [ ] Products table (title, price, images, stock, type)
+- [ ] Orders and order_items tables
+- [ ] Cart and checkout flow
+- [ ] Order history for buyers and sellers
+- [ ] Shipping calculation (for physical goods)
+- [ ] Tax handling (complex for physical goods)
+
 ---
 
 ## Known Issues
