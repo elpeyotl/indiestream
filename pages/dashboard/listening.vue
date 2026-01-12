@@ -64,7 +64,27 @@
           <h2 class="text-lg font-semibold text-zinc-100">Recent Listening</h2>
         </template>
 
-        <div v-if="history.length === 0" class="text-center py-12">
+        <!-- Empty state for free tier users -->
+        <div v-if="history.length === 0 && !isSubscribed" class="text-center py-12">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
+            <UIcon name="i-heroicons-chart-bar" class="w-8 h-8 text-violet-400" />
+          </div>
+          <h3 class="text-lg font-semibold text-zinc-100 mb-2">Track your listening history</h3>
+          <p class="text-zinc-400 mb-6 max-w-md mx-auto">
+            Subscribe to see your full listening history and support artists with every stream.
+          </p>
+          <div class="flex gap-3 justify-center">
+            <UButton color="violet" to="/pricing">
+              Upgrade to Track
+            </UButton>
+            <UButton color="gray" variant="outline" to="/discover">
+              Discover Music
+            </UButton>
+          </div>
+        </div>
+
+        <!-- Empty state for subscribers -->
+        <div v-else-if="history.length === 0" class="text-center py-12">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
             <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-violet-400" />
           </div>
@@ -187,8 +207,10 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const user = useSupabaseUser()
 const client = useSupabaseClient()
 const { getStreamUrl } = useAlbum()
+const { isSubscribed } = useSubscription()
 
 interface ListeningItem {
   id: string
@@ -268,6 +290,7 @@ const loadHistory = async (reset = false) => {
 
   const periodStart = getPeriodStart()
 
+  // Only get user's own streams and exclude free plays
   let query = client
     .from('listening_history')
     .select(`
@@ -287,6 +310,8 @@ const loadHistory = async (reset = false) => {
         )
       )
     `)
+    .eq('user_id', user.value?.id)
+    .eq('is_free_play', false)
     .order('listened_at', { ascending: false })
     .range(page.value * pageSize, (page.value + 1) * pageSize - 1)
 
@@ -332,10 +357,12 @@ const loadHistory = async (reset = false) => {
 const loadStats = async () => {
   const periodStart = getPeriodStart()
 
-  // Total listening time and streams
+  // Only get user's own streams and exclude free plays
   let query = client
     .from('listening_history')
     .select('duration_seconds, completed, track_id, band_id')
+    .eq('user_id', user.value?.id)
+    .eq('is_free_play', false)
 
   if (periodStart) {
     query = query.gte('listened_at', periodStart)
@@ -359,6 +386,7 @@ const loadStats = async () => {
 const loadTopArtists = async () => {
   const periodStart = getPeriodStart()
 
+  // Only get user's own streams and exclude free plays
   let query = client
     .from('listening_history')
     .select(`
@@ -370,6 +398,8 @@ const loadTopArtists = async () => {
         slug
       )
     `)
+    .eq('user_id', user.value?.id)
+    .eq('is_free_play', false)
 
   if (periodStart) {
     query = query.gte('listened_at', periodStart)
@@ -408,6 +438,7 @@ const loadTopArtists = async () => {
 const loadTopTracks = async () => {
   const periodStart = getPeriodStart()
 
+  // Only get user's own streams and exclude free plays
   let query = client
     .from('listening_history')
     .select(`
@@ -421,6 +452,8 @@ const loadTopTracks = async () => {
         )
       )
     `)
+    .eq('user_id', user.value?.id)
+    .eq('is_free_play', false)
 
   if (periodStart) {
     query = query.gte('listened_at', periodStart)

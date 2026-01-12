@@ -212,6 +212,29 @@ Currently hardcoded values (can be moved to config):
 - `components/AudioPlayer.vue` - Added free tier UI
 - `pages/dashboard/index.vue` - Added free plays display
 
+## Dashboard Display Logic
+
+### Current Behavior
+
+Free tier users see:
+- **"X/5 free plays remaining"** counter in dashboard
+- **Empty stats** (0 hours, 0 streams, 0 artists) - because free plays are excluded
+- **Empty listening history** - free plays don't appear in history
+
+Subscribers see:
+- Full listening stats
+- Complete listening history
+- No free play counter
+
+### Upgrade Prompt Opportunity
+
+**TODO:** Add messaging in dashboard/listening pages for free users:
+
+- When stats show 0: *"Subscribe to track your listening and support artists directly"*
+- In empty listening history: *"Upgrade to see your full listening history and contribute to artist streams"*
+
+This provides clear value proposition without being intrusive.
+
 ## Future Considerations
 
 1. **Configurable limits** - Move 5 plays/month to database or env config
@@ -219,3 +242,4 @@ Currently hardcoded values (can be moved to config):
 3. **Ad-supported tier** - Show ads to free users, share ad revenue with artists
 4. **Referral bonus** - Give extra free plays for referrals
 5. **Artist-specific free plays** - Let artists offer free plays for their music
+6. **Upgrade prompts in empty states** - Show contextual upgrade messaging where stats/history would appear

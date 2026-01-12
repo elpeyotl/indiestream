@@ -46,15 +46,8 @@ export default defineEventHandler(async (event) => {
 
   const client = await serverSupabaseClient(event)
 
-  // If this is a free play, consume one of the user's free plays
-  if (isFreePlay) {
-    const { error: useError } = await client.rpc('use_free_play')
-    if (useError) {
-      console.error('Failed to use free play:', useError)
-    }
-    // Continue with recording even if use_free_play fails
-    // The play has already happened, we should still track it
-  }
+  // Note: Free play consumption happens in the record_stream database function
+  // to ensure atomicity and avoid double-counting
 
   // Call the record_stream function with country and free play flag
   const { data, error } = await client.rpc('record_stream', {

@@ -184,7 +184,10 @@ AS $$
 DECLARE
     v_track RECORD;
     v_completed BOOLEAN;
+    v_user_id UUID;
 BEGIN
+    v_user_id := auth.uid();
+
     -- Get track details
     SELECT t.id, t.band_id, t.album_id
     INTO v_track
@@ -198,6 +201,14 @@ BEGIN
     -- A stream counts if listened for at least 30 seconds
     v_completed := p_duration_seconds >= 30;
 
+    -- If this is a free play and stream is completed, consume one free play
+    IF p_is_free_play AND v_completed THEN
+        UPDATE public.profiles
+        SET monthly_full_plays = COALESCE(monthly_full_plays, 0) + 1,
+            play_allowance_reset_at = COALESCE(play_allowance_reset_at, NOW())
+        WHERE id = v_user_id;
+    END IF;
+
     -- Insert listening history with free play flag
     INSERT INTO public.listening_history (
         user_id,
@@ -209,7 +220,7 @@ BEGIN
         country_code,
         is_free_play
     ) VALUES (
-        auth.uid(),
+        v_user_id,
         p_track_id,
         v_track.band_id,
         v_track.album_id,

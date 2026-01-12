@@ -80,6 +80,9 @@ export const usePlayer = () => {
     if (!user.value) return // Only record for logged-in users
     if (state.streamRecorded) return // Already recorded this track
 
+    // Set flag immediately to prevent race condition from multiple timeupdate events
+    state.streamRecorded = true
+
     try {
       await $fetch('/api/streams/record', {
         method: 'POST',
@@ -89,9 +92,10 @@ export const usePlayer = () => {
           isFreePlay: state.isFreePlay,
         },
       })
-      state.streamRecorded = true
     } catch (e) {
       console.error('Failed to record stream:', e)
+      // Reset flag on error so it can retry
+      state.streamRecorded = false
     }
   }
 

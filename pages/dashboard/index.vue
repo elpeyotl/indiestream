@@ -53,6 +53,24 @@
       </NuxtLink>
     </div>
 
+    <!-- Free tier upgrade prompt for empty stats -->
+    <div v-if="!isSubscribed && listeningStats.totalStreams === 0" class="mb-8">
+      <UCard class="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/30">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center shrink-0">
+            <UIcon name="i-heroicons-chart-bar" class="w-6 h-6 text-violet-400" />
+          </div>
+          <div class="flex-1">
+            <p class="text-zinc-100 font-medium">Track your listening journey</p>
+            <p class="text-zinc-400 text-sm">Subscribe to see your stats, support artists directly, and unlock unlimited streaming.</p>
+          </div>
+          <UButton color="violet" to="/pricing">
+            Upgrade
+          </UButton>
+        </div>
+      </UCard>
+    </div>
+
     <!-- Artist Section -->
     <UCard class="bg-zinc-900/50 border-zinc-800 mb-8">
       <template #header>
@@ -323,9 +341,12 @@ const formatHours = (seconds: number): string => {
 
 const loadListeningStats = async () => {
   try {
+    // Only get user's own streams (not band owner views) and exclude free plays
     const { data, error } = await client
       .from('listening_history')
-      .select('duration_seconds, completed, band_id')
+      .select('duration_seconds, completed, band_id, is_free_play')
+      .eq('user_id', user.value?.id)
+      .eq('is_free_play', false)
 
     if (error) throw error
 

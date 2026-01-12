@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.0'
+export const APP_VERSION = '0.5.1'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.5.1',
+    date: '2026-01-12',
+    changes: [
+      { type: 'fixed', description: 'Stream recording race condition causing multiple counts per play' },
+      { type: 'fixed', description: 'Listening stats now correctly filtered by user (no cross-user leakage)' },
+      { type: 'added', description: 'Upgrade prompts in dashboard and listening page for free tier users' },
+      { type: 'changed', description: 'Free plays excluded from dashboard stats and listening history' },
+    ],
+  },
   {
     version: '0.5.0',
     date: '2026-01-12',
