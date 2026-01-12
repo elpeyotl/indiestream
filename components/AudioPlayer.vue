@@ -51,8 +51,16 @@
               </NuxtLink>
             </div>
 
+            <!-- Free Play Badge -->
+            <div v-if="isFreePlay && !isSubscribed" class="mb-4">
+              <UBadge color="teal" variant="soft" size="sm">
+                <UIcon name="i-heroicons-gift" class="w-3 h-3 mr-1" />
+                Free Play ({{ freePlaysRemaining }} left)
+              </UBadge>
+            </div>
+
             <!-- Preview Mode Badge -->
-            <div v-if="isPreviewMode" class="mb-4">
+            <div v-else-if="isPreviewMode" class="mb-4">
               <UBadge color="orange" variant="soft" size="sm">
                 <UIcon name="i-heroicons-clock" class="w-3 h-3 mr-1" />
                 {{ previewLimit }}s Preview
@@ -85,14 +93,25 @@
               </div>
             </div>
 
-            <!-- Preview Ended Message -->
+            <!-- Preview Ended Message (for non-logged-in users) -->
             <div
-              v-if="previewEnded"
+              v-if="previewEnded && !user"
               class="w-full max-w-sm mb-6 p-4 bg-zinc-800/50 rounded-xl text-center"
             >
               <p class="text-zinc-300 mb-3">Want to hear the full track?</p>
               <UButton color="violet" to="/register" @click="isExpanded = false">
                 Sign up for free
+              </UButton>
+            </div>
+
+            <!-- Preview Ended Message (for logged-in free users at limit) -->
+            <div
+              v-else-if="previewEnded && user"
+              class="w-full max-w-sm mb-6 p-4 bg-zinc-800/50 rounded-xl text-center"
+            >
+              <p class="text-zinc-300 mb-3">You've used your free tracks this month</p>
+              <UButton color="violet" to="/pricing" @click="isExpanded = false">
+                Subscribe for unlimited
               </UButton>
             </div>
 
@@ -163,9 +182,33 @@
         </div>
       </Transition>
 
-      <!-- Preview Ended Banner -->
+      <!-- Upgrade Prompt Banner (for logged-in free users out of plays) -->
       <div
-        v-if="previewEnded"
+        v-if="showUpgradePrompt"
+        class="bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2"
+      >
+        <div class="container mx-auto flex items-center justify-between gap-4">
+          <p class="text-sm text-white">
+            You've used your 5 free tracks this month.
+            <NuxtLink to="/pricing" class="font-semibold underline hover:no-underline">
+              Subscribe
+            </NuxtLink>
+            for unlimited listening!
+          </p>
+          <UButton
+            color="white"
+            variant="ghost"
+            size="xs"
+            @click="dismissUpgradePrompt"
+          >
+            <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+          </UButton>
+        </div>
+      </div>
+
+      <!-- Preview Ended Banner (for non-logged-in users) -->
+      <div
+        v-else-if="previewEnded && !user"
         class="bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2 text-center"
       >
         <p class="text-sm text-white">
@@ -174,6 +217,20 @@
             Sign up
           </NuxtLink>
           to listen to full tracks!
+        </p>
+      </div>
+
+      <!-- Preview Ended Banner (for logged-in free users at limit) -->
+      <div
+        v-else-if="previewEnded && user"
+        class="bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-2 text-center"
+      >
+        <p class="text-sm text-white">
+          Preview ended.
+          <NuxtLink to="/pricing" class="font-semibold underline hover:no-underline">
+            Subscribe
+          </NuxtLink>
+          for unlimited full tracks!
         </p>
       </div>
 
@@ -402,6 +459,9 @@
 </template>
 
 <script setup lang="ts">
+const user = useSupabaseUser()
+const { freePlaysRemaining, isSubscribed } = useSubscription()
+
 const {
   currentTrack,
   queue,
@@ -426,6 +486,10 @@ const {
   previewEnded,
   previewLimit,
   effectiveDuration,
+  // Free tier
+  isFreePlay,
+  showUpgradePrompt,
+  dismissUpgradePrompt,
 } = usePlayer()
 
 const isExpanded = ref(false)

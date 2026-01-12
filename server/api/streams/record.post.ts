@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const { trackId, durationSeconds } = body
+  const { trackId, durationSeconds, isFreePlay } = body
 
   if (!trackId || typeof durationSeconds !== 'number') {
     throw createError({
@@ -46,11 +46,22 @@ export default defineEventHandler(async (event) => {
 
   const client = await serverSupabaseClient(event)
 
-  // Call the record_stream function with country
+  // If this is a free play, consume one of the user's free plays
+  if (isFreePlay) {
+    const { error: useError } = await client.rpc('use_free_play')
+    if (useError) {
+      console.error('Failed to use free play:', useError)
+    }
+    // Continue with recording even if use_free_play fails
+    // The play has already happened, we should still track it
+  }
+
+  // Call the record_stream function with country and free play flag
   const { data, error } = await client.rpc('record_stream', {
     p_track_id: trackId,
     p_duration_seconds: Math.floor(durationSeconds),
     p_country_code: countryCode,
+    p_is_free_play: isFreePlay || false,
   })
 
   if (error) {

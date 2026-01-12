@@ -185,15 +185,36 @@
       </div>
 
       <!-- Free State -->
-      <div v-else class="flex items-center justify-between">
-        <div>
-          <p class="text-zinc-400">
-            You're on the free tier. Upgrade to listen to full tracks and support artists directly.
-          </p>
+      <div v-else class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-zinc-100 font-medium">Free Tier</p>
+            <p class="text-zinc-400 text-sm">
+              {{ freeTierStatus?.playsRemaining ?? 5 }} free full-track plays remaining this month
+            </p>
+          </div>
+          <UButton color="violet" to="/pricing">
+            Upgrade
+          </UButton>
         </div>
-        <UButton color="violet" to="/pricing">
-          Upgrade
-        </UButton>
+        <!-- Free plays progress bar -->
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs text-zinc-500">
+            <span>{{ freeTierStatus?.playsUsed ?? 0 }} of 5 plays used</span>
+            <span v-if="freeTierStatus?.resetsAt">
+              Resets {{ formatDate(freeTierStatus.resetsAt) }}
+            </span>
+          </div>
+          <div class="h-2 bg-zinc-800 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-violet-500 rounded-full transition-all duration-300"
+              :style="{ width: `${((freeTierStatus?.playsUsed ?? 0) / 5) * 100}%` }"
+            />
+          </div>
+        </div>
+        <p class="text-zinc-500 text-xs">
+          Upgrade to listen to unlimited full tracks and support artists directly with your subscription.
+        </p>
       </div>
     </UCard>
 
@@ -237,7 +258,7 @@ const user = useSupabaseUser()
 const client = useSupabaseClient()
 const { getUserBands } = useBand()
 const { getStreamUrl } = useAlbum()
-const { subscription, isSubscribed, loading: subscriptionLoading, openCustomerPortal } = useSubscription()
+const { subscription, isSubscribed, freeTierStatus, loading: subscriptionLoading, openCustomerPortal } = useSubscription()
 
 const bands = ref<Band[]>([])
 const bandsLoading = ref(true)

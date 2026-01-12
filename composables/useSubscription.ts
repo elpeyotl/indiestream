@@ -12,6 +12,13 @@ export const useSubscription = () => {
     stripe_subscription_id: string | null
   } | null>(null)
 
+  // Free tier tracking
+  const freeTierStatus = ref<{
+    playsUsed: number
+    playsRemaining: number
+    resetsAt: string | null
+  } | null>(null)
+
   const loading = ref(false)
   const error = ref('')
 
@@ -27,10 +34,24 @@ export const useSubscription = () => {
     return !isSubscribed.value
   })
 
+  // Check if user can play full tracks (subscribed OR has free plays remaining)
+  const canPlayFullTracks = computed(() => {
+    if (isSubscribed.value) return true
+    if (!freeTierStatus.value) return false
+    return freeTierStatus.value.playsRemaining > 0
+  })
+
+  // Free plays remaining (0 if subscribed since they have unlimited)
+  const freePlaysRemaining = computed(() => {
+    if (isSubscribed.value) return Infinity
+    return freeTierStatus.value?.playsRemaining ?? 5
+  })
+
   // Fetch subscription status
   const fetchSubscription = async () => {
     if (!user.value) {
       subscription.value = null
+      freeTierStatus.value = null
       return
     }
 
@@ -55,6 +76,45 @@ export const useSubscription = () => {
       error.value = e.message
     } finally {
       loading.value = false
+    }
+
+    // Also fetch free tier status
+    await fetchFreeTierStatus()
+  }
+
+  // Fetch free tier status
+  const fetchFreeTierStatus = async () => {
+    if (!user.value) {
+      freeTierStatus.value = null
+      return
+    }
+
+    try {
+      const data = await $fetch('/api/free-tier/status')
+      freeTierStatus.value = {
+        playsUsed: data.playsUsed,
+        playsRemaining: data.playsRemaining,
+        resetsAt: data.resetsAt,
+      }
+    } catch (e) {
+      console.error('Error fetching free tier status:', e)
+      // Default to 5 plays remaining if we can't fetch
+      freeTierStatus.value = {
+        playsUsed: 0,
+        playsRemaining: 5,
+        resetsAt: null,
+      }
+    }
+  }
+
+  // Use a free play (decrements counter locally)
+  const useFreePlays = () => {
+    if (freeTierStatus.value && freeTierStatus.value.playsRemaining > 0) {
+      freeTierStatus.value = {
+        ...freeTierStatus.value,
+        playsUsed: freeTierStatus.value.playsUsed + 1,
+        playsRemaining: freeTierStatus.value.playsRemaining - 1,
+      }
     }
   }
 
@@ -113,16 +173,22 @@ export const useSubscription = () => {
       fetchSubscription()
     } else {
       subscription.value = null
+      freeTierStatus.value = null
     }
   }, { immediate: true })
 
   return {
     subscription,
+    freeTierStatus,
     loading,
     error,
     isSubscribed,
     isFree,
+    canPlayFullTracks,
+    freePlaysRemaining,
     fetchSubscription,
+    fetchFreeTierStatus,
+    useFreePlays,
     startCheckout,
     openCustomerPortal,
   }

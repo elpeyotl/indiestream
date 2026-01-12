@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.4.0'
+export const APP_VERSION = '0.5.0'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,17 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.5.0',
+    date: '2026-01-12',
+    changes: [
+      { type: 'added', description: 'Free tier with 5 full-track plays per month for registered users' },
+      { type: 'added', description: 'Free plays tracking in dashboard with monthly reset' },
+      { type: 'added', description: 'Upgrade prompts when free plays are exhausted' },
+      { type: 'changed', description: 'Free plays do not count toward artist stream stats or payouts' },
+      { type: 'changed', description: 'Moved documentation files to docs/ folder' },
+    ],
+  },
   {
     version: '0.4.0',
     date: '2026-01-12',

@@ -26,9 +26,13 @@ interface PlayerState {
   // Stream tracking
   streamRecorded: boolean
   trackStartTime: number
-  // Preview mode for non-logged-in users
+  // Preview mode for non-logged-in users OR free tier limit reached
   isPreviewMode: boolean
   previewEnded: boolean
+  // Free tier tracking - is this a free play (not counting toward artist stats)
+  isFreePlay: boolean
+  // Flag to show upgrade prompt when free plays exhausted
+  showUpgradePrompt: boolean
   // Audio analyser data for visualizations
   audioData: Uint8Array | null
 }
@@ -50,6 +54,8 @@ const state = reactive<PlayerState>({
   trackStartTime: 0,
   isPreviewMode: false,
   previewEnded: false,
+  isFreePlay: false,
+  showUpgradePrompt: false,
   audioData: null,
 })
 
@@ -67,6 +73,7 @@ let listeningStartTime = 0
 export const usePlayer = () => {
   const { getStreamUrl } = useAlbum()
   const user = useSupabaseUser()
+  const { isSubscribed, canPlayFullTracks, useFreePlays, freePlaysRemaining } = useSubscription()
 
   // Record a stream to the backend
   const recordStream = async (trackId: string, durationSeconds: number) => {
@@ -79,6 +86,7 @@ export const usePlayer = () => {
         body: {
           trackId,
           durationSeconds,
+          isFreePlay: state.isFreePlay,
         },
       })
       state.streamRecorded = true
@@ -95,13 +103,59 @@ export const usePlayer = () => {
     }
   }
 
+  // Check play allowance and set up preview/free play mode
+  const checkPlayAllowance = async (): Promise<'full' | 'free' | 'preview'> => {
+    // Not logged in = preview mode
+    if (!user.value) {
+      return 'preview'
+    }
+
+    // Subscriber = full access
+    if (isSubscribed.value) {
+      return 'full'
+    }
+
+    // Free user - check if they have plays remaining
+    if (canPlayFullTracks.value) {
+      return 'free'
+    }
+
+    // Free user with no plays remaining = preview mode
+    return 'preview'
+  }
+
   // Reset stream tracking for new track
-  const resetStreamTracking = () => {
+  const resetStreamTracking = async () => {
     state.streamRecorded = false
     state.trackStartTime = Date.now()
     state.previewEnded = false
-    // Set preview mode based on user login status
-    state.isPreviewMode = !user.value
+    state.showUpgradePrompt = false
+
+    // Check what type of play this will be
+    const playType = await checkPlayAllowance()
+
+    if (playType === 'preview') {
+      state.isPreviewMode = true
+      state.isFreePlay = false
+      // If user is logged in but out of free plays, show upgrade prompt
+      if (user.value) {
+        state.showUpgradePrompt = true
+      }
+    } else if (playType === 'free') {
+      state.isPreviewMode = false
+      state.isFreePlay = true
+      // Decrement free plays locally (server will also decrement)
+      useFreePlays()
+    } else {
+      // Full subscriber access
+      state.isPreviewMode = false
+      state.isFreePlay = false
+    }
+  }
+
+  // Dismiss upgrade prompt
+  const dismissUpgradePrompt = () => {
+    state.showUpgradePrompt = false
   }
 
   // Check and enforce preview limit for non-logged-in users
@@ -215,8 +269,8 @@ export const usePlayer = () => {
     // Initialize audio analyser on first play
     initAudioAnalyser()
 
-    // Reset tracking for new track
-    resetStreamTracking()
+    // Reset tracking for new track (async to check subscription status)
+    await resetStreamTracking()
     state.isLoading = true
 
     try {
@@ -292,8 +346,8 @@ export const usePlayer = () => {
   const playFromQueue = async (index: number) => {
     if (!audio || index < 0 || index >= state.queue.length) return
 
-    // Reset stream tracking for the new track
-    resetStreamTracking()
+    // Reset stream tracking for the new track (async to check subscription status)
+    await resetStreamTracking()
 
     state.queueIndex = index
     state.currentTrack = state.queue[index]
@@ -397,8 +451,8 @@ export const usePlayer = () => {
     // Initialize audio analyser on first play
     initAudioAnalyser()
 
-    // Reset tracking for new track
-    resetStreamTracking()
+    // Reset tracking for new track (async to check subscription status)
+    await resetStreamTracking()
     state.isLoading = true
 
     try {
@@ -475,6 +529,9 @@ export const usePlayer = () => {
     previewLimit: PREVIEW_LIMIT_SECONDS,
     effectiveDuration,
     previewProgress,
+    // Free tier state
+    isFreePlay: computed(() => state.isFreePlay),
+    showUpgradePrompt: computed(() => state.showUpgradePrompt),
     // Audio analyser data for visualizations
     audioData: computed(() => state.audioData),
 
@@ -490,5 +547,6 @@ export const usePlayer = () => {
     setVolume,
     toggleMute,
     formatTime,
+    dismissUpgradePrompt,
   }
 }
