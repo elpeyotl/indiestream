@@ -164,8 +164,8 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-zinc-100 font-medium">Listener Plan</p>
-            <p class="text-zinc-400 text-sm">
-              {{ subscription?.cancel_at_period_end ? 'Cancels' : 'Renews' }} on
+            <p v-if="subscription?.current_period_end" class="text-zinc-400 text-sm">
+              {{ subscriptionDateLabel }}
               {{ formatDate(subscription?.current_period_end) }}
             </p>
           </div>
@@ -262,6 +262,13 @@ const subscriptionBadge = computed(() => {
     default:
       return 'Free'
   }
+})
+
+const subscriptionDateLabel = computed(() => {
+  if (!subscription.value) return ''
+  if (subscription.value.cancel_at_period_end) return 'Cancels on'
+  if (subscription.value.status === 'trialing') return 'Trial ends on'
+  return 'Renews on'
 })
 
 const formatDate = (dateString: string | null | undefined) => {

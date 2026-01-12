@@ -9,14 +9,16 @@ export const useSubscription = () => {
     plan: string
     current_period_end: string | null
     cancel_at_period_end: boolean
+    stripe_subscription_id: string | null
   } | null>(null)
 
   const loading = ref(false)
   const error = ref('')
 
-  // Check if user has an active subscription
+  // Check if user has an active subscription (must have a Stripe subscription ID)
   const isSubscribed = computed(() => {
     if (!subscription.value) return false
+    if (!subscription.value.stripe_subscription_id) return false
     return ['active', 'trialing'].includes(subscription.value.status)
   })
 
@@ -38,7 +40,7 @@ export const useSubscription = () => {
     try {
       const { data, error: fetchError } = await supabase
         .from('subscriptions')
-        .select('status, plan, current_period_end, cancel_at_period_end')
+        .select('status, plan, current_period_end, cancel_at_period_end, stripe_subscription_id')
         .eq('user_id', user.value.id)
         .single()
 
