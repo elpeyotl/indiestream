@@ -175,3 +175,151 @@ Image uploads in the dashboard use the `/api/upload/process-image` endpoint inst
 - Artist banner upload (`pages/dashboard/artist/[id].vue`)
 - Album cover upload - initial (`pages/dashboard/artist/upload.vue`)
 - Album cover change - edit modal (`pages/dashboard/artist/[id].vue`)
+
+## Royalties & Licensing Considerations
+
+### Types of Music Royalties
+
+#### 1. Mechanical Royalties
+- Paid for reproduction/distribution of music
+- Traditionally for physical copies, now applies to streaming
+- In US: Handled by Harry Fox Agency, rate set by Copyright Royalty Board
+- In EU: Collected by national CMOs (GEMA, SACEM, etc.)
+- **For Indiestream**: Required when streaming copyrighted compositions
+
+#### 2. Performance Royalties
+- Paid when music is publicly performed or broadcast
+- Collected by PROs (Performing Rights Organizations)
+- **Major PROs**:
+  - US: ASCAP, BMI, SESAC
+  - Switzerland: SUISA
+  - Germany: GEMA
+  - UK: PRS for Music
+  - France: SACEM
+- **For Indiestream**: Streaming counts as public performance = PRO license required
+
+#### 3. Master Recording Royalties
+- Paid to owner of the recording (usually label or artist)
+- Separate from composition royalties
+- For indie artists who own their masters: They receive this directly
+- For signed artists: Label controls this
+
+### The Label/Distributor Question
+
+#### Independent Artists (Own Masters + Publishing)
+- Artist owns both recording AND composition
+- Can license directly to Indiestream
+- No intermediary needed
+- Artist agreement covers all rights
+- **Simplest case for the platform**
+
+#### Artists with Labels
+- Label owns master recording rights
+- Need label permission to stream
+- Revenue may need to flow through label
+- More complex contractual requirements
+
+#### Artists with Publishers
+- Publisher controls composition rights
+- May still owe PRO royalties even if artist agrees
+- Need to verify publishing status
+
+### Licensing Requirements for Indiestream
+
+#### Option A: Indies-Only Platform
+- Only accept artists who own all rights
+- Require confirmation of rights ownership in artist agreement
+- No PRO licensing needed for original compositions
+- **Pros**: Simpler, lower cost, cleaner model
+- **Cons**: Limits catalog, may exclude some artists
+
+#### Option B: PRO Blanket Licenses
+- Obtain blanket licenses from major PROs
+- Covers any song in their repertoire
+- **Costs** (rough estimates):
+  - ASCAP/BMI: Based on revenue, typically 2-5% of streaming revenue
+  - SUISA/GEMA: Similar percentage-based fees
+  - Need license in each territory you operate
+- **Pros**: Can accept any artist
+- **Cons**: Significant cost, complex multi-territory compliance
+
+#### Option C: Distributor Partnership
+- Partner with aggregator (DistroKid, TuneCore, etc.)
+- They handle licensing complexity
+- Pass-through model for royalties
+- **Pros**: Leverage existing infrastructure
+- **Cons**: Reduces margin, less direct artist relationship
+
+### Recommended Approach for MVP
+
+1. **Start with Indies-Only**: Require artists to confirm ownership of all rights
+2. **Clear Terms of Service**: Artists represent they own or control all necessary rights
+3. **No PRO Covers**: Initially don't allow cover songs (requires mechanical license)
+4. **Geographic Focus**: Start in one territory before expanding
+5. **Future Expansion**: Add PRO licensing as platform scales
+
+### Key Legal Documents Needed
+
+1. **Artist Agreement**: Must include:
+   - Grant of streaming rights
+   - Representation of ownership
+   - Indemnification clause
+   - Revenue share terms
+
+2. **Terms of Service**: For listeners covering:
+   - Personal use only
+   - No redistribution
+   - Subscription terms
+
+3. **Privacy Policy**: GDPR/CCPA compliance for user data
+
+### Cost Impact on Business Model
+
+If PRO licensing is added:
+- Current artist share: 85%
+- After PRO fees (est. 4%): ~81%
+- After payment processing (6%): ~75%
+- Platform margin becomes tighter
+
+### Next Steps (Legal/Business)
+
+1. Consult entertainment lawyer for artist agreement template
+2. Research PRO licensing costs in target markets
+3. Decide on indies-only vs. full catalog strategy
+4. Implement rights verification in upload flow
+5. Consider sync licensing implications (if adding video)
+
+## Listener Location Tracking
+
+### Purpose
+- **PRO Reporting**: Track which territories streams occurred in for royalty reporting
+- **Artist Analytics**: Show artists where their listeners are located
+- **Tax Compliance**: Help with VAT/sales tax calculations by territory
+
+### Implementation
+
+#### Database
+- `listening_history.country_code` - ISO 3166-1 alpha-2 country code (e.g., "US", "DE", "CH")
+- Indexed for efficient country-based queries
+- Migration: `20260112100000_add_country_tracking.sql`
+
+#### Country Detection
+Country is captured automatically from request headers:
+1. **Cloudflare**: `CF-IPCountry` header (if using CF proxy)
+2. **Vercel**: `X-Vercel-IP-Country` header (automatic on Vercel)
+3. Falls back to `null` if neither header present
+
+#### API Endpoints
+- `POST /api/streams/record` - Now includes country in stream recording
+- `GET /api/analytics/countries` - Returns stream counts by country for a band
+
+#### Database Functions
+- `record_stream(track_id, duration, country_code)` - Updated to accept country
+- `get_band_streams_by_country(band_id, days)` - Returns aggregated country data
+
+### Artist Dashboard
+The Analytics tab now includes a "Listener Locations" card showing:
+- Country flags and names
+- Stream counts per country
+- Visual bar chart comparison
+- Respects the selected time period filter (7d, 30d, 90d, All Time)

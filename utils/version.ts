@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.2.0'
+export const APP_VERSION = '0.2.1'
 
 export interface ChangelogEntry {
   version: string
@@ -11,8 +11,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.2.1',
+    date: '2026-01-12',
+    changes: [
+      { type: 'added', description: 'Listener location tracking for PRO reporting and analytics' },
+      { type: 'added', description: 'Country analytics in artist dashboard with flags and stream counts' },
+      { type: 'added', description: 'Play All button on artist pages' },
+      { type: 'added', description: 'Spotify-style queue panel in audio player' },
+      { type: 'fixed', description: 'Bokeh background disabled on mobile devices for performance' },
+    ],
+  },
+  {
     version: '0.2.0',
-    date: '2025-01-12',
+    date: '2026-01-12',
     changes: [
       { type: 'added', description: 'Server-side image processing with Sharp for consistent image dimensions' },
       { type: 'added', description: 'Album cover change feature in edit modal' },

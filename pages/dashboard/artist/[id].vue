@@ -265,38 +265,83 @@
                 </UCard>
               </div>
 
-              <!-- Top Albums -->
-              <UCard class="bg-zinc-900/50 border-zinc-800">
-                <template #header>
-                  <h3 class="text-lg font-semibold text-zinc-100">Album Performance</h3>
-                </template>
-                <div v-if="analytics.albumStats.length === 0" class="text-center py-8 text-zinc-500">
-                  No album data yet
-                </div>
-                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div
-                    v-for="album in analytics.albumStats"
-                    :key="album.album_id"
-                    class="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg"
-                  >
-                    <div class="w-12 h-12 rounded-lg bg-zinc-700 shrink-0 overflow-hidden">
-                      <img
-                        v-if="albumCovers[album.album_id]"
-                        :src="albumCovers[album.album_id]"
-                        :alt="album.title"
-                        class="w-full h-full object-cover"
-                      />
-                      <div v-else class="w-full h-full flex items-center justify-center">
-                        <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-zinc-500" />
+              <!-- Charts Row 2: Album Performance & Listener Locations -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Top Albums -->
+                <UCard class="bg-zinc-900/50 border-zinc-800">
+                  <template #header>
+                    <h3 class="text-lg font-semibold text-zinc-100">Album Performance</h3>
+                  </template>
+                  <div v-if="analytics.albumStats.length === 0" class="text-center py-8 text-zinc-500">
+                    No album data yet
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div
+                      v-for="album in analytics.albumStats.slice(0, 5)"
+                      :key="album.album_id"
+                      class="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg"
+                    >
+                      <div class="w-12 h-12 rounded-lg bg-zinc-700 shrink-0 overflow-hidden">
+                        <img
+                          v-if="albumCovers[album.album_id]"
+                          :src="albumCovers[album.album_id]"
+                          :alt="album.title"
+                          class="w-full h-full object-cover"
+                        />
+                        <div v-else class="w-full h-full flex items-center justify-center">
+                          <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-zinc-500" />
+                        </div>
                       </div>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="font-medium text-zinc-100 truncate">{{ album.title }}</p>
-                      <p class="text-sm text-zinc-400">{{ album.stream_count }} streams</p>
+                      <div class="flex-1 min-w-0">
+                        <p class="font-medium text-zinc-100 truncate">{{ album.title }}</p>
+                        <div class="w-full bg-zinc-800 rounded-full h-1.5 mt-1">
+                          <div
+                            class="bg-fuchsia-500 h-1.5 rounded-full"
+                            :style="{ width: `${getAlbumBarWidth(album.stream_count)}%` }"
+                          />
+                        </div>
+                      </div>
+                      <span class="text-sm text-zinc-400">{{ album.stream_count }}</span>
                     </div>
                   </div>
-                </div>
-              </UCard>
+                </UCard>
+
+                <!-- Listener Locations -->
+                <UCard class="bg-zinc-900/50 border-zinc-800">
+                  <template #header>
+                    <h3 class="text-lg font-semibold text-zinc-100">Listener Locations</h3>
+                  </template>
+                  <div v-if="countryAnalyticsLoading" class="flex items-center justify-center py-8">
+                    <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 text-zinc-400 animate-spin" />
+                  </div>
+                  <div v-else-if="countryAnalytics.length === 0" class="text-center py-8 text-zinc-500">
+                    <UIcon name="i-heroicons-globe-alt" class="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>No location data yet</p>
+                    <p class="text-xs mt-1">Location tracking requires recent streams</p>
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div
+                      v-for="country in countryAnalytics.slice(0, 8)"
+                      :key="country.country_code"
+                      class="flex items-center gap-3"
+                    >
+                      <span class="text-xl">{{ getCountryFlag(country.country_code) }}</span>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="text-sm font-medium text-zinc-100">{{ getCountryName(country.country_code) }}</span>
+                          <span class="text-xs text-zinc-400">{{ country.stream_count }} streams</span>
+                        </div>
+                        <div class="w-full bg-zinc-800 rounded-full h-1.5">
+                          <div
+                            class="bg-teal-500 h-1.5 rounded-full"
+                            :style="{ width: `${getCountryBarWidth(country.stream_count)}%` }"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </UCard>
+              </div>
             </template>
           </template>
         </div>
@@ -857,7 +902,15 @@ interface AnalyticsData {
   streamsByDay: { date: string; count: number }[]
 }
 
+interface CountryData {
+  country_code: string
+  stream_count: number
+  total_duration: number
+}
+
 const analyticsLoading = ref(false)
+const countryAnalyticsLoading = ref(false)
+const countryAnalytics = ref<CountryData[]>([])
 const selectedAnalyticsPeriod = ref('30d')
 const analyticsPeriods = [
   { label: 'Last 7 Days', value: '7d' },
@@ -905,6 +958,90 @@ const getBarHeight = (count: number): number => {
 const getTrackBarWidth = (playCount: number): number => {
   const maxCount = Math.max(...analytics.value.topTracks.map(t => t.play_count), 1)
   return (playCount / maxCount) * 100
+}
+
+const getAlbumBarWidth = (streamCount: number): number => {
+  const maxCount = Math.max(...analytics.value.albumStats.map(a => a.stream_count), 1)
+  return (streamCount / maxCount) * 100
+}
+
+const getCountryBarWidth = (streamCount: number): number => {
+  const maxCount = Math.max(...countryAnalytics.value.map(c => c.stream_count), 1)
+  return (streamCount / maxCount) * 100
+}
+
+// Country code to flag emoji
+const getCountryFlag = (countryCode: string): string => {
+  if (!countryCode || countryCode.length !== 2) return '🌍'
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0))
+  return String.fromCodePoint(...codePoints)
+}
+
+// Country code to name (common countries)
+const countryNames: Record<string, string> = {
+  US: 'United States',
+  GB: 'United Kingdom',
+  DE: 'Germany',
+  FR: 'France',
+  CH: 'Switzerland',
+  AT: 'Austria',
+  CA: 'Canada',
+  AU: 'Australia',
+  NL: 'Netherlands',
+  BE: 'Belgium',
+  IT: 'Italy',
+  ES: 'Spain',
+  JP: 'Japan',
+  KR: 'South Korea',
+  BR: 'Brazil',
+  MX: 'Mexico',
+  SE: 'Sweden',
+  NO: 'Norway',
+  DK: 'Denmark',
+  FI: 'Finland',
+  PL: 'Poland',
+  IE: 'Ireland',
+  NZ: 'New Zealand',
+  PT: 'Portugal',
+  CZ: 'Czech Republic',
+  RU: 'Russia',
+  IN: 'India',
+  CN: 'China',
+  ZA: 'South Africa',
+  AR: 'Argentina',
+}
+
+const getCountryName = (countryCode: string): string => {
+  return countryNames[countryCode?.toUpperCase()] || countryCode || 'Unknown'
+}
+
+// Load country analytics
+const loadCountryAnalytics = async () => {
+  if (!band.value) return
+
+  countryAnalyticsLoading.value = true
+  try {
+    const days = selectedAnalyticsPeriod.value === '7d' ? 7
+      : selectedAnalyticsPeriod.value === '30d' ? 30
+      : selectedAnalyticsPeriod.value === '90d' ? 90
+      : 365 * 10 // "all time" = 10 years
+
+    const data = await $fetch<CountryData[]>('/api/analytics/countries', {
+      query: {
+        bandId: band.value.id,
+        days,
+      },
+    })
+    countryAnalytics.value = data || []
+  } catch (e) {
+    console.error('Failed to load country analytics:', e)
+    countryAnalytics.value = []
+  } finally {
+    countryAnalyticsLoading.value = false
+  }
 }
 
 const getAnalyticsPeriodStart = (): string | null => {
@@ -1063,6 +1200,7 @@ const loadAnalytics = async () => {
 // Watch for period changes
 watch(selectedAnalyticsPeriod, () => {
   loadAnalytics()
+  loadCountryAnalytics()
 })
 
 const addGenre = () => {
@@ -1459,6 +1597,7 @@ onMounted(async () => {
 
       // Load analytics
       loadAnalytics()
+      loadCountryAnalytics()
     }
   } catch (e) {
     console.error('Failed to load band:', e)
