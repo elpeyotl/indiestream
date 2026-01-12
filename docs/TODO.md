@@ -46,8 +46,9 @@
 ### High Priority
 
 #### Payments & Subscriptions
-- [ ] Stripe integration for subscriptions
-- [ ] Subscription management (upgrade/downgrade/cancel)
+- [x] Stripe integration for subscriptions
+- [x] Subscription management (upgrade/downgrade/cancel via Stripe portal)
+- [x] Free tier with 5 full-track plays per month
 - [ ] Payment history page
 - [ ] Artist payout system (Stripe Connect)
 - [ ] Revenue dashboard for artists
@@ -89,7 +90,8 @@
 - [ ] Mobile responsive improvements
 - [ ] PWA support
 - [ ] Offline playback (for subscribers)
-- [ ] Social login (Google, Apple)
+- [x] Social login (Google OAuth)
+- [ ] Apple login
 - [ ] Email notifications (new releases from followed artists)
 
 #### Discovery
@@ -124,6 +126,8 @@ All migrations should be run in Supabase SQL Editor in order:
 5. `20260112100000_add_country_tracking.sql` - Listener location tracking
 6. `20260112110000_add_follows.sql` - Artist follows table
 7. `20260112120000_add_library.sql` - Saved albums and liked tracks
+8. `20260112130000_add_subscriptions.sql` - Stripe subscription fields
+9. `20260112140000_add_free_tier_tracking.sql` - Free tier with 5 plays/month
 
 ---
 
