@@ -151,3 +151,25 @@ For each artist:
    - artist_amount += subscriber_share * $8.49
 3. Total payout = sum of all subscriber contributions
 ```
+
+## Image Processing
+
+### Server-Side Image Processing (Sharp)
+All uploaded images are processed server-side before storage to ensure consistent dimensions:
+- **Avatars**: Resized/cropped to 400x400 (square)
+- **Album Covers**: Resized/cropped to 600x600 (square)
+- **Banners**: Resized/cropped to 1500x500
+
+### Implementation
+- `server/api/upload/process-image.post.ts` - Sharp-based image processing endpoint
+- Accepts multipart form data with `file`, `type` (avatar/cover/banner), and optional `key`
+- Processes images with center-crop to ensure proper aspect ratios
+- Uploads directly to R2 after processing
+- Returns the R2 key for database storage
+
+### Usage
+Image uploads in the dashboard use the `/api/upload/process-image` endpoint instead of direct presigned URL uploads:
+- Artist avatar upload (`pages/dashboard/artist/[id].vue`)
+- Artist banner upload (`pages/dashboard/artist/[id].vue`)
+- Album cover upload - initial (`pages/dashboard/artist/upload.vue`)
+- Album cover change - edit modal (`pages/dashboard/artist/[id].vue`)

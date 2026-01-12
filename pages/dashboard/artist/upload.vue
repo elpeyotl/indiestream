@@ -475,17 +475,8 @@ const startUpload = async () => {
       release_date: albumForm.release_date || undefined,
     })
 
-    // 2. Upload cover art
-    const coverExt = coverFile.value.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const { uploadUrl: coverUploadUrl, key: coverKey } = await getUploadUrl(
-      'cover',
-      selectedBand.value.id,
-      album.id,
-      `cover.${coverExt}`,
-      coverFile.value.type
-    )
-
-    await uploadFile(coverUploadUrl, coverFile.value)
+    // 2. Upload and process cover art (resizes to 600x600 square)
+    const coverKey = await uploadProcessedCover(coverFile.value, selectedBand.value.id, album.id)
 
     // Update album with cover key
     await updateAlbum(album.id, { cover_key: coverKey })
@@ -568,6 +559,21 @@ const uploadFile = async (url: string, file: File): Promise<void> => {
   if (!response.ok) {
     throw new Error('Upload failed')
   }
+}
+
+// Upload and process cover image (resizes to 600x600)
+const uploadProcessedCover = async (file: File, bandId: string, albumId: string): Promise<string> => {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('type', 'cover')
+  formData.append('key', `covers/${bandId}/${albumId}/cover.jpg`)
+
+  const { key } = await $fetch<{ key: string }>('/api/upload/process-image', {
+    method: 'POST',
+    body: formData,
+  })
+
+  return key
 }
 
 const uploadFileWithProgress = (url: string, file: File, onProgress: (progress: number) => void): Promise<void> => {

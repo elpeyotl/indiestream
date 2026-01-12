@@ -544,6 +544,45 @@
         </template>
 
         <div class="space-y-6">
+          <!-- Cover Image -->
+          <div class="flex gap-6">
+            <div class="shrink-0">
+              <div class="w-32 h-32 rounded-lg overflow-hidden bg-zinc-800 border border-zinc-700">
+                <img
+                  v-if="editAlbumCoverPreview || (albumToEdit && albumCovers[albumToEdit.id])"
+                  :src="editAlbumCoverPreview || (albumToEdit && albumCovers[albumToEdit.id])"
+                  class="w-full h-full object-cover"
+                  alt="Album cover"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+                </div>
+              </div>
+            </div>
+            <div class="flex-1 flex flex-col justify-center">
+              <h4 class="text-sm font-medium text-zinc-300 mb-2">Cover Image</h4>
+              <p class="text-xs text-zinc-500 mb-3">Square image recommended. Will be resized to 600x600.</p>
+              <input
+                ref="editAlbumCoverInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+                @change="handleAlbumCoverSelect"
+              />
+              <UButton
+                color="gray"
+                variant="soft"
+                size="sm"
+                :loading="uploadingAlbumCover"
+                :disabled="savingAlbum"
+                @click="editAlbumCoverInput?.click()"
+              >
+                <UIcon name="i-heroicons-photo" class="w-4 h-4 mr-1" />
+                {{ uploadingAlbumCover ? 'Uploading...' : 'Change Cover' }}
+              </UButton>
+            </div>
+          </div>
+
           <!-- Album Details -->
           <div class="space-y-4">
             <UFormGroup label="Title" required>
@@ -789,6 +828,11 @@ const editAlbumForm = reactive({
   release_date: '',
   is_published: false,
 })
+
+// Album cover edit state
+const editAlbumCoverInput = ref<HTMLInputElement | null>(null)
+const editAlbumCoverPreview = ref<string | null>(null)
+const uploadingAlbumCover = ref(false)
 
 const releaseTypeOptions = [
   { label: 'Album', value: 'album' },
@@ -1057,29 +1101,16 @@ const handleAvatarSelect = async (e: Event) => {
     // Create preview
     avatarPreview.value = URL.createObjectURL(file)
 
-    // Get presigned URL for upload
-    const { uploadUrl, key } = await $fetch('/api/upload/presign', {
+    // Upload and process image (resizes to square)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'avatar')
+    formData.append('key', `avatars/${band.value.id}/avatar.jpg`)
+
+    const { key } = await $fetch('/api/upload/process-image', {
       method: 'POST',
-      body: {
-        type: 'avatar',
-        bandId: band.value.id,
-        filename: file.name,
-        contentType: file.type,
-      },
+      body: formData,
     })
-
-    // Upload to R2
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: {
-        'Content-Type': file.type,
-      },
-    })
-
-    if (!uploadResponse.ok) {
-      throw new Error('Upload failed')
-    }
 
     // Store the key (not the signed URL) so we can generate fresh URLs later
     await updateBand(band.value.id, { avatar_key: key })
@@ -1126,29 +1157,16 @@ const handleBannerSelect = async (e: Event) => {
     // Create preview
     bannerPreview.value = URL.createObjectURL(file)
 
-    // Get presigned URL for upload
-    const { uploadUrl, key } = await $fetch('/api/upload/presign', {
+    // Upload and process image (resizes to 1500x500)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'banner')
+    formData.append('key', `banners/${band.value.id}/banner.jpg`)
+
+    const { key } = await $fetch('/api/upload/process-image', {
       method: 'POST',
-      body: {
-        type: 'banner',
-        bandId: band.value.id,
-        filename: file.name,
-        contentType: file.type,
-      },
+      body: formData,
     })
-
-    // Upload to R2
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: {
-        'Content-Type': file.type,
-      },
-    })
-
-    if (!uploadResponse.ok) {
-      throw new Error('Upload failed')
-    }
 
     // Store the key (not the signed URL) so we can generate fresh URLs later
     await updateBand(band.value.id, { banner_key: key })
@@ -1222,9 +1240,75 @@ const openEditAlbum = (album: Album) => {
   editAlbumForm.release_type = album.release_type
   editAlbumForm.release_date = album.release_date?.split('T')[0] || ''
   editAlbumForm.is_published = album.is_published
+  // Reset cover preview
+  editAlbumCoverPreview.value = null
   // Deep copy tracks for editing
   editAlbumTracks.value = (album.tracks || []).map(t => ({ ...t }))
   showEditAlbumModal.value = true
+}
+
+const handleAlbumCoverSelect = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !albumToEdit.value || !band.value) return
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    toast.add({ title: 'Invalid file type', description: 'Please upload a JPEG, PNG, or WebP image', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
+    return
+  }
+
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    toast.add({ title: 'File too large', description: 'Image must be smaller than 5MB', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
+    return
+  }
+
+  uploadingAlbumCover.value = true
+
+  try {
+    // Create preview
+    editAlbumCoverPreview.value = URL.createObjectURL(file)
+
+    // Upload and process image (resizes to 600x600 square)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'cover')
+    formData.append('key', `covers/${band.value.id}/${albumToEdit.value.id}/cover.jpg`)
+
+    const { key } = await $fetch<{ key: string }>('/api/upload/process-image', {
+      method: 'POST',
+      body: formData,
+    })
+
+    // Update album with new cover key
+    await updateAlbum(albumToEdit.value.id, { cover_key: key })
+
+    // Update local state
+    albumToEdit.value.cover_key = key
+    const newCoverUrl = await getStreamUrl(key)
+    albumToEdit.value.cover_url = newCoverUrl
+
+    // Update in albums array
+    const index = albums.value.findIndex(a => a.id === albumToEdit.value!.id)
+    if (index !== -1) {
+      albums.value[index].cover_key = key
+      albums.value[index].cover_url = newCoverUrl
+    }
+
+    toast.add({ title: 'Cover updated', color: 'green', icon: 'i-heroicons-check-circle' })
+  } catch (e: any) {
+    console.error('Album cover upload failed:', e)
+    toast.add({ title: 'Upload failed', description: e.message || 'Failed to upload cover', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
+    editAlbumCoverPreview.value = null
+  } finally {
+    uploadingAlbumCover.value = false
+    // Reset input
+    if (editAlbumCoverInput.value) {
+      editAlbumCoverInput.value.value = ''
+    }
+  }
 }
 
 const handleSaveAlbum = async () => {
