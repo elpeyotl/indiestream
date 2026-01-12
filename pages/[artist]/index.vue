@@ -81,7 +81,7 @@
 
           <!-- Actions -->
           <div class="flex gap-3">
-            <UButton color="violet" size="lg">
+            <UButton color="violet" size="lg" :loading="loadingPlayAll" @click="handlePlayAll">
               <UIcon name="i-heroicons-play" class="w-5 h-5 mr-1" />
               Play All
             </UButton>
@@ -194,11 +194,13 @@ import type { Album } from '~/composables/useAlbum'
 const route = useRoute()
 const { getBandBySlug } = useBand()
 const { getBandAlbums, getStreamUrl } = useAlbum()
+const { playAlbum } = usePlayer()
 
 const band = ref<Band | null>(null)
 const albums = ref<Album[]>([])
 const albumCovers = ref<Record<string, string>>({})
 const loading = ref(true)
+const loadingPlayAll = ref(false)
 
 const tabs = [
   { key: 'releases', label: 'Releases' },
@@ -209,6 +211,36 @@ const formatNumber = (num: number): string => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
   return num.toString()
+}
+
+// Play all tracks from first album with tracks
+const handlePlayAll = async () => {
+  if (!albums.value.length || !band.value) return
+
+  loadingPlayAll.value = true
+  try {
+    // Find first album with tracks
+    for (const album of albums.value) {
+      if (album.tracks && album.tracks.length > 0) {
+        const coverUrl = albumCovers.value[album.id] || null
+        // Add band info to album for player display
+        const albumWithBand = {
+          ...album,
+          band: {
+            id: band.value.id,
+            name: band.value.name,
+            slug: band.value.slug,
+          },
+        }
+        await playAlbum(albumWithBand, coverUrl, 0)
+        break
+      }
+    }
+  } catch (e) {
+    console.error('Failed to play all:', e)
+  } finally {
+    loadingPlayAll.value = false
+  }
 }
 
 // Set page meta based on band

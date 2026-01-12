@@ -270,12 +270,24 @@
               </UButton>
             </div>
 
-            <!-- Time & Volume (Desktop only) -->
+            <!-- Time, Queue & Volume (Desktop only) -->
             <div class="hidden md:flex items-center gap-4 flex-1 justify-end">
               <!-- Time -->
               <div class="text-xs text-zinc-400 font-mono">
                 {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
               </div>
+
+              <!-- Queue Button -->
+              <UButton
+                v-if="queue.length > 1"
+                color="gray"
+                variant="ghost"
+                size="xs"
+                :class="{ 'text-violet-400': showQueue }"
+                @click.stop="showQueue = !showQueue"
+              >
+                <UIcon name="i-heroicons-queue-list" class="w-5 h-5" />
+              </UButton>
 
               <!-- Volume -->
               <div class="flex items-center gap-2">
@@ -298,9 +310,93 @@
                 />
               </div>
             </div>
+
+            <!-- Queue Button (Mobile/Tablet) -->
+            <UButton
+              v-if="queue.length > 1"
+              color="gray"
+              variant="ghost"
+              size="xs"
+              class="md:hidden w-8 h-8 sm:w-9 sm:h-9"
+              :class="{ 'text-violet-400': showQueue }"
+              @click.stop="showQueue = !showQueue"
+            >
+              <UIcon name="i-heroicons-queue-list" class="w-4 h-4 sm:w-5 sm:h-5" />
+            </UButton>
           </div>
         </div>
       </div>
+
+      <!-- Queue Panel -->
+      <Transition name="slide-up-queue">
+        <div
+          v-if="showQueue"
+          class="absolute bottom-full left-0 right-0 bg-zinc-900 border-t border-zinc-800 shadow-2xl max-h-80 overflow-hidden"
+        >
+          <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-zinc-100">Queue</h3>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-zinc-500">{{ queue.length }} tracks</span>
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="xs"
+                @click="showQueue = false"
+              >
+                <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+              </UButton>
+            </div>
+          </div>
+          <div class="overflow-y-auto max-h-64">
+            <div
+              v-for="(track, index) in queue"
+              :key="track.id"
+              class="flex items-center gap-3 px-4 py-2 hover:bg-zinc-800/50 cursor-pointer transition-colors"
+              :class="{ 'bg-zinc-800': index === queueIndex }"
+              @click="handleQueueItemClick(index)"
+            >
+              <!-- Track Number / Playing Indicator -->
+              <div class="w-6 text-center shrink-0">
+                <span v-if="index === queueIndex && isPlaying" class="text-violet-400">
+                  <UIcon name="i-heroicons-speaker-wave" class="w-4 h-4 animate-pulse" />
+                </span>
+                <span v-else class="text-xs text-zinc-500">{{ index + 1 }}</span>
+              </div>
+
+              <!-- Cover -->
+              <div class="w-10 h-10 rounded overflow-hidden bg-zinc-800 shrink-0">
+                <img
+                  v-if="track.coverUrl"
+                  :src="track.coverUrl"
+                  :alt="track.albumTitle"
+                  class="w-full h-full object-cover"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-4 h-4 text-zinc-600" />
+                </div>
+              </div>
+
+              <!-- Track Info -->
+              <div class="flex-1 min-w-0">
+                <p
+                  class="text-sm font-medium truncate"
+                  :class="index === queueIndex ? 'text-violet-400' : 'text-zinc-100'"
+                >
+                  {{ track.title }}
+                </p>
+                <p class="text-xs text-zinc-500 truncate">
+                  {{ track.artist }} &middot; {{ track.albumTitle }}
+                </p>
+              </div>
+
+              <!-- Duration -->
+              <span class="text-xs text-zinc-500 shrink-0">
+                {{ formatTime(track.duration || 0) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </div>
   </Transition>
 </template>
@@ -320,6 +416,7 @@ const {
   togglePlay,
   playNext,
   playPrevious,
+  playFromQueue,
   seek,
   setVolume,
   toggleMute,
@@ -332,6 +429,13 @@ const {
 } = usePlayer()
 
 const isExpanded = ref(false)
+const showQueue = ref(false)
+
+const handleQueueItemClick = (index: number) => {
+  if (index !== queueIndex.value) {
+    playFromQueue(index)
+  }
+}
 
 const volumeIcon = computed(() => {
   if (isMuted.value || volume.value === 0) return 'i-heroicons-speaker-x-mark'
@@ -354,11 +458,15 @@ const onVolumeChange = (e: Event) => {
   setVolume(parseFloat(target.value))
 }
 
-// Close expanded view on escape
+// Close expanded view or queue on escape
 onMounted(() => {
   const handleEscape = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && isExpanded.value) {
-      isExpanded.value = false
+    if (e.key === 'Escape') {
+      if (showQueue.value) {
+        showQueue.value = false
+      } else if (isExpanded.value) {
+        isExpanded.value = false
+      }
     }
   }
   window.addEventListener('keydown', handleEscape)
@@ -386,6 +494,17 @@ onMounted(() => {
 
 .fade-enter-from,
 .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-queue-enter-active,
+.slide-up-queue-leave-active {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.slide-up-queue-enter-from,
+.slide-up-queue-leave-to {
+  transform: translateY(20px);
   opacity: 0;
 }
 
