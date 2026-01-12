@@ -88,6 +88,8 @@ Album and track management, including R2 URL generation
 - `components/AudioPlayer.vue` - Player UI component
 - `components/GlobalSearch.vue` - Command palette search (Cmd+K)
 - `pages/dashboard/artist/[id].vue` - Artist dashboard (releases, analytics, settings)
+- `utils/version.ts` - App version and changelog data
+- `pages/changelog.vue` - Public changelog page
 
 ## Supabase Configuration
 - Site URL must include both localhost and production URL

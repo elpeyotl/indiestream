@@ -102,6 +102,7 @@
               <li><NuxtLink to="/how-it-works" class="hover:text-violet-400 transition-colors">How It Works</NuxtLink></li>
               <li><NuxtLink to="/pricing" class="hover:text-violet-400 transition-colors">Pricing</NuxtLink></li>
               <li><NuxtLink to="/for-artists" class="hover:text-violet-400 transition-colors">For Artists</NuxtLink></li>
+              <li><NuxtLink to="/changelog" class="hover:text-violet-400 transition-colors">Changelog</NuxtLink></li>
             </ul>
           </div>
 
@@ -115,8 +116,15 @@
           </div>
         </div>
 
-        <div class="mt-8 pt-8 border-t border-zinc-800 text-center text-zinc-500 text-sm">
-          <p>&copy; 2026 Indiestream. Built for artists. Designed for fans.</p>
+        <div class="mt-8 pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-zinc-500 text-sm">
+          <p>&copy; 2025 Indiestream. Built for artists. Designed for fans.</p>
+          <NuxtLink
+            to="/changelog"
+            class="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-full transition-colors"
+          >
+            <span class="w-2 h-2 bg-violet-500 rounded-full"></span>
+            <span class="text-zinc-400">v{{ APP_VERSION }}</span>
+          </NuxtLink>
         </div>
       </div>
     </footer>
@@ -125,6 +133,7 @@
 
 <script setup lang="ts">
 import BokehBackground from '~/components/backgrounds/BokehBackground.vue'
+import { APP_VERSION } from '~/utils/version'
 
 const user = useSupabaseUser()
 const { signOut } = useAuth()

@@ -1,0 +1,72 @@
+export const APP_VERSION = '0.2.0'
+
+export interface ChangelogEntry {
+  version: string
+  date: string
+  changes: {
+    type: 'added' | 'changed' | 'fixed' | 'removed'
+    description: string
+  }[]
+}
+
+export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.2.0',
+    date: '2025-01-12',
+    changes: [
+      { type: 'added', description: 'Server-side image processing with Sharp for consistent image dimensions' },
+      { type: 'added', description: 'Album cover change feature in edit modal' },
+      { type: 'added', description: 'Changelog page and version display in footer' },
+      { type: 'changed', description: 'Avatar uploads now auto-resize to 400x400' },
+      { type: 'changed', description: 'Album covers now auto-resize to 600x600' },
+      { type: 'changed', description: 'Banner images now auto-resize to 1500x500' },
+    ],
+  },
+  {
+    version: '0.1.9',
+    date: '2025-01-11',
+    changes: [
+      { type: 'added', description: 'Development seed endpoint for sample data' },
+      { type: 'added', description: 'Placeholder images for seeded artists and albums' },
+      { type: 'fixed', description: 'Avatar URL fallbacks on discover and artists pages' },
+    ],
+  },
+  {
+    version: '0.1.8',
+    date: '2025-01-10',
+    changes: [
+      { type: 'added', description: 'Artist analytics dashboard with stream statistics' },
+      { type: 'added', description: 'Album and track editing functionality' },
+      { type: 'added', description: 'Toast notifications for API feedback' },
+    ],
+  },
+  {
+    version: '0.1.7',
+    date: '2025-01-09',
+    changes: [
+      { type: 'added', description: 'Artist banner image support' },
+      { type: 'added', description: 'Bokeh background effect' },
+      { type: 'fixed', description: 'Cover image loading on listening history page' },
+    ],
+  },
+  {
+    version: '0.1.6',
+    date: '2025-01-08',
+    changes: [
+      { type: 'added', description: 'Global search with Cmd+K shortcut' },
+      { type: 'added', description: 'Preview mode for non-subscribers (30 second samples)' },
+      { type: 'added', description: 'Stream tracking and listening history' },
+    ],
+  },
+  {
+    version: '0.1.0',
+    date: '2025-01-01',
+    changes: [
+      { type: 'added', description: 'Initial release' },
+      { type: 'added', description: 'Artist profiles and album uploads' },
+      { type: 'added', description: 'Audio streaming with queue management' },
+      { type: 'added', description: 'User authentication with Supabase' },
+      { type: 'added', description: 'Cloudflare R2 file storage integration' },
+    ],
+  },
+]
