@@ -73,6 +73,8 @@ export default defineNuxtConfig({
     r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     r2BucketName: process.env.R2_BUCKET_NAME,
     r2AccountId: process.env.R2_ACCOUNT_ID,
+    resendApiKey: process.env.RESEND_API_KEY,
+    contactEmail: process.env.CONTACT_EMAIL || 'hello.indiestream@gmail.com',
 
     // Public keys (exposed to client)
     public: {

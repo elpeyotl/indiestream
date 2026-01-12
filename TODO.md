@@ -59,9 +59,10 @@
 ### Medium Priority
 
 #### Social Features
-- [ ] Follow artists
+- [x] Follow artists
 - [ ] User playlists (create, edit, share)
-- [ ] Like/favorite tracks and albums
+- [x] Like/favorite tracks and albums
+- [x] Library page (Artists, Albums, Liked Songs)
 - [ ] Share functionality
 
 #### Artist Features
@@ -120,6 +121,9 @@ All migrations should be run in Supabase SQL Editor in order:
 2. `20260111160000_add_storage_keys.sql` - R2 storage columns
 3. `20260111170000_listening_history.sql` - Listening history table
 4. `20260111180000_add_avatar_banner_keys.sql` - Avatar/banner keys for bands
+5. `20260112100000_add_country_tracking.sql` - Listener location tracking
+6. `20260112110000_add_follows.sql` - Artist follows table
+7. `20260112120000_add_library.sql` - Saved albums and liked tracks
 
 ---
 

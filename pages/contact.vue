@@ -74,17 +74,14 @@
         </div>
       </div>
 
-      <!-- Alternative Contact -->
+      <!-- Response Times -->
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
           <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
-            <UIcon name="i-heroicons-envelope" class="w-6 h-6 text-violet-400" />
+            <UIcon name="i-heroicons-clock" class="w-6 h-6 text-violet-400" />
           </div>
-          <h3 class="font-semibold text-zinc-100 mb-2">Email Us</h3>
-          <p class="text-zinc-400 text-sm mb-3">For general inquiries</p>
-          <a href="mailto:hello@indiestream.app" class="text-violet-400 hover:text-violet-300">
-            hello@indiestream.app
-          </a>
+          <h3 class="font-semibold text-zinc-100 mb-2">Quick Response</h3>
+          <p class="text-zinc-400 text-sm">We typically respond within 24-48 hours</p>
         </div>
 
         <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
@@ -92,10 +89,7 @@
             <UIcon name="i-heroicons-lifebuoy" class="w-6 h-6 text-fuchsia-400" />
           </div>
           <h3 class="font-semibold text-zinc-100 mb-2">Artist Support</h3>
-          <p class="text-zinc-400 text-sm mb-3">For artist-related questions</p>
-          <a href="mailto:artists@indiestream.app" class="text-fuchsia-400 hover:text-fuchsia-300">
-            artists@indiestream.app
-          </a>
+          <p class="text-zinc-400 text-sm">Select "Artist Support" in the form above for priority help</p>
         </div>
       </div>
 
@@ -125,8 +119,10 @@ const form = reactive({
   message: '',
 })
 
+const toast = useToast()
 const submitting = ref(false)
 const submitted = ref(false)
+const errorMessage = ref('')
 
 const subjectOptions = [
   'General Inquiry',
@@ -147,23 +143,40 @@ const submitForm = async () => {
   if (!isFormValid.value) return
 
   submitting.value = true
+  errorMessage.value = ''
 
-  // Simulate form submission
-  // In production, this would send to an API endpoint
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  try {
+    await $fetch('/api/contact', {
+      method: 'POST',
+      body: {
+        name: form.name,
+        email: form.email,
+        subject: form.subject,
+        message: form.message,
+      },
+    })
 
-  submitted.value = true
-  submitting.value = false
+    submitted.value = true
 
-  // Reset form
-  form.name = ''
-  form.email = ''
-  form.subject = ''
-  form.message = ''
+    // Reset form
+    form.name = ''
+    form.email = ''
+    form.subject = ''
+    form.message = ''
 
-  // Hide success message after 5 seconds
-  setTimeout(() => {
-    submitted.value = false
-  }, 5000)
+    // Hide success message after 5 seconds
+    setTimeout(() => {
+      submitted.value = false
+    }, 5000)
+  } catch (error: any) {
+    errorMessage.value = error.data?.statusMessage || 'Failed to send message. Please try again.'
+    toast.add({
+      title: 'Error',
+      description: errorMessage.value,
+      color: 'red',
+    })
+  } finally {
+    submitting.value = false
+  }
 }
 </script>

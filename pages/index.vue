@@ -264,6 +264,7 @@ const loadNewReleases = async () => {
         title,
         slug,
         cover_key,
+        cover_url,
         band:bands!inner (
           id,
           name,
@@ -280,14 +281,19 @@ const loadNewReleases = async () => {
       band: Array.isArray(album.band) ? album.band[0] : album.band
     }))
 
-    // Load cover URLs
+    // Load cover URLs (use cover_key if available, otherwise fall back to cover_url)
     for (const album of newReleases.value) {
       if (album.cover_key) {
         try {
           albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
         } catch (e) {
-          // Skip failed covers
+          // Fall back to cover_url if stream URL fails
+          if (album.cover_url) {
+            albumCovers.value[album.id] = album.cover_url
+          }
         }
+      } else if (album.cover_url) {
+        albumCovers.value[album.id] = album.cover_url
       }
     }
   } catch (e) {
