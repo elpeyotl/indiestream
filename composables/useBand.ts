@@ -17,6 +17,7 @@ export interface Band {
   is_verified: boolean
   total_streams: number
   total_earnings_cents: number
+  follower_count: number
   created_at: string
   updated_at: string
 }

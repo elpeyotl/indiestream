@@ -1,0 +1,314 @@
+<template>
+  <div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-zinc-100">Your Library</h1>
+      <p class="text-zinc-400 mt-1">Artists, albums, and tracks you've saved</p>
+    </div>
+
+    <!-- Tabs -->
+    <UTabs v-model="activeTab" :items="tabs" class="w-full">
+      <template #item="{ item }">
+        <!-- Artists Tab -->
+        <div v-if="item.key === 'artists'" class="py-6">
+          <div v-if="loading" class="flex items-center justify-center py-20">
+            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+          </div>
+
+          <div v-else-if="artists.length === 0" class="text-center py-16">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-user-group" class="w-10 h-10 text-violet-400" />
+            </div>
+            <h3 class="text-xl font-semibold text-zinc-100 mb-2">No followed artists yet</h3>
+            <p class="text-zinc-400 mb-6 max-w-md mx-auto">
+              Follow your favorite artists to see them here. You'll be notified when they release new music.
+            </p>
+            <UButton color="violet" to="/discover">
+              Discover Artists
+            </UButton>
+          </div>
+
+          <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <NuxtLink
+              v-for="item in artists"
+              :key="item.band.id"
+              :to="`/${item.band.slug}`"
+              class="group text-center"
+            >
+              <div class="aspect-square rounded-full overflow-hidden bg-zinc-800 mb-3 mx-auto w-32 md:w-40 shadow-lg group-hover:shadow-xl transition-shadow ring-2 ring-transparent group-hover:ring-violet-500/50">
+                <img
+                  v-if="artistAvatars[item.band.id]"
+                  :src="artistAvatars[item.band.id]"
+                  :alt="item.band.name"
+                  class="w-full h-full object-cover"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-600 to-fuchsia-600">
+                  <span class="text-3xl font-bold text-white">{{ item.band.name.charAt(0).toUpperCase() }}</span>
+                </div>
+              </div>
+              <h3 class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
+                {{ item.band.name }}
+              </h3>
+              <p class="text-sm text-zinc-500">
+                {{ item.band.location || 'Artist' }}
+              </p>
+            </NuxtLink>
+          </div>
+        </div>
+
+        <!-- Albums Tab -->
+        <div v-else-if="item.key === 'albums'" class="py-6">
+          <div v-if="loading" class="flex items-center justify-center py-20">
+            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+          </div>
+
+          <div v-else-if="albums.length === 0" class="text-center py-16">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-fuchsia-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-square-3-stack-3d" class="w-10 h-10 text-fuchsia-400" />
+            </div>
+            <h3 class="text-xl font-semibold text-zinc-100 mb-2">No saved albums yet</h3>
+            <p class="text-zinc-400 mb-6 max-w-md mx-auto">
+              Save albums to your library to access them quickly and show support for the artists.
+            </p>
+            <UButton color="violet" to="/discover">
+              Discover Music
+            </UButton>
+          </div>
+
+          <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <NuxtLink
+              v-for="item in albums"
+              :key="item.album.id"
+              :to="`/${item.album.band.slug}/${item.album.slug}`"
+              class="group"
+            >
+              <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
+                <img
+                  v-if="albumCovers[item.album.id]"
+                  :src="albumCovers[item.album.id]"
+                  :alt="item.album.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+                </div>
+              </div>
+              <h3 class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
+                {{ item.album.title }}
+              </h3>
+              <p class="text-sm text-zinc-400 truncate">
+                {{ item.album.band.name }}
+              </p>
+            </NuxtLink>
+          </div>
+        </div>
+
+        <!-- Tracks Tab -->
+        <div v-else-if="item.key === 'tracks'" class="py-6">
+          <div v-if="loading" class="flex items-center justify-center py-20">
+            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+          </div>
+
+          <div v-else-if="tracks.length === 0" class="text-center py-16">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-teal-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-heart" class="w-10 h-10 text-teal-400" />
+            </div>
+            <h3 class="text-xl font-semibold text-zinc-100 mb-2">No liked tracks yet</h3>
+            <p class="text-zinc-400 mb-6 max-w-md mx-auto">
+              Like tracks by clicking the heart icon while browsing or playing music.
+            </p>
+            <UButton color="violet" to="/discover">
+              Discover Music
+            </UButton>
+          </div>
+
+          <div v-else class="space-y-1">
+            <div
+              v-for="(item, index) in tracks"
+              :key="item.track.id"
+              class="flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors group"
+            >
+              <!-- Index / Play -->
+              <div class="w-8 text-center shrink-0">
+                <span class="text-sm text-zinc-500 group-hover:hidden">{{ index + 1 }}</span>
+                <UIcon
+                  name="i-heroicons-play"
+                  class="w-4 h-4 text-zinc-100 hidden group-hover:inline cursor-pointer"
+                  @click.prevent="playTrack(item)"
+                />
+              </div>
+
+              <!-- Cover -->
+              <div class="w-10 h-10 rounded bg-zinc-800 shrink-0 overflow-hidden">
+                <img
+                  v-if="trackCovers[item.track.id]"
+                  :src="trackCovers[item.track.id]"
+                  :alt="item.track.title"
+                  class="w-full h-full object-cover"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-4 h-4 text-zinc-600" />
+                </div>
+              </div>
+
+              <!-- Track Info -->
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-zinc-100 truncate">{{ item.track.title }}</p>
+                <NuxtLink
+                  :to="`/${item.track.album.band.slug}`"
+                  class="text-sm text-zinc-400 hover:text-violet-400 truncate block"
+                  @click.stop
+                >
+                  {{ item.track.album.band.name }}
+                </NuxtLink>
+              </div>
+
+              <!-- Album -->
+              <NuxtLink
+                :to="`/${item.track.album.band.slug}/${item.track.album.slug}`"
+                class="hidden md:block text-sm text-zinc-500 hover:text-zinc-300 truncate max-w-[200px]"
+                @click.stop
+              >
+                {{ item.track.album.title }}
+              </NuxtLink>
+
+              <!-- Duration -->
+              <span class="text-sm text-zinc-500 w-12 text-right">
+                {{ formatDuration(item.track.duration_seconds) }}
+              </span>
+
+              <!-- Heart (always filled since it's in liked tracks) -->
+              <UButton
+                color="red"
+                variant="ghost"
+                size="xs"
+                icon="i-heroicons-heart-solid"
+                class="opacity-60 hover:opacity-100"
+                @click.stop="handleUnlike(item.track.id)"
+              />
+            </div>
+          </div>
+        </div>
+      </template>
+    </UTabs>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { SavedAlbum, LikedTrack, FollowedArtist } from '~/composables/useLibrary'
+
+definePageMeta({
+  middleware: 'auth',
+})
+
+const { getStreamUrl } = useAlbum()
+const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = useLibrary()
+const { playTrackFromLibrary } = usePlayer()
+
+const loading = ref(true)
+const activeTab = ref(0)
+
+const artists = ref<FollowedArtist[]>([])
+const albums = ref<SavedAlbum[]>([])
+const tracks = ref<LikedTrack[]>([])
+
+const artistAvatars = ref<Record<string, string>>({})
+const albumCovers = ref<Record<string, string>>({})
+const trackCovers = ref<Record<string, string>>({})
+
+const tabs = computed(() => [
+  { key: 'artists', label: `Artists (${artists.value.length})`, icon: 'i-heroicons-user-group' },
+  { key: 'albums', label: `Albums (${albums.value.length})`, icon: 'i-heroicons-square-3-stack-3d' },
+  { key: 'tracks', label: `Liked Songs (${tracks.value.length})`, icon: 'i-heroicons-heart' },
+])
+
+const formatDuration = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+const handleUnlike = async (trackId: string) => {
+  await unlikeTrack(trackId)
+  tracks.value = tracks.value.filter(t => t.track.id !== trackId)
+}
+
+const playTrack = (item: LikedTrack) => {
+  // Play track from library - implementation in usePlayer
+  playTrackFromLibrary(item.track, trackCovers.value[item.track.id] || null)
+}
+
+const loadLibrary = async () => {
+  loading.value = true
+
+  try {
+    // Load all library data in parallel
+    const [artistsData, albumsData, tracksData] = await Promise.all([
+      getFollowedArtists(),
+      getSavedAlbums(),
+      getLikedTracks(),
+    ])
+
+    artists.value = artistsData
+    albums.value = albumsData
+    tracks.value = tracksData
+
+    // Load images
+    await Promise.all([
+      loadArtistAvatars(),
+      loadAlbumCovers(),
+      loadTrackCovers(),
+    ])
+  } catch (e) {
+    console.error('Failed to load library:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadArtistAvatars = async () => {
+  for (const item of artists.value) {
+    if (item.band.avatar_key) {
+      try {
+        artistAvatars.value[item.band.id] = await getStreamUrl(item.band.avatar_key)
+      } catch (e) {
+        console.error('Failed to load avatar:', e)
+      }
+    } else if (item.band.avatar_url) {
+      artistAvatars.value[item.band.id] = item.band.avatar_url
+    }
+  }
+}
+
+const loadAlbumCovers = async () => {
+  for (const item of albums.value) {
+    if (item.album.cover_key) {
+      try {
+        albumCovers.value[item.album.id] = await getStreamUrl(item.album.cover_key)
+      } catch (e) {
+        console.error('Failed to load cover:', e)
+      }
+    } else if (item.album.cover_url) {
+      albumCovers.value[item.album.id] = item.album.cover_url
+    }
+  }
+}
+
+const loadTrackCovers = async () => {
+  for (const item of tracks.value) {
+    if (item.track.album.cover_key) {
+      try {
+        trackCovers.value[item.track.id] = await getStreamUrl(item.track.album.cover_key)
+      } catch (e) {
+        console.error('Failed to load cover:', e)
+      }
+    } else if (item.track.album.cover_url) {
+      trackCovers.value[item.track.id] = item.track.album.cover_url
+    }
+  }
+}
+
+onMounted(() => {
+  loadLibrary()
+})
+</script>

@@ -371,6 +371,64 @@ export const usePlayer = () => {
     }
   }
 
+  // Play a single track from library (liked tracks)
+  const playTrackFromLibrary = async (
+    track: {
+      id: string
+      title: string
+      duration_seconds: number
+      audio_key: string | null
+      album: {
+        id: string
+        title: string
+        slug: string
+        band: {
+          id: string
+          name: string
+          slug: string
+        }
+      }
+    },
+    coverUrl: string | null
+  ) => {
+    initAudio()
+    if (!audio || !track.audio_key) return
+
+    // Initialize audio analyser on first play
+    initAudioAnalyser()
+
+    // Reset tracking for new track
+    resetStreamTracking()
+    state.isLoading = true
+
+    try {
+      const audioUrl = await getStreamUrl(track.audio_key)
+
+      const playerTrack: PlayerTrack = {
+        id: track.id,
+        title: track.title,
+        artist: track.album.band.name,
+        artistSlug: track.album.band.slug,
+        albumTitle: track.album.title,
+        albumSlug: track.album.slug,
+        coverUrl,
+        audioUrl,
+        duration: track.duration_seconds,
+      }
+
+      // Set as single track (clear queue)
+      state.currentTrack = playerTrack
+      state.queue = [playerTrack]
+      state.queueIndex = 0
+
+      audio.src = audioUrl
+      await audio.play()
+    } catch (e) {
+      console.error('Failed to play track from library:', e)
+      state.isLoading = false
+    }
+  }
+
   // Format time helper
   const formatTime = (seconds: number): string => {
     if (!seconds || isNaN(seconds)) return '0:00'
@@ -424,6 +482,7 @@ export const usePlayer = () => {
     playTrack,
     playAlbum,
     playFromQueue,
+    playTrackFromLibrary,
     togglePlay,
     playNext,
     playPrevious,

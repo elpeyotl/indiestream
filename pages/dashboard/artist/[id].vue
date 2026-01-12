@@ -74,7 +74,7 @@
       </UCard>
       <UCard class="bg-zinc-900/50 border-zinc-800">
         <div class="text-center">
-          <p class="text-3xl font-bold text-zinc-100">0</p>
+          <p class="text-3xl font-bold text-violet-400">{{ formatNumber(band.follower_count || 0) }}</p>
           <p class="text-sm text-zinc-400">Followers</p>
         </div>
       </UCard>

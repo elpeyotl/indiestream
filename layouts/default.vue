@@ -39,6 +39,13 @@
               Artists
             </NuxtLink>
             <NuxtLink
+              v-if="user"
+              to="/library"
+              class="text-zinc-400 hover:text-violet-400 transition-colors"
+            >
+              Library
+            </NuxtLink>
+            <NuxtLink
               to="/pricing"
               class="text-zinc-400 hover:text-violet-400 transition-colors"
             >
@@ -249,6 +256,11 @@ const userMenuItems = [
       label: "Dashboard",
       icon: "i-heroicons-home",
       to: "/dashboard",
+    },
+    {
+      label: "Library",
+      icon: "i-heroicons-heart",
+      to: "/library",
     },
     {
       label: "My Listening",

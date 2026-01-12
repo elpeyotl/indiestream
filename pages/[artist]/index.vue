@@ -58,7 +58,11 @@
             </span>
             <span class="flex items-center gap-1">
               <UIcon name="i-heroicons-musical-note" class="w-4 h-4" />
-              {{ formatNumber(band.total_streams) }} streams
+              {{ formatNumber(band.total_streams || 0) }} streams
+            </span>
+            <span class="flex items-center gap-1">
+              <UIcon name="i-heroicons-heart" class="w-4 h-4" />
+              {{ formatNumber(band.follower_count || 0) }} followers
             </span>
           </div>
 
@@ -85,9 +89,18 @@
               <UIcon name="i-heroicons-play" class="w-5 h-5 mr-1" />
               Play All
             </UButton>
-            <UButton color="gray" variant="outline" size="lg">
-              <UIcon name="i-heroicons-heart" class="w-5 h-5 mr-1" />
-              Follow
+            <UButton
+              :color="isFollowing ? 'violet' : 'gray'"
+              :variant="isFollowing ? 'solid' : 'outline'"
+              size="lg"
+              :loading="loadingFollow"
+              @click="handleFollow"
+            >
+              <UIcon
+                :name="isFollowing ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+                class="w-5 h-5 mr-1"
+              />
+              {{ isFollowing ? 'Following' : 'Follow' }}
             </UButton>
             <UButton
               v-if="band.website"
@@ -192,6 +205,8 @@ import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
 
 const route = useRoute()
+const user = useSupabaseUser()
+const toast = useToast()
 const { getBandBySlug } = useBand()
 const { getBandAlbums, getStreamUrl } = useAlbum()
 const { playAlbum } = usePlayer()
@@ -201,6 +216,8 @@ const albums = ref<Album[]>([])
 const albumCovers = ref<Record<string, string>>({})
 const loading = ref(true)
 const loadingPlayAll = ref(false)
+const isFollowing = ref(false)
+const loadingFollow = ref(false)
 
 const tabs = [
   { key: 'releases', label: 'Releases' },
@@ -211,6 +228,77 @@ const formatNumber = (num: number): string => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
   return num.toString()
+}
+
+// Check follow status
+const checkFollowStatus = async () => {
+  if (!band.value || !user.value) {
+    isFollowing.value = false
+    return
+  }
+
+  try {
+    const { isFollowing: status } = await $fetch('/api/follows/status', {
+      query: { bandId: band.value.id },
+    })
+    isFollowing.value = status
+  } catch (e) {
+    console.error('Failed to check follow status:', e)
+  }
+}
+
+// Handle follow/unfollow
+const handleFollow = async () => {
+  if (!band.value) return
+
+  if (!user.value) {
+    toast.add({
+      title: 'Sign in required',
+      description: 'Create an account to follow artists',
+      color: 'yellow',
+    })
+    return navigateTo('/auth/login')
+  }
+
+  loadingFollow.value = true
+  try {
+    if (isFollowing.value) {
+      await $fetch('/api/follows/unfollow', {
+        method: 'POST',
+        body: { bandId: band.value.id },
+      })
+      isFollowing.value = false
+      if (band.value.follower_count > 0) {
+        band.value.follower_count--
+      }
+      toast.add({
+        title: 'Unfollowed',
+        description: `You unfollowed ${band.value.name}`,
+        color: 'gray',
+      })
+    } else {
+      await $fetch('/api/follows/follow', {
+        method: 'POST',
+        body: { bandId: band.value.id },
+      })
+      isFollowing.value = true
+      band.value.follower_count = (band.value.follower_count || 0) + 1
+      toast.add({
+        title: 'Following',
+        description: `You're now following ${band.value.name}`,
+        color: 'green',
+      })
+    }
+  } catch (e) {
+    console.error('Failed to update follow status:', e)
+    toast.add({
+      title: 'Error',
+      description: 'Failed to update follow status',
+      color: 'red',
+    })
+  } finally {
+    loadingFollow.value = false
+  }
 }
 
 // Play all tracks from first album with tracks
@@ -293,6 +381,9 @@ onMounted(async () => {
           albumCovers.value[album.id] = album.cover_url
         }
       }
+
+      // Check if user is following this artist
+      await checkFollowStatus()
     }
   } catch (e) {
     console.error('Failed to load band:', e)

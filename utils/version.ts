@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.2.1'
+export const APP_VERSION = '0.3.0'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,27 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.3.0',
+    date: '2026-01-12',
+    changes: [
+      { type: 'added', description: 'Library system with Artists, Albums, and Liked Songs tabs' },
+      { type: 'added', description: 'Save albums to your library from album pages' },
+      { type: 'added', description: 'Like tracks with heart icons on track listings' },
+      { type: 'added', description: 'Library link in navigation for logged-in users' },
+      { type: 'changed', description: 'Follow artist adds them to Library > Artists' },
+      { type: 'fixed', description: 'Artist dashboard now displays actual follower count' },
+    ],
+  },
+  {
+    version: '0.2.2',
+    date: '2026-01-12',
+    changes: [
+      { type: 'added', description: 'Follow button on artist pages to track favorite artists' },
+      { type: 'added', description: 'Follower count displayed on artist profiles' },
+      { type: 'added', description: 'Toast notifications for follow/unfollow actions' },
+    ],
+  },
   {
     version: '0.2.1',
     date: '2026-01-12',

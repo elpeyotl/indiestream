@@ -323,3 +323,82 @@ The Analytics tab now includes a "Listener Locations" card showing:
 - Stream counts per country
 - Visual bar chart comparison
 - Respects the selected time period filter (7d, 30d, 90d, All Time)
+
+## Artist Following
+
+### Purpose
+- Allow users to follow their favorite artists
+- Track follower counts for artist analytics
+- Enable future features like "new release" notifications for followed artists
+
+### Database
+- `follows` table - Links users to bands they follow (user_id, band_id, unique constraint)
+- `bands.follower_count` - Denormalized count for efficient display
+- Migration: `20260112110000_add_follows.sql`
+
+### API Endpoints
+- `POST /api/follows/follow` - Follow an artist (requires auth)
+- `POST /api/follows/unfollow` - Unfollow an artist (requires auth)
+- `GET /api/follows/status?bandId=` - Check if current user follows an artist
+
+### Database Functions
+- `follow_band(band_id)` - Adds follow and updates count
+- `unfollow_band(band_id)` - Removes follow and updates count
+- `is_following_band(band_id)` - Returns boolean for follow status
+- `get_followed_bands()` - Returns list of bands user follows
+
+### UI
+- Follow button on artist pages (`pages/[artist]/index.vue`)
+- Button state changes: outlined "Follow" → solid violet "Following"
+- Follower count displayed in artist stats
+- Toast notifications for follow/unfollow actions
+- Unauthenticated users redirected to login when clicking Follow
+
+## User Library
+
+### Purpose
+Spotify-style library system where users can:
+- Follow artists → appears in Library > Artists
+- Save albums → appears in Library > Albums
+- Like tracks → appears in Library > Liked Songs
+
+### Database
+- `saved_albums` table - Albums saved to user library (user_id, album_id)
+- `liked_tracks` table - Tracks liked/hearted by users (user_id, track_id)
+- Migration: `20260112120000_add_library.sql`
+
+### API Endpoints
+
+**Albums:**
+- `POST /api/library/albums/save` - Save album to library
+- `POST /api/library/albums/unsave` - Remove album from library
+- `GET /api/library/albums/status?albumId=` - Check if album is saved
+- `GET /api/library/albums/list` - Get user's saved albums
+
+**Tracks:**
+- `POST /api/library/tracks/like` - Like a track
+- `POST /api/library/tracks/unlike` - Unlike a track
+- `GET /api/library/tracks/status?trackIds=` - Check liked status (comma-separated IDs)
+- `GET /api/library/tracks/list` - Get user's liked tracks
+
+### Database Functions
+- `save_album(album_id)` / `unsave_album(album_id)`
+- `like_track(track_id)` / `unlike_track(track_id)`
+- `is_album_saved(album_id)` / `is_track_liked(track_id)`
+- `get_liked_track_ids(track_ids[])` - Batch check for efficiency
+
+### Composable
+`useLibrary.ts` provides:
+- Reactive state for liked tracks, saved albums, followed artists
+- Toggle functions with toast notifications
+- Batch fetch for checking status of multiple items
+
+### UI
+- Library page (`pages/library.vue`) with three tabs:
+  - Artists: Grid of followed artists with avatars
+  - Albums: Grid of saved albums with covers
+  - Liked Songs: List view with play, unlike, and duration
+- Save button on album pages (`pages/[artist]/[album].vue`)
+- Heart icons on track listings (visible on hover, filled when liked)
+- Library link in main navigation (logged-in users only)
+- Library link in user dropdown menu

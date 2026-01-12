@@ -60,9 +60,18 @@
               <UIcon name="i-heroicons-play" class="w-5 h-5 mr-1" />
               Play All
             </UButton>
-            <UButton color="gray" variant="outline" size="lg">
-              <UIcon name="i-heroicons-heart" class="w-5 h-5 mr-1" />
-              Save
+            <UButton
+              :color="isAlbumSaved(album.id) ? 'violet' : 'gray'"
+              :variant="isAlbumSaved(album.id) ? 'solid' : 'outline'"
+              size="lg"
+              :loading="savingAlbum"
+              @click="handleSaveAlbum"
+            >
+              <UIcon
+                :name="isAlbumSaved(album.id) ? 'i-heroicons-check' : 'i-heroicons-plus'"
+                class="w-5 h-5 mr-1"
+              />
+              {{ isAlbumSaved(album.id) ? 'Saved' : 'Save' }}
             </UButton>
             <UButton color="gray" variant="ghost" size="lg">
               <UIcon name="i-heroicons-share" class="w-5 h-5" />
@@ -84,6 +93,7 @@
               <th class="px-4 py-3 w-20 text-right">
                 <UIcon name="i-heroicons-clock" class="w-4 h-4" />
               </th>
+              <th class="px-4 py-3 w-12"></th>
             </tr>
           </thead>
           <tbody>
@@ -120,6 +130,16 @@
               </td>
               <td class="px-4 py-4 text-zinc-400 text-right">
                 {{ formatTrackDuration(track.duration_seconds) }}
+              </td>
+              <td class="px-4 py-4 text-right">
+                <UButton
+                  :color="isTrackLiked(track.id) ? 'red' : 'gray'"
+                  variant="ghost"
+                  size="xs"
+                  :icon="isTrackLiked(track.id) ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+                  :class="isTrackLiked(track.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'"
+                  @click.stop="handleLikeTrack(track.id)"
+                />
               </td>
             </tr>
           </tbody>
@@ -180,12 +200,14 @@ const route = useRoute()
 const { getAlbumBySlug, getBandAlbums, getStreamUrl } = useAlbum()
 const { getBandBySlug } = useBand()
 const { playAlbum, playTrack: playerPlayTrack, currentTrack, isPlaying } = usePlayer()
+const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
 
 const album = ref<Album | null>(null)
 const band = ref<any>(null)
 const otherAlbums = ref<Album[]>([])
 const loading = ref(true)
 const coverUrl = ref<string | null>(null)
+const savingAlbum = ref(false)
 
 const releaseTypeLabel = computed(() => {
   const types: Record<string, string> = {
@@ -244,6 +266,18 @@ const isTrackPlaying = (track: Track) => {
   return currentTrack.value?.id === track.id && isPlaying.value
 }
 
+// Library actions
+const handleSaveAlbum = async () => {
+  if (!album.value) return
+  savingAlbum.value = true
+  await toggleAlbumSave(album.value.id, album.value.title)
+  savingAlbum.value = false
+}
+
+const handleLikeTrack = async (trackId: string) => {
+  await toggleTrackLike(trackId)
+}
+
 // Set page meta
 useHead(() => ({
   title: album.value && band.value
@@ -286,6 +320,15 @@ onMounted(async () => {
     // Load other albums from same artist
     const allAlbums = await getBandAlbums(band.value.id)
     otherAlbums.value = allAlbums.filter(a => a.id !== album.value?.id).slice(0, 6)
+
+    // Check if album is saved
+    await checkAlbumSaved(album.value.id)
+
+    // Fetch liked status for all tracks
+    if (album.value.tracks?.length) {
+      const trackIds = album.value.tracks.map(t => t.id)
+      await fetchLikedTrackIds(trackIds)
+    }
 
   } catch (e) {
     console.error('Failed to load album:', e)
