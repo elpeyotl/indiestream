@@ -1,5 +1,5 @@
 <template>
-  <canvas ref="canvasRef" class="bokeh-background" />
+  <canvas v-if="!isMobile" ref="canvasRef" class="bokeh-background" />
 </template>
 
 <script setup lang="ts">
@@ -8,8 +8,15 @@ const props = defineProps<{
 }>()
 
 const canvasRef = ref<HTMLCanvasElement>()
+const isMobile = ref(false)
 let animationId: number
 let bokehLights: BokehLight[] = []
+
+// Check if device is mobile (width < 768px or touch device)
+const checkMobile = () => {
+  if (import.meta.server) return false
+  return window.innerWidth < 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0
+}
 
 interface BokehLight {
   x: number
@@ -105,21 +112,47 @@ const animate = () => {
 }
 
 const handleResize = () => {
+  // Re-check mobile on resize
+  isMobile.value = checkMobile()
+
+  if (isMobile.value) {
+    // Stop animation if switched to mobile
+    if (animationId) {
+      cancelAnimationFrame(animationId)
+      animationId = 0
+    }
+    return
+  }
+
   const canvas = canvasRef.value
   if (!canvas) return
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
   initLights(canvas)
+
+  // Restart animation if not running
+  if (!animationId) {
+    animate()
+  }
 }
 
 onMounted(() => {
   if (import.meta.server) return
-  const canvas = canvasRef.value
-  if (!canvas) return
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
-  initLights(canvas)
-  animate()
+
+  // Check if mobile device
+  isMobile.value = checkMobile()
+  if (isMobile.value) return
+
+  // Wait for next tick to ensure canvas is rendered
+  nextTick(() => {
+    const canvas = canvasRef.value
+    if (!canvas) return
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    initLights(canvas)
+    animate()
+  })
+
   window.addEventListener('resize', handleResize)
 })
 
