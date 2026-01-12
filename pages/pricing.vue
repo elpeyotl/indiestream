@@ -86,8 +86,14 @@
             No ads, ever
           </li>
         </ul>
-        <UButton color="violet" block size="lg" to="/register">
-          Start Listening
+        <UButton
+          color="violet"
+          block
+          size="lg"
+          :loading="loading"
+          @click="handleSubscribe"
+        >
+          {{ isSubscribed ? 'Already Subscribed' : user ? 'Start Free Trial' : 'Start Listening' }}
         </UButton>
       </div>
 
@@ -219,12 +225,37 @@
 </template>
 
 <script setup lang="ts">
+const user = useSupabaseUser()
+const { isSubscribed, startCheckout, loading } = useSubscription()
+const toast = useToast()
+
 useHead({
   title: 'Pricing | Indiestream',
   meta: [
     { name: 'description', content: 'Simple, fair pricing. Your subscription goes directly to the artists you listen to.' },
   ],
 })
+
+// Stripe Price ID for Listener plan ($9.99/month)
+const LISTENER_PRICE_ID = 'price_1SolWZDpO91TMxctZrzuoJ0v'
+
+const handleSubscribe = async () => {
+  if (!user.value) {
+    navigateTo('/register')
+    return
+  }
+
+  if (isSubscribed.value) {
+    toast.add({
+      title: 'Already subscribed',
+      description: 'You already have an active subscription.',
+      color: 'blue',
+    })
+    return
+  }
+
+  await startCheckout(LISTENER_PRICE_ID)
+}
 
 const faqItems = [
   {

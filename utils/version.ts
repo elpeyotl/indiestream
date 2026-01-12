@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.3.1'
+export const APP_VERSION = '0.4.0'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.4.0',
+    date: '2026-01-12',
+    changes: [
+      { type: 'added', description: 'Stripe subscription integration with checkout flow' },
+      { type: 'added', description: 'Subscription management in dashboard with portal access' },
+      { type: 'added', description: '7-day free trial for new Listener subscriptions' },
+      { type: 'added', description: 'Google OAuth login and signup' },
+    ],
+  },
   {
     version: '0.3.1',
     date: '2026-01-12',

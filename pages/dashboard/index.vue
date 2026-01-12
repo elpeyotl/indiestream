@@ -150,11 +150,42 @@
       <template #header>
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold text-zinc-100">Your Subscription</h2>
-          <UBadge color="gray" variant="soft">Free</UBadge>
+          <UBadge
+            :color="isSubscribed ? 'green' : 'gray'"
+            variant="soft"
+          >
+            {{ subscriptionBadge }}
+          </UBadge>
         </div>
       </template>
 
-      <div class="flex items-center justify-between">
+      <!-- Subscribed State -->
+      <div v-if="isSubscribed" class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-zinc-100 font-medium">Listener Plan</p>
+            <p class="text-zinc-400 text-sm">
+              {{ subscription?.cancel_at_period_end ? 'Cancels' : 'Renews' }} on
+              {{ formatDate(subscription?.current_period_end) }}
+            </p>
+          </div>
+          <UButton
+            color="gray"
+            variant="outline"
+            :loading="subscriptionLoading"
+            @click="openCustomerPortal"
+          >
+            Manage Subscription
+          </UButton>
+        </div>
+        <div v-if="subscription?.cancel_at_period_end" class="flex items-center gap-2 text-amber-400 text-sm">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />
+          Your subscription will end on {{ formatDate(subscription?.current_period_end) }}
+        </div>
+      </div>
+
+      <!-- Free State -->
+      <div v-else class="flex items-center justify-between">
         <div>
           <p class="text-zinc-400">
             You're on the free tier. Upgrade to listen to full tracks and support artists directly.
@@ -206,6 +237,7 @@ const user = useSupabaseUser()
 const client = useSupabaseClient()
 const { getUserBands } = useBand()
 const { getStreamUrl } = useAlbum()
+const { subscription, isSubscribed, loading: subscriptionLoading, openCustomerPortal } = useSubscription()
 
 const bands = ref<Band[]>([])
 const bandsLoading = ref(true)
@@ -215,6 +247,31 @@ const listeningStats = ref({
   totalStreams: 0,
   uniqueArtists: 0,
 })
+
+const subscriptionBadge = computed(() => {
+  if (!subscription.value) return 'Free'
+  switch (subscription.value.status) {
+    case 'active':
+      return 'Active'
+    case 'trialing':
+      return 'Trial'
+    case 'past_due':
+      return 'Past Due'
+    case 'canceled':
+      return 'Canceled'
+    default:
+      return 'Free'
+  }
+})
+
+const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return ''
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
 
 const displayName = computed(() => {
   if (!user.value) return 'there'
