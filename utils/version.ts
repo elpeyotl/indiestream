@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.3.0'
+export const APP_VERSION = '0.3.1'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.3.1',
+    date: '2026-01-12',
+    changes: [
+      { type: 'added', description: 'Contact form backend with Resend email integration' },
+      { type: 'fixed', description: 'Homepage album covers now fall back to cover_url when cover_key is missing' },
+      { type: 'changed', description: 'Removed public email addresses from contact page to prevent spam' },
+    ],
+  },
   {
     version: '0.3.0',
     date: '2026-01-12',

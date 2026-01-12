@@ -53,8 +53,8 @@
 - [ ] Revenue dashboard for artists
 
 #### Contact Form
-- [ ] Backend for contact form (Formspree, Resend, or Supabase function)
-- [ ] Email notifications
+- [x] Backend for contact form (Resend)
+- [ ] Email notifications (new releases, etc.)
 
 ### Medium Priority
 
