@@ -50,8 +50,8 @@
 - [x] Subscription management (upgrade/downgrade/cancel via Stripe portal)
 - [x] Free tier with 5 full-track plays per month
 - [ ] Payment history page
-- [ ] Artist payout system (Stripe Connect)
-- [ ] Revenue dashboard for artists
+- [x] Artist payout system (Stripe Connect Express)
+- [x] Revenue dashboard for artists (Earnings tab with balance, history)
 
 #### Contact Form
 - [x] Backend for contact form (Resend)
@@ -142,6 +142,7 @@ All migrations should be run in Supabase SQL Editor in order:
 8. `20260112130000_add_subscriptions.sql` - Stripe subscription fields
 9. `20260112140000_add_free_tier_tracking.sql` - Free tier with 5 plays/month
 10. `20260113_add_rights_metadata.sql` - ISRC/ISWC, track credits, album rights metadata
+11. `20260114_artist_payouts.sql` - Stripe Connect, artist balances, payouts tables
 
 ---
 

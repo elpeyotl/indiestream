@@ -348,6 +348,178 @@
         </div>
       </template>
 
+      <!-- Earnings Tab -->
+      <template #earnings>
+        <div class="py-6 space-y-6">
+          <!-- Loading -->
+          <div v-if="earningsLoading" class="flex justify-center py-12">
+            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+          </div>
+
+          <template v-else>
+            <!-- Stripe Connect Status -->
+            <UCard class="bg-zinc-900/50 border-zinc-800">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <div
+                    class="w-12 h-12 rounded-xl flex items-center justify-center"
+                    :class="{
+                      'bg-green-500/20': earningsData?.stripeStatus === 'active',
+                      'bg-yellow-500/20': earningsData?.stripeStatus === 'pending',
+                      'bg-zinc-800': earningsData?.stripeStatus === 'not_connected' || !earningsData?.stripeStatus,
+                      'bg-red-500/20': earningsData?.stripeStatus === 'restricted',
+                    }"
+                  >
+                    <UIcon
+                      :name="earningsData?.stripeStatus === 'active' ? 'i-heroicons-check-circle' : earningsData?.stripeStatus === 'pending' ? 'i-heroicons-clock' : 'i-heroicons-credit-card'"
+                      class="w-6 h-6"
+                      :class="{
+                        'text-green-400': earningsData?.stripeStatus === 'active',
+                        'text-yellow-400': earningsData?.stripeStatus === 'pending',
+                        'text-zinc-400': earningsData?.stripeStatus === 'not_connected' || !earningsData?.stripeStatus,
+                        'text-red-400': earningsData?.stripeStatus === 'restricted',
+                      }"
+                    />
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-zinc-100">
+                      {{ earningsData?.stripeStatus === 'active' ? 'Payouts Enabled' : earningsData?.stripeStatus === 'pending' ? 'Setup Incomplete' : 'Set Up Payouts' }}
+                    </h3>
+                    <p class="text-sm text-zinc-400">
+                      <template v-if="earningsData?.stripeStatus === 'active'">
+                        Your Stripe account is connected and ready to receive payouts.
+                      </template>
+                      <template v-else-if="earningsData?.stripeStatus === 'pending'">
+                        Complete your Stripe account setup to start receiving payouts.
+                      </template>
+                      <template v-else-if="earningsData?.stripeStatus === 'restricted'">
+                        Your account needs attention. Please update your Stripe information.
+                      </template>
+                      <template v-else>
+                        Connect with Stripe to receive your earnings. We pay 85% of your streaming revenue.
+                      </template>
+                    </p>
+                  </div>
+                </div>
+                <UButton
+                  v-if="earningsData?.stripeStatus !== 'active'"
+                  color="violet"
+                  :loading="connectLoading"
+                  @click="handleStripeConnect"
+                >
+                  {{ earningsData?.stripeStatus === 'pending' ? 'Complete Setup' : 'Set Up Payouts' }}
+                </UButton>
+              </div>
+            </UCard>
+
+            <!-- Earnings Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <UCard class="bg-zinc-900/50 border-zinc-800">
+                <div class="text-center">
+                  <p class="text-2xl font-bold text-teal-400">{{ formatCurrency(earningsData?.currentBalance || 0) }}</p>
+                  <p class="text-sm text-zinc-400">Current Balance</p>
+                </div>
+              </UCard>
+              <UCard class="bg-zinc-900/50 border-zinc-800">
+                <div class="text-center">
+                  <p class="text-2xl font-bold text-zinc-100">{{ formatCurrency(earningsData?.thisMonthEarnings || 0) }}</p>
+                  <p class="text-sm text-zinc-400">This Month</p>
+                </div>
+              </UCard>
+              <UCard class="bg-zinc-900/50 border-zinc-800">
+                <div class="text-center">
+                  <p class="text-2xl font-bold text-zinc-100">{{ formatCurrency(earningsData?.lifetimeEarnings || 0) }}</p>
+                  <p class="text-sm text-zinc-400">Lifetime Earnings</p>
+                </div>
+              </UCard>
+              <UCard class="bg-zinc-900/50 border-zinc-800">
+                <div class="text-center">
+                  <p class="text-2xl font-bold text-violet-400">{{ formatNumber(earningsData?.thisMonthStreams || 0) }}</p>
+                  <p class="text-sm text-zinc-400">Streams This Month</p>
+                </div>
+              </UCard>
+            </div>
+
+            <!-- Payout Info -->
+            <UCard class="bg-zinc-900/50 border-zinc-800">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold text-zinc-100 mb-1">Minimum Payout: $10.00</h3>
+                  <p class="text-sm text-zinc-400">
+                    Payouts are processed monthly for balances over $10. Your current balance:
+                    <span class="text-teal-400 font-medium">{{ formatCurrency(earningsData?.currentBalance || 0) }}</span>
+                  </p>
+                </div>
+                <div v-if="earningsData?.lastPayoutAt" class="text-right">
+                  <p class="text-xs text-zinc-500">Last payout</p>
+                  <p class="text-sm text-zinc-400">{{ formatDate(earningsData.lastPayoutAt) }}</p>
+                </div>
+              </div>
+            </UCard>
+
+            <!-- Payout History -->
+            <div>
+              <h3 class="text-lg font-semibold text-zinc-100 mb-4">Payout History</h3>
+              <UCard class="bg-zinc-900/50 border-zinc-800">
+                <div v-if="!earningsData?.payouts?.length" class="text-center py-8">
+                  <UIcon name="i-heroicons-banknotes" class="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                  <p class="text-zinc-400">No payouts yet</p>
+                  <p class="text-sm text-zinc-500">Once your balance reaches $10, payouts will appear here.</p>
+                </div>
+                <div v-else class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead>
+                      <tr class="border-b border-zinc-800">
+                        <th class="text-left py-3 px-4 text-sm font-medium text-zinc-400">Date</th>
+                        <th class="text-left py-3 px-4 text-sm font-medium text-zinc-400">Amount</th>
+                        <th class="text-left py-3 px-4 text-sm font-medium text-zinc-400">Status</th>
+                        <th class="text-left py-3 px-4 text-sm font-medium text-zinc-400">Transfer ID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="payout in earningsData.payouts" :key="payout.id" class="border-b border-zinc-800/50">
+                        <td class="py-3 px-4 text-sm text-zinc-300">{{ formatDate(payout.createdAt) }}</td>
+                        <td class="py-3 px-4 text-sm text-teal-400 font-medium">{{ formatCurrency(payout.amount) }}</td>
+                        <td class="py-3 px-4">
+                          <UBadge
+                            :color="payout.status === 'completed' ? 'green' : payout.status === 'failed' ? 'red' : 'yellow'"
+                            variant="subtle"
+                          >
+                            {{ payout.status }}
+                          </UBadge>
+                        </td>
+                        <td class="py-3 px-4 text-sm text-zinc-500 font-mono">
+                          {{ payout.stripeTransferId || '-' }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </UCard>
+            </div>
+
+            <!-- Revenue Model Explanation -->
+            <UCard class="bg-zinc-900/50 border-zinc-800">
+              <h3 class="font-semibold text-zinc-100 mb-3">How You Get Paid</h3>
+              <div class="space-y-2 text-sm text-zinc-400">
+                <p>
+                  <span class="text-violet-400 font-medium">User-Centric Payouts:</span>
+                  Each subscriber's $9.99 monthly fee is distributed only to artists they actually listened to.
+                </p>
+                <p>
+                  <span class="text-teal-400 font-medium">85% Artist Share:</span>
+                  You receive 85% of your listeners' subscription contribution. We keep 15% for platform costs.
+                </p>
+                <p>
+                  <span class="text-zinc-300 font-medium">Example:</span>
+                  If a subscriber spends 50% of their listening time on your music, you receive 50% of $8.49 (~$4.25) from that subscriber.
+                </p>
+              </div>
+            </UCard>
+          </template>
+        </div>
+      </template>
+
       <!-- Settings Tab -->
       <template #settings>
         <div class="py-6 max-w-2xl">
@@ -1006,9 +1178,48 @@ const analytics = ref<AnalyticsData>({
   streamsByDay: [],
 })
 
+// Earnings state
+interface EarningsData {
+  bandId: string
+  bandName: string
+  stripeStatus: string
+  stripeAccountId: string | null
+  currentBalance: number
+  lifetimeEarnings: number
+  lastPayoutAt: string | null
+  thisMonthEarnings: number
+  thisMonthStreams: number
+  minimumPayout: number
+  canRequestPayout: boolean
+  payouts: Array<{
+    id: string
+    amount: number
+    status: string
+    stripeTransferId: string | null
+    createdAt: string
+    processedAt: string | null
+  }>
+  earningsByPeriod: Array<{
+    id: string
+    streamCount: number
+    listeningSeconds: number
+    grossEarnings: number
+    netEarnings: number
+    payoutStatus: string
+    createdAt: string
+    periodStart: string | null
+    periodEnd: string | null
+  }>
+}
+
+const earningsLoading = ref(false)
+const earningsData = ref<EarningsData | null>(null)
+const connectLoading = ref(false)
+
 const tabs = [
   { label: 'Releases', slot: 'releases' },
   { label: 'Analytics', slot: 'analytics' },
+  { label: 'Earnings', slot: 'earnings' },
   { label: 'Settings', slot: 'settings' },
 ]
 
@@ -1025,6 +1236,21 @@ const formatListeningTime = (seconds: number): string => {
     return `${hours}h ${minutes}m`
   }
   return `${minutes}m`
+}
+
+const formatCurrency = (cents: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100)
+}
+
+const formatDate = (dateStr: string): string => {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 const getBarHeight = (count: number): number => {
@@ -1138,6 +1364,59 @@ const getAnalyticsPeriodStart = (): string | null => {
       return quarter.toISOString()
     default:
       return null
+  }
+}
+
+// Load earnings data
+const loadEarnings = async () => {
+  if (!band.value) return
+
+  earningsLoading.value = true
+  try {
+    const data = await $fetch<EarningsData>('/api/artist/earnings', {
+      query: { bandId: band.value.id },
+    })
+    earningsData.value = data
+  } catch (e) {
+    console.error('Failed to load earnings:', e)
+  } finally {
+    earningsLoading.value = false
+  }
+}
+
+// Handle Stripe Connect onboarding
+const handleStripeConnect = async () => {
+  if (!band.value) return
+
+  connectLoading.value = true
+  try {
+    const data = await $fetch<{ url?: string; accountId: string; status: string }>('/api/stripe/connect/create-account', {
+      method: 'POST',
+      body: { bandId: band.value.id },
+    })
+
+    if (data.url) {
+      // Redirect to Stripe onboarding
+      window.location.href = data.url
+    } else if (data.status === 'active') {
+      toast.add({
+        title: 'Already Connected',
+        description: 'Your Stripe account is already set up and active.',
+        icon: 'i-heroicons-check-circle',
+        color: 'green',
+      })
+      await loadEarnings()
+    }
+  } catch (e: any) {
+    console.error('Stripe connect error:', e)
+    toast.add({
+      title: 'Connection Failed',
+      description: e.data?.message || 'Failed to start Stripe onboarding',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'red',
+    })
+  } finally {
+    connectLoading.value = false
   }
 }
 
@@ -1650,6 +1929,23 @@ onMounted(async () => {
     const id = route.params.id as string
     band.value = await getBandById(id)
 
+    // Check for Stripe Connect return
+    if (route.query.connected === 'true') {
+      toast.add({
+        title: 'Stripe Connected',
+        description: 'Your payout account is being set up. It may take a moment to verify.',
+        icon: 'i-heroicons-check-circle',
+        color: 'green',
+      })
+      // Clean up URL
+      router.replace({ query: { ...route.query, connected: undefined, tab: 'earnings' } })
+    }
+
+    if (route.query.refresh === 'true') {
+      // User returned from incomplete onboarding
+      router.replace({ query: { ...route.query, refresh: undefined, tab: 'earnings' } })
+    }
+
     if (band.value) {
       // Populate edit form
       editForm.name = band.value.name
@@ -1694,6 +1990,9 @@ onMounted(async () => {
       // Load analytics
       loadAnalytics()
       loadCountryAnalytics()
+
+      // Load earnings
+      loadEarnings()
     }
   } catch (e) {
     console.error('Failed to load band:', e)

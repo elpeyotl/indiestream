@@ -182,6 +182,150 @@
         </div>
       </template>
 
+      <!-- Payouts Tab -->
+      <template #payouts>
+        <div class="py-6 space-y-6">
+          <!-- Period Selector -->
+          <UCard class="bg-zinc-900/50 border-zinc-800">
+            <h3 class="text-lg font-semibold text-zinc-100 mb-4">Calculate Artist Payouts</h3>
+            <div class="flex flex-wrap items-end gap-4">
+              <UFormGroup label="Month">
+                <USelectMenu
+                  v-model="payoutMonth"
+                  :options="monthOptions"
+                  value-attribute="value"
+                  option-attribute="label"
+                  class="w-40"
+                />
+              </UFormGroup>
+              <UFormGroup label="Year">
+                <USelectMenu
+                  v-model="payoutYear"
+                  :options="yearOptions"
+                  value-attribute="value"
+                  option-attribute="label"
+                  class="w-32"
+                />
+              </UFormGroup>
+              <UButton
+                color="violet"
+                :loading="calculatingPayouts"
+                @click="calculatePayouts"
+              >
+                <UIcon name="i-heroicons-calculator" class="w-4 h-4 mr-2" />
+                Calculate Payouts
+              </UButton>
+            </div>
+            <p class="text-sm text-zinc-500 mt-4">
+              This will calculate the user-centric revenue distribution for the selected month. 85% of each subscriber's fee goes to artists based on their listening time.
+            </p>
+          </UCard>
+
+          <!-- Calculation Results -->
+          <UCard v-if="payoutCalculation" class="bg-zinc-900/50 border-zinc-800">
+            <h3 class="text-lg font-semibold text-zinc-100 mb-4">Calculation Results</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div class="text-center p-4 bg-zinc-800/50 rounded-lg">
+                <p class="text-2xl font-bold text-zinc-100">{{ formatCurrency(payoutCalculation.totalRevenue) }}</p>
+                <p class="text-sm text-zinc-400">Total Revenue</p>
+              </div>
+              <div class="text-center p-4 bg-zinc-800/50 rounded-lg">
+                <p class="text-2xl font-bold text-teal-400">{{ formatCurrency(payoutCalculation.artistPool) }}</p>
+                <p class="text-sm text-zinc-400">Artist Pool (85%)</p>
+              </div>
+              <div class="text-center p-4 bg-zinc-800/50 rounded-lg">
+                <p class="text-2xl font-bold text-violet-400">{{ payoutCalculation.artistsCount }}</p>
+                <p class="text-sm text-zinc-400">Artists</p>
+              </div>
+              <div class="text-center p-4 bg-zinc-800/50 rounded-lg">
+                <p class="text-2xl font-bold text-zinc-100">{{ payoutCalculation.subscribersCount }}</p>
+                <p class="text-sm text-zinc-400">Subscribers</p>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-zinc-800/30 rounded-lg">
+              <div>
+                <p class="text-zinc-300">Ready to process payouts?</p>
+                <p class="text-sm text-zinc-500">This will send Stripe transfers to artists with balance >= $10.</p>
+              </div>
+              <UButton
+                color="green"
+                :loading="processingPayouts"
+                @click="processPayouts"
+              >
+                <UIcon name="i-heroicons-banknotes" class="w-4 h-4 mr-2" />
+                Process Payouts
+              </UButton>
+            </div>
+          </UCard>
+
+          <!-- Processing Results -->
+          <UCard v-if="payoutResults" class="bg-zinc-900/50 border-zinc-800">
+            <h3 class="text-lg font-semibold text-zinc-100 mb-4">Payout Results</h3>
+            <div class="grid grid-cols-3 gap-4 mb-6">
+              <div class="text-center p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <p class="text-2xl font-bold text-green-400">{{ payoutResults.processed }}</p>
+                <p class="text-sm text-zinc-400">Successful</p>
+              </div>
+              <div class="text-center p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <p class="text-2xl font-bold text-red-400">{{ payoutResults.failed }}</p>
+                <p class="text-sm text-zinc-400">Failed</p>
+              </div>
+              <div class="text-center p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <p class="text-2xl font-bold text-yellow-400">{{ payoutResults.skipped }}</p>
+                <p class="text-sm text-zinc-400">Skipped</p>
+              </div>
+            </div>
+
+            <p class="text-teal-400 font-semibold mb-4">
+              Total Paid: {{ formatCurrency(payoutResults.totalAmount) }}
+            </p>
+
+            <div v-if="payoutResults.results.length > 0" class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-zinc-800">
+                    <th class="text-left py-2 px-3 text-sm font-medium text-zinc-400">Artist</th>
+                    <th class="text-left py-2 px-3 text-sm font-medium text-zinc-400">Amount</th>
+                    <th class="text-left py-2 px-3 text-sm font-medium text-zinc-400">Status</th>
+                    <th class="text-left py-2 px-3 text-sm font-medium text-zinc-400">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="result in payoutResults.results" :key="result.bandId" class="border-b border-zinc-800/50">
+                    <td class="py-2 px-3 text-sm text-zinc-300">{{ result.bandName }}</td>
+                    <td class="py-2 px-3 text-sm text-teal-400">{{ formatCurrency(result.amount) }}</td>
+                    <td class="py-2 px-3">
+                      <UBadge
+                        :color="result.status === 'success' ? 'green' : result.status === 'failed' ? 'red' : 'yellow'"
+                        variant="subtle"
+                        size="xs"
+                      >
+                        {{ result.status }}
+                      </UBadge>
+                    </td>
+                    <td class="py-2 px-3 text-xs text-zinc-500 font-mono">
+                      {{ result.transferId || result.error || '-' }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </UCard>
+
+          <!-- Info Card -->
+          <UCard class="bg-zinc-900/50 border-zinc-800">
+            <h3 class="font-semibold text-zinc-100 mb-3">Payout System Info</h3>
+            <div class="space-y-2 text-sm text-zinc-400">
+              <p><span class="text-violet-400 font-medium">User-Centric Model:</span> Each subscriber's $9.99 is distributed only to artists they listened to.</p>
+              <p><span class="text-teal-400 font-medium">85% Artist Share:</span> Artists receive 85% of their listeners' subscription contribution.</p>
+              <p><span class="text-zinc-300 font-medium">$10 Minimum:</span> Artists need at least $10 balance and a connected Stripe account to receive payouts.</p>
+              <p><span class="text-zinc-300 font-medium">Stripe Connect:</span> Artists connect their bank account through Stripe Express onboarding in their dashboard.</p>
+            </div>
+          </UCard>
+        </div>
+      </template>
+
       <!-- PRO Export Tab -->
       <template #pro-export>
         <div class="py-6">
@@ -324,6 +468,7 @@ const currentTab = ref(0)
 const tabs = [
   { label: 'Overview', slot: 'overview', icon: 'i-heroicons-chart-bar' },
   { label: 'Users', slot: 'users', icon: 'i-heroicons-users' },
+  { label: 'Payouts', slot: 'payouts', icon: 'i-heroicons-banknotes' },
   { label: 'PRO Export', slot: 'pro-export', icon: 'i-heroicons-document-arrow-down' },
 ]
 
@@ -375,6 +520,63 @@ const quarterPresets = [
   { label: 'Last Month', value: 'last-month' },
   { label: 'Custom', value: 'custom' },
 ]
+
+// Payouts
+interface PayoutCalculationResult {
+  success: boolean
+  periodId: string
+  periodStart: string
+  periodEnd: string
+  totalRevenue: number
+  artistPool: number
+  platformFee: number
+  totalStreams: number
+  artistsCount: number
+  subscribersCount: number
+}
+
+interface PayoutProcessResult {
+  success: boolean
+  processed: number
+  failed: number
+  skipped: number
+  totalAmount: number
+  results: Array<{
+    bandId: string
+    bandName: string
+    amount: number
+    status: 'success' | 'failed' | 'skipped'
+    error?: string
+    transferId?: string
+  }>
+}
+
+const payoutMonth = ref(new Date().getMonth())
+const payoutYear = ref(new Date().getFullYear())
+const calculatingPayouts = ref(false)
+const processingPayouts = ref(false)
+const payoutCalculation = ref<PayoutCalculationResult | null>(null)
+const payoutResults = ref<PayoutProcessResult | null>(null)
+
+const monthOptions = [
+  { label: 'January', value: 0 },
+  { label: 'February', value: 1 },
+  { label: 'March', value: 2 },
+  { label: 'April', value: 3 },
+  { label: 'May', value: 4 },
+  { label: 'June', value: 5 },
+  { label: 'July', value: 6 },
+  { label: 'August', value: 7 },
+  { label: 'September', value: 8 },
+  { label: 'October', value: 9 },
+  { label: 'November', value: 10 },
+  { label: 'December', value: 11 },
+]
+
+const yearOptions = Array.from({ length: 5 }, (_, i) => ({
+  label: String(currentYear - i),
+  value: currentYear - i,
+}))
 
 // Helpers
 const formatNumber = (num: number): string => {
@@ -612,6 +814,92 @@ const downloadExport = async () => {
   } finally {
     exporting.value = false
   }
+}
+
+// Calculate payouts for a period
+const calculatePayouts = async () => {
+  const periodStart = new Date(payoutYear.value, payoutMonth.value, 1)
+  const periodEnd = new Date(payoutYear.value, payoutMonth.value + 1, 0)
+
+  calculatingPayouts.value = true
+  payoutCalculation.value = null
+  payoutResults.value = null
+
+  try {
+    const result = await $fetch<PayoutCalculationResult>('/api/admin/calculate-payouts', {
+      method: 'POST',
+      body: {
+        periodStart: periodStart.toISOString().split('T')[0],
+        periodEnd: periodEnd.toISOString().split('T')[0],
+      },
+    })
+
+    payoutCalculation.value = result
+
+    toast.add({
+      title: 'Payouts Calculated',
+      description: `${result.artistsCount} artists have earnings to distribute.`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+    })
+  } catch (e: any) {
+    console.error('Calculate payouts error:', e)
+    toast.add({
+      title: 'Calculation Failed',
+      description: e.data?.statusMessage || e.message,
+      color: 'red',
+      icon: 'i-heroicons-exclamation-triangle',
+    })
+  } finally {
+    calculatingPayouts.value = false
+  }
+}
+
+// Process payouts (send Stripe transfers)
+const processPayouts = async () => {
+  processingPayouts.value = true
+
+  try {
+    const result = await $fetch<PayoutProcessResult>('/api/admin/process-payouts', {
+      method: 'POST',
+      body: {},
+    })
+
+    payoutResults.value = result
+
+    if (result.processed > 0) {
+      toast.add({
+        title: 'Payouts Processed',
+        description: `${result.processed} payouts sent, ${result.failed} failed, ${result.skipped} skipped.`,
+        color: 'green',
+        icon: 'i-heroicons-check-circle',
+      })
+    } else {
+      toast.add({
+        title: 'No Payouts Sent',
+        description: result.results[0]?.error || 'No artists have connected Stripe accounts with balance >= $10.',
+        color: 'yellow',
+        icon: 'i-heroicons-information-circle',
+      })
+    }
+  } catch (e: any) {
+    console.error('Process payouts error:', e)
+    toast.add({
+      title: 'Processing Failed',
+      description: e.data?.statusMessage || e.message,
+      color: 'red',
+      icon: 'i-heroicons-exclamation-triangle',
+    })
+  } finally {
+    processingPayouts.value = false
+  }
+}
+
+const formatCurrency = (cents: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100)
 }
 
 // Search debounce
