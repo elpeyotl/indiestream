@@ -81,7 +81,7 @@
     </div>
 
     <!-- Tabs -->
-    <UTabs :items="tabs" class="w-full">
+    <UTabs v-model="currentTab" :items="tabs" class="w-full">
       <!-- Releases Tab -->
       <template #releases>
         <div class="py-6">
@@ -1217,11 +1217,38 @@ const earningsData = ref<EarningsData | null>(null)
 const connectLoading = ref(false)
 
 const tabs = [
-  { label: 'Releases', slot: 'releases' },
-  { label: 'Analytics', slot: 'analytics' },
-  { label: 'Earnings', slot: 'earnings' },
-  { label: 'Settings', slot: 'settings' },
+  { label: 'Releases', slot: 'releases', icon: 'i-heroicons-musical-note' },
+  { label: 'Analytics', slot: 'analytics', icon: 'i-heroicons-chart-bar' },
+  { label: 'Earnings', slot: 'earnings', icon: 'i-heroicons-banknotes' },
+  { label: 'Settings', slot: 'settings', icon: 'i-heroicons-cog-6-tooth' },
 ]
+
+// Tab state synced with URL
+const currentTab = ref(0)
+
+// Map tab slot names to indices
+const tabSlotToIndex: Record<string, number> = {
+  'releases': 0,
+  'analytics': 1,
+  'earnings': 2,
+  'settings': 3,
+}
+
+// Watch for tab changes and update URL
+watch(currentTab, (newTab) => {
+  const tabName = tabs[newTab]?.slot
+  if (tabName && route.query.tab !== tabName) {
+    router.replace({ query: { ...route.query, tab: tabName } })
+  }
+})
+
+// Initialize tab from URL (called in main onMounted)
+const initTabFromUrl = () => {
+  const tabParam = route.query.tab as string
+  if (tabParam && tabSlotToIndex[tabParam] !== undefined) {
+    currentTab.value = tabSlotToIndex[tabParam]
+  }
+}
 
 const formatNumber = (num: number): string => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
@@ -1925,6 +1952,9 @@ const handleDeleteAlbum = async () => {
 }
 
 onMounted(async () => {
+  // Initialize tab from URL param
+  initTabFromUrl()
+
   try {
     const id = route.params.id as string
     band.value = await getBandById(id)
