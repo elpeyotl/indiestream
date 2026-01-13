@@ -342,6 +342,22 @@
                   </div>
                 </UCard>
               </div>
+
+              <!-- Royalty Export Section -->
+              <UCard class="bg-zinc-900/50 border-zinc-800">
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-zinc-100">Royalty Reports</h3>
+                    <UButton color="violet" size="sm" @click="showRoyaltyExportModal = true">
+                      <UIcon name="i-heroicons-arrow-down-tray" class="w-4 h-4 mr-1" />
+                      Export Report
+                    </UButton>
+                  </div>
+                </template>
+                <p class="text-zinc-400 text-sm">
+                  Download your stream data for PRO reporting (GEMA, SUISA, ASCAP, BMI). Export includes ISRC codes, play counts, and territory breakdown.
+                </p>
+              </UCard>
             </template>
           </template>
         </div>
@@ -867,6 +883,13 @@
         </template>
       </UCard>
     </UModal>
+
+    <!-- Royalty Export Modal -->
+    <RoyaltyExportModal
+      v-if="band"
+      v-model="showRoyaltyExportModal"
+      :band-id="band.id"
+    />
   </div>
 
   <!-- Loading -->
@@ -928,6 +951,9 @@ const editForm = reactive({
   theme_color: '#8B5CF6',
   genres: [] as string[],
 })
+
+// Royalty export state
+const showRoyaltyExportModal = ref(false)
 
 // Album edit/delete state
 const showEditAlbumModal = ref(false)
