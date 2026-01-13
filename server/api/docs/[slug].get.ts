@@ -1,6 +1,3 @@
-import { readFile } from 'fs/promises'
-import { join } from 'path'
-
 // Map slugs to actual filenames
 const docFiles: Record<string, string> = {
   'todo': 'TODO.md',
@@ -22,14 +19,23 @@ export default defineEventHandler(async (event) => {
   }
 
   const filename = docFiles[slug]
-  const docsDir = join(process.cwd(), 'docs')
-  const filePath = join(docsDir, filename)
+
+  // Get the base URL from the request
+  const requestUrl = getRequestURL(event)
+  const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
 
   try {
-    const content = await readFile(filePath, 'utf-8')
+    // Fetch from public folder
+    const response = await fetch(`${baseUrl}/docs/${filename}`)
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch: ${response.status}`)
+    }
+
+    const content = await response.text()
     return content
   } catch (error) {
-    console.error('Failed to read doc file:', error)
+    console.error('Failed to fetch doc file:', error)
     throw createError({
       statusCode: 404,
       statusMessage: 'Document not found',
