@@ -348,6 +348,9 @@
                     MusicBrainz
                   </UButton>
                 </div>
+                <p class="text-xs text-zinc-500 mt-1">
+                  Look up your ISWC at <a href="https://iswcnet.cisac.org" target="_blank" class="text-violet-400 hover:underline">iswcnet.cisac.org</a>
+                </p>
               </div>
 
               <!-- Composer Credits -->
