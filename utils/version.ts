@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.6.0'
+export const APP_VERSION = '0.7.0'
 
 export interface ChangelogEntry {
   version: string
@@ -11,19 +11,31 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.6.0',
-    date: '2026-01-13',
+    version: '0.7.0',
+    date: '2026-01-20',
     changes: [
-      { type: 'added', description: 'ISRC metadata for tracks (required for PRO reporting)' },
-      { type: 'added', description: 'ISWC metadata for compositions (optional)' },
-      { type: 'added', description: 'Composer credits with splits (name, role, IPI number, percentage)' },
-      { type: 'added', description: 'Cover song flag for tracks' },
-      { type: 'added', description: 'Deezer integration for ISRC lookup' },
-      { type: 'added', description: 'MusicBrainz integration for ISWC lookup' },
-      { type: 'added', description: 'Rights confirmation checkboxes on publish' },
-      { type: 'added', description: 'P-line and C-line auto-generation for albums' },
-      { type: 'added', description: 'Track credits display on public album pages' },
-      { type: 'removed', description: 'UPC field removed from upload form (not needed for streaming)' },
+      { type: 'added', description: 'User-level Stripe Connect: Labels with multiple artists now connect ONE Stripe account' },
+      { type: 'added', description: 'Combined earnings dashboard at /dashboard/earnings' },
+      { type: 'added', description: 'Listener location tracking for geographic analytics' },
+      { type: 'added', description: 'Deezer API integration for ISRC lookup (replaced Spotify)' },
+      { type: 'added', description: 'CISAC ISWC lookup link in upload form' },
+      { type: 'changed', description: 'Stripe Connect moved from per-band to per-user (profiles table)' },
+      { type: 'changed', description: 'Payout processing now groups bands by owner and sends single combined transfers' },
+      { type: 'changed', description: 'Artist dashboard earnings tab now links to combined earnings page' },
+      { type: 'removed', description: 'share_percentage from composer credits (not needed for PRO reporting)' },
+      { type: 'fixed', description: 'Artist avatar images loading correctly on upload page' },
+      { type: 'fixed', description: 'Square aspect ratio for artist placeholder avatars on discover and home pages' },
+    ],
+  },
+  {
+    version: '0.6.0',
+    date: '2026-01-19',
+    changes: [
+      { type: 'added', description: 'Artist rights metadata (ISRC, ISWC, composer credits)' },
+      { type: 'added', description: 'PRO export for SUISA/GEMA reporting' },
+      { type: 'added', description: '"85% Music Rights" marketing messaging' },
+      { type: 'changed', description: 'Revenue split updated to transparent 70/15/15 model (70% artists, 15% CMOs, 15% platform)' },
+      { type: 'changed', description: 'Artists can listen to their own music unlimited (doesn\'t count against free tier)' },
     ],
   },
   {
@@ -38,18 +50,18 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: '0.5.0',
-    date: '2026-01-12',
+    date: '2026-01-14',
     changes: [
+      { type: 'added', description: 'Artist payout system with Stripe Connect Express' },
+      { type: 'added', description: 'Revenue dashboard for artists (balance, earnings, payout history)' },
+      { type: 'added', description: 'Admin payout processing' },
       { type: 'added', description: 'Free tier with 5 full-track plays per month for registered users' },
       { type: 'added', description: 'Free plays tracking in dashboard with monthly reset' },
-      { type: 'added', description: 'Upgrade prompts when free plays are exhausted' },
-      { type: 'changed', description: 'Free plays do not count toward artist stream stats or payouts' },
-      { type: 'changed', description: 'Moved documentation files to docs/ folder' },
     ],
   },
   {
     version: '0.4.0',
-    date: '2026-01-12',
+    date: '2026-01-13',
     changes: [
       { type: 'added', description: 'Stripe subscription integration with checkout flow' },
       { type: 'added', description: 'Subscription management in dashboard with portal access' },
@@ -70,12 +82,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '0.3.0',
     date: '2026-01-12',
     changes: [
-      { type: 'added', description: 'Library system with Artists, Albums, and Liked Songs tabs' },
-      { type: 'added', description: 'Save albums to your library from album pages' },
-      { type: 'added', description: 'Like tracks with heart icons on track listings' },
-      { type: 'added', description: 'Library link in navigation for logged-in users' },
-      { type: 'changed', description: 'Follow artist adds them to Library > Artists' },
-      { type: 'fixed', description: 'Artist dashboard now displays actual follower count' },
+      { type: 'added', description: 'Follow artists functionality' },
+      { type: 'added', description: 'Library page (Artists, Albums, Liked Songs)' },
+      { type: 'added', description: 'Listening history tracking' },
+      { type: 'added', description: 'Country tracking for streams' },
     ],
   },
   {
@@ -100,61 +110,22 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: '0.2.0',
-    date: '2026-01-12',
+    date: '2026-01-11',
     changes: [
-      { type: 'added', description: 'Server-side image processing with Sharp for consistent image dimensions' },
-      { type: 'added', description: 'Album cover change feature in edit modal' },
-      { type: 'added', description: 'Changelog page and version display in footer' },
-      { type: 'changed', description: 'Avatar uploads now auto-resize to 400x400' },
-      { type: 'changed', description: 'Album covers now auto-resize to 600x600' },
-      { type: 'changed', description: 'Banner images now auto-resize to 1500x500' },
-    ],
-  },
-  {
-    version: '0.1.9',
-    date: '2025-01-11',
-    changes: [
-      { type: 'added', description: 'Development seed endpoint for sample data' },
-      { type: 'added', description: 'Placeholder images for seeded artists and albums' },
-      { type: 'fixed', description: 'Avatar URL fallbacks on discover and artists pages' },
-    ],
-  },
-  {
-    version: '0.1.8',
-    date: '2025-01-10',
-    changes: [
-      { type: 'added', description: 'Artist analytics dashboard with stream statistics' },
-      { type: 'added', description: 'Album and track editing functionality' },
-      { type: 'added', description: 'Toast notifications for API feedback' },
-    ],
-  },
-  {
-    version: '0.1.7',
-    date: '2025-01-09',
-    changes: [
-      { type: 'added', description: 'Artist banner image support' },
-      { type: 'added', description: 'Bokeh background effect' },
-      { type: 'fixed', description: 'Cover image loading on listening history page' },
-    ],
-  },
-  {
-    version: '0.1.6',
-    date: '2025-01-08',
-    changes: [
-      { type: 'added', description: 'Global search with Cmd+K shortcut' },
-      { type: 'added', description: 'Preview mode for non-subscribers (30 second samples)' },
-      { type: 'added', description: 'Stream tracking and listening history' },
+      { type: 'added', description: 'Audio player with queue management' },
+      { type: 'added', description: 'Album/track upload with R2 storage' },
+      { type: 'added', description: 'Artist profile management' },
+      { type: 'added', description: 'Discover and search functionality' },
     ],
   },
   {
     version: '0.1.0',
-    date: '2025-01-01',
+    date: '2026-01-10',
     changes: [
       { type: 'added', description: 'Initial release' },
-      { type: 'added', description: 'Artist profiles and album uploads' },
-      { type: 'added', description: 'Audio streaming with queue management' },
-      { type: 'added', description: 'User authentication with Supabase' },
-      { type: 'added', description: 'Cloudflare R2 file storage integration' },
+      { type: 'added', description: 'User authentication' },
+      { type: 'added', description: 'Basic artist and album pages' },
+      { type: 'added', description: 'Supabase database setup' },
     ],
   },
 ]
