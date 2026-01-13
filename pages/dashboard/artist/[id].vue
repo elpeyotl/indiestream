@@ -396,7 +396,7 @@
                         Your account needs attention. Please update your Stripe information.
                       </template>
                       <template v-else>
-                        Connect with Stripe to receive your earnings. We pay 85% of your streaming revenue.
+                        Connect with Stripe to receive your earnings. You receive 70% of streaming revenue directly.
                       </template>
                     </p>
                   </div>
@@ -507,12 +507,12 @@
                   Each subscriber's $9.99 monthly fee is distributed only to artists they actually listened to.
                 </p>
                 <p>
-                  <span class="text-teal-400 font-medium">85% Artist Share:</span>
-                  You receive 85% of your listeners' subscription contribution. We keep 15% for platform costs.
+                  <span class="text-teal-400 font-medium">Transparent Split:</span>
+                  You receive 70% directly ($6.99). 15% goes to royalty societies (SUISA/GEMA/etc.) for performance rights. 15% platform fee.
                 </p>
                 <p>
                   <span class="text-zinc-300 font-medium">Example:</span>
-                  If a subscriber spends 50% of their listening time on your music, you receive 50% of $8.49 (~$4.25) from that subscriber.
+                  If a subscriber spends 50% of their listening time on your music, you receive 50% of $6.99 (~$3.50) from that subscriber.
                 </p>
               </div>
             </UCard>

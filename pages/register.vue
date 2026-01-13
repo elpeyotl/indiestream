@@ -147,7 +147,7 @@
       <!-- Value Prop -->
       <div class="mt-8 text-center">
         <p class="text-zinc-500 text-sm">
-          85% of your subscription goes directly to the artists you listen to.
+          70% of your subscription goes directly to artists, 15% to royalty societies.
         </p>
       </div>
     </div>

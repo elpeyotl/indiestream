@@ -157,8 +157,8 @@
           <div class="flex items-start gap-3">
             <UIcon name="i-heroicons-check-circle" class="w-6 h-6 text-green-400 mt-0.5" />
             <div>
-              <p class="text-zinc-100 font-medium">Keep 85% of revenue</p>
-              <p class="text-zinc-400 text-sm">The highest rate in the industry</p>
+              <p class="text-zinc-100 font-medium">Keep 70% of revenue</p>
+              <p class="text-zinc-400 text-sm">Plus 15% goes to royalty societies on your behalf</p>
             </div>
           </div>
           <div class="flex items-start gap-3">

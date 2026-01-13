@@ -112,10 +112,17 @@ export default defineEventHandler(async (event) => {
     }
 
     // Calculate artist earnings using user-centric model
-    // Each subscriber pays $9.99, 85% goes to artists ($8.49)
+    // Transparent revenue split per $9.99 subscription:
+    // - 70% ($6.99) goes directly to artists
+    // - 15% ($1.50) goes to CMOs (SUISA/GEMA/PRS/ASCAP/BMI) for performance royalties
+    // - 15% ($1.50) goes to platform operations
     const SUBSCRIPTION_PRICE_CENTS = 999
-    const ARTIST_SHARE = 0.85
+    const ARTIST_SHARE = 0.70
+    const CMO_SHARE = 0.15
+    const PLATFORM_SHARE = 0.15
     const ARTIST_POOL_PER_USER = Math.floor(SUBSCRIPTION_PRICE_CENTS * ARTIST_SHARE)
+    const CMO_FEE_PER_USER = Math.floor(SUBSCRIPTION_PRICE_CENTS * CMO_SHARE)
+    const PLATFORM_FEE_PER_USER = Math.floor(SUBSCRIPTION_PRICE_CENTS * PLATFORM_SHARE)
 
     const artistEarnings = new Map<string, {
       grossCents: number
@@ -125,6 +132,8 @@ export default defineEventHandler(async (event) => {
 
     let totalRevenueCents = 0
     let totalArtistPoolCents = 0
+    let totalCmoFeeCents = 0
+    let totalPlatformFeeCents = 0
 
     for (const [userId, bands] of userListening) {
       // Calculate this user's total listening time
@@ -135,9 +144,11 @@ export default defineEventHandler(async (event) => {
 
       if (totalUserSeconds === 0) continue
 
-      // This user contributes their share
+      // This user contributes their share to all pools
       totalRevenueCents += SUBSCRIPTION_PRICE_CENTS
       totalArtistPoolCents += ARTIST_POOL_PER_USER
+      totalCmoFeeCents += CMO_FEE_PER_USER
+      totalPlatformFeeCents += PLATFORM_FEE_PER_USER
 
       // Distribute this user's artist pool among bands they listened to
       for (const [bandId, data] of bands) {
@@ -173,7 +184,8 @@ export default defineEventHandler(async (event) => {
           total_subscription_revenue_cents: totalRevenueCents,
           total_streams: listeningData.length,
           artist_pool_cents: totalArtistPoolCents,
-          platform_fee_cents: totalRevenueCents - totalArtistPoolCents,
+          cmo_fee_cents: totalCmoFeeCents,
+          platform_fee_cents: totalPlatformFeeCents,
           status: 'calculating',
         })
         .eq('id', periodId)
@@ -187,7 +199,8 @@ export default defineEventHandler(async (event) => {
           total_subscription_revenue_cents: totalRevenueCents,
           total_streams: listeningData.length,
           artist_pool_cents: totalArtistPoolCents,
-          platform_fee_cents: totalRevenueCents - totalArtistPoolCents,
+          cmo_fee_cents: totalCmoFeeCents,
+          platform_fee_cents: totalPlatformFeeCents,
           status: 'calculating',
         })
         .select()
@@ -263,8 +276,13 @@ export default defineEventHandler(async (event) => {
       periodStart: body.periodStart,
       periodEnd: body.periodEnd,
       totalRevenue: totalRevenueCents,
+      // Transparent breakdown
       artistPool: totalArtistPoolCents,
-      platformFee: totalRevenueCents - totalArtistPoolCents,
+      artistPoolPercent: 70,
+      cmoFee: totalCmoFeeCents,
+      cmoFeePercent: 15,
+      platformFee: totalPlatformFeeCents,
+      platformFeePercent: 15,
       totalStreams: listeningData.length,
       artistsCount: artistEarnings.size,
       subscribersCount: userListening.size,

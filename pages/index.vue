@@ -36,8 +36,8 @@
         <!-- Stats -->
         <div class="flex flex-wrap justify-center gap-8 md:gap-16 mt-16 pt-8 border-t border-zinc-800/50">
           <div class="text-center">
-            <div class="text-3xl font-bold text-teal-400">85%</div>
-            <div class="text-sm text-zinc-500">To Artists</div>
+            <div class="text-3xl font-bold text-teal-400">70%</div>
+            <div class="text-sm text-zinc-500">Direct to Artists</div>
           </div>
           <div class="text-center">
             <div class="text-3xl font-bold text-violet-400">100%</div>
@@ -130,7 +130,7 @@
               </div>
               <div class="pt-3">
                 <h3 class="text-xl font-semibold mb-2">Artists Get Paid</h3>
-                <p class="text-zinc-400">Your subscription is split proportionally to the artists you actually listened to. 85% goes directly to them.</p>
+                <p class="text-zinc-400">Your subscription is split proportionally to the artists you actually listened to. 70% goes directly to them, 15% to royalty societies.</p>
               </div>
             </div>
           </div>

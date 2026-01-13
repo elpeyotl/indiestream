@@ -29,14 +29,19 @@
           </p>
         </div>
         <div class="bg-zinc-900 rounded-2xl p-8 border border-zinc-800">
-          <div class="text-center">
-            <div class="text-5xl font-bold text-violet-400 mb-2">85%</div>
-            <p class="text-zinc-400">Goes directly to artists</p>
+          <div class="text-center mb-4">
+            <div class="text-4xl font-bold text-violet-400 mb-1">70%</div>
+            <p class="text-zinc-400 text-sm">Direct to artists</p>
           </div>
-          <div class="h-px bg-zinc-800 my-6" />
+          <div class="h-px bg-zinc-800 my-4" />
+          <div class="text-center mb-4">
+            <div class="text-4xl font-bold text-teal-400 mb-1">15%</div>
+            <p class="text-zinc-400 text-sm">Royalty societies (SUISA/GEMA)</p>
+          </div>
+          <div class="h-px bg-zinc-800 my-4" />
           <div class="text-center">
-            <div class="text-5xl font-bold text-fuchsia-400 mb-2">15%</div>
-            <p class="text-zinc-400">Platform fee</p>
+            <div class="text-4xl font-bold text-fuchsia-400 mb-1">15%</div>
+            <p class="text-zinc-400 text-sm">Platform operations</p>
           </div>
         </div>
       </div>

@@ -10,7 +10,7 @@
           </span>
         </h1>
         <p class="text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
-          Keep 85% of your streaming revenue. Get paid directly by your fans. No label required.
+          Keep 70% of your streaming revenue. Get paid directly by your fans. No label required.
         </p>
         <UButton color="fuchsia" size="xl" to="/dashboard/artist/new">
           Create Your Artist Profile
@@ -22,8 +22,8 @@
       <!-- Stats -->
       <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-20">
         <div class="text-center">
-          <div class="text-5xl font-bold text-fuchsia-400 mb-2">85%</div>
-          <p class="text-zinc-400">Revenue share</p>
+          <div class="text-5xl font-bold text-fuchsia-400 mb-2">70%</div>
+          <p class="text-zinc-400">Direct to you</p>
         </div>
         <div class="text-center">
           <div class="text-5xl font-bold text-violet-400 mb-2">$0</div>
@@ -201,7 +201,7 @@
 useHead({
   title: 'For Artists | Indiestream',
   meta: [
-    { name: 'description', content: 'Keep 85% of your streaming revenue on Indiestream. Upload your music for free and get paid directly by your fans.' },
+    { name: 'description', content: 'Keep 70% of your streaming revenue on Indiestream. Upload your music for free and get paid directly by your fans.' },
   ],
 })
 </script>

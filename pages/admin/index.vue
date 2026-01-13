@@ -217,7 +217,7 @@
               </UButton>
             </div>
             <p class="text-sm text-zinc-500 mt-4">
-              This will calculate the user-centric revenue distribution for the selected month. 85% of each subscriber's fee goes to artists based on their listening time.
+              This will calculate the user-centric revenue distribution for the selected month. 70% goes to artists, 15% to CMOs (SUISA/GEMA), 15% platform.
             </p>
           </UCard>
 
@@ -231,7 +231,7 @@
               </div>
               <div class="text-center p-4 bg-zinc-800/50 rounded-lg">
                 <p class="text-2xl font-bold text-teal-400">{{ formatCurrency(payoutCalculation.artistPool) }}</p>
-                <p class="text-sm text-zinc-400">Artist Pool (85%)</p>
+                <p class="text-sm text-zinc-400">Artist Pool (70%)</p>
               </div>
               <div class="text-center p-4 bg-zinc-800/50 rounded-lg">
                 <p class="text-2xl font-bold text-violet-400">{{ payoutCalculation.artistsCount }}</p>
@@ -318,7 +318,7 @@
             <h3 class="font-semibold text-zinc-100 mb-3">Payout System Info</h3>
             <div class="space-y-2 text-sm text-zinc-400">
               <p><span class="text-violet-400 font-medium">User-Centric Model:</span> Each subscriber's $9.99 is distributed only to artists they listened to.</p>
-              <p><span class="text-teal-400 font-medium">85% Artist Share:</span> Artists receive 85% of their listeners' subscription contribution.</p>
+              <p><span class="text-teal-400 font-medium">Transparent Split:</span> 70% to artists, 15% to CMOs (SUISA/GEMA/etc.), 15% platform fee.</p>
               <p><span class="text-zinc-300 font-medium">$10 Minimum:</span> Artists need at least $10 balance and a connected Stripe account to receive payouts.</p>
               <p><span class="text-zinc-300 font-medium">Stripe Connect:</span> Artists connect their bank account through Stripe Express onboarding in their dashboard.</p>
             </div>

@@ -115,7 +115,7 @@
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
             <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
-            Keep 85% of revenue
+            Keep 70% of revenue
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
             <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
@@ -164,7 +164,7 @@
           </div>
           <h3 class="font-semibold text-zinc-100 mb-2">Artists Earn</h3>
           <p class="text-zinc-400 text-sm">
-            Artists receive 85% of your contribution. Direct and transparent.
+            70% goes directly to artists, 15% to royalty societies, 15% platform.
           </p>
         </div>
       </div>
@@ -185,7 +185,7 @@
           <tbody class="divide-y divide-zinc-800">
             <tr>
               <td class="p-4 text-zinc-300">Artist revenue share</td>
-              <td class="p-4 text-center text-green-400 font-semibold">85%</td>
+              <td class="p-4 text-center text-green-400 font-semibold">70%</td>
               <td class="p-4 text-center text-zinc-500">~30%</td>
             </tr>
             <tr>
@@ -260,7 +260,7 @@ const handleSubscribe = async () => {
 const faqItems = [
   {
     label: 'How does the artist payment work?',
-    content: 'Unlike traditional streaming services that use a royalty pool, your subscription is divided based on your actual listening. If you spend 50% of your listening time on one artist, they receive 50% of your subscription (minus our 15% platform fee).',
+    content: 'Unlike traditional streaming services that use a royalty pool, your subscription is divided based on your actual listening. If you spend 50% of your listening time on one artist, they receive 50% of the artist share. Your $9.99 is split: 70% ($6.99) to artists, 15% ($1.50) to performance royalty societies (SUISA, GEMA, etc.), and 15% ($1.50) platform fee.',
   },
   {
     label: 'Can I cancel anytime?',
