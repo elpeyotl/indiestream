@@ -22,11 +22,11 @@
 DO $$
 DECLARE
     demo_slugs TEXT[] := ARRAY[
-        'lunar-echo',
-        'the-static-minds',
-        'velvet-underground-revival',
-        'neon-pulse',
-        'acoustic-wanderers'
+        'midnight-echoes',
+        'the-static-hearts',
+        'luna-bay',
+        'concrete-garden',
+        'velvet-haze'
     ];
     deleted_count INTEGER;
 BEGIN

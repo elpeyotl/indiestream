@@ -309,10 +309,10 @@
                       variant="outline"
                       size="sm"
                       :loading="track.fetchingIsrc"
-                      @click="openSpotifyModal(index)"
+                      @click="openDeezerModal(index)"
                     >
                       <UIcon name="i-heroicons-magnifying-glass" class="w-4 h-4 mr-1" />
-                      Spotify
+                      Deezer
                     </UButton>
                   </div>
                   <p class="text-xs text-zinc-500 mt-1">
@@ -505,46 +505,60 @@
       </UCard>
     </div>
 
-    <!-- Spotify Lookup Modal -->
-    <UModal v-model="spotifyModalOpen">
+    <!-- Deezer Lookup Modal -->
+    <UModal v-model="deezerModalOpen">
       <UCard class="bg-zinc-900 border-zinc-800">
         <template #header>
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-              <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-green-400" />
+            <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <h3 class="text-lg font-semibold text-zinc-100">Fetch ISRC from Spotify</h3>
-              <p class="text-sm text-zinc-400">Paste a Spotify track link to get the ISRC</p>
+              <h3 class="text-lg font-semibold text-zinc-100">Fetch ISRC from Deezer</h3>
+              <p class="text-sm text-zinc-400">Paste a Deezer track link or search by title</p>
             </div>
           </div>
         </template>
 
         <div class="space-y-4">
-          <UFormGroup label="Spotify Track URL">
+          <UFormGroup label="Deezer Track URL or Search">
             <UInput
-              v-model="spotifyUrl"
-              placeholder="https://open.spotify.com/track/..."
+              v-model="deezerInput"
+              placeholder="https://www.deezer.com/track/... or search term"
               size="lg"
-              @keyup.enter="fetchFromSpotify"
+              @keyup.enter="fetchFromDeezer"
             />
           </UFormGroup>
 
-          <p v-if="spotifyError" class="text-sm text-red-400">{{ spotifyError }}</p>
+          <!-- Search Results -->
+          <div v-if="deezerResults.length > 0" class="space-y-2">
+            <p class="text-sm text-zinc-400">Select a track:</p>
+            <button
+              v-for="result in deezerResults"
+              :key="result.deezerTrackId"
+              class="w-full text-left p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+              @click="selectDeezerResult(result)"
+            >
+              <p class="font-medium text-zinc-100">{{ result.name }}</p>
+              <p class="text-sm text-zinc-400">{{ result.artist }} · ISRC: {{ result.isrc || 'N/A' }}</p>
+            </button>
+          </div>
+
+          <p v-if="deezerError" class="text-sm text-red-400">{{ deezerError }}</p>
         </div>
 
         <template #footer>
           <div class="flex justify-end gap-3">
-            <UButton color="gray" variant="ghost" @click="spotifyModalOpen = false">
+            <UButton color="gray" variant="ghost" @click="deezerModalOpen = false">
               Cancel
             </UButton>
             <UButton
               color="violet"
-              :loading="spotifyLoading"
-              :disabled="!spotifyUrl"
-              @click="fetchFromSpotify"
+              :loading="deezerLoading"
+              :disabled="!deezerInput"
+              @click="fetchFromDeezer"
             >
-              Fetch ISRC
+              {{ deezerInput.includes('deezer.com') ? 'Fetch ISRC' : 'Search' }}
             </UButton>
           </div>
         </template>
@@ -747,49 +761,97 @@ const getTotalShare = (credits: TrackCredit[]): number => {
   return credits.reduce((sum, c) => sum + (c.share_percentage || 0), 0)
 }
 
-// Spotify modal state
-const spotifyModalOpen = ref(false)
-const spotifyModalTrackIndex = ref<number | null>(null)
-const spotifyUrl = ref('')
-const spotifyLoading = ref(false)
-const spotifyError = ref('')
+// Deezer modal state
+const deezerModalOpen = ref(false)
+const deezerModalTrackIndex = ref<number | null>(null)
+const deezerInput = ref('')
+const deezerLoading = ref(false)
+const deezerError = ref('')
+const deezerResults = ref<Array<{
+  deezerTrackId: string
+  name: string
+  artist: string
+  isrc: string | null
+}>>([])
 
-const openSpotifyModal = (trackIndex: number) => {
-  spotifyModalTrackIndex.value = trackIndex
-  spotifyUrl.value = ''
-  spotifyError.value = ''
-  spotifyModalOpen.value = true
+const openDeezerModal = (trackIndex: number) => {
+  deezerModalTrackIndex.value = trackIndex
+  deezerInput.value = tracks.value[trackIndex].title || ''
+  deezerError.value = ''
+  deezerResults.value = []
+  deezerModalOpen.value = true
 }
 
-const fetchFromSpotify = async () => {
-  if (!spotifyUrl.value || spotifyModalTrackIndex.value === null) return
+const fetchFromDeezer = async () => {
+  if (!deezerInput.value || deezerModalTrackIndex.value === null) return
 
-  spotifyLoading.value = true
-  spotifyError.value = ''
+  deezerLoading.value = true
+  deezerError.value = ''
+  deezerResults.value = []
 
   try {
-    const result = await $fetch<{
-      isrc: string | null
-      name: string
-      spotifyTrackId: string
-    }>('/api/spotify/fetch-track', {
-      method: 'POST',
-      body: { spotifyUrl: spotifyUrl.value },
-    })
+    // Check if it's a URL or a search query
+    const isUrl = deezerInput.value.includes('deezer.com') || /^\d+$/.test(deezerInput.value.trim())
 
-    const track = tracks.value[spotifyModalTrackIndex.value]
-    if (result.isrc) {
-      track.isrc = result.isrc
-      track.spotify_track_id = result.spotifyTrackId
-      toast.add({ title: 'ISRC found', description: `ISRC: ${result.isrc}`, color: 'green' })
-      spotifyModalOpen.value = false
+    if (isUrl) {
+      // Direct URL fetch
+      const result = await $fetch<{
+        isrc: string | null
+        name: string
+        deezerTrackId: string
+      }>('/api/deezer/fetch-track', {
+        method: 'POST',
+        body: { deezerUrl: deezerInput.value },
+      })
+
+      const track = tracks.value[deezerModalTrackIndex.value]
+      if (result.isrc) {
+        track.isrc = result.isrc
+        toast.add({ title: 'ISRC found', description: `ISRC: ${result.isrc}`, color: 'green' })
+        deezerModalOpen.value = false
+      } else {
+        deezerError.value = 'This track does not have an ISRC in Deezer'
+      }
     } else {
-      spotifyError.value = 'This track does not have an ISRC in Spotify'
+      // Search by title
+      const result = await $fetch<{
+        results: Array<{
+          deezerTrackId: string
+          name: string
+          artist: string
+          isrc: string | null
+        }>
+      }>('/api/deezer/fetch-track', {
+        method: 'POST',
+        body: {
+          searchQuery: deezerInput.value,
+          artistName: selectedBand.value?.name,
+        },
+      })
+
+      if (result.results && result.results.length > 0) {
+        deezerResults.value = result.results
+      } else {
+        deezerError.value = 'No tracks found. Try a different search term.'
+      }
     }
   } catch (e: any) {
-    spotifyError.value = e.data?.message || 'Failed to fetch from Spotify'
+    deezerError.value = e.data?.message || 'Failed to fetch from Deezer'
   } finally {
-    spotifyLoading.value = false
+    deezerLoading.value = false
+  }
+}
+
+const selectDeezerResult = (result: { deezerTrackId: string; name: string; isrc: string | null }) => {
+  if (deezerModalTrackIndex.value === null) return
+
+  const track = tracks.value[deezerModalTrackIndex.value]
+  if (result.isrc) {
+    track.isrc = result.isrc
+    toast.add({ title: 'ISRC found', description: `ISRC: ${result.isrc}`, color: 'green' })
+    deezerModalOpen.value = false
+  } else {
+    deezerError.value = 'This track does not have an ISRC'
   }
 }
 

@@ -97,53 +97,88 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="track in album.tracks"
-              :key="track.id"
-              class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors cursor-pointer group"
-              :class="{ 'bg-violet-500/10': isTrackPlaying(track) }"
-              @click="playTrack(track)"
-            >
-              <td class="px-4 py-4">
-                <span v-if="isTrackPlaying(track)" class="text-violet-400">
-                  <UIcon name="i-heroicons-speaker-wave" class="w-4 h-4 animate-pulse" />
-                </span>
-                <template v-else>
-                  <span class="text-zinc-400 group-hover:hidden">{{ track.track_number }}</span>
-                  <UIcon name="i-heroicons-play" class="w-4 h-4 text-violet-400 hidden group-hover:block" />
-                </template>
-              </td>
-              <td class="px-4 py-4">
-                <div class="flex items-center gap-3">
-                  <div>
-                    <p class="font-medium" :class="isTrackPlaying(track) ? 'text-violet-400' : 'text-zinc-100'">
-                      {{ track.title }}
-                    </p>
-                    <div v-if="track.is_explicit" class="mt-1">
-                      <UBadge color="gray" size="xs">E</UBadge>
+            <template v-for="track in album.tracks" :key="track.id">
+              <tr
+                class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+                :class="{ 'bg-violet-500/10': isTrackPlaying(track), 'border-b-0': expandedTrack === track.id }"
+                @click="playTrack(track)"
+              >
+                <td class="px-4 py-4">
+                  <span v-if="isTrackPlaying(track)" class="text-violet-400">
+                    <UIcon name="i-heroicons-speaker-wave" class="w-4 h-4 animate-pulse" />
+                  </span>
+                  <template v-else>
+                    <span class="text-zinc-400 group-hover:hidden">{{ track.track_number }}</span>
+                    <UIcon name="i-heroicons-play" class="w-4 h-4 text-violet-400 hidden group-hover:block" />
+                  </template>
+                </td>
+                <td class="px-4 py-4">
+                  <div class="flex items-center gap-2">
+                    <div>
+                      <p class="font-medium" :class="isTrackPlaying(track) ? 'text-violet-400' : 'text-zinc-100'">
+                        {{ track.title }}
+                      </p>
+                      <div class="flex items-center gap-1 mt-1">
+                        <UBadge v-if="track.is_explicit" color="gray" size="xs">E</UBadge>
+                        <UBadge v-if="track.is_cover" color="amber" size="xs">Cover</UBadge>
+                      </div>
+                    </div>
+                    <!-- Credits toggle button -->
+                    <UButton
+                      v-if="hasCredits(track.id)"
+                      color="gray"
+                      variant="ghost"
+                      size="xs"
+                      class="ml-2 opacity-0 group-hover:opacity-60"
+                      @click.stop="toggleCredits(track.id)"
+                    >
+                      <UIcon name="i-heroicons-information-circle" class="w-4 h-4" />
+                    </UButton>
+                  </div>
+                </td>
+                <td class="px-4 py-4 text-zinc-400 hidden sm:table-cell">
+                  {{ formatNumber(track.stream_count || 0) }}
+                </td>
+                <td class="px-4 py-4 text-zinc-400 text-right">
+                  {{ formatTrackDuration(track.duration_seconds) }}
+                </td>
+                <td class="px-4 py-4 text-right">
+                  <UButton
+                    :color="isTrackLiked(track.id) ? 'red' : 'gray'"
+                    variant="ghost"
+                    size="xs"
+                    :icon="isTrackLiked(track.id) ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+                    :class="isTrackLiked(track.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'"
+                    @click.stop="handleLikeTrack(track.id)"
+                  />
+                </td>
+              </tr>
+              <!-- Expanded Credits Row -->
+              <tr v-if="expandedTrack === track.id" class="border-b border-zinc-800/50 bg-zinc-900/50">
+                <td colspan="5" class="px-4 py-3">
+                  <div class="pl-8 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                    <div v-if="track.isrc" class="text-zinc-400">
+                      <span class="text-zinc-500">ISRC:</span> {{ track.isrc }}
+                    </div>
+                    <div v-if="track.iswc" class="text-zinc-400">
+                      <span class="text-zinc-500">ISWC:</span> {{ track.iswc }}
+                    </div>
+                    <div v-for="credit in trackCredits[track.id]" :key="credit.id" class="text-zinc-400">
+                      <span class="text-zinc-500 capitalize">{{ credit.role }}:</span> {{ credit.name }}
+                      <span v-if="credit.share_percentage && credit.share_percentage < 100" class="text-zinc-600">({{ credit.share_percentage }}%)</span>
                     </div>
                   </div>
-                </div>
-              </td>
-              <td class="px-4 py-4 text-zinc-400 hidden sm:table-cell">
-                {{ formatNumber(track.stream_count || 0) }}
-              </td>
-              <td class="px-4 py-4 text-zinc-400 text-right">
-                {{ formatTrackDuration(track.duration_seconds) }}
-              </td>
-              <td class="px-4 py-4 text-right">
-                <UButton
-                  :color="isTrackLiked(track.id) ? 'red' : 'gray'"
-                  variant="ghost"
-                  size="xs"
-                  :icon="isTrackLiked(track.id) ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
-                  :class="isTrackLiked(track.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'"
-                  @click.stop="handleLikeTrack(track.id)"
-                />
-              </td>
-            </tr>
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
+
+        <!-- Rights Footer -->
+        <div v-if="album.p_line || album.c_line" class="px-4 py-3 border-t border-zinc-800 text-xs text-zinc-500">
+          <p v-if="album.p_line">{{ album.p_line }}</p>
+          <p v-if="album.c_line">{{ album.c_line }}</p>
+        </div>
       </div>
     </div>
 
@@ -194,10 +229,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Album, Track } from '~/composables/useAlbum'
+import type { Album, Track, TrackCredit } from '~/composables/useAlbum'
 
 const route = useRoute()
-const { getAlbumBySlug, getBandAlbums, getStreamUrl } = useAlbum()
+const { getAlbumBySlug, getBandAlbums, getStreamUrl, getCreditsForTracks } = useAlbum()
 const { getBandBySlug } = useBand()
 const { playAlbum, playTrack: playerPlayTrack, currentTrack, isPlaying } = usePlayer()
 const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
@@ -208,6 +243,8 @@ const otherAlbums = ref<Album[]>([])
 const loading = ref(true)
 const coverUrl = ref<string | null>(null)
 const savingAlbum = ref(false)
+const trackCredits = ref<Record<string, TrackCredit[]>>({})
+const expandedTrack = ref<string | null>(null)
 
 const releaseTypeLabel = computed(() => {
   const types: Record<string, string> = {
@@ -278,6 +315,24 @@ const handleLikeTrack = async (trackId: string) => {
   await toggleTrackLike(trackId)
 }
 
+// Credits helpers
+const hasCredits = (trackId: string): boolean => {
+  const track = album.value?.tracks?.find(t => t.id === trackId)
+  return Boolean(
+    (trackCredits.value[trackId] && trackCredits.value[trackId].length > 0) ||
+    track?.isrc ||
+    track?.iswc
+  )
+}
+
+const toggleCredits = (trackId: string) => {
+  if (expandedTrack.value === trackId) {
+    expandedTrack.value = null
+  } else {
+    expandedTrack.value = trackId
+  }
+}
+
 // Set page meta
 useHead(() => ({
   title: album.value && band.value
@@ -324,10 +379,17 @@ onMounted(async () => {
     // Check if album is saved
     await checkAlbumSaved(album.value.id)
 
-    // Fetch liked status for all tracks
+    // Fetch liked status and credits for all tracks
     if (album.value.tracks?.length) {
       const trackIds = album.value.tracks.map(t => t.id)
       await fetchLikedTrackIds(trackIds)
+
+      // Load track credits
+      try {
+        trackCredits.value = await getCreditsForTracks(trackIds)
+      } catch (e) {
+        console.error('Failed to load track credits:', e)
+      }
     }
 
   } catch (e) {

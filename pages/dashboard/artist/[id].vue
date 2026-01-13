@@ -669,6 +669,49 @@
               </UFormGroup>
             </div>
 
+            <!-- Rights Metadata -->
+            <div class="border-t border-zinc-800 pt-4 mt-2">
+              <h4 class="text-sm font-medium text-zinc-300 mb-3">Rights Metadata</h4>
+              <div class="grid grid-cols-2 gap-4">
+                <UFormGroup label="Label Name" hint="Optional">
+                  <UInput
+                    v-model="editAlbumForm.label_name"
+                    :placeholder="band?.name || 'Self-released'"
+                    size="lg"
+                    :disabled="savingAlbum"
+                  />
+                </UFormGroup>
+
+                <UFormGroup label="UPC Code" hint="Optional">
+                  <UInput
+                    v-model="editAlbumForm.upc"
+                    placeholder="e.g. 012345678901"
+                    size="lg"
+                    maxlength="12"
+                    :disabled="savingAlbum"
+                  />
+                </UFormGroup>
+
+                <UFormGroup label="℗ Line (Sound Recording)" hint="Optional">
+                  <UInput
+                    v-model="editAlbumForm.p_line"
+                    :placeholder="`℗ ${new Date().getFullYear()} ${editAlbumForm.label_name || band?.name || 'Label'}`"
+                    size="lg"
+                    :disabled="savingAlbum"
+                  />
+                </UFormGroup>
+
+                <UFormGroup label="© Line (Composition)" hint="Optional">
+                  <UInput
+                    v-model="editAlbumForm.c_line"
+                    :placeholder="`© ${new Date().getFullYear()} ${editAlbumForm.label_name || band?.name || 'Publisher'}`"
+                    size="lg"
+                    :disabled="savingAlbum"
+                  />
+                </UFormGroup>
+              </div>
+            </div>
+
             <UFormGroup label="Published">
               <UToggle
                 v-model="editAlbumForm.is_published"
@@ -688,37 +731,75 @@
               No tracks in this album
             </div>
 
-            <div v-else class="space-y-2">
+            <div v-else class="space-y-3">
               <div
                 v-for="(track, index) in editAlbumTracks"
                 :key="track.id"
-                class="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg"
+                class="p-3 bg-zinc-800/50 rounded-lg space-y-3"
               >
-                <span class="text-zinc-500 text-sm w-6 text-center">{{ index + 1 }}</span>
+                <!-- Track Header Row -->
+                <div class="flex items-center gap-3">
+                  <span class="text-zinc-500 text-sm w-6 text-center">{{ index + 1 }}</span>
 
-                <UInput
-                  v-model="track.title"
-                  placeholder="Track title"
-                  size="sm"
-                  class="flex-1"
-                  :disabled="savingAlbum"
-                />
+                  <UInput
+                    v-model="track.title"
+                    placeholder="Track title"
+                    size="sm"
+                    class="flex-1"
+                    :disabled="savingAlbum"
+                  />
 
-                <UCheckbox
-                  v-model="track.is_explicit"
-                  label="Explicit"
-                  :disabled="savingAlbum"
-                />
+                  <UCheckbox
+                    v-model="track.is_explicit"
+                    label="Explicit"
+                    :disabled="savingAlbum"
+                  />
 
-                <UButton
-                  color="red"
-                  variant="ghost"
-                  size="xs"
-                  :disabled="savingAlbum"
-                  @click="confirmDeleteTrack(track)"
-                >
-                  <UIcon name="i-heroicons-trash" class="w-4 h-4" />
-                </UButton>
+                  <UCheckbox
+                    v-model="track.is_cover"
+                    label="Cover"
+                    :disabled="savingAlbum"
+                  />
+
+                  <UButton
+                    color="red"
+                    variant="ghost"
+                    size="xs"
+                    :disabled="savingAlbum"
+                    @click="confirmDeleteTrack(track)"
+                  >
+                    <UIcon name="i-heroicons-trash" class="w-4 h-4" />
+                  </UButton>
+                </div>
+
+                <!-- ISRC / ISWC Row -->
+                <div class="flex items-center gap-3 pl-9">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs text-zinc-500 w-10">ISRC</span>
+                      <UInput
+                        v-model="track.isrc"
+                        placeholder="e.g. USRC12345678"
+                        size="xs"
+                        class="flex-1"
+                        maxlength="12"
+                        :disabled="savingAlbum"
+                      />
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs text-zinc-500 w-10">ISWC</span>
+                      <UInput
+                        v-model="track.iswc"
+                        placeholder="e.g. T-123.456.789-0"
+                        size="xs"
+                        class="flex-1"
+                        :disabled="savingAlbum"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -872,6 +953,11 @@ const editAlbumForm = reactive({
   release_type: 'album' as 'album' | 'ep' | 'single',
   release_date: '',
   is_published: false,
+  // Rights metadata
+  label_name: '',
+  upc: '',
+  p_line: '',
+  c_line: '',
 })
 
 // Album cover edit state
@@ -1378,6 +1464,11 @@ const openEditAlbum = (album: Album) => {
   editAlbumForm.release_type = album.release_type
   editAlbumForm.release_date = album.release_date?.split('T')[0] || ''
   editAlbumForm.is_published = album.is_published
+  // Rights metadata
+  editAlbumForm.label_name = album.label_name || ''
+  editAlbumForm.upc = album.upc || ''
+  editAlbumForm.p_line = album.p_line || ''
+  editAlbumForm.c_line = album.c_line || ''
   // Reset cover preview
   editAlbumCoverPreview.value = null
   // Deep copy tracks for editing
@@ -1461,15 +1552,31 @@ const handleSaveAlbum = async () => {
       release_type: editAlbumForm.release_type,
       release_date: editAlbumForm.release_date || undefined,
       is_published: editAlbumForm.is_published,
+      // Rights metadata
+      label_name: editAlbumForm.label_name.trim() || undefined,
+      upc: editAlbumForm.upc.trim() || undefined,
+      p_line: editAlbumForm.p_line.trim() || undefined,
+      c_line: editAlbumForm.c_line.trim() || undefined,
     })
 
     // Update tracks
     for (const track of editAlbumTracks.value) {
       const originalTrack = albumToEdit.value.tracks?.find(t => t.id === track.id)
-      if (originalTrack && (originalTrack.title !== track.title || originalTrack.is_explicit !== track.is_explicit)) {
+      // Check if any track field changed
+      const changed = originalTrack && (
+        originalTrack.title !== track.title ||
+        originalTrack.is_explicit !== track.is_explicit ||
+        originalTrack.isrc !== track.isrc ||
+        originalTrack.iswc !== track.iswc ||
+        originalTrack.is_cover !== track.is_cover
+      )
+      if (changed) {
         await updateTrack(track.id, {
           title: track.title,
           is_explicit: track.is_explicit,
+          isrc: track.isrc || undefined,
+          iswc: track.iswc || undefined,
+          is_cover: track.is_cover,
         })
       }
     }
