@@ -129,6 +129,25 @@
             />
           </UFormGroup>
 
+          <!-- Label Name -->
+          <UFormGroup label="Label Name" hint="Optional - defaults to your artist name for independents">
+            <UInput
+              v-model="albumForm.label_name"
+              :placeholder="selectedBand?.name || 'Self-released'"
+              size="lg"
+            />
+          </UFormGroup>
+
+          <!-- UPC -->
+          <UFormGroup label="UPC Code" hint="Optional - Universal Product Code for the release">
+            <UInput
+              v-model="albumForm.upc"
+              placeholder="e.g. 012345678901"
+              size="lg"
+              maxlength="12"
+            />
+          </UFormGroup>
+
           <!-- Cover Art -->
           <UFormGroup label="Cover Art" required>
             <div
@@ -216,60 +235,235 @@
         </div>
 
         <!-- Track List -->
-        <div v-if="tracks.length > 0" class="space-y-3">
+        <div v-if="tracks.length > 0" class="space-y-4">
           <div
             v-for="(track, index) in tracks"
             :key="index"
-            class="flex items-center gap-4 p-4 bg-zinc-800/50 rounded-lg"
+            class="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700"
           >
-            <!-- Track Number -->
-            <div class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-semibold shrink-0">
-              {{ index + 1 }}
+            <!-- Track Header -->
+            <div class="flex items-center gap-4 mb-4">
+              <!-- Track Number -->
+              <div class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-semibold shrink-0">
+                {{ index + 1 }}
+              </div>
+
+              <!-- Track Title -->
+              <div class="flex-1 min-w-0">
+                <UInput
+                  v-model="track.title"
+                  placeholder="Track title"
+                  variant="none"
+                  class="font-semibold text-zinc-100"
+                />
+                <p class="text-sm text-zinc-400 mt-1">
+                  {{ track.file.name }} · {{ formatFileSize(track.file.size) }}
+                </p>
+              </div>
+
+              <!-- Upload Progress -->
+              <div v-if="track.uploading" class="w-24">
+                <UProgress :value="track.progress" color="violet" size="sm" />
+              </div>
+
+              <!-- Status -->
+              <div v-else-if="track.uploaded" class="text-green-500">
+                <UIcon name="i-heroicons-check-circle" class="w-6 h-6" />
+              </div>
+
+              <div v-else-if="track.error" class="text-red-500">
+                <UIcon name="i-heroicons-exclamation-circle" class="w-6 h-6" />
+              </div>
+
+              <!-- Remove -->
+              <UButton
+                v-if="!track.uploading && !track.uploaded"
+                color="gray"
+                variant="ghost"
+                size="sm"
+                @click="removeTrack(index)"
+              >
+                <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+              </UButton>
             </div>
 
-            <!-- Track Info -->
-            <div class="flex-1 min-w-0">
-              <UInput
-                v-model="track.title"
-                placeholder="Track title"
-                variant="none"
-                class="font-semibold text-zinc-100"
-              />
-              <p class="text-sm text-zinc-400 mt-1">
-                {{ track.file.name }} · {{ formatFileSize(track.file.size) }}
-              </p>
-            </div>
+            <!-- Track Metadata (collapsed by default during upload) -->
+            <div v-if="!track.uploading && !track.uploaded" class="space-y-4 pt-4 border-t border-zinc-700">
+              <!-- ISRC Row -->
+              <div class="flex items-start gap-4">
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-zinc-300 mb-1">
+                    ISRC Code <span class="text-red-400">*</span>
+                  </label>
+                  <div class="flex gap-2">
+                    <UInput
+                      v-model="track.isrc"
+                      placeholder="e.g. USRC12345678"
+                      size="sm"
+                      class="flex-1"
+                      maxlength="12"
+                      :color="!track.isrc ? 'red' : undefined"
+                    />
+                    <UButton
+                      color="gray"
+                      variant="outline"
+                      size="sm"
+                      :loading="track.fetchingIsrc"
+                      @click="openSpotifyModal(index)"
+                    >
+                      <UIcon name="i-heroicons-magnifying-glass" class="w-4 h-4 mr-1" />
+                      Spotify
+                    </UButton>
+                  </div>
+                  <p class="text-xs text-zinc-500 mt-1">
+                    Don't have an ISRC? Get one from your distributor (DistroKid, TuneCore, CD Baby) or
+                    <a href="https://usisrc.org" target="_blank" class="text-violet-400 hover:underline">usisrc.org</a>
+                  </p>
+                </div>
 
-            <!-- Upload Progress -->
-            <div v-if="track.uploading" class="w-24">
-              <UProgress :value="track.progress" color="violet" size="sm" />
-            </div>
+                <!-- Is Cover Checkbox -->
+                <div class="pt-6">
+                  <UCheckbox v-model="track.is_cover" label="Cover song" />
+                </div>
+              </div>
 
-            <!-- Status -->
-            <div v-else-if="track.uploaded" class="text-green-500">
-              <UIcon name="i-heroicons-check-circle" class="w-6 h-6" />
-            </div>
+              <!-- ISWC Row (Optional) -->
+              <div>
+                <label class="block text-sm font-medium text-zinc-300 mb-1">ISWC Code <span class="text-zinc-500">(optional)</span></label>
+                <div class="flex gap-2">
+                  <UInput
+                    v-model="track.iswc"
+                    placeholder="e.g. T-123.456.789-0"
+                    size="sm"
+                    class="flex-1"
+                  />
+                  <UButton
+                    color="gray"
+                    variant="outline"
+                    size="sm"
+                    :loading="track.fetchingIswc"
+                    @click="searchMusicBrainz(index)"
+                  >
+                    <UIcon name="i-heroicons-magnifying-glass" class="w-4 h-4 mr-1" />
+                    MusicBrainz
+                  </UButton>
+                </div>
+              </div>
 
-            <div v-else-if="track.error" class="text-red-500">
-              <UIcon name="i-heroicons-exclamation-circle" class="w-6 h-6" />
-            </div>
+              <!-- Composer Credits -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-sm font-medium text-zinc-300">
+                    Composer Credits
+                    <span class="text-zinc-500 font-normal">(for PRO reporting)</span>
+                  </label>
+                  <UButton
+                    color="gray"
+                    variant="ghost"
+                    size="xs"
+                    @click="track.showCredits = !track.showCredits"
+                  >
+                    {{ track.showCredits ? 'Hide' : 'Show' }}
+                    <UIcon :name="track.showCredits ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="w-4 h-4 ml-1" />
+                  </UButton>
+                </div>
 
-            <!-- Remove -->
-            <UButton
-              v-if="!track.uploading && !track.uploaded"
-              color="gray"
-              variant="ghost"
-              size="sm"
-              @click="removeTrack(index)"
-            >
-              <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
-            </UButton>
+                <div v-if="track.showCredits" class="space-y-2">
+                  <!-- Existing Credits -->
+                  <div
+                    v-for="(credit, creditIndex) in track.credits"
+                    :key="creditIndex"
+                    class="flex items-center gap-2 p-2 bg-zinc-900/50 rounded"
+                  >
+                    <USelect
+                      v-model="credit.role"
+                      :options="creditRoles"
+                      size="xs"
+                      class="w-28"
+                    />
+                    <UInput
+                      v-model="credit.name"
+                      placeholder="Name"
+                      size="xs"
+                      class="flex-1"
+                    />
+                    <UInput
+                      v-model="credit.ipi_number"
+                      placeholder="IPI #"
+                      size="xs"
+                      class="w-24"
+                    />
+                    <UInput
+                      v-model.number="credit.share_percentage"
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="%"
+                      size="xs"
+                      class="w-16"
+                    />
+                    <UButton
+                      color="gray"
+                      variant="ghost"
+                      size="xs"
+                      @click="track.credits.splice(creditIndex, 1)"
+                    >
+                      <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+                    </UButton>
+                  </div>
+
+                  <!-- Add Credit Button -->
+                  <UButton
+                    color="gray"
+                    variant="dashed"
+                    size="sm"
+                    block
+                    @click="addCredit(index)"
+                  >
+                    <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
+                    Add Credit
+                  </UButton>
+
+                  <!-- Share Total Warning -->
+                  <p
+                    v-if="track.credits.length > 0 && getTotalShare(track.credits) !== 100"
+                    class="text-xs text-amber-400"
+                  >
+                    Share percentages should total 100% (currently {{ getTotalShare(track.credits) }}%)
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Empty State -->
         <div v-else class="text-center py-8 text-zinc-400">
           <p>No tracks added yet. Drop some audio files above!</p>
+        </div>
+
+        <!-- Rights Confirmation -->
+        <div v-if="tracks.length > 0" class="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-700">
+          <h3 class="text-sm font-semibold text-zinc-100 mb-3">Rights Confirmation</h3>
+
+          <!-- ISRC Warning -->
+          <div v-if="!allTracksHaveIsrc" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p class="text-sm text-red-400">
+              <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
+              All tracks require an ISRC code before publishing.
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <UCheckbox
+              v-model="rightsConfirmed"
+              label="I confirm that I own or control all rights to distribute this music"
+            />
+            <UCheckbox
+              v-model="falseInfoUnderstood"
+              label="I understand that providing false information may result in account termination"
+            />
+          </div>
         </div>
 
         <!-- Actions -->
@@ -281,7 +475,7 @@
             color="violet"
             size="lg"
             :loading="uploading"
-            :disabled="tracks.length === 0 || uploading"
+            :disabled="!canPublish || uploading"
             @click="startUpload"
           >
             <UIcon name="i-heroicons-cloud-arrow-up" class="w-5 h-5 mr-1" />
@@ -310,6 +504,52 @@
         </div>
       </UCard>
     </div>
+
+    <!-- Spotify Lookup Modal -->
+    <UModal v-model="spotifyModalOpen">
+      <UCard class="bg-zinc-900 border-zinc-800">
+        <template #header>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-green-400" />
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-zinc-100">Fetch ISRC from Spotify</h3>
+              <p class="text-sm text-zinc-400">Paste a Spotify track link to get the ISRC</p>
+            </div>
+          </div>
+        </template>
+
+        <div class="space-y-4">
+          <UFormGroup label="Spotify Track URL">
+            <UInput
+              v-model="spotifyUrl"
+              placeholder="https://open.spotify.com/track/..."
+              size="lg"
+              @keyup.enter="fetchFromSpotify"
+            />
+          </UFormGroup>
+
+          <p v-if="spotifyError" class="text-sm text-red-400">{{ spotifyError }}</p>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <UButton color="gray" variant="ghost" @click="spotifyModalOpen = false">
+              Cancel
+            </UButton>
+            <UButton
+              color="violet"
+              :loading="spotifyLoading"
+              :disabled="!spotifyUrl"
+              @click="fetchFromSpotify"
+            >
+              Fetch ISRC
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
   </div>
 </template>
 
@@ -322,8 +562,9 @@ definePageMeta({
 })
 
 const { getUserBands } = useBand()
-const { createAlbum, createTrack, updateTrack, updateAlbum, getUploadUrl } = useAlbum()
+const { createAlbum, createTrack, updateTrack, updateAlbum, getUploadUrl, setTrackCredits } = useAlbum()
 const toast = useToast()
+const user = useSupabaseUser()
 
 // State
 const bands = ref<Band[]>([])
@@ -344,6 +585,8 @@ const albumForm = reactive({
   description: '',
   release_type: 'album' as 'album' | 'ep' | 'single',
   release_date: '',
+  label_name: '',
+  upc: '',
 })
 
 const releaseTypes = [
@@ -357,6 +600,13 @@ const coverFile = ref<File | null>(null)
 const coverPreview = ref<string | null>(null)
 
 // Tracks
+interface TrackCredit {
+  role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
+  name: string
+  ipi_number: string
+  share_percentage: number
+}
+
 interface TrackUpload {
   file: File
   title: string
@@ -364,6 +614,17 @@ interface TrackUpload {
   uploaded: boolean
   progress: number
   error: string | null
+  // Rights metadata
+  isrc: string
+  iswc: string
+  is_cover: boolean
+  spotify_track_id: string
+  musicbrainz_work_id: string
+  credits: TrackCredit[]
+  // UI state
+  showCredits: boolean
+  fetchingIsrc: boolean
+  fetchingIswc: boolean
 }
 const tracks = ref<TrackUpload[]>([])
 
@@ -442,6 +703,17 @@ const addAudioFiles = (files: File[]) => {
       uploaded: false,
       progress: 0,
       error: null,
+      // Rights metadata
+      isrc: '',
+      iswc: '',
+      is_cover: false,
+      spotify_track_id: '',
+      musicbrainz_work_id: '',
+      credits: [],
+      // UI state
+      showCredits: false,
+      fetchingIsrc: false,
+      fetchingIswc: false,
     })
   }
 }
@@ -449,6 +721,142 @@ const addAudioFiles = (files: File[]) => {
 const removeTrack = (index: number) => {
   tracks.value.splice(index, 1)
 }
+
+// Credit roles for dropdown
+const creditRoles = [
+  { value: 'composer', label: 'Composer' },
+  { value: 'lyricist', label: 'Lyricist' },
+  { value: 'performer', label: 'Performer' },
+  { value: 'producer', label: 'Producer' },
+  { value: 'arranger', label: 'Arranger' },
+]
+
+// Add a credit to a track
+const addCredit = (trackIndex: number) => {
+  tracks.value[trackIndex].credits.push({
+    role: 'composer',
+    name: '',
+    ipi_number: '',
+    share_percentage: 100,
+  })
+  tracks.value[trackIndex].showCredits = true
+}
+
+// Calculate total share percentage
+const getTotalShare = (credits: TrackCredit[]): number => {
+  return credits.reduce((sum, c) => sum + (c.share_percentage || 0), 0)
+}
+
+// Spotify modal state
+const spotifyModalOpen = ref(false)
+const spotifyModalTrackIndex = ref<number | null>(null)
+const spotifyUrl = ref('')
+const spotifyLoading = ref(false)
+const spotifyError = ref('')
+
+const openSpotifyModal = (trackIndex: number) => {
+  spotifyModalTrackIndex.value = trackIndex
+  spotifyUrl.value = ''
+  spotifyError.value = ''
+  spotifyModalOpen.value = true
+}
+
+const fetchFromSpotify = async () => {
+  if (!spotifyUrl.value || spotifyModalTrackIndex.value === null) return
+
+  spotifyLoading.value = true
+  spotifyError.value = ''
+
+  try {
+    const result = await $fetch<{
+      isrc: string | null
+      name: string
+      spotifyTrackId: string
+    }>('/api/spotify/fetch-track', {
+      method: 'POST',
+      body: { spotifyUrl: spotifyUrl.value },
+    })
+
+    const track = tracks.value[spotifyModalTrackIndex.value]
+    if (result.isrc) {
+      track.isrc = result.isrc
+      track.spotify_track_id = result.spotifyTrackId
+      toast.add({ title: 'ISRC found', description: `ISRC: ${result.isrc}`, color: 'green' })
+      spotifyModalOpen.value = false
+    } else {
+      spotifyError.value = 'This track does not have an ISRC in Spotify'
+    }
+  } catch (e: any) {
+    spotifyError.value = e.data?.message || 'Failed to fetch from Spotify'
+  } finally {
+    spotifyLoading.value = false
+  }
+}
+
+// MusicBrainz search
+const searchMusicBrainz = async (trackIndex: number) => {
+  const track = tracks.value[trackIndex]
+  if (!track.title) return
+
+  track.fetchingIswc = true
+
+  try {
+    const result = await $fetch<{
+      count: number
+      results: Array<{
+        musicbrainzWorkId: string
+        title: string
+        iswc: string | null
+        composers: Array<{ name: string; role: string }>
+      }>
+    }>('/api/musicbrainz/search-work', {
+      params: {
+        title: track.title,
+        artist: selectedBand.value?.name,
+      },
+    })
+
+    if (result.results.length > 0 && result.results[0].iswc) {
+      const work = result.results[0]
+      track.iswc = work.iswc || ''
+      track.musicbrainz_work_id = work.musicbrainzWorkId
+
+      // Optionally add composers if found and no credits exist
+      if (work.composers.length > 0 && track.credits.length === 0) {
+        for (const composer of work.composers) {
+          track.credits.push({
+            role: composer.role === 'lyricist' ? 'lyricist' : 'composer',
+            name: composer.name,
+            ipi_number: '',
+            share_percentage: Math.floor(100 / work.composers.length),
+          })
+        }
+        track.showCredits = true
+      }
+
+      toast.add({ title: 'ISWC found', description: `ISWC: ${work.iswc}`, color: 'green' })
+    } else {
+      toast.add({ title: 'No results', description: 'No matching work found in MusicBrainz', color: 'amber' })
+    }
+  } catch (e: any) {
+    toast.add({ title: 'Search failed', description: e.data?.message || 'Failed to search MusicBrainz', color: 'red' })
+  } finally {
+    track.fetchingIswc = false
+  }
+}
+
+// Rights confirmation state
+const rightsConfirmed = ref(false)
+const falseInfoUnderstood = ref(false)
+
+// Validation: all tracks must have ISRC
+const allTracksHaveIsrc = computed(() => {
+  return tracks.value.length > 0 && tracks.value.every(t => t.isrc && t.isrc.length > 0)
+})
+
+const canPublish = computed(() => {
+  return tracks.value.length > 0 && allTracksHaveIsrc.value && rightsConfirmed.value && falseInfoUnderstood.value
+})
 
 // Step navigation
 const goToStep2 = () => {
@@ -473,6 +881,8 @@ const startUpload = async () => {
       description: albumForm.description || undefined,
       release_type: albumForm.release_type,
       release_date: albumForm.release_date || undefined,
+      label_name: albumForm.label_name || undefined,
+      upc: albumForm.upc || undefined,
     })
 
     // 2. Upload and process cover art (resizes to 600x600 square)
@@ -487,13 +897,26 @@ const startUpload = async () => {
       track.uploading = true
 
       try {
-        // Create track in database
+        // Create track in database with rights metadata
         const dbTrack = await createTrack({
           album_id: album.id,
           band_id: selectedBand.value!.id,
           title: track.title,
           track_number: i + 1,
+          isrc: track.isrc || undefined,
+          iswc: track.iswc || undefined,
+          is_cover: track.is_cover,
+          spotify_track_id: track.spotify_track_id || undefined,
+          musicbrainz_work_id: track.musicbrainz_work_id || undefined,
         })
+
+        // Create track credits if any
+        if (track.credits.length > 0) {
+          const validCredits = track.credits.filter(c => c.name.trim())
+          if (validCredits.length > 0) {
+            await setTrackCredits(dbTrack.id, validCredits)
+          }
+        }
 
         // Get presigned URL and upload
         const { uploadUrl, key } = await getUploadUrl(
@@ -528,7 +951,16 @@ const startUpload = async () => {
     // 4. Only publish if ALL tracks uploaded successfully
     const allTracksUploaded = tracks.value.every(t => t.uploaded)
     if (allTracksUploaded) {
-      await updateAlbum(album.id, { is_published: true })
+      // Mark rights as confirmed and publish
+      await updateAlbum(album.id, {
+        is_published: true,
+        rights_confirmed: true,
+        rights_confirmed_at: new Date().toISOString(),
+        rights_confirmed_by: user.value?.id,
+        // Generate P-line and C-line
+        p_line: `℗ ${new Date().getFullYear()} ${albumForm.label_name || selectedBand.value?.name}`,
+        c_line: `© ${new Date().getFullYear()} ${albumForm.label_name || selectedBand.value?.name}`,
+      })
       createdAlbum.value = album
       toast.add({ title: 'Release published!', description: `"${albumForm.title}" is now live`, color: 'green', icon: 'i-heroicons-check-circle' })
       step.value = 3
@@ -632,9 +1064,13 @@ const resetForm = () => {
   albumForm.description = ''
   albumForm.release_type = 'album'
   albumForm.release_date = ''
+  albumForm.label_name = ''
+  albumForm.upc = ''
   coverFile.value = null
   coverPreview.value = null
   tracks.value = []
   createdAlbum.value = null
+  rightsConfirmed.value = false
+  falseInfoUnderstood.value = false
 }
 </script>

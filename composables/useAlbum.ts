@@ -13,6 +13,24 @@ export interface Track {
   stream_count: number
   created_at: string
   updated_at: string
+  // Rights metadata
+  isrc: string | null
+  iswc: string | null
+  is_cover: boolean
+  spotify_track_id: string | null
+  musicbrainz_work_id: string | null
+  // Joined data
+  credits?: TrackCredit[]
+}
+
+export interface TrackCredit {
+  id: string
+  track_id: string
+  role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
+  name: string
+  ipi_number: string | null
+  share_percentage: number
+  created_at: string
 }
 
 export interface Album {
@@ -30,6 +48,14 @@ export interface Album {
   total_streams: number
   created_at: string
   updated_at: string
+  // Rights metadata
+  upc: string | null
+  label_name: string | null
+  p_line: string | null
+  c_line: string | null
+  rights_confirmed: boolean
+  rights_confirmed_at: string | null
+  rights_confirmed_by: string | null
   // Joined data
   tracks?: Track[]
   band?: {
@@ -46,6 +72,9 @@ export interface CreateAlbumInput {
   description?: string
   release_type: 'album' | 'ep' | 'single'
   release_date?: string
+  // Rights metadata
+  upc?: string
+  label_name?: string
 }
 
 export interface UpdateAlbumInput {
@@ -56,6 +85,14 @@ export interface UpdateAlbumInput {
   cover_key?: string
   cover_url?: string
   is_published?: boolean
+  // Rights metadata
+  upc?: string
+  label_name?: string
+  p_line?: string
+  c_line?: string
+  rights_confirmed?: boolean
+  rights_confirmed_at?: string
+  rights_confirmed_by?: string
 }
 
 export interface CreateTrackInput {
@@ -66,6 +103,12 @@ export interface CreateTrackInput {
   duration_seconds?: number
   is_explicit?: boolean
   lyrics?: string
+  // Rights metadata
+  isrc?: string
+  iswc?: string
+  is_cover?: boolean
+  spotify_track_id?: string
+  musicbrainz_work_id?: string
 }
 
 export interface UpdateTrackInput {
@@ -76,6 +119,27 @@ export interface UpdateTrackInput {
   preview_start_seconds?: number
   is_explicit?: boolean
   lyrics?: string
+  // Rights metadata
+  isrc?: string
+  iswc?: string
+  is_cover?: boolean
+  spotify_track_id?: string
+  musicbrainz_work_id?: string
+}
+
+export interface CreateTrackCreditInput {
+  track_id: string
+  role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
+  name: string
+  ipi_number?: string
+  share_percentage?: number
+}
+
+export interface UpdateTrackCreditInput {
+  role?: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
+  name?: string
+  ipi_number?: string
+  share_percentage?: number
 }
 
 export const useAlbum = () => {
@@ -188,6 +252,8 @@ export const useAlbum = () => {
         description: input.description || null,
         release_type: input.release_type,
         release_date: input.release_date || null,
+        upc: input.upc || null,
+        label_name: input.label_name || null,
       })
       .select()
       .single()
@@ -246,6 +312,11 @@ export const useAlbum = () => {
         duration_seconds: input.duration_seconds || 0,
         is_explicit: input.is_explicit || false,
         lyrics: input.lyrics || null,
+        isrc: input.isrc || null,
+        iswc: input.iswc || null,
+        is_cover: input.is_cover || false,
+        spotify_track_id: input.spotify_track_id || null,
+        musicbrainz_work_id: input.musicbrainz_work_id || null,
       })
       .select()
       .single()
@@ -336,6 +407,131 @@ export const useAlbum = () => {
     return response.url
   }
 
+  // ==========================================
+  // Track Credits (Composer/Songwriter splits)
+  // ==========================================
+
+  // Get credits for a track
+  const getTrackCredits = async (trackId: string): Promise<TrackCredit[]> => {
+    const { data, error } = await supabase
+      .from('track_credits')
+      .select('*')
+      .eq('track_id', trackId)
+      .order('share_percentage', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  }
+
+  // Get credits for multiple tracks (batch)
+  const getCreditsForTracks = async (trackIds: string[]): Promise<Record<string, TrackCredit[]>> => {
+    if (trackIds.length === 0) return {}
+
+    const { data, error } = await supabase
+      .from('track_credits')
+      .select('*')
+      .in('track_id', trackIds)
+
+    if (error) throw error
+
+    // Group by track_id
+    const grouped: Record<string, TrackCredit[]> = {}
+    for (const credit of data || []) {
+      if (!grouped[credit.track_id]) {
+        grouped[credit.track_id] = []
+      }
+      grouped[credit.track_id].push(credit)
+    }
+
+    return grouped
+  }
+
+  // Create a track credit
+  const createTrackCredit = async (input: CreateTrackCreditInput): Promise<TrackCredit> => {
+    if (!user.value) throw new Error('Must be logged in to add track credits')
+
+    const { data, error } = await supabase
+      .from('track_credits')
+      .insert({
+        track_id: input.track_id,
+        role: input.role,
+        name: input.name,
+        ipi_number: input.ipi_number || null,
+        share_percentage: input.share_percentage ?? 100,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  // Update a track credit
+  const updateTrackCredit = async (creditId: string, input: UpdateTrackCreditInput): Promise<TrackCredit> => {
+    if (!user.value) throw new Error('Must be logged in to update track credits')
+
+    const { data, error } = await supabase
+      .from('track_credits')
+      .update(input)
+      .eq('id', creditId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  // Delete a track credit
+  const deleteTrackCredit = async (creditId: string): Promise<void> => {
+    if (!user.value) throw new Error('Must be logged in to delete track credits')
+
+    const { error } = await supabase
+      .from('track_credits')
+      .delete()
+      .eq('id', creditId)
+
+    if (error) throw error
+  }
+
+  // Delete all credits for a track
+  const deleteAllTrackCredits = async (trackId: string): Promise<void> => {
+    if (!user.value) throw new Error('Must be logged in to delete track credits')
+
+    const { error } = await supabase
+      .from('track_credits')
+      .delete()
+      .eq('track_id', trackId)
+
+    if (error) throw error
+  }
+
+  // Batch create credits for a track (replaces all existing)
+  const setTrackCredits = async (trackId: string, credits: Omit<CreateTrackCreditInput, 'track_id'>[]): Promise<TrackCredit[]> => {
+    if (!user.value) throw new Error('Must be logged in to manage track credits')
+
+    // Delete existing credits
+    await deleteAllTrackCredits(trackId)
+
+    if (credits.length === 0) return []
+
+    // Insert new credits
+    const { data, error } = await supabase
+      .from('track_credits')
+      .insert(
+        credits.map((c) => ({
+          track_id: trackId,
+          role: c.role,
+          name: c.name,
+          ipi_number: c.ipi_number || null,
+          share_percentage: c.share_percentage ?? 100,
+        }))
+      )
+      .select()
+
+    if (error) throw error
+    return data || []
+  }
+
   return {
     generateSlug,
     getBandAlbums,
@@ -350,5 +546,13 @@ export const useAlbum = () => {
     reorderTracks,
     getUploadUrl,
     getStreamUrl,
+    // Track credits
+    getTrackCredits,
+    getCreditsForTracks,
+    createTrackCredit,
+    updateTrackCredit,
+    deleteTrackCredit,
+    deleteAllTrackCredits,
+    setTrackCredits,
   }
 }
