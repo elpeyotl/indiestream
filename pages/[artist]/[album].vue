@@ -165,7 +165,6 @@
                     </div>
                     <div v-for="credit in trackCredits[track.id]" :key="credit.id" class="text-zinc-400">
                       <span class="text-zinc-500 capitalize">{{ credit.role }}:</span> {{ credit.name }}
-                      <span v-if="credit.share_percentage && credit.share_percentage < 100" class="text-zinc-600">({{ credit.share_percentage }}%)</span>
                     </div>
                   </div>
                 </td>

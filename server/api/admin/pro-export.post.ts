@@ -81,7 +81,7 @@ export default defineEventHandler(async (event) => {
   // Fetch composer credits for all tracks
   const { data: credits } = await client
     .from('track_credits')
-    .select('track_id, name, role, ipi_number, share_percentage')
+    .select('track_id, name, role, ipi_number')
     .in('track_id', trackIds)
     .in('role', ['composer', 'lyricist'])
 
@@ -90,8 +90,8 @@ export default defineEventHandler(async (event) => {
   for (const credit of credits || []) {
     const existing = creditsByTrack.get(credit.track_id) || []
     const creditStr = credit.ipi_number
-      ? `${credit.name} (IPI: ${credit.ipi_number}, ${credit.share_percentage}%)`
-      : `${credit.name} (${credit.share_percentage}%)`
+      ? `${credit.name} (IPI: ${credit.ipi_number})`
+      : credit.name
     existing.push(creditStr)
     creditsByTrack.set(credit.track_id, existing)
   }

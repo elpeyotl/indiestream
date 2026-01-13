@@ -1,4 +1,4 @@
-// Create Stripe Connect Express account for artist
+// Create Stripe Connect Express account for user (covers all their bands)
 import Stripe from 'stripe'
 import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
 
@@ -13,50 +13,33 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const body = await readBody<{ bandId: string }>(event)
-
-  if (!body.bandId) {
-    throw createError({
-      statusCode: 400,
-      message: 'Band ID is required',
-    })
-  }
-
   const client = await serverSupabaseClient(event)
 
-  // Verify user owns the band
-  const { data: band, error: bandError } = await client
-    .from('bands')
-    .select('id, name, owner_id, stripe_account_id, stripe_account_status')
-    .eq('id', body.bandId)
+  // Get user's profile with Stripe info
+  const { data: profile, error: profileError } = await client
+    .from('profiles')
+    .select('id, display_name, stripe_account_id, stripe_account_status')
+    .eq('id', user.id)
     .single()
 
-  if (bandError || !band) {
+  if (profileError || !profile) {
     throw createError({
       statusCode: 404,
-      message: 'Band not found',
+      message: 'Profile not found',
     })
   }
 
-  if (band.owner_id !== user.id) {
-    throw createError({
-      statusCode: 403,
-      message: 'You do not own this band',
-    })
-  }
+  const stripe = new Stripe(config.stripeSecretKey, {
+    apiVersion: '2025-02-24.acacia',
+  })
 
-  // If already has an account, return account link instead
-  if (band.stripe_account_id) {
-    // Check if account needs onboarding completion
-    const stripe = new Stripe(config.stripeSecretKey, {
-      apiVersion: '2025-02-24.acacia',
-    })
-
-    const account = await stripe.accounts.retrieve(band.stripe_account_id)
+  // If already has an account, return account link for completion or status
+  if (profile.stripe_account_id) {
+    const account = await stripe.accounts.retrieve(profile.stripe_account_id)
 
     if (account.details_submitted && account.payouts_enabled) {
       return {
-        accountId: band.stripe_account_id,
+        accountId: profile.stripe_account_id,
         status: 'active',
         message: 'Account already set up',
       }
@@ -64,34 +47,29 @@ export default defineEventHandler(async (event) => {
 
     // Need to complete onboarding
     const accountLink = await stripe.accountLinks.create({
-      account: band.stripe_account_id,
-      refresh_url: `${config.public.appUrl}/dashboard/artist/${body.bandId}?tab=earnings&refresh=true`,
-      return_url: `${config.public.appUrl}/dashboard/artist/${body.bandId}?tab=earnings&connected=true`,
+      account: profile.stripe_account_id,
+      refresh_url: `${config.public.appUrl}/dashboard/earnings?refresh=true`,
+      return_url: `${config.public.appUrl}/dashboard/earnings?connected=true`,
       type: 'account_onboarding',
     })
 
     return {
-      accountId: band.stripe_account_id,
+      accountId: profile.stripe_account_id,
       url: accountLink.url,
       status: 'pending',
     }
   }
 
-  const stripe = new Stripe(config.stripeSecretKey, {
-    apiVersion: '2025-02-24.acacia',
-  })
-
   try {
-    // Create Express account
+    // Create Express account for the user
     const account = await stripe.accounts.create({
       type: 'express',
       email: user.email,
       metadata: {
-        band_id: body.bandId,
         supabase_user_id: user.id,
       },
       business_profile: {
-        name: band.name,
+        name: profile.display_name || user.email,
         product_description: 'Music streaming royalties from Indiestream',
       },
       capabilities: {
@@ -99,24 +77,24 @@ export default defineEventHandler(async (event) => {
       },
     })
 
-    // Update band with Stripe account ID
+    // Update profile with Stripe account ID
     const { error: updateError } = await client
-      .from('bands')
+      .from('profiles')
       .update({
         stripe_account_id: account.id,
         stripe_account_status: 'pending',
       })
-      .eq('id', body.bandId)
+      .eq('id', user.id)
 
     if (updateError) {
-      console.error('Failed to update band with Stripe account:', updateError)
+      console.error('Failed to update profile with Stripe account:', updateError)
     }
 
     // Create account link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${config.public.appUrl}/dashboard/artist/${body.bandId}?tab=earnings&refresh=true`,
-      return_url: `${config.public.appUrl}/dashboard/artist/${body.bandId}?tab=earnings&connected=true`,
+      refresh_url: `${config.public.appUrl}/dashboard/earnings?refresh=true`,
+      return_url: `${config.public.appUrl}/dashboard/earnings?connected=true`,
       type: 'account_onboarding',
     })
 

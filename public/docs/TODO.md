@@ -50,8 +50,8 @@
 - [x] Subscription management (upgrade/downgrade/cancel via Stripe portal)
 - [x] Free tier with 5 full-track plays per month
 - [ ] Payment history page
-- [ ] Artist payout system (Stripe Connect)
-- [ ] Revenue dashboard for artists
+- [x] Artist payout system (Stripe Connect Express)
+- [x] Revenue dashboard for artists (Earnings tab with balance, history)
 
 #### Contact Form
 - [x] Backend for contact form (Resend)
@@ -73,6 +73,11 @@
 - [x] Album/track editing and deletion
 - [ ] Release scheduling (set future release date)
 - [ ] Pre-save functionality
+- [x] ISRC/ISWC metadata for tracks (with Deezer/MusicBrainz lookup)
+- [x] Composer credits (name, role, IPI number)
+- [x] Cover song flagging
+- [x] Rights confirmation on publish
+- [x] User-level Stripe payouts (one account for all bands/labels)
 
 #### User Features
 - [ ] User profile page
@@ -81,10 +86,19 @@
 
 ### Lower Priority
 
-#### Admin
-- [ ] Admin panel for content moderation
-- [ ] Artist verification system
+#### Admin Dashboard
+- [x] Admin middleware and route protection
+- [x] Platform stats overview (users, artists, tracks, streams)
+- [x] User management (list, search, pagination)
+- [x] Delete users (cascades to all their data)
+- [x] Change user roles (user/artist/admin)
+- [x] PRO export for SUISA/GEMA reporting (CSV with ISRC, composers, territories)
+- [ ] Artist/band management (list, delete, feature/unfeature)
+- [ ] Content moderation queue (review flagged/new uploads)
 - [ ] Track approval workflow
+- [ ] Artist verification system
+- [ ] Revenue dashboard (subscriptions, payouts)
+- [ ] Growth metrics over time
 
 #### Platform
 - [ ] Mobile responsive improvements
@@ -128,6 +142,13 @@ All migrations should be run in Supabase SQL Editor in order:
 7. `20260112120000_add_library.sql` - Saved albums and liked tracks
 8. `20260112130000_add_subscriptions.sql` - Stripe subscription fields
 9. `20260112140000_add_free_tier_tracking.sql` - Free tier with 5 plays/month
+10. `20260113_add_rights_metadata.sql` - ISRC/ISWC, track credits, album rights metadata
+11. `20260114_artist_payouts.sql` - Stripe Connect, artist balances, payouts tables
+12. `20260116_transparent_revenue_split.sql` - CMO fee tracking in revenue periods
+13. `20260117_backfill_country_codes.sql` - Backfill country codes for existing streams
+14. `20260118_unique_isrc.sql` - Add unique constraint on ISRC codes
+15. `20260119_remove_share_percentage.sql` - Remove share_percentage from track_credits
+16. `20260120_user_level_stripe.sql` - Move Stripe Connect to user level for labels
 
 ---
 

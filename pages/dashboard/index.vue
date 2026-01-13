@@ -211,9 +211,22 @@
               {{ freeTierStatus?.playsRemaining ?? 5 }} free full-track plays remaining this month
             </p>
           </div>
-          <UButton color="violet" to="/pricing">
-            Upgrade
-          </UButton>
+          <div class="flex gap-2">
+            <UButton
+              v-if="subscription?.status === 'active' && !subscription?.stripe_subscription_id"
+              color="gray"
+              variant="outline"
+              size="sm"
+              :loading="syncing"
+              @click="syncSubscription"
+            >
+              <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 mr-1" />
+              Sync
+            </UButton>
+            <UButton color="violet" to="/pricing">
+              Upgrade
+            </UButton>
+          </div>
         </div>
         <!-- Free plays progress bar -->
         <div class="space-y-2">
@@ -276,10 +289,42 @@ const user = useSupabaseUser()
 const client = useSupabaseClient()
 const { getUserBands } = useBand()
 const { getStreamUrl } = useAlbum()
-const { subscription, isSubscribed, freeTierStatus, loading: subscriptionLoading, openCustomerPortal } = useSubscription()
+const { subscription, isSubscribed, freeTierStatus, loading: subscriptionLoading, openCustomerPortal, fetchSubscription } = useSubscription()
 
 const bands = ref<Band[]>([])
 const bandsLoading = ref(true)
+const syncing = ref(false)
+const toast = useToast()
+
+const syncSubscription = async () => {
+  syncing.value = true
+  try {
+    const result = await $fetch('/api/subscription/sync', { method: 'POST' })
+    if (result.synced) {
+      toast.add({
+        title: 'Subscription synced',
+        description: `Status: ${result.status}`,
+        color: 'green',
+      })
+      // Refetch subscription to update UI
+      await fetchSubscription()
+    } else {
+      toast.add({
+        title: 'Sync failed',
+        description: result.message || 'Could not find subscription in Stripe',
+        color: 'red',
+      })
+    }
+  } catch (e: any) {
+    toast.add({
+      title: 'Sync error',
+      description: e.message || 'Failed to sync subscription',
+      color: 'red',
+    })
+  } finally {
+    syncing.value = false
+  }
+}
 
 const listeningStats = ref({
   totalSeconds: 0,
@@ -361,6 +406,9 @@ const loadListeningStats = async () => {
 }
 
 onMounted(async () => {
+  // Refresh subscription status on mount (in case webhook updated it)
+  fetchSubscription()
+
   try {
     bands.value = await getUserBands()
 

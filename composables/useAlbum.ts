@@ -29,7 +29,6 @@ export interface TrackCredit {
   role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
   name: string
   ipi_number: string | null
-  share_percentage: number
   created_at: string
 }
 
@@ -132,14 +131,12 @@ export interface CreateTrackCreditInput {
   role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
   name: string
   ipi_number?: string
-  share_percentage?: number
 }
 
 export interface UpdateTrackCreditInput {
   role?: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
   name?: string
   ipi_number?: string
-  share_percentage?: number
 }
 
 export const useAlbum = () => {
@@ -417,7 +414,7 @@ export const useAlbum = () => {
       .from('track_credits')
       .select('*')
       .eq('track_id', trackId)
-      .order('share_percentage', { ascending: false })
+      .order('created_at', { ascending: true })
 
     if (error) throw error
     return data || []
@@ -457,7 +454,6 @@ export const useAlbum = () => {
         role: input.role,
         name: input.name,
         ipi_number: input.ipi_number || null,
-        share_percentage: input.share_percentage ?? 100,
       })
       .select()
       .single()
@@ -523,7 +519,6 @@ export const useAlbum = () => {
           role: c.role,
           name: c.name,
           ipi_number: c.ipi_number || null,
-          share_percentage: c.share_percentage ?? 100,
         }))
       )
       .select()

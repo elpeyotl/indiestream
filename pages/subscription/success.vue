@@ -43,9 +43,37 @@ useHead({
   title: 'Subscription Activated | Indiestream',
 })
 
-// Refresh subscription status
-const { fetchSubscription } = useSubscription()
+// Refresh subscription status with retry (webhook may not have processed yet)
+const { fetchSubscription, isSubscribed } = useSubscription()
+
+const syncAndFetch = async () => {
+  // First try to sync from Stripe (in case webhook didn't fire)
+  try {
+    await $fetch('/api/subscription/sync', { method: 'POST' })
+  } catch (e) {
+    console.log('Sync attempt:', e)
+  }
+
+  // Then fetch the subscription
+  await fetchSubscription()
+}
+
+const pollForSubscription = async (retries = 10, delay = 1000) => {
+  // Try immediate sync first
+  await syncAndFetch()
+  if (isSubscribed.value) return
+
+  // If not subscribed yet, poll for webhook to process
+  for (let i = 0; i < retries; i++) {
+    await new Promise(resolve => setTimeout(resolve, delay))
+    await fetchSubscription()
+    if (isSubscribed.value) {
+      return // Success!
+    }
+  }
+}
+
 onMounted(() => {
-  fetchSubscription()
+  pollForSubscription()
 })
 </script>

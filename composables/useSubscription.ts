@@ -1,26 +1,36 @@
 // Subscription management composable
+// Using global state so subscription status is shared across all components
+
+interface SubscriptionData {
+  status: string
+  plan: string
+  current_period_end: string | null
+  cancel_at_period_end: boolean
+  stripe_subscription_id: string | null
+}
+
+interface FreeTierData {
+  playsUsed: number
+  playsRemaining: number
+  resetsAt: string | null
+}
+
+// Global state (shared across all components)
+const globalSubscription = ref<SubscriptionData | null>(null)
+const globalFreeTierStatus = ref<FreeTierData | null>(null)
+const globalLoading = ref(false)
+const globalError = ref('')
+
 export const useSubscription = () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
   const config = useRuntimeConfig()
 
-  const subscription = ref<{
-    status: string
-    plan: string
-    current_period_end: string | null
-    cancel_at_period_end: boolean
-    stripe_subscription_id: string | null
-  } | null>(null)
-
-  // Free tier tracking
-  const freeTierStatus = ref<{
-    playsUsed: number
-    playsRemaining: number
-    resetsAt: string | null
-  } | null>(null)
-
-  const loading = ref(false)
-  const error = ref('')
+  // Use global refs
+  const subscription = globalSubscription
+  const freeTierStatus = globalFreeTierStatus
+  const loading = globalLoading
+  const error = globalError
 
   // Check if user has an active subscription (must have a Stripe subscription ID)
   const isSubscribed = computed(() => {

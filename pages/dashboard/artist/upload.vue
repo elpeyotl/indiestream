@@ -384,16 +384,7 @@
                       v-model="credit.ipi_number"
                       placeholder="IPI #"
                       size="xs"
-                      class="w-24"
-                    />
-                    <UInput
-                      v-model.number="credit.share_percentage"
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="%"
-                      size="xs"
-                      class="w-16"
+                      class="w-28"
                     />
                     <UButton
                       color="gray"
@@ -417,13 +408,6 @@
                     Add Credit
                   </UButton>
 
-                  <!-- Share Total Warning -->
-                  <p
-                    v-if="track.credits.length > 0 && getTotalShare(track.credits) !== 100"
-                    class="text-xs text-amber-400"
-                  >
-                    Share percentages should total 100% (currently {{ getTotalShare(track.credits) }}%)
-                  </p>
                 </div>
               </div>
             </div>
@@ -569,7 +553,7 @@ definePageMeta({
 })
 
 const { getUserBands } = useBand()
-const { createAlbum, createTrack, updateTrack, updateAlbum, getUploadUrl, setTrackCredits } = useAlbum()
+const { createAlbum, createTrack, updateTrack, updateAlbum, getUploadUrl, setTrackCredits, getStreamUrl } = useAlbum()
 const toast = useToast()
 const user = useSupabaseUser()
 
@@ -610,7 +594,6 @@ interface TrackCredit {
   role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
   name: string
   ipi_number: string
-  share_percentage: number
 }
 
 interface TrackUpload {
@@ -639,7 +622,18 @@ const totalSize = computed(() => tracks.value.reduce((sum, t) => sum + t.file.si
 // Load bands
 onMounted(async () => {
   try {
-    bands.value = await getUserBands()
+    const loadedBands = await getUserBands()
+    // Load avatar URLs from keys
+    for (const band of loadedBands) {
+      if (band.avatar_key) {
+        try {
+          band.avatar_url = await getStreamUrl(band.avatar_key)
+        } catch (e) {
+          console.error('Failed to load avatar for band:', band.name, e)
+        }
+      }
+    }
+    bands.value = loadedBands
   } catch (e) {
     console.error('Failed to load bands:', e)
   } finally {
@@ -743,14 +737,8 @@ const addCredit = (trackIndex: number) => {
     role: 'composer',
     name: '',
     ipi_number: '',
-    share_percentage: 100,
   })
   tracks.value[trackIndex].showCredits = true
-}
-
-// Calculate total share percentage
-const getTotalShare = (credits: TrackCredit[]): number => {
-  return credits.reduce((sum, c) => sum + (c.share_percentage || 0), 0)
 }
 
 // Deezer modal state
@@ -882,7 +870,6 @@ const searchMusicBrainz = async (trackIndex: number) => {
             role: composer.role === 'lyricist' ? 'lyricist' : 'composer',
             name: composer.name,
             ipi_number: '',
-            share_percentage: Math.floor(100 / work.composers.length),
           })
         }
         track.showCredits = true

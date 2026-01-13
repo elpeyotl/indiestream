@@ -13,39 +13,23 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const body = await readBody<{ bandId: string }>(event)
-
-  if (!body.bandId) {
-    throw createError({
-      statusCode: 400,
-      message: 'Band ID is required',
-    })
-  }
-
   const client = await serverSupabaseClient(event)
 
-  // Verify user owns the band and get Stripe account
-  const { data: band, error: bandError } = await client
-    .from('bands')
-    .select('id, owner_id, stripe_account_id')
-    .eq('id', body.bandId)
+  // Get user's profile with Stripe info
+  const { data: profile, error: profileError } = await client
+    .from('profiles')
+    .select('id, stripe_account_id')
+    .eq('id', user.id)
     .single()
 
-  if (bandError || !band) {
+  if (profileError || !profile) {
     throw createError({
       statusCode: 404,
-      message: 'Band not found',
+      message: 'Profile not found',
     })
   }
 
-  if (band.owner_id !== user.id) {
-    throw createError({
-      statusCode: 403,
-      message: 'You do not own this band',
-    })
-  }
-
-  if (!band.stripe_account_id) {
+  if (!profile.stripe_account_id) {
     throw createError({
       statusCode: 400,
       message: 'No Stripe account found. Please create one first.',
@@ -58,9 +42,9 @@ export default defineEventHandler(async (event) => {
 
   try {
     const accountLink = await stripe.accountLinks.create({
-      account: band.stripe_account_id,
-      refresh_url: `${config.public.appUrl}/dashboard/artist/${body.bandId}?tab=earnings&refresh=true`,
-      return_url: `${config.public.appUrl}/dashboard/artist/${body.bandId}?tab=earnings&connected=true`,
+      account: profile.stripe_account_id,
+      refresh_url: `${config.public.appUrl}/dashboard/earnings?refresh=true`,
+      return_url: `${config.public.appUrl}/dashboard/earnings?connected=true`,
       type: 'account_onboarding',
     })
 

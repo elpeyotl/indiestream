@@ -19,6 +19,11 @@ function getCountryCode(event: any): string | null {
     return vercelCountry.toUpperCase()
   }
 
+  // In development, use a default country for testing
+  if (process.dev) {
+    return 'DE' // Default to Germany for dev testing
+  }
+
   return null
 }
 

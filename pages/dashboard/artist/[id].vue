@@ -357,57 +357,23 @@
           </div>
 
           <template v-else>
-            <!-- Stripe Connect Status -->
+            <!-- Payout Settings Link -->
             <UCard class="bg-zinc-900/50 border-zinc-800">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                  <div
-                    class="w-12 h-12 rounded-xl flex items-center justify-center"
-                    :class="{
-                      'bg-green-500/20': earningsData?.stripeStatus === 'active',
-                      'bg-yellow-500/20': earningsData?.stripeStatus === 'pending',
-                      'bg-zinc-800': earningsData?.stripeStatus === 'not_connected' || !earningsData?.stripeStatus,
-                      'bg-red-500/20': earningsData?.stripeStatus === 'restricted',
-                    }"
-                  >
-                    <UIcon
-                      :name="earningsData?.stripeStatus === 'active' ? 'i-heroicons-check-circle' : earningsData?.stripeStatus === 'pending' ? 'i-heroicons-clock' : 'i-heroicons-credit-card'"
-                      class="w-6 h-6"
-                      :class="{
-                        'text-green-400': earningsData?.stripeStatus === 'active',
-                        'text-yellow-400': earningsData?.stripeStatus === 'pending',
-                        'text-zinc-400': earningsData?.stripeStatus === 'not_connected' || !earningsData?.stripeStatus,
-                        'text-red-400': earningsData?.stripeStatus === 'restricted',
-                      }"
-                    />
+                  <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-violet-500/20">
+                    <UIcon name="i-heroicons-banknotes" class="w-6 h-6 text-violet-400" />
                   </div>
                   <div>
-                    <h3 class="font-semibold text-zinc-100">
-                      {{ earningsData?.stripeStatus === 'active' ? 'Payouts Enabled' : earningsData?.stripeStatus === 'pending' ? 'Setup Incomplete' : 'Set Up Payouts' }}
-                    </h3>
+                    <h3 class="font-semibold text-zinc-100">Payout Settings</h3>
                     <p class="text-sm text-zinc-400">
-                      <template v-if="earningsData?.stripeStatus === 'active'">
-                        Your Stripe account is connected and ready to receive payouts.
-                      </template>
-                      <template v-else-if="earningsData?.stripeStatus === 'pending'">
-                        Complete your Stripe account setup to start receiving payouts.
-                      </template>
-                      <template v-else-if="earningsData?.stripeStatus === 'restricted'">
-                        Your account needs attention. Please update your Stripe information.
-                      </template>
-                      <template v-else>
-                        Connect with Stripe to receive your earnings. You receive 70% of streaming revenue directly.
-                      </template>
+                      Manage your Stripe account and view combined earnings across all your artists.
                     </p>
                   </div>
                 </div>
-                <UButton
-                  v-if="earningsData?.stripeStatus !== 'active'"
-                  color="violet"
-                  :loading="connectLoading"
-                  @click="handleStripeConnect"
-                >
-                  {{ earningsData?.stripeStatus === 'pending' ? 'Complete Setup' : 'Set Up Payouts' }}
+                <UButton color="violet" variant="outline" to="/dashboard/earnings">
+                  <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 mr-1" />
+                  View All Earnings
                 </UButton>
               </div>
             </UCard>
@@ -963,6 +929,80 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Composer Credits -->
+                <div class="pl-9 pt-2">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-zinc-400">
+                      Composer Credits
+                      <span v-if="track.credits.length > 0" class="text-zinc-500">({{ track.credits.length }})</span>
+                    </span>
+                    <UButton
+                      color="gray"
+                      variant="ghost"
+                      size="xs"
+                      :disabled="savingAlbum"
+                      @click="track.showCredits = !track.showCredits"
+                    >
+                      {{ track.showCredits ? 'Hide' : 'Show' }}
+                      <UIcon :name="track.showCredits ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="w-3 h-3 ml-1" />
+                    </UButton>
+                  </div>
+
+                  <div v-if="track.showCredits" class="space-y-2">
+                    <!-- Existing Credits -->
+                    <div
+                      v-for="(credit, creditIndex) in track.credits"
+                      :key="creditIndex"
+                      class="flex items-center gap-2 p-2 bg-zinc-900/50 rounded"
+                    >
+                      <USelect
+                        v-model="credit.role"
+                        :options="creditRoleOptions"
+                        size="xs"
+                        class="w-24"
+                        :disabled="savingAlbum"
+                      />
+                      <UInput
+                        v-model="credit.name"
+                        placeholder="Name"
+                        size="xs"
+                        class="flex-1"
+                        :disabled="savingAlbum"
+                      />
+                      <UInput
+                        v-model="credit.ipi_number"
+                        placeholder="IPI #"
+                        size="xs"
+                        class="w-24"
+                        :disabled="savingAlbum"
+                      />
+                      <UButton
+                        color="gray"
+                        variant="ghost"
+                        size="xs"
+                        :disabled="savingAlbum"
+                        @click="track.credits.splice(creditIndex, 1)"
+                      >
+                        <UIcon name="i-heroicons-x-mark" class="w-3 h-3" />
+                      </UButton>
+                    </div>
+
+                    <!-- Add Credit Button -->
+                    <UButton
+                      color="gray"
+                      variant="outline"
+                      size="xs"
+                      block
+                      :disabled="savingAlbum"
+                      @click="track.credits.push({ role: 'composer', name: '', ipi_number: '' })"
+                    >
+                      <UIcon name="i-heroicons-plus" class="w-3 h-3 mr-1" />
+                      Add Credit
+                    </UButton>
+
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1062,7 +1102,20 @@
 
 <script setup lang="ts">
 import type { Band } from '~/composables/useBand'
-import type { Album, Track } from '~/composables/useAlbum'
+import type { Album, Track, TrackCredit } from '~/composables/useAlbum'
+
+// Extended track type for editing with credits
+interface EditableCredit {
+  id?: string
+  role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
+  name: string
+  ipi_number: string
+}
+
+interface EditableTrack extends Omit<Track, 'credits'> {
+  credits: EditableCredit[]
+  showCredits: boolean
+}
 
 definePageMeta({
   middleware: 'auth',
@@ -1073,7 +1126,7 @@ const router = useRouter()
 const toast = useToast()
 const client = useSupabaseClient()
 const { getBandById, updateBand, deleteBand } = useBand()
-const { getBandAlbums, getStreamUrl, deleteAlbum, updateAlbum, updateTrack, deleteTrack } = useAlbum()
+const { getBandAlbums, getStreamUrl, deleteAlbum, updateAlbum, updateTrack, deleteTrack, getCreditsForTracks, setTrackCredits } = useAlbum()
 
 const band = ref<Band | null>(null)
 const albums = ref<Album[]>([])
@@ -1135,10 +1188,19 @@ const releaseTypeOptions = [
 ]
 
 // Track edit/delete state
-const editAlbumTracks = ref<Track[]>([])
+const editAlbumTracks = ref<EditableTrack[]>([])
 const showDeleteTrackModal = ref(false)
+
+// Credit role options
+const creditRoleOptions = [
+  { label: 'Composer', value: 'composer' },
+  { label: 'Lyricist', value: 'lyricist' },
+  { label: 'Performer', value: 'performer' },
+  { label: 'Producer', value: 'producer' },
+  { label: 'Arranger', value: 'arranger' },
+]
 const deletingTrack = ref(false)
-const trackToDelete = ref<Track | null>(null)
+const trackToDelete = ref<EditableTrack | null>(null)
 
 // Analytics state
 interface AnalyticsData {
@@ -1214,7 +1276,6 @@ interface EarningsData {
 
 const earningsLoading = ref(false)
 const earningsData = ref<EarningsData | null>(null)
-const connectLoading = ref(false)
 
 const tabs = [
   { label: 'Releases', slot: 'releases', icon: 'i-heroicons-musical-note' },
@@ -1303,6 +1364,8 @@ const getCountryBarWidth = (streamCount: number): number => {
 // Country code to flag emoji
 const getCountryFlag = (countryCode: string): string => {
   if (!countryCode || countryCode.length !== 2) return '🌍'
+  // XX is used for unknown locations
+  if (countryCode.toUpperCase() === 'XX') return '🌍'
   const codePoints = countryCode
     .toUpperCase()
     .split('')
@@ -1342,6 +1405,7 @@ const countryNames: Record<string, string> = {
   CN: 'China',
   ZA: 'South Africa',
   AR: 'Argentina',
+  XX: 'Unknown',
 }
 
 const getCountryName = (countryCode: string): string => {
@@ -1411,41 +1475,6 @@ const loadEarnings = async () => {
   }
 }
 
-// Handle Stripe Connect onboarding
-const handleStripeConnect = async () => {
-  if (!band.value) return
-
-  connectLoading.value = true
-  try {
-    const data = await $fetch<{ url?: string; accountId: string; status: string }>('/api/stripe/connect/create-account', {
-      method: 'POST',
-      body: { bandId: band.value.id },
-    })
-
-    if (data.url) {
-      // Redirect to Stripe onboarding
-      window.location.href = data.url
-    } else if (data.status === 'active') {
-      toast.add({
-        title: 'Already Connected',
-        description: 'Your Stripe account is already set up and active.',
-        icon: 'i-heroicons-check-circle',
-        color: 'green',
-      })
-      await loadEarnings()
-    }
-  } catch (e: any) {
-    console.error('Stripe connect error:', e)
-    toast.add({
-      title: 'Connection Failed',
-      description: e.data?.message || 'Failed to start Stripe onboarding',
-      icon: 'i-heroicons-exclamation-triangle',
-      color: 'red',
-    })
-  } finally {
-    connectLoading.value = false
-  }
-}
 
 const loadAnalytics = async () => {
   if (!band.value) return
@@ -1754,7 +1783,7 @@ const handleDelete = async () => {
 }
 
 // Album edit functions
-const openEditAlbum = (album: Album) => {
+const openEditAlbum = async (album: Album) => {
   albumToEdit.value = album
   editAlbumForm.title = album.title
   editAlbumForm.description = album.description || ''
@@ -1767,8 +1796,33 @@ const openEditAlbum = (album: Album) => {
   editAlbumForm.c_line = album.c_line || ''
   // Reset cover preview
   editAlbumCoverPreview.value = null
-  // Deep copy tracks for editing
-  editAlbumTracks.value = (album.tracks || []).map(t => ({ ...t }))
+
+  // Deep copy tracks for editing with credits
+  const tracks = album.tracks || []
+  const trackIds = tracks.map(t => t.id)
+
+  // Load credits for all tracks
+  let creditsMap: Record<string, TrackCredit[]> = {}
+  if (trackIds.length > 0) {
+    try {
+      creditsMap = await getCreditsForTracks(trackIds)
+    } catch (e) {
+      console.error('Failed to load track credits:', e)
+    }
+  }
+
+  // Map tracks with their credits
+  editAlbumTracks.value = tracks.map(t => ({
+    ...t,
+    credits: (creditsMap[t.id] || []).map(c => ({
+      id: c.id,
+      role: c.role,
+      name: c.name,
+      ipi_number: c.ipi_number || '',
+    })),
+    showCredits: false,
+  }))
+
   showEditAlbumModal.value = true
 }
 
@@ -1854,7 +1908,7 @@ const handleSaveAlbum = async () => {
       c_line: editAlbumForm.c_line.trim() || undefined,
     })
 
-    // Update tracks
+    // Update tracks and their credits
     for (const track of editAlbumTracks.value) {
       const originalTrack = albumToEdit.value.tracks?.find(t => t.id === track.id)
       // Check if any track field changed
@@ -1874,12 +1928,22 @@ const handleSaveAlbum = async () => {
           is_cover: track.is_cover,
         })
       }
+
+      // Save credits (always update to handle additions/removals)
+      const validCredits = track.credits.filter(c => c.name.trim())
+      await setTrackCredits(track.id, validCredits.map(c => ({
+        role: c.role,
+        name: c.name.trim(),
+        ipi_number: c.ipi_number?.trim() || undefined,
+      })))
     }
 
     // Update local albums array with updated data including tracks
+    // Strip editable-only fields (showCredits) when saving back
     const index = albums.value.findIndex(a => a.id === albumToEdit.value!.id)
     if (index !== -1) {
-      albums.value[index] = { ...albums.value[index], ...updated, tracks: editAlbumTracks.value }
+      const tracksForStorage = editAlbumTracks.value.map(({ showCredits, ...track }) => track)
+      albums.value[index] = { ...albums.value[index], ...updated, tracks: tracksForStorage as Track[] }
     }
 
     toast.add({ title: 'Album updated', color: 'green', icon: 'i-heroicons-check-circle' })
@@ -1892,7 +1956,7 @@ const handleSaveAlbum = async () => {
 }
 
 // Track delete functions
-const confirmDeleteTrack = (track: Track) => {
+const confirmDeleteTrack = (track: EditableTrack) => {
   trackToDelete.value = track
   showDeleteTrackModal.value = true
 }

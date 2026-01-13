@@ -1,4 +1,4 @@
-// Get Stripe Connect account status for a band
+// Get Stripe Connect account status for user
 import Stripe from 'stripe'
 import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
 
@@ -13,40 +13,23 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const query = getQuery(event)
-  const bandId = query.bandId as string
-
-  if (!bandId) {
-    throw createError({
-      statusCode: 400,
-      message: 'Band ID is required',
-    })
-  }
-
   const client = await serverSupabaseClient(event)
 
-  // Verify user owns the band
-  const { data: band, error: bandError } = await client
-    .from('bands')
-    .select('id, owner_id, stripe_account_id, stripe_account_status')
-    .eq('id', bandId)
+  // Get user's profile with Stripe info
+  const { data: profile, error: profileError } = await client
+    .from('profiles')
+    .select('id, stripe_account_id, stripe_account_status')
+    .eq('id', user.id)
     .single()
 
-  if (bandError || !band) {
+  if (profileError || !profile) {
     throw createError({
       statusCode: 404,
-      message: 'Band not found',
+      message: 'Profile not found',
     })
   }
 
-  if (band.owner_id !== user.id) {
-    throw createError({
-      statusCode: 403,
-      message: 'You do not own this band',
-    })
-  }
-
-  if (!band.stripe_account_id) {
+  if (!profile.stripe_account_id) {
     return {
       status: 'not_connected',
       accountId: null,
@@ -61,7 +44,7 @@ export default defineEventHandler(async (event) => {
   })
 
   try {
-    const account = await stripe.accounts.retrieve(band.stripe_account_id)
+    const account = await stripe.accounts.retrieve(profile.stripe_account_id)
 
     // Determine status
     let status = 'pending'
@@ -72,16 +55,16 @@ export default defineEventHandler(async (event) => {
     }
 
     // Update status in database if it changed
-    if (status !== band.stripe_account_status) {
+    if (status !== profile.stripe_account_status) {
       await client
-        .from('bands')
+        .from('profiles')
         .update({ stripe_account_status: status })
-        .eq('id', bandId)
+        .eq('id', user.id)
     }
 
     return {
       status,
-      accountId: band.stripe_account_id,
+      accountId: profile.stripe_account_id,
       payoutsEnabled: account.payouts_enabled || false,
       chargesEnabled: account.charges_enabled || false,
       detailsSubmitted: account.details_submitted || false,
@@ -91,15 +74,15 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     console.error('Stripe status check error:', error)
 
-    // If account doesn't exist, reset the band's stripe fields
+    // If account doesn't exist, reset the profile's stripe fields
     if (error.code === 'account_invalid') {
       await client
-        .from('bands')
+        .from('profiles')
         .update({
           stripe_account_id: null,
           stripe_account_status: 'not_connected',
         })
-        .eq('id', bandId)
+        .eq('id', user.id)
 
       return {
         status: 'not_connected',

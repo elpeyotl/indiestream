@@ -13,7 +13,41 @@ export const useStripeConnect = () => {
     disabledReason?: string | null
   }
 
-  interface EarningsData {
+  interface BandEarnings {
+    id: string
+    name: string
+    slug: string
+    totalStreams: number
+    currentBalance: number
+    lifetimeEarnings: number
+    lastPayoutAt: string | null
+  }
+
+  interface UserEarningsData {
+    stripeStatus: string
+    stripeAccountId: string | null
+    stripeOnboardingComplete: boolean
+    totalBalance: number
+    totalLifetimeEarnings: number
+    thisMonthEarnings: number
+    thisMonthStreams: number
+    minimumPayout: number
+    canRequestPayout: boolean
+    bandCount: number
+    bands: BandEarnings[]
+    payouts: Array<{
+      id: string
+      amount: number
+      status: string
+      stripeTransferId: string | null
+      createdAt: string
+      processedAt: string | null
+      bands: string[]
+    }>
+  }
+
+  // Legacy per-band earnings (kept for backward compatibility)
+  interface BandEarningsData {
     bandId: string
     bandName: string
     stripeStatus: string
@@ -47,17 +81,16 @@ export const useStripeConnect = () => {
   }
 
   const connectStatus = ref<ConnectStatus | null>(null)
-  const earnings = ref<EarningsData | null>(null)
+  const userEarnings = ref<UserEarningsData | null>(null)
+  const bandEarnings = ref<BandEarningsData | null>(null)
 
-  // Fetch Stripe Connect status for a band
-  const fetchConnectStatus = async (bandId: string): Promise<ConnectStatus | null> => {
+  // Fetch Stripe Connect status for user (new user-level approach)
+  const fetchConnectStatus = async (): Promise<ConnectStatus | null> => {
     loading.value = true
     error.value = null
 
     try {
-      const data = await $fetch<ConnectStatus>('/api/stripe/connect/status', {
-        query: { bandId },
-      })
+      const data = await $fetch<ConnectStatus>('/api/stripe/connect/status')
       connectStatus.value = data
       return data
     } catch (e: any) {
@@ -68,15 +101,14 @@ export const useStripeConnect = () => {
     }
   }
 
-  // Create or continue Stripe Connect onboarding
-  const startOnboarding = async (bandId: string): Promise<string | null> => {
+  // Create or continue Stripe Connect onboarding (user-level)
+  const startOnboarding = async (): Promise<string | null> => {
     loading.value = true
     error.value = null
 
     try {
       const data = await $fetch<{ url?: string; accountId: string; status: string }>('/api/stripe/connect/create-account', {
         method: 'POST',
-        body: { bandId },
       })
 
       if (data.url) {
@@ -95,15 +127,14 @@ export const useStripeConnect = () => {
     }
   }
 
-  // Get new account link for incomplete onboarding
-  const getAccountLink = async (bandId: string): Promise<string | null> => {
+  // Get new account link for incomplete onboarding (user-level)
+  const getAccountLink = async (): Promise<string | null> => {
     loading.value = true
     error.value = null
 
     try {
       const data = await $fetch<{ url: string }>('/api/stripe/connect/account-link', {
         method: 'POST',
-        body: { bandId },
       })
 
       if (data.url) {
@@ -120,16 +151,33 @@ export const useStripeConnect = () => {
     }
   }
 
-  // Fetch earnings data
-  const fetchEarnings = async (bandId: string): Promise<EarningsData | null> => {
+  // Fetch combined user earnings (all bands)
+  const fetchUserEarnings = async (): Promise<UserEarningsData | null> => {
     loading.value = true
     error.value = null
 
     try {
-      const data = await $fetch<EarningsData>('/api/artist/earnings', {
+      const data = await $fetch<UserEarningsData>('/api/user/earnings')
+      userEarnings.value = data
+      return data
+    } catch (e: any) {
+      error.value = e.data?.message || e.message || 'Failed to fetch earnings'
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Fetch per-band earnings (for band-specific view)
+  const fetchBandEarnings = async (bandId: string): Promise<BandEarningsData | null> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const data = await $fetch<BandEarningsData>('/api/artist/earnings', {
         query: { bandId },
       })
-      earnings.value = data
+      bandEarnings.value = data
       return data
     } catch (e: any) {
       error.value = e.data?.message || e.message || 'Failed to fetch earnings'
@@ -162,11 +210,13 @@ export const useStripeConnect = () => {
     loading,
     error,
     connectStatus,
-    earnings,
+    userEarnings,
+    bandEarnings,
     fetchConnectStatus,
     startOnboarding,
     getAccountLink,
-    fetchEarnings,
+    fetchUserEarnings,
+    fetchBandEarnings,
     formatCurrency,
     formatListeningTime,
   }
