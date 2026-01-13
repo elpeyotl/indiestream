@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.1'
+export const APP_VERSION = '0.6.0'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,22 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.6.0',
+    date: '2026-01-13',
+    changes: [
+      { type: 'added', description: 'ISRC metadata for tracks (required for PRO reporting)' },
+      { type: 'added', description: 'ISWC metadata for compositions (optional)' },
+      { type: 'added', description: 'Composer credits with splits (name, role, IPI number, percentage)' },
+      { type: 'added', description: 'Cover song flag for tracks' },
+      { type: 'added', description: 'Deezer integration for ISRC lookup' },
+      { type: 'added', description: 'MusicBrainz integration for ISWC lookup' },
+      { type: 'added', description: 'Rights confirmation checkboxes on publish' },
+      { type: 'added', description: 'P-line and C-line auto-generation for albums' },
+      { type: 'added', description: 'Track credits display on public album pages' },
+      { type: 'removed', description: 'UPC field removed from upload form (not needed for streaming)' },
+    ],
+  },
   {
     version: '0.5.1',
     date: '2026-01-12',

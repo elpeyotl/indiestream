@@ -138,16 +138,6 @@
             />
           </UFormGroup>
 
-          <!-- UPC -->
-          <UFormGroup label="UPC Code" hint="Optional - Universal Product Code for the release">
-            <UInput
-              v-model="albumForm.upc"
-              placeholder="e.g. 012345678901"
-              size="lg"
-              maxlength="12"
-            />
-          </UFormGroup>
-
           <!-- Cover Art -->
           <UFormGroup label="Cover Art" required>
             <div
@@ -603,7 +593,6 @@ const albumForm = reactive({
   release_type: 'album' as 'album' | 'ep' | 'single',
   release_date: '',
   label_name: '',
-  upc: '',
 })
 
 const releaseTypes = [
@@ -947,7 +936,6 @@ const startUpload = async () => {
       release_type: albumForm.release_type,
       release_date: albumForm.release_date || undefined,
       label_name: albumForm.label_name || undefined,
-      upc: albumForm.upc || undefined,
     })
 
     // 2. Upload and process cover art (resizes to 600x600 square)
@@ -1130,7 +1118,6 @@ const resetForm = () => {
   albumForm.release_type = 'album'
   albumForm.release_date = ''
   albumForm.label_name = ''
-  albumForm.upc = ''
   coverFile.value = null
   coverPreview.value = null
   tracks.value = []

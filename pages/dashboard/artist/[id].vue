@@ -682,16 +682,6 @@
                   />
                 </UFormGroup>
 
-                <UFormGroup label="UPC Code" hint="Optional">
-                  <UInput
-                    v-model="editAlbumForm.upc"
-                    placeholder="e.g. 012345678901"
-                    size="lg"
-                    maxlength="12"
-                    :disabled="savingAlbum"
-                  />
-                </UFormGroup>
-
                 <UFormGroup label="℗ Line (Sound Recording)" hint="Optional">
                   <UInput
                     v-model="editAlbumForm.p_line"
@@ -955,7 +945,6 @@ const editAlbumForm = reactive({
   is_published: false,
   // Rights metadata
   label_name: '',
-  upc: '',
   p_line: '',
   c_line: '',
 })
@@ -1466,7 +1455,6 @@ const openEditAlbum = (album: Album) => {
   editAlbumForm.is_published = album.is_published
   // Rights metadata
   editAlbumForm.label_name = album.label_name || ''
-  editAlbumForm.upc = album.upc || ''
   editAlbumForm.p_line = album.p_line || ''
   editAlbumForm.c_line = album.c_line || ''
   // Reset cover preview
@@ -1554,7 +1542,6 @@ const handleSaveAlbum = async () => {
       is_published: editAlbumForm.is_published,
       // Rights metadata
       label_name: editAlbumForm.label_name.trim() || undefined,
-      upc: editAlbumForm.upc.trim() || undefined,
       p_line: editAlbumForm.p_line.trim() || undefined,
       c_line: editAlbumForm.c_line.trim() || undefined,
     })

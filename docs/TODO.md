@@ -73,6 +73,10 @@
 - [x] Album/track editing and deletion
 - [ ] Release scheduling (set future release date)
 - [ ] Pre-save functionality
+- [x] ISRC/ISWC metadata for tracks (with Deezer/MusicBrainz lookup)
+- [x] Composer credits with splits (name, role, IPI number, percentage)
+- [x] Cover song flagging
+- [x] Rights confirmation on publish
 
 #### User Features
 - [ ] User profile page
@@ -128,6 +132,7 @@ All migrations should be run in Supabase SQL Editor in order:
 7. `20260112120000_add_library.sql` - Saved albums and liked tracks
 8. `20260112130000_add_subscriptions.sql` - Stripe subscription fields
 9. `20260112140000_add_free_tier_tracking.sql` - Free tier with 5 plays/month
+10. `20260113_add_rights_metadata.sql` - ISRC/ISWC, track credits, album rights metadata
 
 ---
 
