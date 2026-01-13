@@ -199,16 +199,16 @@
           :to="`/${artist.slug}`"
           class="group"
         >
-          <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl transition-shadow">
+          <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl transition-shadow">
             <img
               v-if="artist.avatar_url"
               :src="artist.avatar_url"
               :alt="artist.name"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <div
               v-else
-              class="w-full h-full flex items-center justify-center"
+              class="absolute inset-0 w-full h-full flex items-center justify-center"
               :style="{ background: `linear-gradient(135deg, ${artist.theme_color || '#8B5CF6'} 0%, #c026d3 100%)` }"
             >
               <span class="text-4xl font-bold text-white">{{ artist.name.charAt(0) }}</span>
