@@ -46,15 +46,37 @@ export default defineEventHandler(async (event) => {
 
   const client = await serverSupabaseClient(event)
 
+  // Get track's band_id to check ownership
+  const { data: track } = await client
+    .from('tracks')
+    .select('band_id')
+    .eq('id', trackId)
+    .single()
+
+  // Check if user owns the band (artists can listen to their own music unlimited)
+  let isOwnMusic = false
+  if (track?.band_id) {
+    const { data: ownsBand } = await client
+      .from('bands')
+      .select('id')
+      .eq('id', track.band_id)
+      .eq('owner_id', user.id)
+      .single()
+
+    isOwnMusic = !!ownsBand
+  }
+
   // Note: Free play consumption happens in the record_stream database function
   // to ensure atomicity and avoid double-counting
+  // If user owns the band, this is NOT a free play (they can listen unlimited)
+  const shouldCountAsFreePlay = !isOwnMusic && (isFreePlay || false)
 
   // Call the record_stream function with country and free play flag
   const { data, error } = await client.rpc('record_stream', {
     p_track_id: trackId,
     p_duration_seconds: Math.floor(durationSeconds),
     p_country_code: countryCode,
-    p_is_free_play: isFreePlay || false,
+    p_is_free_play: shouldCountAsFreePlay,
   })
 
   if (error) {

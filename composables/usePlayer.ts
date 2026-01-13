@@ -108,10 +108,26 @@ export const usePlayer = () => {
   }
 
   // Check play allowance and set up preview/free play mode
-  const checkPlayAllowance = async (): Promise<'full' | 'free' | 'preview'> => {
+  const checkPlayAllowance = async (trackId?: string): Promise<'full' | 'free' | 'preview' | 'own_music'> => {
     // Not logged in = preview mode
     if (!user.value) {
       return 'preview'
+    }
+
+    // Check if this is the user's own music (artists can always play their own music)
+    if (trackId) {
+      try {
+        const result = await $fetch('/api/free-tier/check', {
+          method: 'POST',
+          body: { trackId },
+        })
+        if (result.isOwnMusic) {
+          return 'own_music'
+        }
+      } catch (e) {
+        // Fall through to regular checks if this fails
+        console.error('Failed to check track ownership:', e)
+      }
     }
 
     // Subscriber = full access
@@ -129,14 +145,14 @@ export const usePlayer = () => {
   }
 
   // Reset stream tracking for new track
-  const resetStreamTracking = async () => {
+  const resetStreamTracking = async (trackId?: string) => {
     state.streamRecorded = false
     state.trackStartTime = Date.now()
     state.previewEnded = false
     state.showUpgradePrompt = false
 
     // Check what type of play this will be
-    const playType = await checkPlayAllowance()
+    const playType = await checkPlayAllowance(trackId)
 
     if (playType === 'preview') {
       state.isPreviewMode = true
@@ -150,6 +166,10 @@ export const usePlayer = () => {
       state.isFreePlay = true
       // Decrement free plays locally (server will also decrement)
       useFreePlays()
+    } else if (playType === 'own_music') {
+      // Artist listening to their own music - full access, no free play
+      state.isPreviewMode = false
+      state.isFreePlay = false
     } else {
       // Full subscriber access
       state.isPreviewMode = false
@@ -274,7 +294,7 @@ export const usePlayer = () => {
     initAudioAnalyser()
 
     // Reset tracking for new track (async to check subscription status)
-    await resetStreamTracking()
+    await resetStreamTracking(track.id)
     state.isLoading = true
 
     try {
@@ -350,8 +370,9 @@ export const usePlayer = () => {
   const playFromQueue = async (index: number) => {
     if (!audio || index < 0 || index >= state.queue.length) return
 
+    const trackId = state.queue[index]?.id
     // Reset stream tracking for the new track (async to check subscription status)
-    await resetStreamTracking()
+    await resetStreamTracking(trackId)
 
     state.queueIndex = index
     state.currentTrack = state.queue[index]
@@ -456,7 +477,7 @@ export const usePlayer = () => {
     initAudioAnalyser()
 
     // Reset tracking for new track (async to check subscription status)
-    await resetStreamTracking()
+    await resetStreamTracking(track.id)
     state.isLoading = true
 
     try {

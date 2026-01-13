@@ -10,7 +10,38 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  const body = await readBody(event)
+  const { trackId } = body
+
   const client = await serverSupabaseClient(event)
+
+  // Check if user owns the band for this track (artists can always play their own music)
+  if (trackId) {
+    const { data: track } = await client
+      .from('tracks')
+      .select('band_id')
+      .eq('id', trackId)
+      .single()
+
+    if (track?.band_id) {
+      const { data: ownsBand } = await client
+        .from('bands')
+        .select('id')
+        .eq('id', track.band_id)
+        .eq('owner_id', user.id)
+        .single()
+
+      if (ownsBand) {
+        return {
+          canPlay: true,
+          reason: 'own_music',
+          isSubscribed: false,
+          isFree: false,
+          isOwnMusic: true,
+        }
+      }
+    }
+  }
 
   const { data, error } = await client.rpc('check_free_play_allowance')
 
@@ -30,5 +61,6 @@ export default defineEventHandler(async (event) => {
     reason: status,
     isSubscribed: status === 'subscribed',
     isFree: status === 'allowed' || status === 'limit_reached',
+    isOwnMusic: false,
   }
 })
