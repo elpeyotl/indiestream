@@ -105,16 +105,39 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Search endpoint doesn't return ISRC, so fetch full details for each track
+    const resultsWithIsrc = await Promise.all(
+      data.data.map(async (track) => {
+        try {
+          const detailResponse = await fetch(`https://api.deezer.com/track/${track.id}`)
+          if (detailResponse.ok) {
+            const details = (await detailResponse.json()) as DeezerTrackResponse
+            return {
+              deezerTrackId: track.id.toString(),
+              name: track.title,
+              artist: track.artist?.name || 'Unknown',
+              albumName: track.album?.title || null,
+              isrc: details.isrc || null,
+              durationSeconds: track.duration,
+            }
+          }
+        } catch {
+          // Fall back to no ISRC if fetch fails
+        }
+        return {
+          deezerTrackId: track.id.toString(),
+          name: track.title,
+          artist: track.artist?.name || 'Unknown',
+          albumName: track.album?.title || null,
+          isrc: null,
+          durationSeconds: track.duration,
+        }
+      })
+    )
+
     return {
       source: 'deezer',
-      results: data.data.map((track) => ({
-        deezerTrackId: track.id.toString(),
-        name: track.title,
-        artist: track.artist?.name || 'Unknown',
-        albumName: track.album?.title || null,
-        isrc: track.isrc || null,
-        durationSeconds: track.duration,
-      })),
+      results: resultsWithIsrc,
     }
   }
 
