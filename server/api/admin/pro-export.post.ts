@@ -1,11 +1,10 @@
-// Royalty Export API - Generate stream data for PRO reporting
+// Admin PRO Export API - Generate stream data for SUISA/GEMA reporting
+// Only accessible by admin users
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 interface ExportRequest {
-  bandId: string
   startDate: string
   endDate: string
-  format: 'csv' | 'json'
 }
 
 interface StreamData {
@@ -14,6 +13,7 @@ interface StreamData {
   track_title: string
   album_title: string
   artist_name: string
+  composers: string
   country_code: string | null
   play_count: number
   total_duration: number
@@ -25,36 +25,27 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const body = await readBody<ExportRequest>(event)
-  const { bandId, startDate, endDate, format } = body
-
-  if (!bandId || !startDate || !endDate || !format) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing required fields' })
-  }
-
-  // Validate format
-  if (format !== 'csv' && format !== 'json') {
-    throw createError({ statusCode: 400, statusMessage: 'Format must be csv or json' })
-  }
-
   const client = await serverSupabaseClient(event)
 
-  // Verify user owns this band
-  const { data: band, error: bandError } = await client
-    .from('bands')
-    .select('id, name, owner_id')
-    .eq('id', bandId)
+  // Verify user is admin
+  const { data: profile, error: profileError } = await client
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
     .single()
 
-  if (bandError || !band) {
-    throw createError({ statusCode: 404, statusMessage: 'Band not found' })
+  if (profileError || profile?.role !== 'admin') {
+    throw createError({ statusCode: 403, statusMessage: 'Admin access required' })
   }
 
-  if (band.owner_id !== user.id) {
-    throw createError({ statusCode: 403, statusMessage: 'Not authorized to export this band\'s data' })
+  const body = await readBody<ExportRequest>(event)
+  const { startDate, endDate } = body
+
+  if (!startDate || !endDate) {
+    throw createError({ statusCode: 400, statusMessage: 'Missing required fields: startDate, endDate' })
   }
 
-  // Query stream data grouped by track and country
+  // Query ALL streams platform-wide
   const { data: streams, error: streamsError } = await client
     .from('listening_history')
     .select(`
@@ -67,11 +58,13 @@ export default defineEventHandler(async (event) => {
         isrc,
         iswc,
         albums!inner (
-          title
+          title,
+          bands!inner (
+            name
+          )
         )
       )
     `)
-    .eq('band_id', bandId)
     .gte('listened_at', startDate)
     .lte('listened_at', endDate + 'T23:59:59.999Z')
     .eq('completed', true)
@@ -82,6 +75,27 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: 'Failed to fetch stream data' })
   }
 
+  // Get all track IDs to fetch credits
+  const trackIds = [...new Set((streams || []).map(s => s.track_id))]
+
+  // Fetch composer credits for all tracks
+  const { data: credits } = await client
+    .from('track_credits')
+    .select('track_id, name, role, ipi_number, share_percentage')
+    .in('track_id', trackIds)
+    .in('role', ['composer', 'lyricist'])
+
+  // Group credits by track
+  const creditsByTrack = new Map<string, string[]>()
+  for (const credit of credits || []) {
+    const existing = creditsByTrack.get(credit.track_id) || []
+    const creditStr = credit.ipi_number
+      ? `${credit.name} (IPI: ${credit.ipi_number}, ${credit.share_percentage}%)`
+      : `${credit.name} (${credit.share_percentage}%)`
+    existing.push(creditStr)
+    creditsByTrack.set(credit.track_id, existing)
+  }
+
   // Aggregate by track + country
   const aggregated = new Map<string, StreamData>()
 
@@ -90,12 +104,14 @@ export default defineEventHandler(async (event) => {
     const key = `${stream.track_id}:${stream.country_code || 'UNKNOWN'}`
 
     if (!aggregated.has(key)) {
+      const composers = creditsByTrack.get(stream.track_id)?.join('; ') || 'N/A'
       aggregated.set(key, {
         isrc: track.isrc || null,
         iswc: track.iswc || null,
         track_title: track.title,
         album_title: track.albums?.title || 'Unknown Album',
-        artist_name: band.name,
+        artist_name: track.albums?.bands?.name || 'Unknown Artist',
+        composers,
         country_code: stream.country_code || null,
         play_count: 0,
         total_duration: 0,
@@ -113,48 +129,14 @@ export default defineEventHandler(async (event) => {
   const totals = {
     playCount: streamData.reduce((sum, s) => sum + s.play_count, 0),
     durationSeconds: streamData.reduce((sum, s) => sum + s.total_duration, 0),
-    territories: new Set(streamData.map((s) => s.country_code).filter(Boolean)).size,
+    territories: new Set(streamData.map(s => s.country_code).filter(Boolean)).size,
+    uniqueTracks: new Set(streamData.map(s => s.isrc || s.track_title)).size,
+    uniqueArtists: new Set(streamData.map(s => s.artist_name)).size,
   }
 
-  if (format === 'json') {
-    // Group by track for JSON output
-    const trackMap = new Map<string, {
-      isrc: string | null
-      iswc: string | null
-      title: string
-      album: string
-      streams: { country: string; playCount: number; durationSeconds: number }[]
-    }>()
-
-    for (const stream of streamData) {
-      const key = `${stream.isrc || stream.track_title}`
-      if (!trackMap.has(key)) {
-        trackMap.set(key, {
-          isrc: stream.isrc,
-          iswc: stream.iswc,
-          title: stream.track_title,
-          album: stream.album_title,
-          streams: [],
-        })
-      }
-      trackMap.get(key)!.streams.push({
-        country: stream.country_code || 'UNKNOWN',
-        playCount: stream.play_count,
-        durationSeconds: stream.total_duration,
-      })
-    }
-
-    return {
-      reportPeriod: { start: startDate, end: endDate },
-      artist: { id: band.id, name: band.name },
-      tracks: Array.from(trackMap.values()),
-      totals,
-    }
-  }
-
-  // CSV format
+  // CSV format for SUISA
   const csvRows = [
-    ['ISRC', 'ISWC', 'Track Title', 'Album', 'Artist', 'Play Count', 'Duration (sec)', 'Territory', 'Period Start', 'Period End'].join(','),
+    ['ISRC', 'ISWC', 'Track Title', 'Album', 'Artist', 'Composer(s)', 'Play Count', 'Duration (sec)', 'Territory', 'Period Start', 'Period End'].join(','),
   ]
 
   for (const stream of streamData) {
@@ -164,6 +146,7 @@ export default defineEventHandler(async (event) => {
       `"${stream.track_title.replace(/"/g, '""')}"`,
       `"${stream.album_title.replace(/"/g, '""')}"`,
       `"${stream.artist_name.replace(/"/g, '""')}"`,
+      `"${stream.composers.replace(/"/g, '""')}"`,
       stream.play_count.toString(),
       stream.total_duration.toString(),
       stream.country_code || 'UNKNOWN',
@@ -177,7 +160,7 @@ export default defineEventHandler(async (event) => {
   // Set headers for file download
   setResponseHeaders(event, {
     'Content-Type': 'text/csv',
-    'Content-Disposition': `attachment; filename="royalty-report-${startDate}-to-${endDate}.csv"`,
+    'Content-Disposition': `attachment; filename="suisa-report-${startDate}-to-${endDate}.csv"`,
   })
 
   return csvContent

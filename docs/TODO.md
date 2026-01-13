@@ -85,10 +85,19 @@
 
 ### Lower Priority
 
-#### Admin
-- [ ] Admin panel for content moderation
-- [ ] Artist verification system
+#### Admin Dashboard
+- [x] Admin middleware and route protection
+- [x] Platform stats overview (users, artists, tracks, streams)
+- [x] User management (list, search, pagination)
+- [x] Delete users (cascades to all their data)
+- [x] Change user roles (user/artist/admin)
+- [x] PRO export for SUISA/GEMA reporting (CSV with ISRC, composers, territories)
+- [ ] Artist/band management (list, delete, feature/unfeature)
+- [ ] Content moderation queue (review flagged/new uploads)
 - [ ] Track approval workflow
+- [ ] Artist verification system
+- [ ] Revenue dashboard (subscriptions, payouts)
+- [ ] Growth metrics over time
 
 #### Platform
 - [ ] Mobile responsive improvements

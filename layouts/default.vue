@@ -224,9 +224,26 @@ import BokehBackground from "~/components/backgrounds/BokehBackground.vue";
 import { APP_VERSION } from "~/utils/version";
 
 const user = useSupabaseUser();
+const client = useSupabaseClient();
 const { signOut } = useAuth();
 const { audioData } = usePlayer();
 const toast = useToast();
+
+// Check if user is admin
+const isAdmin = ref(false);
+
+watch(user, async (newUser) => {
+  if (newUser) {
+    const { data } = await client
+      .from('profiles')
+      .select('role')
+      .eq('id', newUser.id)
+      .single();
+    isAdmin.value = data?.role === 'admin';
+  } else {
+    isAdmin.value = false;
+  }
+}, { immediate: true });
 
 const displayName = computed(() => {
   if (!user.value) return "";
@@ -250,35 +267,50 @@ const handleSignOut = async () => {
   }
 };
 
-const userMenuItems = [
-  [
-    {
-      label: "Dashboard",
-      icon: "i-heroicons-home",
-      to: "/dashboard",
-    },
-    {
-      label: "Library",
-      icon: "i-heroicons-heart",
-      to: "/library",
-    },
-    {
-      label: "My Listening",
-      icon: "i-heroicons-musical-note",
-      to: "/dashboard/listening",
-    },
-    {
-      label: "Settings",
-      icon: "i-heroicons-cog-6-tooth",
-      to: "/dashboard/settings",
-    },
-  ],
-  [
-    {
-      label: "Sign out",
-      icon: "i-heroicons-arrow-right-on-rectangle",
-      click: handleSignOut,
-    },
-  ],
-];
+const userMenuItems = computed(() => {
+  const items = [
+    [
+      {
+        label: "Dashboard",
+        icon: "i-heroicons-home",
+        to: "/dashboard",
+      },
+      {
+        label: "Library",
+        icon: "i-heroicons-heart",
+        to: "/library",
+      },
+      {
+        label: "My Listening",
+        icon: "i-heroicons-musical-note",
+        to: "/dashboard/listening",
+      },
+      {
+        label: "Settings",
+        icon: "i-heroicons-cog-6-tooth",
+        to: "/dashboard/settings",
+      },
+    ],
+    [
+      {
+        label: "Sign out",
+        icon: "i-heroicons-arrow-right-on-rectangle",
+        click: handleSignOut,
+      },
+    ],
+  ];
+
+  // Add admin link for admins
+  if (isAdmin.value) {
+    items.splice(1, 0, [
+      {
+        label: "Admin",
+        icon: "i-heroicons-shield-check",
+        to: "/admin",
+      },
+    ]);
+  }
+
+  return items;
+});
 </script>
