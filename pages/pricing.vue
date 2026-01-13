@@ -4,7 +4,7 @@
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-zinc-100 mb-4">Simple, Fair Pricing</h1>
       <p class="text-xl text-zinc-400 max-w-2xl mx-auto">
-        Your subscription goes directly to the artists you listen to. No complicated royalty pools.
+        <span class="text-teal-400 font-semibold">85% of your subscription supports music rights</span> - the highest in streaming.
       </p>
     </div>
 
@@ -162,9 +162,9 @@
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
             <UIcon name="i-heroicons-banknotes" class="w-8 h-8 text-green-400" />
           </div>
-          <h3 class="font-semibold text-zinc-100 mb-2">Artists Earn</h3>
+          <h3 class="font-semibold text-zinc-100 mb-2">85% to Music Rights</h3>
           <p class="text-zinc-400 text-sm">
-            70% goes directly to artists, 15% to royalty societies, 15% platform.
+            70% direct to artists + 15% to royalty societies. Only 15% platform fee.
           </p>
         </div>
       </div>
@@ -184,7 +184,12 @@
           </thead>
           <tbody class="divide-y divide-zinc-800">
             <tr>
-              <td class="p-4 text-zinc-300">Artist revenue share</td>
+              <td class="p-4 text-zinc-300">To music rights</td>
+              <td class="p-4 text-center text-green-400 font-semibold">85%</td>
+              <td class="p-4 text-center text-zinc-500">~70%</td>
+            </tr>
+            <tr>
+              <td class="p-4 text-zinc-300">Direct to artist</td>
               <td class="p-4 text-center text-green-400 font-semibold">70%</td>
               <td class="p-4 text-center text-zinc-500">~30%</td>
             </tr>

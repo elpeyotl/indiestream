@@ -30,18 +30,25 @@
         </div>
         <div class="bg-zinc-900 rounded-2xl p-8 border border-zinc-800">
           <div class="text-center mb-4">
-            <div class="text-4xl font-bold text-violet-400 mb-1">70%</div>
-            <p class="text-zinc-400 text-sm">Direct to artists</p>
+            <div class="text-5xl font-bold text-green-400 mb-1">85%</div>
+            <p class="text-zinc-300 font-medium">To Music Rights</p>
+            <p class="text-zinc-500 text-xs mt-1">Highest in streaming</p>
           </div>
           <div class="h-px bg-zinc-800 my-4" />
-          <div class="text-center mb-4">
-            <div class="text-4xl font-bold text-teal-400 mb-1">15%</div>
-            <p class="text-zinc-400 text-sm">Royalty societies (SUISA/GEMA)</p>
+          <div class="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div class="text-2xl font-bold text-violet-400">70%</div>
+              <p class="text-zinc-400 text-xs">Direct to artists</p>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-teal-400">15%</div>
+              <p class="text-zinc-400 text-xs">Royalty societies</p>
+            </div>
           </div>
           <div class="h-px bg-zinc-800 my-4" />
           <div class="text-center">
-            <div class="text-4xl font-bold text-fuchsia-400 mb-1">15%</div>
-            <p class="text-zinc-400 text-sm">Platform operations</p>
+            <div class="text-2xl font-bold text-fuchsia-400 mb-1">15%</div>
+            <p class="text-zinc-400 text-xs">Platform operations</p>
           </div>
         </div>
       </div>

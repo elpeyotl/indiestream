@@ -36,16 +36,16 @@
         <!-- Stats -->
         <div class="flex flex-wrap justify-center gap-8 md:gap-16 mt-16 pt-8 border-t border-zinc-800/50">
           <div class="text-center">
-            <div class="text-3xl font-bold text-teal-400">70%</div>
+            <div class="text-3xl font-bold text-teal-400">85%</div>
+            <div class="text-sm text-zinc-500">To Music Rights</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-violet-400">70%</div>
             <div class="text-sm text-zinc-500">Direct to Artists</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-violet-400">100%</div>
-            <div class="text-sm text-zinc-500">Transparent</div>
-          </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-fuchsia-400">0</div>
-            <div class="text-sm text-zinc-500">Hidden Fees</div>
+            <div class="text-3xl font-bold text-fuchsia-400">15%</div>
+            <div class="text-sm text-zinc-500">Platform Fee</div>
           </div>
         </div>
       </div>
