@@ -46,6 +46,9 @@ test.describe('Artist Features', () => {
     await page.waitForLoadState('networkidle')
     await expect(page).not.toHaveURL(/login/)
     await expect(page.getByLabel(/name/i).first()).toBeVisible()
+    // Avatar upload should be visible and required
+    await expect(page.getByText(/artist photo/i)).toBeVisible()
+    await expect(page.getByRole('button', { name: /upload photo/i })).toBeVisible()
   })
 
   test('can access earnings page', async ({ page }) => {
