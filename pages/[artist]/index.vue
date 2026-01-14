@@ -60,10 +60,14 @@
               <UIcon name="i-heroicons-musical-note" class="w-4 h-4" />
               {{ formatNumber(band.total_streams || 0) }} streams
             </span>
-            <span class="flex items-center gap-1">
+            <NuxtLink
+              :to="`/${band.slug}?tab=followers`"
+              class="flex items-center gap-1 hover:text-violet-400 transition-colors cursor-pointer"
+              @click="fetchFollowers"
+            >
               <UIcon name="i-heroicons-heart" class="w-4 h-4" />
               {{ formatNumber(band.follower_count || 0) }} followers
-            </span>
+            </NuxtLink>
           </div>
 
           <!-- Genres -->
@@ -119,7 +123,7 @@
 
     <!-- Content Tabs -->
     <div class="container mx-auto px-4 py-12">
-      <UTabs :items="tabs" class="w-full">
+      <UTabs v-model="selectedTabIndex" :items="tabs" class="w-full">
         <template #item="{ item }">
           <!-- Releases Tab -->
           <div v-if="item.key === 'releases'" class="py-6">
@@ -175,6 +179,57 @@
               </div>
             </div>
           </div>
+
+          <!-- Followers Tab -->
+          <div v-else-if="item.key === 'followers'" class="py-6">
+            <!-- Loading state -->
+            <div v-if="followersLoading" class="flex items-center justify-center py-12">
+              <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-zinc-400" />
+            </div>
+
+            <!-- Followers grid -->
+            <div v-else-if="followers.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <NuxtLink
+                v-for="follower in followers"
+                :key="follower.id"
+                :to="`/user/${follower.id}`"
+                class="group flex flex-col items-center text-center p-4 rounded-lg hover:bg-zinc-800/50 transition-colors"
+              >
+                <!-- Avatar -->
+                <div class="w-20 h-20 rounded-full overflow-hidden mb-3 ring-2 ring-zinc-800 group-hover:ring-violet-500 transition-all">
+                  <img
+                    v-if="follower.avatarUrl"
+                    :src="follower.avatarUrl"
+                    :alt="follower.displayName || 'User'"
+                    class="w-full h-full object-cover"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center bg-violet-500 text-white font-semibold text-xl"
+                  >
+                    {{ follower.displayName ? follower.displayName.charAt(0).toUpperCase() : '?' }}
+                  </div>
+                </div>
+
+                <!-- Name -->
+                <p class="font-medium text-zinc-100 truncate w-full group-hover:text-violet-400 transition-colors">
+                  {{ follower.displayName || 'Anonymous User' }}
+                </p>
+
+                <!-- Followed date -->
+                <p class="text-xs text-zinc-500 mt-1">
+                  Followed {{ new Date(follower.followedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) }}
+                </p>
+              </NuxtLink>
+            </div>
+
+            <!-- Empty state -->
+            <div v-else class="text-center py-12 text-zinc-400">
+              <UIcon name="i-heroicons-user-group" class="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No followers yet</p>
+              <p class="text-sm mt-2">Be the first to follow {{ band.name }}!</p>
+            </div>
+          </div>
         </template>
       </UTabs>
     </div>
@@ -222,7 +277,28 @@ const loadingFollow = ref(false)
 const tabs = [
   { key: 'releases', label: 'Releases' },
   { key: 'about', label: 'About' },
+  { key: 'followers', label: 'Followers' },
 ]
+
+// Selected tab synced with URL query
+const selectedTabIndex = computed({
+  get: () => {
+    const tabKey = (route.query.tab as string) || 'releases'
+    const index = tabs.findIndex(t => t.key === tabKey)
+    return index >= 0 ? index : 0
+  },
+  set: (index: number) => {
+    const tab = tabs[index]
+    if (tab) {
+      navigateTo({ query: { ...route.query, tab: tab.key } }, { replace: true })
+    }
+  }
+})
+
+// Followers state
+const followers = ref<Array<{ id: string; displayName: string | null; avatarUrl: string | null; followedAt: string }>>([])
+const followersLoading = ref(false)
+const followersLoaded = ref(false)
 
 const formatNumber = (num: number): string => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
@@ -330,6 +406,34 @@ const handlePlayAll = async () => {
     loadingPlayAll.value = false
   }
 }
+
+// Fetch followers
+const fetchFollowers = async () => {
+  if (!band.value || followersLoaded.value) return
+
+  followersLoading.value = true
+  try {
+    const data = await $fetch(`/api/artist/${band.value.slug}/followers`)
+    followers.value = data.followers
+    followersLoaded.value = true
+  } catch (e) {
+    console.error('Failed to fetch followers:', e)
+    toast.add({
+      title: 'Error',
+      description: 'Failed to load followers',
+      color: 'red',
+    })
+  } finally {
+    followersLoading.value = false
+  }
+}
+
+// Watch for tab changes to load followers when needed
+watch(() => route.query.tab, (newTab) => {
+  if (newTab === 'followers' && !followersLoaded.value && band.value) {
+    fetchFollowers()
+  }
+}, { immediate: true })
 
 // Set page meta based on band
 useHead(() => ({

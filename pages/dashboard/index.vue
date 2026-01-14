@@ -210,6 +210,24 @@
               color="gray"
               variant="ghost"
               size="sm"
+              :to="`/user/${user?.id}`"
+            >
+              <UIcon name="i-heroicons-user-circle" class="w-4 h-4" />
+              My Profile
+            </UButton>
+            <UButton
+              color="gray"
+              variant="ghost"
+              size="sm"
+              to="/dashboard/settings"
+            >
+              <UIcon name="i-heroicons-cog-6-tooth" class="w-4 h-4" />
+              Settings
+            </UButton>
+            <UButton
+              color="gray"
+              variant="ghost"
+              size="sm"
               to="/dashboard/payments"
             >
               Payment History

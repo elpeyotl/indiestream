@@ -1,6 +1,6 @@
 {
   "name": "indiestream",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -45,6 +45,7 @@
     "happy-dom": "^20.1.0",
     "husky": "^9.1.7",
     "postcss": "^8.4.47",
+    "supabase": "^2.72.7",
     "tailwindcss": "3.4.14",
     "typescript": "^5.6.2",
     "vite": "5.4.14",

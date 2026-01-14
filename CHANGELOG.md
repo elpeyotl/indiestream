@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.10.0] - 2026-01-14
+
+### Added
+- **User Profiles**: Public profile pages at `/user/[id]` featuring:
+  - Display name, avatar with initials fallback, bio, location, and website
+  - Grid display of followed artists (shows 8, expandable to all)
+  - Member since date and profile metadata
+  - Responsive design (2-4 column grid based on screen size)
+- **Settings Page**: Profile management at `/dashboard/settings` with:
+  - Profile editing: display name, bio (280 char limit with counter), location, website
+  - Avatar upload to R2 storage (5MB max, JPEG/PNG/WebP/GIF)
+  - Form validation (bio length, website URL format)
+  - Auto-redirect to public profile after saving
+- **Profile Discovery**: Community features for user discovery:
+  - "My Profile" button in dashboard for quick access
+  - "Followers" tab on artist pages showing all fans
+  - Clickable follower count that navigates to Followers tab
+  - View any user's profile and discover shared music taste
+- **UserAvatar Component**: Reusable avatar component with automatic initials fallback
+- Database migration for profile fields (avatar_key, bio, location, website)
+- Profile API endpoints with proper authentication and R2 integration
+
+### Technical
+- Server-side R2 integration for avatar storage with presigned URLs
+- Proper snake_case ↔ camelCase mapping between database and frontend
+- Index-based tab selection synced with URL query parameters
+- Two-query approach for followers to work around foreign key limitations
+- Form validation on both client and server side
+
 ## [0.9.0] - 2026-01-14
 
 ### Added
