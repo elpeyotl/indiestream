@@ -137,6 +137,26 @@
         </div>
       </UCard>
 
+      <!-- Impact Card -->
+      <UCard v-if="isSubscribed" class="bg-gradient-to-r from-teal-500/10 to-violet-500/10 border-teal-500/30 mt-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center shrink-0">
+              <UIcon name="i-heroicons-chart-pie" class="w-6 h-6 text-teal-400" />
+            </div>
+            <div>
+              <h3 class="text-zinc-100 font-semibold mb-1">See Where Your Money Went</h3>
+              <p class="text-zinc-400 text-sm">
+                View how your subscription supports the artists you love
+              </p>
+            </div>
+          </div>
+          <UButton color="teal" to="/dashboard/my-impact" class="shrink-0">
+            View Impact
+          </UButton>
+        </div>
+      </UCard>
+
       <!-- Help Text -->
       <p class="text-center text-sm text-zinc-500 mt-6">
         Need help with billing? <NuxtLink to="/contact" class="text-violet-400 hover:text-violet-300">Contact support</NuxtLink>

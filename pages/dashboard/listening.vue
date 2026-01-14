@@ -10,6 +10,21 @@
       <p class="text-zinc-400 mt-1">Track your music journey and see which artists you've supported</p>
     </div>
 
+    <!-- Promo Card for Stats -->
+    <UCard class="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/30 mb-6">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div class="flex-1 min-w-[200px]">
+          <h3 class="text-zinc-100 font-semibold mb-1">See Your Full Stats</h3>
+          <p class="text-zinc-400 text-sm">
+            Discover your listening patterns, top artists, and more in-depth insights
+          </p>
+        </div>
+        <UButton color="violet" to="/dashboard/stats">
+          View Stats
+        </UButton>
+      </div>
+    </UCard>
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
       <UCard class="bg-zinc-900/50 border-zinc-800">

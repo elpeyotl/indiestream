@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.9.0] - 2026-01-14
+
+### Added
+- **Listening Stats/Wrapped**: Comprehensive stats dashboard at `/dashboard/stats` showing:
+  - Overview metrics: total listening time, streams, unique artists/tracks/albums
+  - Listening patterns: most active day/hour, 24-hour listening chart, listening streaks
+  - Top 10 artists, tracks, and albums with play counts and percentages
+  - Top 5 genres with stream counts
+  - Discovery metrics: new artists discovered, diversity score, repeat listener score
+  - Fun facts: longest streak, top listening day, total days with listening
+  - Period selector: This Year / Last Month / All Time views
+- **"My Impact" page**: Transparency feature at `/dashboard/my-impact` showing:
+  - Revenue split visualization (70% artists, 15% CMOs, 15% platform)
+  - All Time and Last Month views
+  - Artist breakdown showing exactly how subscription money is distributed
+  - Total paid, artist pool, and per-artist earnings
+- Stats promo card on listening history page linking to full stats
+- Stats navigation button on main dashboard
+
 ## [0.8.0] - 2026-01-14
 
 ### Added

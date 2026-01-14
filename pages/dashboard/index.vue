@@ -192,6 +192,24 @@
               color="gray"
               variant="ghost"
               size="sm"
+              to="/dashboard/my-impact"
+            >
+              <UIcon name="i-heroicons-chart-pie" class="w-4 h-4" />
+              My Impact
+            </UButton>
+            <UButton
+              color="gray"
+              variant="ghost"
+              size="sm"
+              to="/dashboard/stats"
+            >
+              <UIcon name="i-heroicons-chart-bar-square" class="w-4 h-4" />
+              Listening Stats
+            </UButton>
+            <UButton
+              color="gray"
+              variant="ghost"
+              size="sm"
               to="/dashboard/payments"
             >
               Payment History

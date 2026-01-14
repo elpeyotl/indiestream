@@ -81,8 +81,8 @@
 
 #### User Features
 - [ ] User profile page
-- [ ] Listening stats/wrapped
-- [ ] "Where your money went" monthly breakdown
+- [x] Listening stats/wrapped (comprehensive stats dashboard with This Year/Last Month/All Time views)
+- [x] "Where your money went" monthly breakdown (My Impact page with All Time/Last Month views)
 
 ### Lower Priority
 
