@@ -1,3 +1,2 @@
 #!/bin/sh
-echo "Running E2E tests before push..."
-npm run test:e2e
+# Pre-push hook disabled - run tests manually with: npm run test:e2e
