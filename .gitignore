@@ -35,6 +35,11 @@ cypress/videos/
 cypress/screenshots/
 cypress/downloads/
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
 # Supabase
 supabase/.branches
 supabase/.temp

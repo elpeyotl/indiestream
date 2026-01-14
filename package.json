@@ -11,7 +11,11 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.966.0",
@@ -29,14 +33,19 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^0.5.7",
+    "@nuxt/test-utils": "^3.23.0",
     "@nuxtjs/supabase": "^1.4.0",
     "@nuxtjs/tailwindcss": "6.12.1",
+    "@playwright/test": "^1.57.0",
     "@types/node": "^22.7.5",
+    "@vitest/ui": "^4.0.17",
     "autoprefixer": "^10.4.20",
+    "happy-dom": "^20.1.0",
     "postcss": "^8.4.47",
     "tailwindcss": "3.4.14",
     "typescript": "^5.6.2",
     "vite": "5.4.14",
+    "vitest": "^4.0.17",
     "vue-tsc": "^2.1.6"
   },
   "overrides": {
