@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "Running E2E tests before push..."
+npm run test:e2e
