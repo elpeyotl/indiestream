@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nuxt dev",
     "sync-docs": "cp docs/*.md public/docs/",
-    "build": "npm run sync-docs && nuxt build",
+    "build": "npx playwright install chromium && npm run test:e2e && npm run sync-docs && nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
