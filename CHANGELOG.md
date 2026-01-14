@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.0] - 2026-01-14
+
+### Added
+- **Player controls**: Heart/favorite button to like currently playing track
+- **Shuffle mode**: Randomizes queue playback order while keeping current track playing
+- **Repeat modes**: Cycle through off → repeat all → repeat one
+- Shuffle and repeat controls visible in both mini player and expanded view
+- Heart button syncs with library liked tracks
+
+### Changed
+- Player UI now shows shuffle (Lucide icon) and repeat controls alongside play/pause
+- Next button disabled logic updated to respect repeat mode
+
 ## [0.7.0] - 2026-01-20
 
 ### Added

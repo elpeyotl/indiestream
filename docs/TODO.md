@@ -8,6 +8,7 @@
 - [x] Album/EP/Single upload with cover art
 - [x] Track upload with audio files to R2
 - [x] Audio player with queue management
+- [x] Player controls: shuffle, repeat (off/all/one), heart/favorite
 - [x] Stream tracking (counts after 30 seconds)
 - [x] Listening history for logged-in users
 
@@ -61,10 +62,10 @@
 
 #### Social Features
 - [x] Follow artists
-- [ ] User playlists (create, edit, share)
+- [x] User playlists (create, edit, share, collaborative)
 - [x] Like/favorite tracks and albums
-- [x] Library page (Artists, Albums, Liked Songs)
-- [ ] Share functionality
+- [x] Library page (Artists, Albums, Playlists, Liked Songs)
+- [x] Share functionality (playlist share links)
 
 #### Artist Features
 - [x] Detailed analytics dashboard (streams, listeners, top tracks, time period filters)
@@ -143,6 +144,7 @@ All migrations should be run in Supabase SQL Editor in order:
 9. `20260112140000_add_free_tier_tracking.sql` - Free tier with 5 plays/month
 10. `20260113_add_rights_metadata.sql` - ISRC/ISWC, track credits, album rights metadata
 11. `20260114_artist_payouts.sql` - Stripe Connect, artist balances, payouts tables
+12. `20260115_playlists.sql` - Collaborative playlists with owner/editor/viewer roles
 
 ---
 

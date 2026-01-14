@@ -49,19 +49,21 @@
           :to="`/${artist.slug}`"
           class="group"
         >
-          <div class="aspect-square rounded-xl overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-all group-hover:ring-2 group-hover:ring-violet-500/50">
-            <img
-              v-if="artist.avatar_url"
-              :src="artist.avatar_url"
-              :alt="artist.name"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            <div
-              v-else
-              class="w-full h-full flex items-center justify-center"
-              :style="{ background: `linear-gradient(135deg, ${artist.theme_color || '#8B5CF6'} 0%, #c026d3 100%)` }"
-            >
-              <span class="text-5xl font-bold text-white">{{ artist.name.charAt(0) }}</span>
+          <div class="relative w-full pb-[100%] rounded-xl overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-all group-hover:ring-2 group-hover:ring-violet-500/50">
+            <div class="absolute inset-0">
+              <img
+                v-if="artist.avatar_url"
+                :src="artist.avatar_url"
+                :alt="artist.name"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center"
+                :style="{ background: `linear-gradient(135deg, ${artist.theme_color || '#8B5CF6'} 0%, #c026d3 100%)` }"
+              >
+                <span class="text-5xl font-bold text-white">{{ artist.name.charAt(0) }}</span>
+              </div>
             </div>
           </div>
           <h3 class="font-semibold text-zinc-100 truncate group-hover:text-violet-400 transition-colors">

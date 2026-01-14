@@ -116,7 +116,18 @@
             </div>
 
             <!-- Controls -->
-            <div class="flex items-center justify-center gap-6">
+            <div class="flex items-center justify-center gap-4">
+              <!-- Shuffle -->
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :class="{ '!text-violet-400': shuffleEnabled }"
+                @click="toggleShuffle"
+              >
+                <UIcon name="i-lucide-shuffle" class="w-6 h-6" :class="{ '!text-violet-400': shuffleEnabled }" />
+              </UButton>
+
               <UButton
                 color="gray"
                 variant="ghost"
@@ -144,10 +155,44 @@
                 color="gray"
                 variant="ghost"
                 size="xl"
-                :disabled="queueIndex >= queue.length - 1"
+                :disabled="queueIndex >= queue.length - 1 && repeatMode === 'off'"
                 @click="playNext"
               >
                 <UIcon name="i-heroicons-forward" class="w-8 h-8" />
+              </UButton>
+
+              <!-- Repeat -->
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="lg"
+                class="relative"
+                :class="{ '!text-violet-400': repeatMode !== 'off' }"
+                @click="cycleRepeatMode"
+              >
+                <UIcon name="i-heroicons-arrow-path" class="w-6 h-6" :class="{ '!text-violet-400': repeatMode !== 'off' }" />
+                <span
+                  v-if="repeatMode === 'one'"
+                  class="absolute -top-0.5 -right-0.5 text-xs font-bold text-violet-400"
+                >
+                  1
+                </span>
+              </UButton>
+            </div>
+
+            <!-- Heart Button -->
+            <div v-if="user" class="mt-6">
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :class="{ 'text-red-500': isCurrentTrackLiked }"
+                @click="handleHeartClick"
+              >
+                <UIcon
+                  :name="isCurrentTrackLiked ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+                  class="w-7 h-7"
+                />
               </UButton>
             </div>
 
@@ -288,7 +333,19 @@
             </div>
 
             <!-- Controls -->
-            <div class="flex items-center gap-1 sm:gap-2 md:gap-4">
+            <div class="flex items-center gap-1 sm:gap-2 md:gap-3">
+              <!-- Shuffle (hidden on mobile) -->
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="xs"
+                class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9"
+                :class="{ '!text-violet-400': shuffleEnabled }"
+                @click.stop="toggleShuffle"
+              >
+                <UIcon name="i-lucide-shuffle" class="w-4 h-4 sm:w-5 sm:h-5" :class="{ '!text-violet-400': shuffleEnabled }" />
+              </UButton>
+
               <!-- Previous -->
               <UButton
                 color="gray"
@@ -320,10 +377,44 @@
                 variant="ghost"
                 size="xs"
                 class="w-8 h-8 sm:w-9 sm:h-9"
-                :disabled="queueIndex >= queue.length - 1"
+                :disabled="queueIndex >= queue.length - 1 && repeatMode === 'off'"
                 @click.stop="playNext"
               >
                 <UIcon name="i-heroicons-forward" class="w-4 h-4 sm:w-5 sm:h-5" />
+              </UButton>
+
+              <!-- Repeat (hidden on mobile) -->
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="xs"
+                class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 relative"
+                :class="{ '!text-violet-400': repeatMode !== 'off' }"
+                @click.stop="cycleRepeatMode"
+              >
+                <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 sm:w-5 sm:h-5" :class="{ '!text-violet-400': repeatMode !== 'off' }" />
+                <span
+                  v-if="repeatMode === 'one'"
+                  class="absolute -top-0.5 -right-0.5 text-[10px] font-bold text-violet-400"
+                >
+                  1
+                </span>
+              </UButton>
+
+              <!-- Heart (hidden on mobile, only for logged in users) -->
+              <UButton
+                v-if="user"
+                color="gray"
+                variant="ghost"
+                size="xs"
+                class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9"
+                :class="{ 'text-red-500': isCurrentTrackLiked }"
+                @click.stop="handleHeartClick"
+              >
+                <UIcon
+                  :name="isCurrentTrackLiked ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+                  class="w-4 h-4 sm:w-5 sm:h-5"
+                />
               </UButton>
             </div>
 
@@ -480,6 +571,8 @@ const {
   seek,
   setVolume,
   toggleMute,
+  toggleShuffle,
+  cycleRepeatMode,
   formatTime,
   // Preview mode
   isPreviewMode,
@@ -490,10 +583,26 @@ const {
   isFreePlay,
   showUpgradePrompt,
   dismissUpgradePrompt,
+  // Shuffle and repeat
+  shuffleEnabled,
+  repeatMode,
 } = usePlayer()
+
+const { isTrackLiked, toggleTrackLike } = useLibrary()
 
 const isExpanded = ref(false)
 const showQueue = ref(false)
+
+// Heart/favorite functionality
+const isCurrentTrackLiked = computed(() => {
+  if (!currentTrack.value?.id) return false
+  return isTrackLiked(currentTrack.value.id)
+})
+
+const handleHeartClick = async () => {
+  if (!currentTrack.value?.id) return
+  await toggleTrackLike(currentTrack.value.id)
+}
 
 const handleQueueItemClick = (index: number) => {
   if (index !== queueIndex.value) {

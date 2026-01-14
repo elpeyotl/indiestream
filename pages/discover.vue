@@ -57,15 +57,17 @@
             :to="`/${album.band?.slug}/${album.slug}`"
             class="group"
           >
-            <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
-              <img
-                v-if="albumCovers[album.id]"
-                :src="albumCovers[album.id]"
-                :alt="album.title"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div v-else class="w-full h-full flex items-center justify-center">
-                <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
+              <div class="absolute inset-0">
+                <img
+                  v-if="albumCovers[album.id]"
+                  :src="albumCovers[album.id]"
+                  :alt="album.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+                </div>
               </div>
             </div>
             <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ album.title }}</p>

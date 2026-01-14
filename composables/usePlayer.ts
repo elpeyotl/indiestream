@@ -1,6 +1,8 @@
 // Global audio player composable for Indiestream
 import type { Track, Album } from './useAlbum'
 
+export type RepeatMode = 'off' | 'all' | 'one'
+
 export interface PlayerTrack {
   id: string
   title: string
@@ -35,6 +37,10 @@ interface PlayerState {
   showUpgradePrompt: boolean
   // Audio analyser data for visualizations
   audioData: Uint8Array | null
+  // Shuffle and repeat modes
+  shuffleEnabled: boolean
+  originalQueue: PlayerTrack[]
+  repeatMode: RepeatMode
 }
 
 // Preview limit in seconds for non-logged-in users
@@ -57,6 +63,9 @@ const state = reactive<PlayerState>({
   isFreePlay: false,
   showUpgradePrompt: false,
   audioData: null,
+  shuffleEnabled: false,
+  originalQueue: [],
+  repeatMode: 'off' as RepeatMode,
 })
 
 let audio: HTMLAudioElement | null = null
@@ -400,10 +409,22 @@ export const usePlayer = () => {
 
   // Play next track
   const playNext = () => {
+    // Repeat one: restart current track
+    if (state.repeatMode === 'one') {
+      if (audio) {
+        audio.currentTime = 0
+        audio.play()
+      }
+      return
+    }
+
     if (state.queueIndex < state.queue.length - 1) {
       playFromQueue(state.queueIndex + 1)
+    } else if (state.repeatMode === 'all') {
+      // Repeat all: go back to first track
+      playFromQueue(0)
     } else {
-      // End of queue
+      // End of queue, no repeat
       state.isPlaying = false
     }
   }
@@ -448,6 +469,46 @@ export const usePlayer = () => {
     if (audio) {
       audio.volume = state.isMuted ? 0 : state.volume
     }
+  }
+
+  // Toggle shuffle mode
+  const toggleShuffle = () => {
+    state.shuffleEnabled = !state.shuffleEnabled
+
+    if (state.shuffleEnabled) {
+      // Save original queue order
+      state.originalQueue = [...state.queue]
+
+      // Shuffle queue while keeping current track at position 0
+      const currentTrackItem = state.queue[state.queueIndex]
+      const remainingTracks = state.queue.filter((_, i) => i !== state.queueIndex)
+
+      // Fisher-Yates shuffle for remaining tracks
+      for (let i = remainingTracks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[remainingTracks[i], remainingTracks[j]] = [remainingTracks[j], remainingTracks[i]]
+      }
+
+      // Put current track first, then shuffled remaining
+      state.queue = [currentTrackItem, ...remainingTracks]
+      state.queueIndex = 0
+    } else {
+      // Restore original queue order
+      if (state.originalQueue.length > 0) {
+        const currentId = state.currentTrack?.id
+        state.queue = [...state.originalQueue]
+        // Find current track in original queue
+        state.queueIndex = state.queue.findIndex(t => t.id === currentId)
+        if (state.queueIndex < 0) state.queueIndex = 0
+      }
+    }
+  }
+
+  // Cycle through repeat modes: off -> all -> one -> off
+  const cycleRepeatMode = () => {
+    const modes: RepeatMode[] = ['off', 'all', 'one']
+    const currentIndex = modes.indexOf(state.repeatMode)
+    state.repeatMode = modes[(currentIndex + 1) % 3]
   }
 
   // Play a single track from library (liked tracks)
@@ -508,6 +569,66 @@ export const usePlayer = () => {
     }
   }
 
+  // Play a playlist (array of tracks with cover URLs)
+  const playPlaylist = async (
+    tracks: Array<{
+      id: string
+      title: string
+      duration_seconds: number
+      audio_key: string | null
+      coverUrl?: string | null
+      album: {
+        id: string
+        title: string
+        slug: string
+        band: {
+          id: string
+          name: string
+          slug: string
+        }
+      }
+    }>,
+    startIndex = 0
+  ) => {
+    initAudio()
+    if (!audio || !tracks.length) return
+
+    // Initialize audio analyser on first play
+    initAudioAnalyser()
+
+    // Filter tracks with audio
+    const playableTracks = tracks.filter(t => t.audio_key)
+    if (playableTracks.length === 0) return
+
+    state.queue = []
+    state.queueIndex = startIndex
+
+    // Load all track URLs
+    for (const track of playableTracks) {
+      try {
+        const audioUrl = await getStreamUrl(track.audio_key!)
+        state.queue.push({
+          id: track.id,
+          title: track.title,
+          artist: track.album.band.name,
+          artistSlug: track.album.band.slug,
+          albumTitle: track.album.title,
+          albumSlug: track.album.slug,
+          coverUrl: track.coverUrl || null,
+          audioUrl,
+          duration: track.duration_seconds,
+        })
+      } catch (e) {
+        console.error('Failed to load track URL:', e)
+      }
+    }
+
+    // Play the starting track
+    if (state.queue.length > 0 && state.queue[startIndex]) {
+      await playFromQueue(startIndex)
+    }
+  }
+
   // Format time helper
   const formatTime = (seconds: number): string => {
     if (!seconds || isNaN(seconds)) return '0:00'
@@ -559,18 +680,24 @@ export const usePlayer = () => {
     showUpgradePrompt: computed(() => state.showUpgradePrompt),
     // Audio analyser data for visualizations
     audioData: computed(() => state.audioData),
+    // Shuffle and repeat state
+    shuffleEnabled: computed(() => state.shuffleEnabled),
+    repeatMode: computed(() => state.repeatMode),
 
     // Actions
     playTrack,
     playAlbum,
     playFromQueue,
     playTrackFromLibrary,
+    playPlaylist,
     togglePlay,
     playNext,
     playPrevious,
     seek,
     setVolume,
     toggleMute,
+    toggleShuffle,
+    cycleRepeatMode,
     formatTime,
     dismissUpgradePrompt,
   }
