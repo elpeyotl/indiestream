@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.11.0] - 2026-01-14
+
+### Added
+- **Playlists**: Full playlist system with collaborative features:
+  - Create, edit, and delete custom playlists
+  - Add/remove tracks from playlists with "Add to Playlist" menu
+  - Drag-and-drop track reordering within playlists
+  - Collaborative playlists with owner/editor/viewer roles
+  - Public playlist sharing with shareable links
+  - Private/public playlist visibility settings
+  - "Liked Songs" as a special system playlist
+  - Playlist tab in Library page alongside Artists and Albums
+- **AddToPlaylistMenu Component**: Context menu for adding tracks to any playlist
+- **Playlist Detail Page**: Dedicated page at `/playlist/[id]` with:
+  - Full track listing with album covers
+  - Playlist metadata (title, description, track count, duration)
+  - Collaborator management interface
+  - Play all tracks functionality
+  - Drag-and-drop reordering
+- **Shared Playlist View**: Public view at `/playlist/share/[token]` for shared playlists
+- Database migrations for playlists, playlist_tracks, and playlist_collaborators tables
+- Comprehensive E2E tests for playlist functionality
+
+### Technical
+- usePlaylist composable for centralized playlist state management
+- Proper RLS policies for playlists with role-based access control
+- Track position management with automatic reordering
+- Share token generation for public playlist links
+- Three separate migrations to ensure correct RLS behavior
+
 ## [0.10.0] - 2026-01-14
 
 ### Added
