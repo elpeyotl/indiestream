@@ -28,8 +28,14 @@ setup('authenticate as user', async ({ page }) => {
   const password = process.env.TEST_USER_PASSWORD || 'testpassword123'
 
   await page.goto('/login')
-  await page.getByLabel(/email/i).fill(email)
-  await page.getByLabel('Password').fill(password)
+  await page.waitForLoadState('networkidle')
+
+  // Wait for Vue hydration - UInput components need to be ready
+  await page.waitForTimeout(500)
+
+  // Use input[type] selectors for Nuxt UI components
+  await page.locator('input[type="email"]').fill(email)
+  await page.locator('input[type="password"]').fill(password)
   await page.getByRole('button', { name: /sign in/i }).click()
 
   // Wait for successful login (redirect to dashboard or home)
@@ -37,8 +43,15 @@ setup('authenticate as user', async ({ page }) => {
     await page.waitForURL(/dashboard|\/(?!login)/, { timeout: 15000 })
     await expect(page).not.toHaveURL(/login/)
     await page.context().storageState({ path: authFile })
-  } catch {
-    console.log('User login failed - test user may not exist. Creating empty auth state.')
+  } catch (err) {
+    // Debug: check for error message on page
+    const errorAlert = page.locator('[role="alert"]')
+    if (await errorAlert.count() > 0) {
+      const errorText = await errorAlert.textContent()
+      console.log(`User login failed with error: ${errorText}`)
+    } else {
+      console.log(`User login failed - current URL: ${page.url()}`)
+    }
     createEmptyAuthState(authFile)
   }
 })
@@ -56,16 +69,29 @@ setup('authenticate as admin', async ({ page }) => {
   const password = process.env.TEST_ADMIN_PASSWORD || 'adminpassword123'
 
   await page.goto('/login')
-  await page.getByLabel(/email/i).fill(email)
-  await page.getByLabel('Password').fill(password)
+  await page.waitForLoadState('networkidle')
+
+  // Wait for Vue hydration - UInput components need to be ready
+  await page.waitForTimeout(500)
+
+  // Use input[type] selectors for Nuxt UI components
+  await page.locator('input[type="email"]').fill(email)
+  await page.locator('input[type="password"]').fill(password)
   await page.getByRole('button', { name: /sign in/i }).click()
 
   try {
     await page.waitForURL(/dashboard|\/(?!login)/, { timeout: 15000 })
     await expect(page).not.toHaveURL(/login/)
     await page.context().storageState({ path: adminAuthFile })
-  } catch {
-    console.log('Admin login failed - admin user may not exist. Creating empty auth state.')
+  } catch (err) {
+    // Debug: check for error message on page
+    const errorAlert = page.locator('[role="alert"]')
+    if (await errorAlert.count() > 0) {
+      const errorText = await errorAlert.textContent()
+      console.log(`Admin login failed with error: ${errorText}`)
+    } else {
+      console.log(`Admin login failed - current URL: ${page.url()}`)
+    }
     createEmptyAuthState(adminAuthFile)
   }
 })

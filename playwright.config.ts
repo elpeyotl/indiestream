@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 import { fileURLToPath } from 'url'
 import path from 'path'
+import dotenv from 'dotenv'
+
+// Load .env file
+dotenv.config()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const authFile = path.join(__dirname, 'tests/fixtures/.auth/user.json')
