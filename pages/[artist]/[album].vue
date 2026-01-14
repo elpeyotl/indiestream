@@ -143,14 +143,22 @@
                   {{ formatTrackDuration(track.duration_seconds) }}
                 </td>
                 <td class="px-4 py-4 text-right">
-                  <UButton
-                    :color="isTrackLiked(track.id) ? 'red' : 'gray'"
-                    variant="ghost"
-                    size="xs"
-                    :icon="isTrackLiked(track.id) ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
-                    :class="isTrackLiked(track.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'"
-                    @click.stop="handleLikeTrack(track.id)"
-                  />
+                  <div class="flex items-center justify-end gap-1">
+                    <AddToPlaylistMenu
+                      :track-id="track.id"
+                      :track-title="track.title"
+                      class="opacity-0 group-hover:opacity-60"
+                      @click.stop
+                    />
+                    <UButton
+                      :color="isTrackLiked(track.id) ? 'red' : 'gray'"
+                      variant="ghost"
+                      size="xs"
+                      :icon="isTrackLiked(track.id) ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+                      :class="isTrackLiked(track.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'"
+                      @click.stop="handleLikeTrack(track.id)"
+                    />
+                  </div>
                 </td>
               </tr>
               <!-- Expanded Credits Row -->

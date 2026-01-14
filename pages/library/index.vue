@@ -3,12 +3,121 @@
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-zinc-100">Your Library</h1>
-      <p class="text-zinc-400 mt-1">Artists, albums, and tracks you've saved</p>
+      <p class="text-zinc-400 mt-1">Artists, albums, playlists, and tracks you've saved</p>
     </div>
 
     <!-- Tabs -->
     <UTabs v-model="activeTab" :items="tabs" class="w-full">
       <template #item="{ item }">
+        <!-- Playlists Tab -->
+        <div v-if="item.key === 'playlists'" class="py-6">
+          <div v-if="loading" class="flex items-center justify-center py-20">
+            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+          </div>
+
+          <!-- Create Playlist Button -->
+          <div v-if="!loading && (userPlaylists.length > 0 || tracks.length > 0)" class="flex justify-end mb-6">
+            <UButton color="violet" variant="soft" @click="showCreatePlaylist = true">
+              <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
+              Create Playlist
+            </UButton>
+          </div>
+
+          <!-- Empty State (no playlists and no liked tracks) -->
+          <div v-if="!loading && userPlaylists.length === 0 && tracks.length === 0" class="text-center py-16">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-queue-list" class="w-10 h-10 text-violet-400" />
+            </div>
+            <h3 class="text-xl font-semibold text-zinc-100 mb-2">No playlists yet</h3>
+            <p class="text-zinc-400 mb-6 max-w-md mx-auto">
+              Create playlists to organize your favorite tracks and share them with friends.
+            </p>
+            <UButton color="violet" @click="showCreatePlaylist = true">
+              <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
+              Create Playlist
+            </UButton>
+          </div>
+
+          <!-- Playlist Grid (includes Liked Songs as first item) -->
+          <div v-else-if="!loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <!-- Liked Songs Card (first in grid if there are liked tracks) -->
+            <NuxtLink v-if="tracks.length > 0" to="/library/liked" class="group">
+              <div class="relative mb-3 group-hover:scale-[1.02] transition-all">
+                <!-- Use PlaylistCover with heart icon -->
+                <PlaylistCover :covers="[]" icon="i-heroicons-heart-solid" />
+                <!-- Overlay with info and play button -->
+                <div class="absolute inset-0 rounded-lg bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4">
+                  <div></div>
+                  <!-- Bottom info and play button -->
+                  <div class="flex items-end justify-between">
+                    <div class="min-w-0 flex-1 mr-2">
+                      <h3 class="font-semibold text-white text-lg truncate">Liked Songs</h3>
+                      <p class="text-white/70 text-sm">{{ tracks.length }} {{ tracks.length === 1 ? 'song' : 'songs' }}</p>
+                    </div>
+                    <UButton
+                      color="violet"
+                      size="lg"
+                      :ui="{ rounded: 'rounded-full' }"
+                      class="opacity-0 group-hover:opacity-100 transition-opacity shadow-lg shrink-0"
+                      @click.prevent.stop="playLikedSongs"
+                    >
+                      <UIcon name="i-heroicons-play-solid" class="w-6 h-6" />
+                    </UButton>
+                  </div>
+                </div>
+              </div>
+            </NuxtLink>
+
+            <!-- Regular Playlists -->
+            <NuxtLink
+              v-for="playlist in userPlaylists"
+              :key="playlist.id"
+              :to="`/playlist/${playlist.id}`"
+              class="group"
+            >
+              <div class="relative mb-3 group-hover:scale-[1.02] transition-all">
+                <PlaylistCover :covers="playlistCovers[playlist.id] || []" />
+                <!-- Overlay with info and play button -->
+                <div class="absolute inset-0 rounded-lg bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4">
+                  <!-- Top badges -->
+                  <div class="flex items-center gap-2">
+                    <UIcon
+                      v-if="playlist.is_public"
+                      name="i-heroicons-globe-alt"
+                      class="w-4 h-4 text-white/70"
+                    />
+                    <UBadge
+                      v-if="playlist.role !== 'owner'"
+                      :color="playlist.role === 'editor' ? 'yellow' : 'gray'"
+                      variant="soft"
+                      size="xs"
+                    >
+                      {{ playlist.role }}
+                    </UBadge>
+                  </div>
+                  <!-- Bottom info and play button -->
+                  <div class="flex items-end justify-between">
+                    <div class="min-w-0 flex-1 mr-2">
+                      <h3 class="font-semibold text-white text-lg truncate">{{ playlist.title }}</h3>
+                      <p class="text-white/70 text-sm">{{ playlist.track_count }} {{ playlist.track_count === 1 ? 'track' : 'tracks' }}</p>
+                    </div>
+                    <UButton
+                      v-if="playlist.track_count > 0"
+                      color="violet"
+                      size="lg"
+                      :ui="{ rounded: 'rounded-full' }"
+                      class="opacity-0 group-hover:opacity-100 transition-opacity shadow-lg shrink-0"
+                      @click.prevent.stop="playPlaylistById(playlist.id)"
+                    >
+                      <UIcon name="i-heroicons-play-solid" class="w-6 h-6" />
+                    </UButton>
+                  </div>
+                </div>
+              </div>
+            </NuxtLink>
+          </div>
+        </div>
+
         <!-- Artists Tab -->
         <div v-if="item.key === 'artists'" class="py-6">
           <div v-if="loading" class="flex items-center justify-center py-20">
@@ -177,6 +286,14 @@
                 {{ formatDuration(item.track.duration_seconds) }}
               </span>
 
+              <!-- Add to playlist -->
+              <AddToPlaylistMenu
+                :track-id="item.track.id"
+                :track-title="item.track.title"
+                class="opacity-0 group-hover:opacity-60"
+                @click.stop
+              />
+
               <!-- Heart (always filled since it's in liked tracks) -->
               <UButton
                 color="red"
@@ -191,11 +308,68 @@
         </div>
       </template>
     </UTabs>
+
+    <!-- Create Playlist Modal -->
+    <UModal v-model="showCreatePlaylist">
+      <UCard>
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-zinc-100">Create Playlist</h3>
+            <UButton
+              color="gray"
+              variant="ghost"
+              icon="i-heroicons-x-mark"
+              size="sm"
+              @click="showCreatePlaylist = false"
+            />
+          </div>
+        </template>
+
+        <div class="space-y-4">
+          <UFormGroup label="Name" required>
+            <UInput
+              v-model="newPlaylistTitle"
+              placeholder="My Playlist"
+              autofocus
+            />
+          </UFormGroup>
+
+          <UFormGroup label="Description">
+            <UTextarea
+              v-model="newPlaylistDescription"
+              placeholder="Add an optional description..."
+              :rows="3"
+            />
+          </UFormGroup>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <UButton
+              color="gray"
+              variant="ghost"
+              @click="showCreatePlaylist = false"
+            >
+              Cancel
+            </UButton>
+            <UButton
+              color="violet"
+              :loading="creatingPlaylist"
+              :disabled="!newPlaylistTitle.trim()"
+              @click="handleCreatePlaylist"
+            >
+              Create
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SavedAlbum, LikedTrack, FollowedArtist } from '~/composables/useLibrary'
+import type { Playlist } from '~/composables/usePlaylist'
 
 definePageMeta({
   middleware: 'auth',
@@ -203,7 +377,8 @@ definePageMeta({
 
 const { getStreamUrl } = useAlbum()
 const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = useLibrary()
-const { playTrackFromLibrary } = usePlayer()
+const { playTrackFromLibrary, playPlaylist } = usePlayer()
+const { playlists: userPlaylists, fetchPlaylists, createPlaylist, getPlaylist } = usePlaylist()
 
 const loading = ref(true)
 const activeTab = ref(0)
@@ -215,8 +390,32 @@ const tracks = ref<LikedTrack[]>([])
 const artistAvatars = ref<Record<string, string>>({})
 const albumCovers = ref<Record<string, string>>({})
 const trackCovers = ref<Record<string, string>>({})
+const playlistCovers = ref<Record<string, string[]>>({})
+
+// Create playlist modal
+const showCreatePlaylist = ref(false)
+const newPlaylistTitle = ref('')
+const newPlaylistDescription = ref('')
+const creatingPlaylist = ref(false)
+
+const handleCreatePlaylist = async () => {
+  if (!newPlaylistTitle.value.trim()) return
+
+  creatingPlaylist.value = true
+  const playlist = await createPlaylist(newPlaylistTitle.value, newPlaylistDescription.value)
+  creatingPlaylist.value = false
+
+  if (playlist) {
+    showCreatePlaylist.value = false
+    newPlaylistTitle.value = ''
+    newPlaylistDescription.value = ''
+    // Navigate to the new playlist
+    navigateTo(`/playlist/${playlist.id}`)
+  }
+}
 
 const tabs = computed(() => [
+  { key: 'playlists', label: `Playlists (${userPlaylists.value.length})`, icon: 'i-heroicons-queue-list' },
   { key: 'artists', label: `Artists (${artists.value.length})`, icon: 'i-heroicons-user-group' },
   { key: 'albums', label: `Albums (${albums.value.length})`, icon: 'i-heroicons-square-3-stack-3d' },
   { key: 'tracks', label: `Liked Songs (${tracks.value.length})`, icon: 'i-heroicons-heart' },
@@ -238,6 +437,50 @@ const playTrack = (item: LikedTrack) => {
   playTrackFromLibrary(item.track, trackCovers.value[item.track.id] || null)
 }
 
+// Play all liked songs as a playlist
+const playLikedSongs = () => {
+  if (tracks.value.length === 0) return
+
+  const playableTracks = tracks.value.map((item) => ({
+    ...item.track,
+    coverUrl: trackCovers.value[item.track.id] || null,
+  }))
+
+  playPlaylist(playableTracks, 0)
+}
+
+// Play a playlist by ID (fetches tracks and plays)
+const playPlaylistById = async (playlistId: string) => {
+  try {
+    const playlist = await getPlaylist(playlistId)
+    if (!playlist?.playlist_tracks?.length) return
+
+    // Load cover URLs for tracks
+    const playableTracks = await Promise.all(
+      playlist.playlist_tracks.map(async (item) => {
+        let coverUrl: string | null = null
+        if (item.track.album.cover_key) {
+          try {
+            coverUrl = await getStreamUrl(item.track.album.cover_key)
+          } catch (e) {
+            console.error('Failed to load cover:', e)
+          }
+        } else if (item.track.album.cover_url) {
+          coverUrl = item.track.album.cover_url
+        }
+        return {
+          ...item.track,
+          coverUrl,
+        }
+      })
+    )
+
+    playPlaylist(playableTracks, 0)
+  } catch (e) {
+    console.error('Failed to play playlist:', e)
+  }
+}
+
 const loadLibrary = async () => {
   loading.value = true
 
@@ -247,6 +490,7 @@ const loadLibrary = async () => {
       getFollowedArtists(),
       getSavedAlbums(),
       getLikedTracks(),
+      fetchPlaylists(),
     ])
 
     artists.value = artistsData
@@ -258,6 +502,7 @@ const loadLibrary = async () => {
       loadArtistAvatars(),
       loadAlbumCovers(),
       loadTrackCovers(),
+      loadPlaylistCovers(),
     ])
   } catch (e) {
     console.error('Failed to load library:', e)
@@ -306,6 +551,38 @@ const loadTrackCovers = async () => {
       trackCovers.value[item.track.id] = item.track.album.cover_url
     }
   }
+}
+
+const loadPlaylistCovers = async () => {
+  // Load covers for all playlists in parallel
+  await Promise.all(
+    userPlaylists.value.map(async (playlist) => {
+      try {
+        const response = await $fetch<{ covers: Array<{ url?: string; key?: string }> }>(
+          `/api/playlists/${playlist.id}/covers`
+        )
+
+        // Convert cover keys to URLs
+        const coverUrls: string[] = []
+        for (const cover of response.covers) {
+          if (cover.key) {
+            try {
+              coverUrls.push(await getStreamUrl(cover.key))
+            } catch (e) {
+              console.error('Failed to get stream URL for cover:', e)
+            }
+          } else if (cover.url) {
+            coverUrls.push(cover.url)
+          }
+        }
+
+        playlistCovers.value[playlist.id] = coverUrls
+      } catch (e) {
+        console.error('Failed to load playlist covers:', e)
+        playlistCovers.value[playlist.id] = []
+      }
+    })
+  )
 }
 
 onMounted(() => {
