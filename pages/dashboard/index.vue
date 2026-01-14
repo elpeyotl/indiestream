@@ -187,14 +187,24 @@
               {{ formatDate(subscription?.current_period_end) }}
             </p>
           </div>
-          <UButton
-            color="gray"
-            variant="outline"
-            :loading="subscriptionLoading"
-            @click="openCustomerPortal"
-          >
-            Manage Subscription
-          </UButton>
+          <div class="flex gap-2">
+            <UButton
+              color="gray"
+              variant="ghost"
+              size="sm"
+              to="/dashboard/payments"
+            >
+              Payment History
+            </UButton>
+            <UButton
+              color="gray"
+              variant="outline"
+              :loading="subscriptionLoading"
+              @click="openCustomerPortal"
+            >
+              Manage Subscription
+            </UButton>
+          </div>
         </div>
         <div v-if="subscription?.cancel_at_period_end" class="flex items-center gap-2 text-amber-400 text-sm">
           <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />

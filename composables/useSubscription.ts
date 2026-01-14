@@ -177,15 +177,17 @@ export const useSubscription = () => {
     }
   }
 
-  // Watch for user changes
-  watch(user, (newUser) => {
-    if (newUser) {
-      fetchSubscription()
-    } else {
-      subscription.value = null
-      freeTierStatus.value = null
-    }
-  }, { immediate: true })
+  // Watch for user changes - only run on client side to avoid SSR auth issues
+  if (import.meta.client) {
+    watch(user, (newUser) => {
+      if (newUser) {
+        fetchSubscription()
+      } else {
+        subscription.value = null
+        freeTierStatus.value = null
+      }
+    }, { immediate: true })
+  }
 
   return {
     subscription,

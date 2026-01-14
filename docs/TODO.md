@@ -49,7 +49,7 @@
 - [x] Stripe integration for subscriptions
 - [x] Subscription management (upgrade/downgrade/cancel via Stripe portal)
 - [x] Free tier with 5 full-track plays per month
-- [ ] Payment history page
+- [x] Payment history page
 - [x] Artist payout system (Stripe Connect Express)
 - [x] Revenue dashboard for artists (Earnings tab with balance, history)
 
