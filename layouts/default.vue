@@ -3,6 +3,9 @@
     <!-- Bokeh Background -->
     <BokehBackground :audio-data="audioData" />
 
+    <!-- Global Back Button -->
+    <BackButton />
+
     <!-- Header -->
     <header
       class="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50"
