@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.14.1] - 2026-01-16
+
+### Added
+- **Media Session API**: Lock screen playback controls for mobile devices
+  - Track info (title, artist, album, artwork) displayed on lock screen
+  - Play/pause, next/previous track controls
+  - Seek forward/backward controls
+  - Progress bar with position state
+
+### Changed
+- **Audio Player UI Improvements**:
+  - Play/pause button icons now properly centered in both mini and expanded player
+  - Expanded player cover art adapts to viewport height (`40vh`) for better fit on small screens
+  - Expanded player layout scrollable with reduced margins for laptop screens
+- **User Menu**: Now uses slideover panel instead of dropdown menu
+
+### Fixed
+- Mobile player no longer overlaps bottom navigation
+- Stream counts hidden from public artist pages (visible only to artist owners)
+
 ## [0.14.0] - 2026-01-16
 
 ### Added

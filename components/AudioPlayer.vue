@@ -23,9 +23,9 @@
           </div>
 
           <!-- Main Content -->
-          <div class="flex-1 flex flex-col items-center justify-center px-8 pb-8">
-            <!-- Large Cover -->
-            <div class="w-full max-w-sm aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl mb-8">
+          <div class="flex-1 flex flex-col items-center justify-start px-8 pb-8 overflow-y-auto">
+            <!-- Large Cover - scales based on viewport height -->
+            <div class="w-full max-w-[min(24rem,40vh)] aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl mb-4 mt-2 shrink-0">
               <img
                 v-if="currentTrack.coverUrl"
                 :src="currentTrack.coverUrl"
@@ -38,7 +38,7 @@
             </div>
 
             <!-- Track Info -->
-            <div class="text-center mb-8 w-full max-w-sm">
+            <div class="text-center mb-4 w-full max-w-sm">
               <h2 class="text-2xl font-bold text-zinc-100 truncate mb-1">
                 {{ currentTrack.title }}
               </h2>
@@ -68,7 +68,7 @@
             </div>
 
             <!-- Progress Bar -->
-            <div class="w-full max-w-sm mb-6">
+            <div class="w-full max-w-sm mb-4">
               <div
                 class="h-2 bg-zinc-800 rounded-full cursor-pointer overflow-hidden relative"
                 @click="onProgressClick"
@@ -148,6 +148,7 @@
                 <UIcon
                   :name="isPlaying ? 'i-heroicons-pause' : 'i-heroicons-play'"
                   class="w-8 h-8"
+                  :class="isPlaying ? 'mr-0.5' : 'ml-1.5'"
                 />
               </UButton>
 
@@ -181,7 +182,7 @@
             </div>
 
             <!-- Heart Button -->
-            <div v-if="user" class="mt-6">
+            <div v-if="user" class="mt-4">
               <UButton
                 color="gray"
                 variant="ghost"
@@ -197,7 +198,7 @@
             </div>
 
             <!-- Volume (only on larger screens in expanded mode) -->
-            <div class="hidden sm:flex items-center gap-3 mt-8">
+            <div class="hidden sm:flex items-center gap-3 mt-4">
               <UButton
                 color="gray"
                 variant="ghost"
@@ -368,6 +369,7 @@
                 <UIcon
                   :name="isPlaying ? 'i-heroicons-pause' : 'i-heroicons-play'"
                   class="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
+                  :class="isPlaying ? 'ml-0.5' : 'ml-1'"
                 />
               </UButton>
 
