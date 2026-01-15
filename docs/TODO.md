@@ -66,6 +66,7 @@
 - [x] Like/favorite tracks and albums
 - [x] Library page (Artists, Albums, Playlists, Liked Songs)
 - [x] Share functionality (playlist share links)
+- [x] Artist followers tab (discover other fans)
 
 #### Artist Features
 - [x] Detailed analytics dashboard (streams, listeners, top tracks, time period filters)
@@ -80,7 +81,7 @@
 - [x] Rights confirmation on publish
 
 #### User Features
-- [ ] User profile page
+- [x] User profile page (public profiles with followed artists, settings page with avatar upload)
 - [x] Listening stats/wrapped (comprehensive stats dashboard with This Year/Last Month/All Time views)
 - [x] "Where your money went" monthly breakdown (My Impact page with All Time/Last Month views)
 
@@ -102,11 +103,17 @@
 
 #### Platform
 - [ ] Mobile responsive improvements
-- [ ] PWA support
+- [ ] PWA support (full offline mode)
 - [ ] Offline playback (for subscribers)
 - [x] Social login (Google OAuth)
 - [ ] Apple login
 - [ ] Email notifications (new releases from followed artists)
+
+#### Native App UX (Phase 1 - See docs/NATIVE_APP_UX.md)
+- [x] Smart landing page redirect (logged-in users → /discover)
+- [x] Mobile bottom navigation bar (5 icons: Discover, Search, Library, Profile, Now Playing)
+- [x] Clean up navigation for logged-in users (remove marketing links)
+- [x] PWA manifest and meta tags (installable app)
 
 #### Discovery
 - [ ] Genre pages
@@ -145,6 +152,7 @@ All migrations should be run in Supabase SQL Editor in order:
 10. `20260113_add_rights_metadata.sql` - ISRC/ISWC, track credits, album rights metadata
 11. `20260114_artist_payouts.sql` - Stripe Connect, artist balances, payouts tables
 12. `20260115_playlists.sql` - Collaborative playlists with owner/editor/viewer roles
+13. `20260114000000_add_profile_fields.sql` - User profile fields (avatar_key, bio, location, website)
 
 ---
 

@@ -26,31 +26,55 @@
 
           <!-- Navigation -->
           <nav class="hidden md:flex items-center gap-6">
-            <NuxtLink
-              to="/discover"
-              class="text-zinc-400 hover:text-violet-400 transition-colors"
-            >
-              Discover
-            </NuxtLink>
-            <NuxtLink
-              to="/artists"
-              class="text-zinc-400 hover:text-violet-400 transition-colors"
-            >
-              Artists
-            </NuxtLink>
-            <NuxtLink
-              v-if="user"
-              to="/library"
-              class="text-zinc-400 hover:text-violet-400 transition-colors"
-            >
-              Library
-            </NuxtLink>
-            <NuxtLink
-              to="/pricing"
-              class="text-zinc-400 hover:text-violet-400 transition-colors"
-            >
-              Pricing
-            </NuxtLink>
+            <!-- Logged-in navigation -->
+            <template v-if="user">
+              <NuxtLink
+                to="/discover"
+                class="text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                Discover
+              </NuxtLink>
+              <NuxtLink
+                to="/artists"
+                class="text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                Artists
+              </NuxtLink>
+              <NuxtLink
+                to="/library"
+                class="text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                Library
+              </NuxtLink>
+            </template>
+
+            <!-- Logged-out navigation -->
+            <template v-else>
+              <NuxtLink
+                to="/discover"
+                class="text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                Discover
+              </NuxtLink>
+              <NuxtLink
+                to="/artists"
+                class="text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                Artists
+              </NuxtLink>
+              <NuxtLink
+                to="/pricing"
+                class="text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                Pricing
+              </NuxtLink>
+              <NuxtLink
+                to="/for-artists"
+                class="text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                For Artists
+              </NuxtLink>
+            </template>
           </nav>
 
           <!-- Auth / User Menu -->
@@ -96,12 +120,15 @@
     </header>
 
     <!-- Main Content -->
-    <main class="pb-20 md:pb-24">
+    <main class="pb-32 md:pb-24">
       <slot />
     </main>
 
     <!-- Global Audio Player -->
     <AudioPlayer />
+
+    <!-- Mobile Bottom Navigation -->
+    <MobileBottomNav />
 
     <!-- Footer -->
     <footer class="mt-20 border-t border-zinc-800 bg-zinc-950">
