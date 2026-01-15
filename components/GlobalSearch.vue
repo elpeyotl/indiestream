@@ -253,12 +253,16 @@ const performSearch = async () => {
       .ilike('title', `%${query.value}%`)
       .limit(5)
 
-    // Search tracks
-    const { data: tracks } = await client
+    // Search tracks - check moderation setting
+    const { moderationEnabled, loadModerationSetting } = useModerationFilter()
+    await loadModerationSetting()
+
+    let tracksQuery = client
       .from('tracks')
       .select(`
         id,
         title,
+        moderation_status,
         albums!inner (
           slug,
           title,
@@ -271,7 +275,13 @@ const performSearch = async () => {
       `)
       .eq('albums.is_published', true)
       .ilike('title', `%${query.value}%`)
-      .limit(5)
+
+    // Filter by moderation status if enabled
+    if (moderationEnabled.value) {
+      tracksQuery = tracksQuery.eq('moderation_status', 'approved')
+    }
+
+    const { data: tracks } = await tracksQuery.limit(5)
 
     // Process results
     results.value.artists = artists || []

@@ -19,6 +19,11 @@ export interface Track {
   is_cover: boolean
   spotify_track_id: string | null
   musicbrainz_work_id: string | null
+  // Moderation
+  moderation_status?: string
+  moderation_notes?: string | null
+  moderated_at?: string | null
+  moderated_by?: string | null
   // Joined data
   credits?: TrackCredit[]
 }
@@ -152,7 +157,7 @@ export const useAlbum = () => {
   }
 
   // Get albums for a band
-  const getBandAlbums = async (bandId: string, includeUnpublished = false): Promise<Album[]> => {
+  const getBandAlbums = async (bandId: string, includeUnpublished = false, filterModeration = true): Promise<Album[]> => {
     let query = supabase
       .from('albums')
       .select('*, tracks(*)')
@@ -166,11 +171,25 @@ export const useAlbum = () => {
     const { data, error } = await query
 
     if (error) throw error
+
+    // Filter tracks by moderation status if enabled
+    if (filterModeration && data) {
+      const { filterTracks, filterAlbums, loadModerationSetting } = useModerationFilter()
+      await loadModerationSetting()
+      for (const album of data) {
+        if (album.tracks) {
+          album.tracks = filterTracks(album.tracks)
+        }
+      }
+      // Filter out albums with no approved tracks
+      return filterAlbums(data)
+    }
+
     return data || []
   }
 
   // Get a single album by ID
-  const getAlbumById = async (albumId: string): Promise<Album | null> => {
+  const getAlbumById = async (albumId: string, filterModeration = true): Promise<Album | null> => {
     const { data, error } = await supabase
       .from('albums')
       .select('*, tracks(*), band:bands(id, name, slug)')
@@ -182,8 +201,18 @@ export const useAlbum = () => {
       throw error
     }
 
-    // Sort tracks by track_number
     if (data?.tracks) {
+      // Filter tracks by moderation status if enabled
+      if (filterModeration) {
+        const { filterTracks, loadModerationSetting } = useModerationFilter()
+        await loadModerationSetting()
+        data.tracks = filterTracks(data.tracks)
+        // Return null if no approved tracks (album not visible)
+        if (data.tracks.length === 0) {
+          return null
+        }
+      }
+      // Sort tracks by track_number
       data.tracks.sort((a: Track, b: Track) => a.track_number - b.track_number)
     }
 
@@ -191,7 +220,7 @@ export const useAlbum = () => {
   }
 
   // Get album by band slug and album slug (public)
-  const getAlbumBySlug = async (bandSlug: string, albumSlug: string): Promise<Album | null> => {
+  const getAlbumBySlug = async (bandSlug: string, albumSlug: string, filterModeration = true): Promise<Album | null> => {
     // First get the band
     const { data: band } = await supabase
       .from('bands')
@@ -215,6 +244,16 @@ export const useAlbum = () => {
     }
 
     if (data?.tracks) {
+      // Filter tracks by moderation status if enabled
+      if (filterModeration) {
+        const { filterTracks, loadModerationSetting } = useModerationFilter()
+        await loadModerationSetting()
+        data.tracks = filterTracks(data.tracks)
+        // Return null if no approved tracks (album not visible)
+        if (data.tracks.length === 0) {
+          return null
+        }
+      }
       data.tracks.sort((a: Track, b: Track) => a.track_number - b.track_number)
     }
 

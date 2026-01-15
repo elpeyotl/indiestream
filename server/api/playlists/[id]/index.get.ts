@@ -1,9 +1,18 @@
-import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseClient, serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const user = await serverSupabaseUser(event)
   const client = await serverSupabaseClient(event)
+  const serviceClient = await serverSupabaseServiceRole(event)
+
+  // Check if moderation filtering is enabled
+  const { data: moderationSetting } = await serviceClient
+    .from('platform_settings')
+    .select('value')
+    .eq('key', 'require_track_moderation')
+    .single()
+  const requireModeration = moderationSetting?.value === true || moderationSetting?.value === 'true'
 
   // Fetch playlist with tracks and collaborators
   const { data: playlist, error } = await client
@@ -29,6 +38,7 @@ export default defineEventHandler(async (event) => {
           duration_seconds,
           track_number,
           audio_key,
+          moderation_status,
           album:albums (
             id,
             title,
@@ -86,10 +96,18 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Sort tracks by position
-  const sortedTracks = playlist.playlist_tracks?.sort(
+  // Sort tracks by position and filter by moderation status if enabled
+  let sortedTracks = playlist.playlist_tracks?.sort(
     (a: { position: number }, b: { position: number }) => a.position - b.position
   ) || []
+
+  // Filter out non-approved tracks if moderation is enabled
+  if (requireModeration) {
+    sortedTracks = sortedTracks.filter(
+      (pt: { track: { moderation_status?: string } }) =>
+        pt.track?.moderation_status === 'approved'
+    )
+  }
 
   return {
     ...playlist,

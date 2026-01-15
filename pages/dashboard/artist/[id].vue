@@ -878,6 +878,16 @@
                     :disabled="savingAlbum"
                   />
 
+                  <!-- Moderation Status Badge -->
+                  <UBadge
+                    v-if="track.moderation_status"
+                    :color="getModerationColor(track.moderation_status)"
+                    variant="subtle"
+                    size="xs"
+                  >
+                    {{ getModerationLabel(track.moderation_status) }}
+                  </UBadge>
+
                   <UCheckbox
                     v-model="track.is_explicit"
                     label="Explicit"
@@ -899,6 +909,32 @@
                   >
                     <UIcon name="i-heroicons-trash" class="w-4 h-4" />
                   </UButton>
+                </div>
+
+                <!-- Admin Feedback (for rejected/revision_requested tracks) -->
+                <div
+                  v-if="track.moderation_notes && ['rejected', 'revision_requested'].includes(track.moderation_status)"
+                  class="ml-9 p-3 rounded-lg text-sm"
+                  :class="track.moderation_status === 'rejected' ? 'bg-red-500/10 border border-red-500/20' : 'bg-orange-500/10 border border-orange-500/20'"
+                >
+                  <div class="flex items-start gap-2">
+                    <UIcon
+                      :name="track.moderation_status === 'rejected' ? 'i-heroicons-x-circle' : 'i-heroicons-exclamation-triangle'"
+                      :class="track.moderation_status === 'rejected' ? 'text-red-400' : 'text-orange-400'"
+                      class="w-4 h-4 mt-0.5 shrink-0"
+                    />
+                    <div>
+                      <p :class="track.moderation_status === 'rejected' ? 'text-red-300' : 'text-orange-300'" class="font-medium">
+                        {{ track.moderation_status === 'rejected' ? 'Rejection Reason:' : 'Revision Requested:' }}
+                      </p>
+                      <p :class="track.moderation_status === 'rejected' ? 'text-red-200/80' : 'text-orange-200/80'" class="mt-1">
+                        {{ track.moderation_notes }}
+                      </p>
+                      <p class="text-zinc-500 text-xs mt-2">
+                        Edit the track and save to resubmit for review.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- ISRC / ISWC Row -->
@@ -1199,6 +1235,27 @@ const creditRoleOptions = [
   { label: 'Producer', value: 'producer' },
   { label: 'Arranger', value: 'arranger' },
 ]
+
+// Moderation status helpers
+const getModerationColor = (status: string) => {
+  switch (status) {
+    case 'approved': return 'green'
+    case 'pending': return 'yellow'
+    case 'rejected': return 'red'
+    case 'revision_requested': return 'orange'
+    default: return 'gray'
+  }
+}
+
+const getModerationLabel = (status: string) => {
+  switch (status) {
+    case 'approved': return 'Approved'
+    case 'pending': return 'Pending Review'
+    case 'rejected': return 'Rejected'
+    case 'revision_requested': return 'Revision Requested'
+    default: return status
+  }
+}
 const deletingTrack = ref(false)
 const trackToDelete = ref<EditableTrack | null>(null)
 
@@ -1894,6 +1951,8 @@ const handleSaveAlbum = async () => {
   if (!albumToEdit.value || !editAlbumForm.title.trim()) return
 
   savingAlbum.value = true
+  let tracksResetToReview = 0
+
   try {
     // Update album details
     const updated = await updateAlbum(albumToEdit.value.id, {
@@ -1908,7 +1967,7 @@ const handleSaveAlbum = async () => {
       c_line: editAlbumForm.c_line.trim() || undefined,
     })
 
-    // Update tracks and their credits
+    // Update tracks using the API (handles re-review logic)
     for (const track of editAlbumTracks.value) {
       const originalTrack = albumToEdit.value.tracks?.find(t => t.id === track.id)
       // Check if any track field changed
@@ -1920,13 +1979,27 @@ const handleSaveAlbum = async () => {
         originalTrack.is_cover !== track.is_cover
       )
       if (changed) {
-        await updateTrack(track.id, {
-          title: track.title,
-          is_explicit: track.is_explicit,
-          isrc: track.isrc || undefined,
-          iswc: track.iswc || undefined,
-          is_cover: track.is_cover,
+        // Use the new API endpoint that handles re-review logic
+        const result = await $fetch<{ success: boolean; track: any; wasResetToReview: boolean }>(`/api/tracks/${track.id}`, {
+          method: 'PATCH',
+          body: {
+            title: track.title,
+            is_explicit: track.is_explicit,
+            isrc: track.isrc || null,
+            iswc: track.iswc || null,
+            is_cover: track.is_cover,
+          },
         })
+
+        // Update local track with new moderation status
+        if (result.track) {
+          track.moderation_status = result.track.moderation_status
+          track.moderation_notes = result.track.moderation_notes
+        }
+
+        if (result.wasResetToReview) {
+          tracksResetToReview++
+        }
       }
 
       // Save credits (always update to handle additions/removals)
@@ -1946,7 +2019,17 @@ const handleSaveAlbum = async () => {
       albums.value[index] = { ...albums.value[index], ...updated, tracks: tracksForStorage as Track[] }
     }
 
-    toast.add({ title: 'Album updated', color: 'green', icon: 'i-heroicons-check-circle' })
+    // Show appropriate toast based on whether tracks were reset to review
+    if (tracksResetToReview > 0) {
+      toast.add({
+        title: 'Album updated',
+        description: `${tracksResetToReview} track${tracksResetToReview > 1 ? 's' : ''} sent for re-review`,
+        color: 'yellow',
+        icon: 'i-heroicons-clock',
+      })
+    } else {
+      toast.add({ title: 'Album updated', color: 'green', icon: 'i-heroicons-check-circle' })
+    }
     showEditAlbumModal.value = false
   } catch (e: any) {
     toast.add({ title: 'Update failed', description: e.message || 'Failed to update album', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
@@ -2067,8 +2150,8 @@ onMounted(async () => {
         }
       }
 
-      // Load albums (including unpublished drafts)
-      albums.value = await getBandAlbums(band.value.id, true)
+      // Load albums (including unpublished drafts, no moderation filtering - artists see all their tracks)
+      albums.value = await getBandAlbums(band.value.id, true, false)
 
       // Load cover URLs
       for (const album of albums.value) {

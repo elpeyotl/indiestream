@@ -179,6 +179,7 @@ import type { Album } from '~/composables/useAlbum'
 
 const client = useSupabaseClient()
 const { getStreamUrl } = useAlbum()
+const { moderationEnabled, loadModerationSetting, filterTracks, filterAlbums } = useModerationFilter()
 
 const loading = ref(true)
 const loadingMore = ref(false)
@@ -229,6 +230,9 @@ const loadFeaturedArtists = async () => {
 
 const loadNewReleases = async () => {
   try {
+    // Load moderation setting first
+    await loadModerationSetting()
+
     const { data, error } = await client
       .from('albums')
       .select(`
@@ -243,17 +247,33 @@ const loadNewReleases = async () => {
           id,
           name,
           slug
+        ),
+        tracks (
+          id,
+          moderation_status
         )
       `)
       .eq('is_published', true)
       .order('created_at', { ascending: false })
-      .limit(10)
+      .limit(20) // Fetch more since some may be filtered out
 
     if (error) throw error
-    newReleases.value = (data || []).map(album => ({
+
+    // Map and filter albums
+    let albums = (data || []).map(album => ({
       ...album,
       band: Array.isArray(album.band) ? album.band[0] : album.band
     }))
+
+    // Filter out albums with no approved tracks when moderation is enabled
+    if (moderationEnabled.value) {
+      albums = albums.filter(album => {
+        if (!album.tracks || album.tracks.length === 0) return false
+        return album.tracks.some((track: any) => track.moderation_status === 'approved')
+      })
+    }
+
+    newReleases.value = albums.slice(0, 10) // Return max 10 after filtering
 
     // Load cover URLs (use direct URL as fallback if no key)
     for (const album of newReleases.value) {

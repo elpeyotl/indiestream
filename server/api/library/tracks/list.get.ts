@@ -1,5 +1,5 @@
 // Get user's liked tracks
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -11,6 +11,15 @@ export default defineEventHandler(async (event) => {
   }
 
   const client = await serverSupabaseClient(event)
+  const serviceClient = await serverSupabaseServiceRole(event)
+
+  // Check if moderation filtering is enabled
+  const { data: moderationSetting } = await serviceClient
+    .from('platform_settings')
+    .select('value')
+    .eq('key', 'require_track_moderation')
+    .single()
+  const requireModeration = moderationSetting?.value === true || moderationSetting?.value === 'true'
 
   const { data, error } = await client
     .from('liked_tracks')
@@ -22,6 +31,7 @@ export default defineEventHandler(async (event) => {
         duration_seconds,
         track_number,
         audio_key,
+        moderation_status,
         album:albums (
           id,
           title,
@@ -47,5 +57,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  return data || []
+  // Filter out non-approved tracks if moderation is enabled
+  let result = data || []
+  if (requireModeration) {
+    result = result.filter(
+      (item: { track: { moderation_status?: string } }) =>
+        item.track?.moderation_status === 'approved'
+    )
+  }
+
+  return result
 })

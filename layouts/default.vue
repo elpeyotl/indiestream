@@ -96,6 +96,87 @@
 
             <!-- Logged In -->
             <template v-else>
+              <!-- Notifications Bell -->
+              <UPopover :popper="{ placement: 'bottom-end' }">
+                <UButton
+                  color="gray"
+                  variant="ghost"
+                  class="relative"
+                  @click="handleBellClick"
+                >
+                  <UIcon name="i-heroicons-bell" class="w-5 h-5" />
+                  <span
+                    v-if="unreadCount > 0"
+                    class="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-xs font-bold bg-violet-500 text-white rounded-full px-1"
+                  >
+                    {{ unreadCount > 9 ? '9+' : unreadCount }}
+                  </span>
+                </UButton>
+
+                <template #panel>
+                  <div class="w-80 max-h-96 overflow-hidden bg-zinc-900 rounded-lg border border-zinc-800">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+                      <h3 class="font-semibold text-zinc-100">Notifications</h3>
+                      <UButton
+                        v-if="unreadCount > 0"
+                        color="gray"
+                        variant="ghost"
+                        size="xs"
+                        @click="markAllAsRead"
+                      >
+                        Mark all read
+                      </UButton>
+                    </div>
+
+                    <!-- Notifications List -->
+                    <div class="overflow-y-auto max-h-72">
+                      <div v-if="notificationsLoading" class="p-4 text-center">
+                        <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin text-zinc-500" />
+                      </div>
+
+                      <div v-else-if="notifications.length === 0" class="p-6 text-center text-zinc-500">
+                        <UIcon name="i-heroicons-bell-slash" class="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>No notifications yet</p>
+                      </div>
+
+                      <div v-else>
+                        <NuxtLink
+                          v-for="notification in notifications"
+                          :key="notification.id"
+                          :to="notification.link || '#'"
+                          class="block px-4 py-3 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/50 last:border-b-0"
+                          :class="{ 'bg-zinc-800/30': !notification.read }"
+                          @click="handleNotificationClick(notification)"
+                        >
+                          <div class="flex gap-3">
+                            <UIcon
+                              :name="getNotificationIcon(notification.type)"
+                              :class="['w-5 h-5 mt-0.5 flex-shrink-0', getNotificationColor(notification.type)]"
+                            />
+                            <div class="flex-1 min-w-0">
+                              <p class="font-medium text-sm text-zinc-100">
+                                {{ notification.title }}
+                              </p>
+                              <p v-if="notification.message" class="text-xs text-zinc-400 mt-0.5 line-clamp-2">
+                                {{ notification.message }}
+                              </p>
+                              <p class="text-xs text-zinc-500 mt-1">
+                                {{ formatTime(notification.created_at) }}
+                              </p>
+                            </div>
+                            <span
+                              v-if="!notification.read"
+                              class="w-2 h-2 bg-violet-500 rounded-full flex-shrink-0 mt-2"
+                            />
+                          </div>
+                        </NuxtLink>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </UPopover>
+
               <UDropdown
                 :items="userMenuItems"
                 :popper="{ placement: 'bottom-end' }"
@@ -253,12 +334,56 @@
 <script setup lang="ts">
 import BokehBackground from "~/components/backgrounds/BokehBackground.vue";
 import { APP_VERSION } from "~/utils/version";
+import type { Notification } from "~/composables/useNotifications";
 
 const user = useSupabaseUser();
 const client = useSupabaseClient();
 const { signOut } = useAuth();
 const { audioData } = usePlayer();
 const toast = useToast();
+
+// Notifications
+const {
+  notifications,
+  unreadCount,
+  loading: notificationsLoading,
+  fetchUnreadCount,
+  fetchNotifications,
+  markAsRead,
+  markAllAsRead,
+  getNotificationIcon,
+  getNotificationColor,
+  formatTime,
+  subscribeToRealtime,
+  unsubscribeFromRealtime,
+} = useNotifications();
+
+// Fetch unread count on mount and when user changes, subscribe to realtime
+watch(user, async (newUser) => {
+  if (newUser) {
+    await fetchUnreadCount();
+    subscribeToRealtime();
+  } else {
+    unsubscribeFromRealtime();
+  }
+}, { immediate: true });
+
+// Cleanup on unmount
+onUnmounted(() => {
+  unsubscribeFromRealtime();
+});
+
+// Handle bell click - fetch full notifications
+const handleBellClick = () => {
+  fetchNotifications();
+};
+
+// Handle notification click - mark as read
+const handleNotificationClick = (notification: Notification) => {
+  if (!notification.read) {
+    markAsRead(notification.id);
+  }
+};
 
 // Check if user is admin
 const isAdmin = ref(false);

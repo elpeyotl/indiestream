@@ -68,6 +68,16 @@ ALTER TABLE artist_earnings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE artist_balances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payouts ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Admins can manage revenue periods" ON revenue_periods;
+DROP POLICY IF EXISTS "Artists can view revenue periods" ON revenue_periods;
+DROP POLICY IF EXISTS "Artists can view own earnings" ON artist_earnings;
+DROP POLICY IF EXISTS "Admins can manage artist earnings" ON artist_earnings;
+DROP POLICY IF EXISTS "Artists can view own balance" ON artist_balances;
+DROP POLICY IF EXISTS "Admins can manage artist balances" ON artist_balances;
+DROP POLICY IF EXISTS "Artists can view own payouts" ON payouts;
+DROP POLICY IF EXISTS "Admins can manage payouts" ON payouts;
+
 -- Revenue periods: admins can read/write, artists can read
 CREATE POLICY "Admins can manage revenue periods"
   ON revenue_periods FOR ALL
@@ -155,6 +165,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS artist_balances_updated_at ON artist_balances;
 CREATE TRIGGER artist_balances_updated_at
   BEFORE UPDATE ON artist_balances
   FOR EACH ROW
