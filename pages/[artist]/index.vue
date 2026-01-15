@@ -36,15 +36,21 @@
       <div class="flex flex-col md:flex-row gap-6 items-start">
         <!-- Avatar -->
         <div
-          class="w-36 h-36 md:w-48 md:h-48 rounded-2xl shadow-2xl overflow-hidden shrink-0 ring-4 ring-zinc-950"
+          class="w-36 h-36 md:w-48 md:h-48 rounded-2xl shadow-2xl overflow-hidden shrink-0 ring-4 ring-zinc-950 relative"
           :style="{ background: `linear-gradient(135deg, ${band.theme_color} 0%, #c026d3 100%)` }"
         >
+          <!-- Skeleton placeholder until image loads -->
+          <USkeleton
+            v-if="band.avatar_url && !avatarLoaded"
+            class="absolute inset-0 rounded-none"
+          />
           <img
             v-if="band.avatar_url"
-            v-fade-image
             :src="band.avatar_url"
             :alt="band.name"
-            class="w-full h-full object-cover"
+            class="w-full h-full object-cover transition-opacity duration-300"
+            :class="avatarLoaded ? 'opacity-100' : 'opacity-0'"
+            @load="avatarLoaded = true"
           />
           <div v-else class="w-full h-full flex items-center justify-center">
             <span class="text-5xl font-bold text-white">
@@ -389,9 +395,63 @@
     </div>
   </div>
 
-  <!-- Loading -->
-  <div v-else-if="loading" class="min-h-screen flex items-center justify-center">
-    <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+  <!-- Loading Skeleton -->
+  <div v-else-if="loading">
+    <!-- Hero Banner Skeleton -->
+    <div class="relative h-72 md:h-96 lg:h-[28rem] overflow-hidden">
+      <USkeleton class="absolute inset-0 rounded-none" />
+      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/20" />
+    </div>
+
+    <!-- Profile Info Skeleton -->
+    <div class="container mx-auto px-4 -mt-32 md:-mt-40 relative z-10">
+      <!-- Back Button placeholder -->
+      <div class="hidden md:block mb-4">
+        <USkeleton class="h-10 w-24 rounded-lg" />
+      </div>
+
+      <div class="flex flex-col md:flex-row gap-6 items-start">
+        <!-- Avatar Skeleton -->
+        <USkeleton class="w-36 h-36 md:w-48 md:h-48 rounded-2xl shrink-0" />
+
+        <!-- Info Skeleton -->
+        <div class="flex-1 pt-4">
+          <USkeleton class="h-10 w-64 mb-4" />
+          <div class="flex gap-4 mb-4">
+            <USkeleton class="h-5 w-24" />
+            <USkeleton class="h-5 w-20" />
+          </div>
+          <div class="flex gap-2 mb-4">
+            <USkeleton class="h-6 w-16 rounded-full" />
+            <USkeleton class="h-6 w-20 rounded-full" />
+            <USkeleton class="h-6 w-14 rounded-full" />
+          </div>
+          <USkeleton class="h-16 w-full max-w-xl mb-6" />
+          <div class="flex gap-3">
+            <USkeleton class="h-11 w-28 rounded-lg" />
+            <USkeleton class="h-11 w-24 rounded-lg" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs Skeleton -->
+      <div class="mt-8">
+        <div class="flex gap-4 border-b border-zinc-800 pb-2">
+          <USkeleton class="h-8 w-20" />
+          <USkeleton class="h-8 w-16" />
+          <USkeleton class="h-8 w-24" />
+        </div>
+      </div>
+
+      <!-- Album Grid Skeleton -->
+      <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+        <div v-for="i in 5" :key="i" class="space-y-3">
+          <USkeleton class="aspect-square rounded-lg" />
+          <USkeleton class="h-5 w-3/4" />
+          <USkeleton class="h-4 w-1/2" />
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Not Found -->
@@ -424,6 +484,7 @@ const band = ref<Band | null>(null)
 const albums = ref<Album[]>([])
 const albumCovers = ref<Record<string, string>>({})
 const loading = ref(true)
+const avatarLoaded = ref(false)
 const loadingPlayAll = ref(false)
 const isFollowing = ref(false)
 const loadingFollow = ref(false)
