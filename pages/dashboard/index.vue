@@ -525,7 +525,7 @@ const loadListeningStats = async () => {
 // Watch for subscription status changes and fetch impact data
 watch(isSubscribed, (newValue) => {
   if (newValue && !distribution.value) {
-    fetchDistribution('all-time')
+    fetchDistribution('this-month')
   }
 })
 
@@ -535,7 +535,7 @@ onMounted(async () => {
 
   // Load impact stats for subscribers
   if (isSubscribed.value) {
-    fetchDistribution('all-time')
+    fetchDistribution('this-month')
   }
 
   try {

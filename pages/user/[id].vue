@@ -4,8 +4,45 @@ const userId = route.params.id as string
 
 const { profile, loading, error, fetchPublicProfile } = useUserProfile()
 
-onMounted(() => {
+// Impact stats
+const impactStats = ref<any>(null)
+const impactLoading = ref(false)
+
+// Helper functions
+const formatCurrency = (cents: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100)
+}
+
+const formatDuration = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  } else if (minutes > 0) {
+    return `${minutes}m`
+  } else {
+    return `${seconds}s`
+  }
+}
+
+onMounted(async () => {
   fetchPublicProfile(userId)
+
+  // Fetch public impact stats
+  try {
+    impactLoading.value = true
+    const stats = await $fetch(`/api/user/${userId}/impact-stats`)
+    impactStats.value = stats
+  } catch (e) {
+    console.error('Failed to fetch impact stats:', e)
+    // Fail silently - not critical
+  } finally {
+    impactLoading.value = false
+  }
 })
 
 // Show first 8 artists, then "Show All" button
@@ -81,6 +118,46 @@ const artistsToShow = computed(() =>
           <p class="text-zinc-500 text-sm mt-4">
             Member since {{ new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }}
           </p>
+        </div>
+      </UCard>
+
+      <!-- Impact Stats (only if public) -->
+      <UCard
+        v-if="impactStats?.impactPublic && impactStats?.stats"
+        class="mb-6 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20">
+        <div class="flex items-center gap-2 mb-4">
+          <UIcon name="i-heroicons-heart" class="w-5 h-5 text-violet-400" />
+          <h2 class="text-lg font-semibold text-zinc-100">Impact</h2>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="text-center p-3 bg-zinc-900/50 rounded-lg">
+            <p class="text-2xl font-bold text-violet-400 mb-1">
+              {{ formatCurrency(impactStats.stats.totalEarned) }}
+            </p>
+            <p class="text-xs text-zinc-400">Earned by Artists</p>
+          </div>
+
+          <div class="text-center p-3 bg-zinc-900/50 rounded-lg">
+            <p class="text-2xl font-bold text-violet-400 mb-1">
+              {{ impactStats.stats.artistsSupported }}
+            </p>
+            <p class="text-xs text-zinc-400">Artists Supported</p>
+          </div>
+
+          <div class="text-center p-3 bg-zinc-900/50 rounded-lg">
+            <p class="text-2xl font-bold text-violet-400 mb-1">
+              {{ formatDuration(impactStats.stats.listeningTime) }}
+            </p>
+            <p class="text-xs text-zinc-400">Listening Time</p>
+          </div>
+
+          <div class="text-center p-3 bg-zinc-900/50 rounded-lg">
+            <p class="text-2xl font-bold text-violet-400 mb-1">
+              {{ impactStats.stats.streamCount }}
+            </p>
+            <p class="text-xs text-zinc-400">Streams</p>
+          </div>
         </div>
       </UCard>
 

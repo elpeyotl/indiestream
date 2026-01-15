@@ -10,9 +10,17 @@
       <p class="text-zinc-400 mt-2">See how your subscription supports the artists you love</p>
     </div>
 
-    <!-- Period Toggle -->
-    <div class="mb-6">
+    <!-- Period Toggle + Share Button -->
+    <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
       <div class="inline-flex gap-2 p-1 rounded-lg bg-zinc-900/50 border border-zinc-800">
+        <UButton
+          :color="selectedPeriod === 'this-month' ? 'violet' : 'gray'"
+          :variant="selectedPeriod === 'this-month' ? 'solid' : 'ghost'"
+          size="sm"
+          @click="selectedPeriod = 'this-month'"
+        >
+          This Month
+        </UButton>
         <UButton
           :color="selectedPeriod === 'last-month' ? 'violet' : 'gray'"
           :variant="selectedPeriod === 'last-month' ? 'solid' : 'ghost'"
@@ -30,6 +38,16 @@
           All Time
         </UButton>
       </div>
+
+      <!-- Share Button -->
+      <UButton
+        v-if="distribution && distribution.subscriptionStatus !== 'inactive'"
+        color="violet"
+        variant="outline"
+        @click="showShareModal = true">
+        <UIcon name="i-heroicons-share" class="w-4 h-4" />
+        Share
+      </UButton>
     </div>
 
     <!-- Loading -->
@@ -97,7 +115,7 @@
             </div>
             <h3 class="text-lg font-semibold text-zinc-100 mb-2">Start Listening to See Your Impact</h3>
             <p class="text-zinc-400 mb-6 max-w-md mx-auto">
-              You haven't streamed any music {{ selectedPeriod === 'last-month' ? 'last month' : 'yet' }}. Start listening to support artists and see your personalized impact breakdown.
+              You haven't streamed any music {{ selectedPeriod === 'this-month' ? 'this month' : selectedPeriod === 'last-month' ? 'last month' : 'yet' }}. Start listening to support artists and see your personalized impact breakdown.
             </p>
             <UButton color="teal" to="/discover" size="lg">
               Discover Artists
@@ -209,6 +227,9 @@
         </UCard>
       </div>
     </template>
+
+    <!-- Share Impact Modal -->
+    <ShareImpactModal v-model="showShareModal" />
   </div>
 </template>
 
@@ -219,8 +240,11 @@ definePageMeta({
 
 const { distribution, loading, error, fetchDistribution, formatCurrency, formatDuration } = useMoneyDistribution()
 
-// Period selector - default to last-month
-const selectedPeriod = ref<'all-time' | 'last-month'>('last-month')
+// Period selector - default to this-month
+const selectedPeriod = ref<'all-time' | 'last-month' | 'this-month'>('this-month')
+
+// Share modal
+const showShareModal = ref(false)
 
 // Function to load distribution
 const loadDistribution = () => {

@@ -14,7 +14,7 @@ interface ArtistBreakdown {
 }
 
 interface MoneyDistribution {
-  period: 'all-time' | 'last-month'
+  period: 'all-time' | 'last-month' | 'this-month'
   periodLabel: string
   subscriptionStatus: 'active' | 'trialing' | 'inactive'
   totalPaidCents: number
@@ -37,11 +37,11 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
   const client = await serverSupabaseClient(event)
   const query = getQuery(event)
 
-  // Get period parameter (default to last-month)
-  const period = (query.period as string) || 'last-month'
+  // Get period parameter (default to this-month)
+  const period = (query.period as string) || 'this-month'
 
-  if (period !== 'all-time' && period !== 'last-month') {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid period. Must be "all-time" or "last-month"' })
+  if (period !== 'all-time' && period !== 'last-month' && period !== 'this-month') {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid period. Must be "all-time", "last-month", or "this-month"' })
   }
 
   // Revenue model constants
@@ -71,7 +71,16 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
   let periodLabel: string
   let monthsSubscribed = 0
 
-  if (period === 'last-month') {
+  if (period === 'this-month') {
+    // Get current calendar month (from 1st to now)
+    const now = new Date()
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    periodStartStr = thisMonth.toISOString().split('T')[0]
+    periodEndStr = now.toISOString()
+    periodLabel = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    monthsSubscribed = 1
+  } else if (period === 'last-month') {
     // Get previous calendar month
     const now = new Date()
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)

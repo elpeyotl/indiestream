@@ -1,6 +1,6 @@
 {
   "name": "indiestream",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -25,6 +25,7 @@
     "@supabase/supabase-js": "^2.45.4",
     "@types/three": "^0.182.0",
     "marked": "^17.0.1",
+    "nanoid": "^5.1.6",
     "nuxt": "3.13.2",
     "resend": "^6.7.0",
     "sharp": "^0.34.5",

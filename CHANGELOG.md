@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.13.0] - 2026-01-15
+
+### Added
+- **"This Month" Tab**: Added "This Month" period to My Impact page alongside "Last Month" and "All Time"
+  - Shows real-time impact stats for the current calendar month
+  - Dashboard hero card now defaults to showing "This Month" data
+  - Encourages daily listening by showing impact grow in real-time
+- **Social Impact Sharing**: Users can now share their impact stats publicly
+  - Generate shareable links with customizable stats visibility
+  - Choose which period to share (This Month, Last Month, All Time)
+  - Select which stats to display (total earned, artists supported, listening time, streams, artist breakdown)
+  - Public share page at `/impact/share/[token]` with clean design
+  - Social media sharing buttons for Twitter and Facebook
+  - Copy-to-clipboard functionality for easy sharing
+  - View count tracking for shared links
+- **User Profile Impact Stats**: Optional public display of impact on user profiles
+  - Privacy toggle in settings to show/hide impact stats publicly
+  - All-time impact stats displayed on `/user/[id]` pages when opted in
+  - Shows total earned by artists, artists supported, listening time, and stream count
+  - Helps build community around supporting artists
+- ShareImpactModal component for managing share settings
+- Database table `impact_shares` for storing share preferences and tokens
+- Database column `show_impact_publicly` in profiles for privacy control
+
+### Changed
+- Default period on My Impact page changed from "Last Month" to "This Month"
+- Dashboard hero card now fetches "This Month" data instead of "All Time"
+- My Impact page now shows "Share" button for subscribed users
+
+### Technical
+- API endpoint `/api/listener/money-distribution.get.ts` now supports 'this-month' period
+- New API endpoints:
+  - `POST /api/impact/share` for creating share tokens
+  - `GET /api/impact/share/[token]` for fetching shared impact data
+  - `GET /api/user/[id]/impact-stats` for public profile impact stats
+- Updated TypeScript types to include 'this-month' period
+- Token generation using Node.js crypto (base64url encoding)
+- RLS policies for impact_shares table (user can manage own, anyone can view by token)
+
 ## [0.12.0] - 2026-01-15
 
 ### Added

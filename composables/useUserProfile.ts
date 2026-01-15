@@ -70,6 +70,7 @@ export const useUserProfile = () => {
     bio?: string
     location?: string
     website?: string
+    showImpactPublicly?: boolean
   }) => {
     loading.value = true
     error.value = null

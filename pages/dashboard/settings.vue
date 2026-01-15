@@ -15,6 +15,7 @@ const form = reactive({
 })
 
 const user = useSupabaseUser()
+const showImpactPublicly = ref(false)
 
 // Load current profile
 onMounted(async () => {
@@ -24,6 +25,7 @@ onMounted(async () => {
     form.bio = profile.value.bio || ''
     form.location = profile.value.location || ''
     form.website = profile.value.website || ''
+    showImpactPublicly.value = (profile.value as any).showImpactPublicly || false
   }
 })
 
@@ -122,7 +124,8 @@ const handleSubmit = async () => {
       displayName: form.displayName.trim(),
       bio: form.bio.trim() || undefined,
       location: form.location.trim() || undefined,
-      website: form.website.trim() || undefined
+      website: form.website.trim() || undefined,
+      showImpactPublicly: showImpactPublicly.value
     })
 
     toast.add({
@@ -272,10 +275,28 @@ const handleSubmit = async () => {
       </form>
     </UCard>
 
-    <!-- Future sections -->
+    <!-- Privacy Settings -->
     <UCard class="mt-6">
-      <p class="text-zinc-500 text-sm">
-        Additional settings sections (Privacy, Notifications, etc.) can be added here in the future.
+      <h2 class="text-xl font-semibold text-zinc-100 mb-6">Privacy</h2>
+
+      <div class="space-y-4">
+        <label class="flex items-start gap-3 cursor-pointer hover:bg-zinc-800/30 rounded-lg p-3 -mx-3 transition-colors">
+          <UCheckbox v-model="showImpactPublicly" class="mt-1" />
+          <div>
+            <span class="text-sm font-medium text-zinc-300 block mb-1">
+              Show my impact stats on my public profile
+            </span>
+            <span class="text-xs text-zinc-500 leading-relaxed block">
+              Let others see how much you've supported artists on Indiestream. This displays your total earnings sent to artists, number of artists supported, listening time, and stream count on your public profile page.
+            </span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Note: Privacy setting auto-saves with profile -->
+      <p class="text-xs text-zinc-500 mt-6 p-3 bg-zinc-900/50 rounded-lg">
+        <UIcon name="i-heroicons-information-circle" class="inline-block mr-1" />
+        Privacy settings are saved when you save your profile changes.
       </p>
     </UCard>
   </div>

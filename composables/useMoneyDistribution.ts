@@ -13,7 +13,7 @@ interface ArtistBreakdown {
 }
 
 interface MoneyDistribution {
-  period: 'all-time' | 'last-month'
+  period: 'all-time' | 'last-month' | 'this-month'
   periodLabel: string
   subscriptionStatus: 'active' | 'trialing' | 'inactive'
   totalPaidCents: number
