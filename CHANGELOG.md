@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.1] - 2026-01-15
+
+### Changed
+- **Enhanced Impact Share Page Visual Design**: Made the share page more colorful and engaging
+  - Added colorful gradient backgrounds with distinct colors for each stat (emerald for earnings, violet for artists, amber for time, fuchsia for streams)
+  - Added icon badges for each stat card (dollar, user-group, clock, musical-note)
+  - Enhanced artist breakdown with artist avatar thumbnails
+  - Added rank badges (1, 2, 3...) for top artists
+  - Added hover effects and gradient text for earnings
+  - Improved overall color scheme with multi-color gradients (violet → fuchsia → pink)
+  - Shows additional artist details (stream count and listening time)
+
 ## [0.13.0] - 2026-01-15
 
 ### Added
