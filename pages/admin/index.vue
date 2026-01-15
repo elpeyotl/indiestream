@@ -270,7 +270,7 @@
                     <td class="py-3 px-4 text-right" @click.stop>
                       <div class="flex justify-end gap-1">
                         <UButton
-                          v-if="item.status === 'pending'"
+                          v-if="item.status === 'pending' || item.status === 'pending_update'"
                           color="green"
                           variant="ghost"
                           size="xs"
@@ -280,7 +280,7 @@
                           <UIcon name="i-heroicons-check" class="w-4 h-4" />
                         </UButton>
                         <UButton
-                          v-if="item.status === 'pending'"
+                          v-if="item.status === 'pending' || item.status === 'pending_update'"
                           color="red"
                           variant="ghost"
                           size="xs"
@@ -1454,7 +1454,7 @@
             <UButton color="gray" variant="ghost" @click="closeTrackDetail">
               Close
             </UButton>
-            <div v-if="selectedQueueItem?.status === 'pending'" class="flex gap-2">
+            <div v-if="selectedQueueItem?.status === 'pending' || selectedQueueItem?.status === 'pending_update'" class="flex gap-2">
               <UButton
                 color="orange"
                 variant="soft"
@@ -1996,6 +1996,7 @@ const moderationPagination = ref({
 const moderationStatusOptions = [
   { label: 'All Status', value: 'all' },
   { label: 'Pending', value: 'pending' },
+  { label: 'Pending Update', value: 'pending_update' },
   { label: 'Approved', value: 'approved' },
   { label: 'Rejected', value: 'rejected' },
   { label: 'Revision Requested', value: 'revision_requested' },
@@ -2705,11 +2706,11 @@ const updateSetting = async (key: string, value: any) => {
 
 // Computed stats for moderation queue
 const pendingCount = computed(() => {
-  return moderationQueue.value.filter(item => item.status === 'pending').length
+  return moderationQueue.value.filter(item => item.status === 'pending' || item.status === 'pending_update').length
 })
 
 const urgentCount = computed(() => {
-  return moderationQueue.value.filter(item => item.priority === 'urgent' && item.status === 'pending').length
+  return moderationQueue.value.filter(item => item.priority === 'urgent' && (item.status === 'pending' || item.status === 'pending_update')).length
 })
 
 const approvedTodayCount = computed(() => {
@@ -2889,6 +2890,7 @@ const rejectArtist = async () => {
 const getStatusColor = (status: string): string => {
   switch (status) {
     case 'pending': return 'yellow'
+    case 'pending_update': return 'blue'
     case 'approved': return 'green'
     case 'rejected': return 'red'
     case 'revision_requested': return 'orange'
@@ -2899,6 +2901,7 @@ const getStatusColor = (status: string): string => {
 const formatStatus = (status: string): string => {
   switch (status) {
     case 'pending': return 'Pending'
+    case 'pending_update': return 'Update Pending'
     case 'approved': return 'Approved'
     case 'rejected': return 'Rejected'
     case 'revision_requested': return 'Revision Requested'

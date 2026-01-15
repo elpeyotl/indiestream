@@ -97,8 +97,9 @@
 - [x] Change user roles (user/artist/admin)
 - [x] PRO export for SUISA/GEMA reporting (CSV with ISRC, composers, territories)
 - [x] Artist/band management (list, delete, feature/unfeature, full edit, verify, suspend)
-- [ ] Content moderation queue (review flagged/new uploads)
-- [ ] Track approval workflow
+- [x] Content moderation queue (review flagged/new uploads)
+- [x] Track approval workflow (approve/reject/request revision with notifications)
+- [x] In-app notifications (bell icon with real-time updates)
 - [ ] Artist verification system (submission workflow)
 - [ ] Revenue dashboard (subscriptions, payouts)
 - [ ] Growth metrics over time

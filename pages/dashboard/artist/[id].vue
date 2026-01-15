@@ -1012,7 +1012,27 @@
 
           <!-- Tracks Section -->
           <div class="border-t border-zinc-800 pt-4">
-            <h4 class="text-sm font-medium text-zinc-300 mb-3">Tracks</h4>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-sm font-medium text-zinc-300">Tracks</h4>
+              <UButton
+                color="violet"
+                variant="outline"
+                size="xs"
+                :disabled="savingAlbum"
+                @click="addTrackInput?.click()"
+              >
+                <UIcon name="i-heroicons-plus" class="w-3 h-3 mr-1" />
+                Add Track
+              </UButton>
+              <input
+                ref="addTrackInput"
+                type="file"
+                accept="audio/mpeg,audio/mp3,audio/wav,audio/flac,audio/aac,audio/ogg"
+                multiple
+                class="hidden"
+                @change="onAddTracksSelect"
+              />
+            </div>
 
             <div v-if="editAlbumTracks.length === 0" class="text-center py-4 text-zinc-500 text-sm">
               No tracks in this album
@@ -1022,19 +1042,43 @@
               <div
                 v-for="(track, index) in editAlbumTracks"
                 :key="track.id"
-                class="p-3 bg-zinc-800/50 rounded-lg space-y-3"
+                class="p-3 bg-zinc-800/50 rounded-lg space-y-3 border border-zinc-700"
+                :class="{ 'border-violet-500 bg-violet-500/10': dragOverEditTrackIndex === index }"
+                draggable="true"
+                @dragstart="onEditTrackDragStart($event, index)"
+                @dragend="onEditTrackDragEnd"
+                @dragover.prevent="onEditTrackDragOver(index)"
+                @dragleave="onEditTrackDragLeave"
+                @drop.prevent="onEditTrackDrop(index)"
               >
                 <!-- Track Header Row -->
                 <div class="flex items-center gap-3">
-                  <span class="text-zinc-500 text-sm w-6 text-center">{{ index + 1 }}</span>
+                  <!-- Drag Handle -->
+                  <div class="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300">
+                    <UIcon name="i-heroicons-bars-3" class="w-5 h-5" />
+                  </div>
 
-                  <UInput
-                    v-model="track.title"
-                    placeholder="Track title"
-                    size="sm"
-                    class="flex-1"
-                    :disabled="savingAlbum"
-                  />
+                  <!-- Track Number -->
+                  <div class="w-7 h-7 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-semibold shrink-0">
+                    {{ index + 1 }}
+                  </div>
+
+                  <!-- Track Title with improved UX -->
+                  <div class="flex-1 min-w-0">
+                    <div class="group/title relative">
+                      <UInput
+                        v-model="track.title"
+                        placeholder="Track title"
+                        size="sm"
+                        class="font-semibold text-zinc-100 bg-transparent hover:bg-zinc-700/50 focus:bg-zinc-700/50 rounded-lg transition-colors"
+                        :disabled="savingAlbum"
+                      >
+                        <template #trailing>
+                          <UIcon name="i-heroicons-pencil" class="w-4 h-4 text-zinc-500 group-hover/title:text-zinc-300 transition-colors" />
+                        </template>
+                      </UInput>
+                    </div>
+                  </div>
 
                   <!-- Moderation Status Badge -->
                   <UBadge
@@ -1124,11 +1168,11 @@
                   </div>
                 </div>
 
-                <!-- Composer Credits -->
-                <div class="pl-9 pt-2">
+                <!-- Credits -->
+                <div class="pl-12 pt-2">
                   <div class="flex items-center justify-between mb-2">
                     <span class="text-xs text-zinc-400">
-                      Composer Credits
+                      Credits
                       <span v-if="track.credits.length > 0" class="text-zinc-500">({{ track.credits.length }})</span>
                     </span>
                     <UButton
@@ -1154,7 +1198,7 @@
                         v-model="credit.role"
                         :options="creditRoleOptions"
                         size="xs"
-                        class="w-24"
+                        class="w-36"
                         :disabled="savingAlbum"
                       />
                       <UInput
@@ -1168,7 +1212,7 @@
                         v-model="credit.ipi_number"
                         placeholder="IPI #"
                         size="xs"
-                        class="w-24"
+                        class="w-28"
                         :disabled="savingAlbum"
                       />
                       <UButton
@@ -1182,18 +1226,42 @@
                       </UButton>
                     </div>
 
-                    <!-- Add Credit Button -->
-                    <UButton
-                      color="gray"
-                      variant="outline"
-                      size="xs"
-                      block
-                      :disabled="savingAlbum"
-                      @click="track.credits.push({ role: 'composer', name: '', ipi_number: '' })"
-                    >
-                      <UIcon name="i-heroicons-plus" class="w-3 h-3 mr-1" />
-                      Add Credit
-                    </UButton>
+                    <!-- Action Buttons -->
+                    <div class="flex gap-2">
+                      <UButton
+                        color="gray"
+                        variant="dashed"
+                        size="xs"
+                        class="flex-1"
+                        :disabled="savingAlbum"
+                        @click="track.credits.push({ role: 'composer', name: '', ipi_number: '' })"
+                      >
+                        <UIcon name="i-heroicons-plus" class="w-3 h-3 mr-1" />
+                        Add Credit
+                      </UButton>
+                      <UButton
+                        v-if="canCopyEditCredits(index)"
+                        color="gray"
+                        variant="outline"
+                        size="xs"
+                        :disabled="savingAlbum"
+                        @click="copyEditCredits(index)"
+                      >
+                        <UIcon name="i-heroicons-clipboard-document" class="w-3 h-3 mr-1" />
+                        Copy
+                      </UButton>
+                      <UButton
+                        v-if="copiedEditCredits && copiedEditCredits.length > 0"
+                        color="violet"
+                        variant="outline"
+                        size="xs"
+                        :disabled="savingAlbum"
+                        @click="pasteEditCredits(index)"
+                      >
+                        <UIcon name="i-heroicons-clipboard-document-check" class="w-3 h-3 mr-1" />
+                        Paste
+                      </UButton>
+                    </div>
 
                   </div>
                 </div>
@@ -1301,7 +1369,7 @@ import type { Album, Track, TrackCredit } from '~/composables/useAlbum'
 // Extended track type for editing with credits
 interface EditableCredit {
   id?: string
-  role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
+  role: 'composer' | 'author' | 'composer_author' | 'arranger' | 'interpreter' | 'producer' | 'mixing' | 'mastering' | 'publisher' | 'label' | 'cover_artist' | 'lyricist' | 'performer'
   name: string
   ipi_number: string
 }
@@ -1320,7 +1388,7 @@ const router = useRouter()
 const toast = useToast()
 const client = useSupabaseClient()
 const { getBandById, updateBand, deleteBand } = useBand()
-const { getBandAlbums, getStreamUrl, deleteAlbum, updateAlbum, updateTrack, deleteTrack, getCreditsForTracks, setTrackCredits } = useAlbum()
+const { getBandAlbums, getStreamUrl, deleteAlbum, updateAlbum, updateTrack, deleteTrack, getCreditsForTracks, setTrackCredits, createTrack, getUploadUrl } = useAlbum()
 
 const band = ref<Band | null>(null)
 const albums = ref<Album[]>([])
@@ -1383,6 +1451,10 @@ const editAlbumCoverInput = ref<HTMLInputElement | null>(null)
 const editAlbumCoverPreview = ref<string | null>(null)
 const uploadingAlbumCover = ref(false)
 
+// Add track state
+const addTrackInput = ref<HTMLInputElement | null>(null)
+const addingTracks = ref(false)
+
 const releaseTypeOptions = [
   { label: 'Album', value: 'album' },
   { label: 'EP', value: 'ep' },
@@ -1393,14 +1465,168 @@ const releaseTypeOptions = [
 const editAlbumTracks = ref<EditableTrack[]>([])
 const showDeleteTrackModal = ref(false)
 
-// Credit role options
+// Store original credits for comparison (to detect changes that trigger re-review)
+const originalTrackCredits = ref<Record<string, string>>({})
+
+// Credit role options (same as upload page)
 const creditRoleOptions = [
   { label: 'Composer', value: 'composer' },
-  { label: 'Lyricist', value: 'lyricist' },
-  { label: 'Performer', value: 'performer' },
-  { label: 'Producer', value: 'producer' },
+  { label: 'Author', value: 'author' },
+  { label: 'Composer & Author', value: 'composer_author' },
   { label: 'Arranger', value: 'arranger' },
+  { label: 'Interpreter', value: 'interpreter' },
+  { label: 'Producer', value: 'producer' },
+  { label: 'Mixing', value: 'mixing' },
+  { label: 'Mastering', value: 'mastering' },
+  { label: 'Publisher', value: 'publisher' },
+  { label: 'Label', value: 'label' },
+  { label: 'Cover Artists', value: 'cover_artist' },
 ]
+
+// Track drag-and-drop reordering state
+const draggedEditTrackIndex = ref<number | null>(null)
+const dragOverEditTrackIndex = ref<number | null>(null)
+
+const onEditTrackDragStart = (e: DragEvent, index: number) => {
+  draggedEditTrackIndex.value = index
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+  }
+}
+
+const onEditTrackDragEnd = () => {
+  draggedEditTrackIndex.value = null
+  dragOverEditTrackIndex.value = null
+}
+
+const onEditTrackDragOver = (index: number) => {
+  if (draggedEditTrackIndex.value !== null && draggedEditTrackIndex.value !== index) {
+    dragOverEditTrackIndex.value = index
+  }
+}
+
+const onEditTrackDragLeave = () => {
+  dragOverEditTrackIndex.value = null
+}
+
+const onEditTrackDrop = async (targetIndex: number) => {
+  if (draggedEditTrackIndex.value === null || draggedEditTrackIndex.value === targetIndex) {
+    dragOverEditTrackIndex.value = null
+    return
+  }
+
+  const draggedTrack = editAlbumTracks.value[draggedEditTrackIndex.value]
+  editAlbumTracks.value.splice(draggedEditTrackIndex.value, 1)
+  editAlbumTracks.value.splice(targetIndex, 0, draggedTrack)
+
+  // Update track numbers
+  editAlbumTracks.value.forEach((t, idx) => {
+    t.track_number = idx + 1
+  })
+
+  draggedEditTrackIndex.value = null
+  dragOverEditTrackIndex.value = null
+}
+
+// Copy/paste credits functionality for edit modal
+const copiedEditCredits = ref<EditableCredit[] | null>(null)
+
+const canCopyEditCredits = (trackIndex: number) => {
+  const track = editAlbumTracks.value[trackIndex]
+  return track.credits.length > 0 && track.credits.every(c => c.name.trim() && c.role)
+}
+
+const copyEditCredits = (trackIndex: number) => {
+  const track = editAlbumTracks.value[trackIndex]
+  copiedEditCredits.value = JSON.parse(JSON.stringify(track.credits))
+  toast.add({ title: 'Credits copied', color: 'green', icon: 'i-heroicons-clipboard-document' })
+}
+
+const pasteEditCredits = (trackIndex: number) => {
+  if (!copiedEditCredits.value) return
+  const track = editAlbumTracks.value[trackIndex]
+  // Append copied credits to existing ones
+  for (const credit of copiedEditCredits.value) {
+    track.credits.push({ ...credit, id: undefined })
+  }
+  track.showCredits = true
+}
+
+// Add new tracks to existing album
+const onAddTracksSelect = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const files = input.files
+  if (!files || files.length === 0 || !albumToEdit.value || !band.value) return
+
+  addingTracks.value = true
+
+  try {
+    const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/'))
+
+    for (const file of audioFiles) {
+      // Generate title from filename
+      const title = file.name
+        .replace(/\.[^/.]+$/, '') // Remove extension
+        .replace(/^\d+[\s._-]*/, '') // Remove leading track numbers
+        .replace(/[_-]/g, ' ') // Replace underscores/dashes with spaces
+        .trim() || 'Untitled Track'
+
+      // Upload the audio file
+      const audioKey = `tracks/${band.value.id}/${albumToEdit.value.id}/${crypto.randomUUID()}.mp3`
+      const uploadUrl = await getUploadUrl(audioKey, file.type)
+
+      await $fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      })
+
+      // Create the track in the database using the composable
+      const trackNumber = editAlbumTracks.value.length + 1
+      const newTrack = await createTrack({
+        album_id: albumToEdit.value.id,
+        band_id: band.value.id,
+        title,
+        track_number: trackNumber,
+        duration_seconds: 0, // Will be updated when processed
+        is_explicit: false,
+        is_cover: false,
+      })
+
+      // Update track with audio key
+      await updateTrack(newTrack.id, { audio_key: audioKey })
+
+      // Add to local state
+      editAlbumTracks.value.push({
+        ...newTrack,
+        audio_key: audioKey,
+        credits: [],
+        showCredits: false,
+      } as EditableTrack)
+    }
+
+    toast.add({
+      title: `${audioFiles.length} track${audioFiles.length > 1 ? 's' : ''} added`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+    })
+  } catch (e: any) {
+    console.error('Failed to add tracks:', e)
+    toast.add({
+      title: 'Failed to add tracks',
+      description: e.data?.message || e.message || 'An error occurred',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-triangle',
+    })
+  } finally {
+    addingTracks.value = false
+    // Reset input
+    if (addTrackInput.value) {
+      addTrackInput.value.value = ''
+    }
+  }
+}
 
 // Moderation status helpers
 const getModerationColor = (status: string) => {
@@ -2054,6 +2280,17 @@ const openEditAlbum = async (album: Album) => {
     showCredits: false,
   }))
 
+  // Store original credits for comparison (to detect changes that trigger re-review)
+  originalTrackCredits.value = {}
+  for (const track of editAlbumTracks.value) {
+    // Store a normalized JSON string of credits for comparison
+    const normalizedCredits = track.credits
+      .filter(c => c.name.trim())
+      .map(c => ({ role: c.role, name: c.name.trim(), ipi_number: c.ipi_number?.trim() || '' }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+    originalTrackCredits.value[track.id] = JSON.stringify(normalizedCredits)
+  }
+
   showEditAlbumModal.value = true
 }
 
@@ -2142,17 +2379,32 @@ const handleSaveAlbum = async () => {
     })
 
     // Update tracks using the API (handles re-review logic)
-    for (const track of editAlbumTracks.value) {
+    for (let i = 0; i < editAlbumTracks.value.length; i++) {
+      const track = editAlbumTracks.value[i]
+      const newTrackNumber = i + 1
       const originalTrack = albumToEdit.value.tracks?.find(t => t.id === track.id)
-      // Check if any track field changed
-      const changed = originalTrack && (
+
+      // Check if any track field changed (including track number from reordering)
+      const trackNumberChanged = originalTrack && originalTrack.track_number !== newTrackNumber
+      const contentChanged = originalTrack && (
         originalTrack.title !== track.title ||
         originalTrack.is_explicit !== track.is_explicit ||
         originalTrack.isrc !== track.isrc ||
         originalTrack.iswc !== track.iswc ||
         originalTrack.is_cover !== track.is_cover
       )
-      if (changed) {
+
+      // Check if credits changed (also triggers re-review since it affects royalties)
+      const validCredits = track.credits.filter(c => c.name.trim())
+      const currentCreditsNormalized = validCredits
+        .map(c => ({ role: c.role, name: c.name.trim(), ipi_number: c.ipi_number?.trim() || '' }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+      const currentCreditsJson = JSON.stringify(currentCreditsNormalized)
+      const originalCreditsJson = originalTrackCredits.value[track.id] || '[]'
+      const creditsChanged = currentCreditsJson !== originalCreditsJson
+
+      // Update if content or credits changed (uses API with re-review logic)
+      if (contentChanged || creditsChanged) {
         // Use the new API endpoint that handles re-review logic
         const result = await $fetch<{ success: boolean; track: any; wasResetToReview: boolean }>(`/api/tracks/${track.id}`, {
           method: 'PATCH',
@@ -2162,6 +2414,7 @@ const handleSaveAlbum = async () => {
             isrc: track.isrc || null,
             iswc: track.iswc || null,
             is_cover: track.is_cover,
+            track_number: newTrackNumber,
           },
         })
 
@@ -2174,10 +2427,12 @@ const handleSaveAlbum = async () => {
         if (result.wasResetToReview) {
           tracksResetToReview++
         }
+      } else if (trackNumberChanged) {
+        // Only track number changed (from reordering) - update without re-review
+        await updateTrack(track.id, { track_number: newTrackNumber })
       }
 
       // Save credits (always update to handle additions/removals)
-      const validCredits = track.credits.filter(c => c.name.trim())
       await setTrackCredits(track.id, validCredits.map(c => ({
         role: c.role,
         name: c.name.trim(),

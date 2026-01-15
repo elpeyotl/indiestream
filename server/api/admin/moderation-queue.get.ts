@@ -85,7 +85,12 @@ export default defineEventHandler(async (event) => {
 
   // Filter by status
   if (status && status !== 'all') {
-    queueQuery = queueQuery.eq('status', status)
+    // When filtering by 'pending', also include 'pending_update' (tracks awaiting re-review)
+    if (status === 'pending') {
+      queueQuery = queueQuery.in('status', ['pending', 'pending_update'])
+    } else {
+      queueQuery = queueQuery.eq('status', status)
+    }
   }
 
   // Filter by priority

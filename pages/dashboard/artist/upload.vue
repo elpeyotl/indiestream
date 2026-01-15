@@ -229,11 +229,23 @@
         <div v-if="tracks.length > 0" class="space-y-4">
           <div
             v-for="(track, index) in tracks"
-            :key="index"
+            :key="track.file.name + index"
             class="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700"
+            :class="{ 'border-violet-500 bg-violet-500/10': dragOverIndex === index }"
+            draggable="true"
+            @dragstart="onTrackDragStart($event, index)"
+            @dragend="onTrackDragEnd"
+            @dragover.prevent="onTrackDragOver(index)"
+            @dragleave="onTrackDragLeave"
+            @drop.prevent="onTrackDrop(index)"
           >
             <!-- Track Header -->
             <div class="flex items-center gap-4 mb-4">
+              <!-- Drag Handle -->
+              <div class="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300">
+                <UIcon name="i-heroicons-bars-3" class="w-5 h-5" />
+              </div>
+
               <!-- Track Number -->
               <div class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-semibold shrink-0">
                 {{ index + 1 }}
@@ -241,13 +253,20 @@
 
               <!-- Track Title -->
               <div class="flex-1 min-w-0">
-                <UInput
-                  v-model="track.title"
-                  placeholder="Track title"
-                  variant="none"
-                  class="font-semibold text-zinc-100"
-                />
-                <p class="text-sm text-zinc-400 mt-1">
+                <div class="group/title relative">
+                  <UInput
+                    v-model="track.title"
+                    placeholder="Track title"
+                    size="lg"
+                    class="font-semibold text-zinc-100 bg-transparent hover:bg-zinc-700/50 focus:bg-zinc-700/50 rounded-lg transition-colors"
+                  >
+                    <template #trailing>
+                      <UIcon name="i-heroicons-pencil" class="w-4 h-4 text-zinc-500 group-hover/title:text-zinc-300 transition-colors" />
+                    </template>
+                  </UInput>
+                </div>
+                <p class="text-sm text-zinc-400 mt-1 pl-3">
+                  <UIcon name="i-heroicons-document" class="w-3 h-3 inline mr-1" />
                   {{ track.file.name }} · {{ formatFileSize(track.file.size) }}
                 </p>
               </div>
@@ -344,12 +363,12 @@
                 </p>
               </div>
 
-              <!-- Composer Credits -->
+              <!-- Credits -->
               <div>
                 <div class="flex items-center justify-between mb-2">
                   <label class="text-sm font-medium text-zinc-300">
-                    Composer Credits
-                    <span class="text-zinc-500 font-normal">(for PRO reporting)</span>
+                    Credits
+                    <span class="text-red-400">*</span>
                   </label>
                   <UButton
                     color="gray"
@@ -373,7 +392,7 @@
                       v-model="credit.role"
                       :options="creditRoles"
                       size="xs"
-                      class="w-28"
+                      class="w-36"
                     />
                     <UInput
                       v-model="credit.name"
@@ -397,17 +416,39 @@
                     </UButton>
                   </div>
 
-                  <!-- Add Credit Button -->
-                  <UButton
-                    color="gray"
-                    variant="dashed"
-                    size="sm"
-                    block
-                    @click="addCredit(index)"
-                  >
-                    <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
-                    Add Credit
-                  </UButton>
+                  <!-- Action Buttons -->
+                  <div class="flex gap-2">
+                    <UButton
+                      color="gray"
+                      variant="dashed"
+                      size="sm"
+                      class="flex-1"
+                      @click="addCredit(index)"
+                    >
+                      <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
+                      Add Credit
+                    </UButton>
+                    <UButton
+                      v-if="canCopyCredits(index)"
+                      color="gray"
+                      variant="outline"
+                      size="sm"
+                      @click="copyCredits(index)"
+                    >
+                      <UIcon name="i-heroicons-clipboard-document" class="w-4 h-4 mr-1" />
+                      Copy
+                    </UButton>
+                    <UButton
+                      v-if="copiedCredits && copiedCredits.length > 0"
+                      color="violet"
+                      variant="outline"
+                      size="sm"
+                      @click="pasteCredits(index)"
+                    >
+                      <UIcon name="i-heroicons-clipboard-document-check" class="w-4 h-4 mr-1" />
+                      Paste
+                    </UButton>
+                  </div>
 
                 </div>
               </div>
@@ -429,6 +470,14 @@
             <p class="text-sm text-red-400">
               <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
               All tracks require an ISRC code before publishing.
+            </p>
+          </div>
+
+          <!-- Composer Warning -->
+          <div v-if="!allTracksHaveComposer" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p class="text-sm text-red-400">
+              <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
+              All tracks require at least one Composer or Composer & Author credit.
             </p>
           </div>
 
@@ -592,7 +641,7 @@ const coverPreview = ref<string | null>(null)
 
 // Tracks
 interface TrackCredit {
-  role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
+  role: 'composer' | 'author' | 'composer_author' | 'arranger' | 'interpreter' | 'producer' | 'mixing' | 'mastering' | 'publisher' | 'label' | 'cover_artist'
   name: string
   ipi_number: string
 }
@@ -724,13 +773,60 @@ const removeTrack = (index: number) => {
   tracks.value.splice(index, 1)
 }
 
+// Track drag-and-drop reordering
+const draggedTrackIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+const onTrackDragStart = (e: DragEvent, index: number) => {
+  draggedTrackIndex.value = index
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+  }
+}
+
+const onTrackDragEnd = () => {
+  draggedTrackIndex.value = null
+  dragOverIndex.value = null
+}
+
+const onTrackDragOver = (index: number) => {
+  if (draggedTrackIndex.value !== null && draggedTrackIndex.value !== index) {
+    dragOverIndex.value = index
+  }
+}
+
+const onTrackDragLeave = () => {
+  dragOverIndex.value = null
+}
+
+const onTrackDrop = (targetIndex: number) => {
+  if (draggedTrackIndex.value === null || draggedTrackIndex.value === targetIndex) {
+    dragOverIndex.value = null
+    return
+  }
+
+  const draggedTrack = tracks.value[draggedTrackIndex.value]
+  tracks.value.splice(draggedTrackIndex.value, 1)
+  tracks.value.splice(targetIndex, 0, draggedTrack)
+
+  draggedTrackIndex.value = null
+  dragOverIndex.value = null
+}
+
 // Credit roles for dropdown
 const creditRoles = [
   { value: 'composer', label: 'Composer' },
-  { value: 'lyricist', label: 'Lyricist' },
-  { value: 'performer', label: 'Performer' },
-  { value: 'producer', label: 'Producer' },
+  { value: 'author', label: 'Author' },
+  { value: 'composer_author', label: 'Composer & Author' },
   { value: 'arranger', label: 'Arranger' },
+  { value: 'interpreter', label: 'Interpreter' },
+  { value: 'producer', label: 'Producer' },
+  { value: 'mixing', label: 'Mixing' },
+  { value: 'mastering', label: 'Mastering' },
+  { value: 'publisher', label: 'Publisher' },
+  { value: 'label', label: 'Label' },
+  { value: 'cover_artist', label: 'Cover Artists' },
 ]
 
 // Add a credit to a track
@@ -897,9 +993,41 @@ const allTracksHaveIsrc = computed(() => {
   return tracks.value.length > 0 && tracks.value.every(t => t.isrc && t.isrc.length > 0)
 })
 
-const canPublish = computed(() => {
-  return tracks.value.length > 0 && allTracksHaveIsrc.value && rightsConfirmed.value && falseInfoUnderstood.value
+// Validation: all tracks must have at least one composer credit
+const allTracksHaveComposer = computed(() => {
+  return tracks.value.length > 0 && tracks.value.every(t =>
+    t.credits.some(c =>
+      (c.role === 'composer' || c.role === 'composer_author') && c.name.trim()
+    )
+  )
 })
+
+const canPublish = computed(() => {
+  return tracks.value.length > 0 && allTracksHaveIsrc.value && allTracksHaveComposer.value && rightsConfirmed.value && falseInfoUnderstood.value
+})
+
+// Copy/paste credits functionality
+const copiedCredits = ref<TrackCredit[] | null>(null)
+
+const canCopyCredits = (trackIndex: number) => {
+  const track = tracks.value[trackIndex]
+  return track.credits.length > 0 && track.credits.every(c => c.name.trim() && c.role)
+}
+
+const copyCredits = (trackIndex: number) => {
+  const track = tracks.value[trackIndex]
+  copiedCredits.value = JSON.parse(JSON.stringify(track.credits))
+}
+
+const pasteCredits = (trackIndex: number) => {
+  if (!copiedCredits.value) return
+  const track = tracks.value[trackIndex]
+  // Append copied credits to existing ones
+  for (const credit of copiedCredits.value) {
+    track.credits.push({ ...credit })
+  }
+  track.showCredits = true
+}
 
 // Step navigation
 const goToStep2 = () => {

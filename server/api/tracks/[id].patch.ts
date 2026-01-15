@@ -2,7 +2,7 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 // Fields that trigger re-review when changed
-const SUBSTANTIVE_FIELDS = ['title', 'audio_key', 'is_explicit', 'is_cover']
+const SUBSTANTIVE_FIELDS = ['title', 'audio_key', 'is_explicit', 'is_cover', 'isrc', 'iswc']
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -67,10 +67,13 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // If substantive changes, reset moderation status
+  // If substantive changes, set appropriate moderation status
   let wasResetToReview = false
   if (hasSubstantiveChanges && currentTrack.moderation_status !== 'pending') {
-    updateData.moderation_status = 'pending'
+    // Use 'pending_update' for previously approved tracks so they stay visible
+    // Use 'pending' for rejected/revision_requested tracks
+    const wasApproved = currentTrack.moderation_status === 'approved' || currentTrack.moderation_status === 'pending_update'
+    updateData.moderation_status = wasApproved ? 'pending_update' : 'pending'
     updateData.moderation_notes = null
     updateData.moderated_at = null
     updateData.moderated_by = null
@@ -87,6 +90,10 @@ export default defineEventHandler(async (event) => {
 
   if (updateError) {
     console.error('Failed to update track:', updateError)
+    // Handle duplicate ISRC error
+    if (updateError.code === '23505' && updateError.message.includes('isrc')) {
+      throw createError({ statusCode: 409, statusMessage: 'This ISRC code is already in use by another track' })
+    }
     throw createError({ statusCode: 500, statusMessage: updateError.message })
   }
 
@@ -98,7 +105,7 @@ export default defineEventHandler(async (event) => {
         track_id: trackId,
         band_id: currentTrack.band_id,
         submitted_by: currentTrack.band?.owner_id,
-        status: 'pending',
+        status: updateData.moderation_status, // Use same status as track
         priority: 'normal',
         notes: null,
         reviewed_by: null,
