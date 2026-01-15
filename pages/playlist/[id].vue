@@ -96,7 +96,7 @@
               class="w-8 h-8 rounded-full bg-zinc-700 border-2 border-zinc-900 flex items-center justify-center overflow-hidden"
               :title="`${collab.display_name} (${collab.role})`"
             >
-              <img
+              <img v-fade-image v-fade-image
                 v-if="collab.avatar_url"
                 :src="collab.avatar_url"
                 :alt="collab.display_name"
@@ -157,7 +157,7 @@
             class="w-10 h-10 rounded bg-zinc-800 shrink-0 overflow-hidden relative cursor-pointer group/cover"
             @click.stop="playFromIndex(index)"
           >
-            <img
+            <img v-fade-image v-fade-image
               v-if="trackCovers[item.track.id]"
               :src="trackCovers[item.track.id]"
               :alt="item.track.title"
@@ -316,7 +316,7 @@
               class="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/50"
             >
               <div class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center overflow-hidden">
-                <img
+                <img v-fade-image v-fade-image
                   v-if="collab.avatar_url"
                   :src="collab.avatar_url"
                   class="w-full h-full object-cover"

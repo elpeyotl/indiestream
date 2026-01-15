@@ -154,9 +154,11 @@
               <div class="aspect-square rounded-full overflow-hidden bg-zinc-800 mb-3 mx-auto w-32 md:w-40 shadow-lg group-hover:shadow-xl transition-shadow ring-2 ring-transparent group-hover:ring-violet-500/50">
                 <img
                   v-if="artistAvatars[item.band.id]"
+                  v-fade-image
                   :src="artistAvatars[item.band.id]"
                   :alt="item.band.name"
                   class="w-full h-full object-cover"
+                  loading="lazy"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-600 to-fuchsia-600">
                   <span class="text-3xl font-bold text-white">{{ item.band.name.charAt(0).toUpperCase() }}</span>
@@ -201,9 +203,11 @@
               <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
                 <img
                   v-if="albumCovers[item.album.id]"
+                  v-fade-image
                   :src="albumCovers[item.album.id]"
                   :alt="item.album.title"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
                   <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />

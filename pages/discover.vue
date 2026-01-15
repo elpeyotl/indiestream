@@ -60,9 +60,11 @@
             <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
               <img
                 v-if="artist.avatar_url"
+                v-fade-image
                 :src="artist.avatar_url"
                 :alt="artist.name"
                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
               />
               <div
                 v-else
@@ -94,9 +96,11 @@
               <div class="absolute inset-0">
                 <img
                   v-if="albumCovers[album.id]"
+                  v-fade-image
                   :src="albumCovers[album.id]"
                   :alt="album.title"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
                   <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
@@ -127,9 +131,11 @@
             <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
               <img
                 v-if="artist.avatar_url"
+                v-fade-image
                 :src="artist.avatar_url"
                 :alt="artist.name"
                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
               />
               <div
                 v-else

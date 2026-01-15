@@ -36,6 +36,7 @@
         >
           <img
             v-if="band.avatar_url"
+            v-fade-image
             :src="band.avatar_url"
             :alt="band.name"
             class="w-full h-full object-cover"
@@ -144,9 +145,11 @@
                 <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
                   <img
                     v-if="albumCovers[album.id]"
+                    v-fade-image
                     :src="albumCovers[album.id]"
                     :alt="album.title"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
                   />
                   <div v-else class="w-full h-full flex items-center justify-center">
                     <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
