@@ -214,7 +214,8 @@
     </header>
 
     <!-- Main Content -->
-    <main class="pb-32 md:pb-24">
+    <!-- pb-40 on mobile for bottom nav + player, pb-24 on desktop for player only -->
+    <main class="pb-40 md:pb-24">
       <slot />
     </main>
 

@@ -2,7 +2,7 @@
   <Transition name="slide-up">
     <div
       v-if="currentTrack"
-      class="fixed bottom-0 left-0 right-0 z-50"
+      class="fixed left-0 right-0 z-50 bottom-[72px] md:bottom-0"
     >
       <!-- Expanded View (Full Screen on Mobile) -->
       <Transition name="fade">
