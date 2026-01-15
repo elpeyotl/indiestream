@@ -43,6 +43,7 @@
     "@nuxtjs/tailwindcss": "6.12.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "^22.7.5",
+    "@vite-pwa/nuxt": "^1.1.0",
     "@vitest/ui": "^4.0.17",
     "autoprefixer": "^10.4.20",
     "dotenv": "^17.2.3",

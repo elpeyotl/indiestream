@@ -7,7 +7,65 @@ export default defineNuxtConfig({
     '@nuxtjs/supabase',
     '@nuxt/eslint',
     '@nuxt/ui',
+    '@vite-pwa/nuxt',
   ],
+
+  // PWA configuration
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'Indiestream',
+      short_name: 'Indiestream',
+      description: 'Stream Fair. Support Direct.',
+      theme_color: '#8b5cf6',
+      background_color: '#09090b',
+      display: 'standalone',
+      orientation: 'portrait',
+      start_url: '/discover',
+      icons: [
+        {
+          src: '/icons/icon-192.png',
+          sizes: '192x192',
+          type: 'image/png',
+        },
+        {
+          src: '/icons/icon-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+        },
+        {
+          src: '/icons/icon-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable',
+        },
+      ],
+    },
+    workbox: {
+      navigateFallback: '/',
+      globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'supabase-cache',
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 60 * 60, // 1 hour
+            },
+          },
+        },
+      ],
+    },
+    client: {
+      installPrompt: true,
+    },
+    devOptions: {
+      enabled: true,
+      type: 'module',
+    },
+  },
 
   // Supabase configuration
   supabase: {
@@ -51,8 +109,7 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'manifest', href: '/manifest.json' },
-        { rel: 'apple-touch-icon', href: '/icons/icon-192.svg' },
+        { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
         {
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap'
