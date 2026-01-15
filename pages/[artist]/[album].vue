@@ -293,7 +293,7 @@
 import type { Album, Track, TrackCredit } from '~/composables/useAlbum'
 
 const route = useRoute()
-const { getAlbumBySlug, getBandAlbums, getStreamUrl, getCreditsForTracks } = useAlbum()
+const { getAlbumBySlug, getBandAlbums, getCachedCoverUrl, getCreditsForTracks } = useAlbum()
 const { getBandBySlug } = useBand()
 const { playAlbum, playTrack: playerPlayTrack, currentTrack, isPlaying } = usePlayer()
 const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
@@ -427,9 +427,9 @@ onMounted(async () => {
       return
     }
 
-    // Load cover URL if exists (use cover_key if available, otherwise use cover_url)
+    // Load cover URL if exists (cached)
     if (album.value.cover_key) {
-      coverUrl.value = await getStreamUrl(album.value.cover_key)
+      coverUrl.value = await getCachedCoverUrl(album.value.cover_key)
     } else if (album.value.cover_url) {
       coverUrl.value = album.value.cover_url
     }

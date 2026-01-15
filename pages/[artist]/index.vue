@@ -477,8 +477,8 @@ import type { Album } from '~/composables/useAlbum'
 const route = useRoute()
 const user = useSupabaseUser()
 const toast = useToast()
-const { getBandBySlug } = useBand()
-const { getBandAlbums, getStreamUrl } = useAlbum()
+const { getBandBySlug, getCachedImageUrl } = useBand()
+const { getBandAlbums, getCachedCoverUrl } = useAlbum()
 const { playAlbum } = usePlayer()
 
 const band = ref<Band | null>(null)
@@ -703,35 +703,26 @@ const loadArtistData = async () => {
     band.value = await getBandBySlug(slug)
 
     if (band.value) {
-      // Load avatar URL from key if available
+      // Load avatar URL from key if available (cached)
       if (band.value.avatar_key) {
-        try {
-          band.value.avatar_url = await getStreamUrl(band.value.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar:', e)
-        }
+        const avatarUrl = await getCachedImageUrl(band.value.avatar_key)
+        if (avatarUrl) band.value.avatar_url = avatarUrl
       }
 
-      // Load banner URL from key if available
+      // Load banner URL from key if available (cached)
       if (band.value.banner_key) {
-        try {
-          band.value.banner_url = await getStreamUrl(band.value.banner_key)
-        } catch (e) {
-          console.error('Failed to load banner:', e)
-        }
+        const bannerUrl = await getCachedImageUrl(band.value.banner_key)
+        if (bannerUrl) band.value.banner_url = bannerUrl
       }
 
       // Load albums
       albums.value = await getBandAlbums(band.value.id)
 
-      // Load cover URLs for albums (use cover_key if available, otherwise use cover_url)
+      // Load cover URLs for albums (cached)
       for (const album of albums.value) {
         if (album.cover_key) {
-          try {
-            albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
-          } catch (e) {
-            console.error('Failed to load cover for album:', album.id, e)
-          }
+          const coverUrl = await getCachedCoverUrl(album.cover_key)
+          if (coverUrl) albumCovers.value[album.id] = coverUrl
         } else if (album.cover_url) {
           albumCovers.value[album.id] = album.cover_url
         }

@@ -81,6 +81,8 @@ interface CacheEntry<T> {
 const albumBySlugCache = new Map<string, CacheEntry<Album>>() // key: "bandSlug/albumSlug"
 const albumByIdCache = new Map<string, CacheEntry<Album>>()
 const bandAlbumsCache = new Map<string, CacheEntry<Album[]>>() // key: bandId
+// Cache for resolved cover URLs - keyed by storage key
+const coverUrlCache = new Map<string, CacheEntry<string>>()
 
 const isCacheValid = <T>(entry: CacheEntry<T> | undefined): entry is CacheEntry<T> => {
   if (!entry) return false
@@ -537,6 +539,28 @@ export const useAlbum = () => {
     return response.url
   }
 
+  // Get cached cover URL or fetch new one
+  const getCachedCoverUrl = async (key: string | null | undefined): Promise<string | null> => {
+    if (!key) return null
+
+    // Check cache first
+    const cached = coverUrlCache.get(key)
+    if (isCacheValid(cached)) {
+      return cached.data
+    }
+
+    // Fetch new URL
+    try {
+      const url = await getStreamUrl(key)
+      // Cache the URL
+      coverUrlCache.set(key, { data: url, timestamp: Date.now() })
+      return url
+    } catch (e) {
+      console.error('Failed to get cover URL:', e)
+      return null
+    }
+  }
+
   // ==========================================
   // Track Credits (Composer/Songwriter splits)
   // ==========================================
@@ -674,6 +698,7 @@ export const useAlbum = () => {
     reorderTracks,
     getUploadUrl,
     getStreamUrl,
+    getCachedCoverUrl,
     invalidateAlbumCache,
     // Track credits
     getTrackCredits,

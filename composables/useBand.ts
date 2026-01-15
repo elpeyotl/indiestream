@@ -11,6 +11,8 @@ interface CacheEntry<T> {
 
 const bandBySlugCache = new Map<string, CacheEntry<Band>>()
 const bandByIdCache = new Map<string, CacheEntry<Band>>()
+// Cache for resolved image URLs (avatar, banner) - keyed by storage key
+const imageUrlCache = new Map<string, CacheEntry<string>>()
 
 const isCacheValid = <T>(entry: CacheEntry<T> | undefined): entry is CacheEntry<T> => {
   if (!entry) return false
@@ -308,6 +310,31 @@ export const useBand = () => {
     return data || []
   }
 
+  // Get cached image URL or fetch new one
+  const getCachedImageUrl = async (key: string | null | undefined): Promise<string | null> => {
+    if (!key) return null
+
+    // Check cache first
+    const cached = imageUrlCache.get(key)
+    if (isCacheValid(cached)) {
+      return cached.data
+    }
+
+    // Fetch new URL - need to import getStreamUrl from useAlbum
+    try {
+      const encodedKey = btoa(key).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+      const response = await $fetch<{ url: string }>(`/api/stream/${encodedKey}`)
+      const url = response.url
+
+      // Cache the URL
+      imageUrlCache.set(key, { data: url, timestamp: Date.now() })
+      return url
+    } catch (e) {
+      console.error('Failed to get image URL:', e)
+      return null
+    }
+  }
+
   return {
     getUserBands,
     getBandBySlug,
@@ -319,5 +346,6 @@ export const useBand = () => {
     deleteBand,
     getFeaturedBands,
     invalidateBandCache,
+    getCachedImageUrl,
   }
 }
