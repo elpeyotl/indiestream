@@ -70,6 +70,54 @@ const state = reactive<PlayerState>({
 
 let audio: HTMLAudioElement | null = null
 
+// Media Session API for lock screen controls
+let mediaSessionInitialized = false
+
+// Update Media Session metadata (for lock screen controls)
+const updateMediaSessionMetadata = (track: PlayerTrack | null) => {
+  if (!('mediaSession' in navigator) || !track) return
+
+  const artwork: MediaImage[] = []
+  if (track.coverUrl) {
+    // Add multiple sizes for different devices
+    artwork.push(
+      { src: track.coverUrl, sizes: '96x96', type: 'image/jpeg' },
+      { src: track.coverUrl, sizes: '128x128', type: 'image/jpeg' },
+      { src: track.coverUrl, sizes: '192x192', type: 'image/jpeg' },
+      { src: track.coverUrl, sizes: '256x256', type: 'image/jpeg' },
+      { src: track.coverUrl, sizes: '384x384', type: 'image/jpeg' },
+      { src: track.coverUrl, sizes: '512x512', type: 'image/jpeg' }
+    )
+  }
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: track.title,
+    artist: track.artist,
+    album: track.albumTitle,
+    artwork,
+  })
+}
+
+// Update Media Session playback state
+const updateMediaSessionPlaybackState = (isPlaying: boolean) => {
+  if (!('mediaSession' in navigator)) return
+  navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
+}
+
+// Update Media Session position state
+const updateMediaSessionPositionState = (currentTime: number, duration: number) => {
+  if (!('mediaSession' in navigator) || !duration) return
+  try {
+    navigator.mediaSession.setPositionState({
+      duration,
+      playbackRate: 1,
+      position: currentTime,
+    })
+  } catch (e) {
+    // setPositionState may not be supported in all browsers
+  }
+}
+
 // Audio context and analyser for visualizations
 let audioContext: AudioContext | null = null
 let analyser: AnalyserNode | null = null
@@ -249,6 +297,8 @@ export const usePlayer = () => {
       checkAndRecordStream()
       // Check preview limit for non-logged-in users
       checkPreviewLimit()
+      // Update lock screen position (throttled by browser)
+      updateMediaSessionPositionState(audio!.currentTime, audio!.duration)
     })
 
     audio.addEventListener('durationchange', () => {
@@ -262,10 +312,12 @@ export const usePlayer = () => {
     audio.addEventListener('play', () => {
       state.isPlaying = true
       listeningStartTime = Date.now()
+      updateMediaSessionPlaybackState(true)
     })
 
     audio.addEventListener('pause', () => {
       state.isPlaying = false
+      updateMediaSessionPlaybackState(false)
     })
 
     audio.addEventListener('ended', () => {
@@ -288,6 +340,47 @@ export const usePlayer = () => {
       state.isLoading = false
       state.isPlaying = false
     })
+
+    // Initialize Media Session API for lock screen controls
+    if ('mediaSession' in navigator && !mediaSessionInitialized) {
+      mediaSessionInitialized = true
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        audio?.play()
+      })
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        audio?.pause()
+      })
+
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        playPrevious()
+      })
+
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        playNext()
+      })
+
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime !== undefined && audio) {
+          seek(details.seekTime)
+        }
+      })
+
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        const skipTime = details.seekOffset || 10
+        if (audio) {
+          seek(Math.max(0, audio.currentTime - skipTime))
+        }
+      })
+
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        const skipTime = details.seekOffset || 10
+        if (audio) {
+          seek(Math.min(audio.duration || 0, audio.currentTime + skipTime))
+        }
+      })
+    }
   }
 
   // Play a single track
@@ -322,6 +415,8 @@ export const usePlayer = () => {
       }
 
       state.currentTrack = playerTrack
+      // Update lock screen metadata
+      updateMediaSessionMetadata(playerTrack)
       audio.src = audioUrl
       await audio.play()
     } catch (e) {
@@ -386,6 +481,9 @@ export const usePlayer = () => {
     state.queueIndex = index
     state.currentTrack = state.queue[index]
     state.isLoading = true
+
+    // Update lock screen metadata
+    updateMediaSessionMetadata(state.currentTrack)
 
     try {
       audio.src = state.currentTrack.audioUrl
@@ -560,6 +658,9 @@ export const usePlayer = () => {
       state.currentTrack = playerTrack
       state.queue = [playerTrack]
       state.queueIndex = 0
+
+      // Update lock screen metadata
+      updateMediaSessionMetadata(playerTrack)
 
       audio.src = audioUrl
       await audio.play()
