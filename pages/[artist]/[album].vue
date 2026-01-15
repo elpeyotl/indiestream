@@ -10,14 +10,23 @@
       <div class="flex flex-col md:flex-row gap-8">
         <!-- Cover Art -->
         <div class="w-full md:w-80 shrink-0">
-          <div class="aspect-square rounded-xl overflow-hidden shadow-2xl bg-zinc-800">
+          <div class="aspect-square rounded-xl overflow-hidden shadow-2xl bg-zinc-800 relative">
+            <!-- Placeholder while loading -->
+            <div
+              v-if="!imageLoaded"
+              class="absolute inset-0 flex items-center justify-center bg-zinc-800"
+            >
+              <UIcon name="i-heroicons-musical-note" class="w-20 h-20 text-zinc-600" />
+            </div>
             <img
               v-if="coverUrl"
               :src="coverUrl"
               :alt="album.title"
-              class="w-full h-full object-cover"
+              class="w-full h-full object-cover transition-opacity duration-300"
+              :class="imageLoaded ? 'opacity-100' : 'opacity-0'"
+              @load="imageLoaded = true"
             />
-            <div v-else class="w-full h-full flex items-center justify-center">
+            <div v-else-if="!coverUrl && !loading" class="w-full h-full flex items-center justify-center">
               <UIcon name="i-heroicons-musical-note" class="w-20 h-20 text-zinc-600" />
             </div>
           </div>
@@ -220,9 +229,54 @@
     </div>
   </div>
 
-  <!-- Loading -->
-  <div v-else-if="loading" class="min-h-screen flex items-center justify-center">
-    <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+  <!-- Loading Skeleton -->
+  <div v-else-if="loading" class="container mx-auto px-4 py-12">
+    <!-- Back Button placeholder -->
+    <div class="hidden md:block mb-4">
+      <USkeleton class="h-10 w-24 rounded-lg" />
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-8">
+      <!-- Cover Art Skeleton -->
+      <div class="w-full md:w-80 shrink-0">
+        <USkeleton class="aspect-square rounded-xl" />
+      </div>
+
+      <!-- Album Info Skeleton -->
+      <div class="flex-1">
+        <USkeleton class="h-4 w-16 mb-2" />
+        <USkeleton class="h-12 w-3/4 mb-4" />
+        <USkeleton class="h-6 w-32 mb-6" />
+        <div class="flex gap-4 mb-6">
+          <USkeleton class="h-5 w-24" />
+          <USkeleton class="h-5 w-20" />
+          <USkeleton class="h-5 w-16" />
+        </div>
+        <USkeleton class="h-16 w-full max-w-xl mb-8" />
+        <div class="flex gap-3">
+          <USkeleton class="h-11 w-28 rounded-lg" />
+          <USkeleton class="h-11 w-24 rounded-lg" />
+          <USkeleton class="h-11 w-11 rounded-lg" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Track List Skeleton -->
+    <div class="mt-12 bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
+      <div class="border-b border-zinc-800 px-4 py-3">
+        <div class="flex gap-4">
+          <USkeleton class="h-4 w-8" />
+          <USkeleton class="h-4 w-32" />
+        </div>
+      </div>
+      <div v-for="i in 5" :key="i" class="px-4 py-4 border-b border-zinc-800/50">
+        <div class="flex items-center gap-4">
+          <USkeleton class="h-4 w-6" />
+          <USkeleton class="h-5 w-48" />
+          <USkeleton class="h-4 w-12 ml-auto" />
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Not Found -->
@@ -254,6 +308,7 @@ const band = ref<any>(null)
 const otherAlbums = ref<Album[]>([])
 const loading = ref(true)
 const coverUrl = ref<string | null>(null)
+const imageLoaded = ref(false)
 const savingAlbum = ref(false)
 const trackCredits = ref<Record<string, TrackCredit[]>>({})
 const expandedTrack = ref<string | null>(null)
