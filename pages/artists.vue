@@ -72,7 +72,7 @@
             {{ artist.name }}
           </h3>
           <div class="flex items-center gap-2 text-sm text-zinc-500">
-            <span>{{ formatNumber(artist.total_streams) }} streams</span>
+            <span>Artist</span>
             <UIcon
               v-if="artist.is_verified"
               name="i-heroicons-check-badge"
@@ -134,13 +134,12 @@ const loadingMore = ref(false)
 const artists = ref<Band[]>([])
 const searchQuery = ref('')
 const selectedGenre = ref<string | null>(null)
-const sortBy = ref('streams')
+const sortBy = ref('newest')
 const hasMore = ref(false)
 const page = ref(0)
 const pageSize = 24
 
 const sortOptions = [
-  { label: 'Most Streams', value: 'streams' },
   { label: 'Newest', value: 'newest' },
   { label: 'A-Z', value: 'name' },
 ]
@@ -192,9 +191,7 @@ const loadArtists = async (reset = false) => {
     }
 
     // Sorting
-    if (sortBy.value === 'streams') {
-      query = query.order('total_streams', { ascending: false })
-    } else if (sortBy.value === 'newest') {
+    if (sortBy.value === 'newest') {
       query = query.order('created_at', { ascending: false })
     } else if (sortBy.value === 'name') {
       query = query.order('name', { ascending: true })

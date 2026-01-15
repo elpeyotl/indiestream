@@ -215,7 +215,7 @@
             </div>
           </div>
           <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ artist.name }}</p>
-          <p class="text-sm text-zinc-500">{{ formatNumber(artist.total_streams) }} streams</p>
+          <p class="text-sm text-zinc-500">Artist</p>
         </NuxtLink>
       </div>
     </section>

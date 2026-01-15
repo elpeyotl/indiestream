@@ -69,10 +69,6 @@
               <UIcon name="i-heroicons-map-pin" class="w-4 h-4" />
               {{ band.location }}
             </span>
-            <span class="flex items-center gap-1">
-              <UIcon name="i-heroicons-musical-note" class="w-4 h-4" />
-              {{ formatNumber(band.total_streams || 0) }} streams
-            </span>
             <NuxtLink
               :to="`/${band.slug}?tab=followers`"
               class="flex items-center gap-1 hover:text-violet-400 transition-colors cursor-pointer"
