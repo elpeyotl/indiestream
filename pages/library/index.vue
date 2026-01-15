@@ -1,5 +1,12 @@
 <template>
   <div class="container mx-auto px-4 py-8">
+    <!-- Pull to Refresh Indicator -->
+    <PullToRefreshIndicator
+      :pull-distance="pullDistance"
+      :is-refreshing="isRefreshing"
+      :threshold="threshold"
+    />
+
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-zinc-100">Your Library</h1>
@@ -584,6 +591,11 @@ const loadPlaylistCovers = async () => {
     })
   )
 }
+
+// Pull to refresh
+const { pullDistance, isRefreshing, threshold } = usePullToRefresh({
+  onRefresh: loadLibrary
+})
 
 onMounted(() => {
   loadLibrary()

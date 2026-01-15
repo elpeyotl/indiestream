@@ -68,7 +68,7 @@ export default defineNuxtConfig({
   },
 
   // CSS configuration
-  css: [],  // Remove custom CSS for now, use only Nuxt UI
+  css: ['~/assets/css/transitions.css'],
 
   // Runtime config
   runtimeConfig: {

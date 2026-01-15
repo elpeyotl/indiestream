@@ -115,6 +115,13 @@
 - [x] Clean up navigation for logged-in users (remove marketing links)
 - [x] PWA manifest and meta tags (installable app)
 
+#### Native App UX (Phase 2 - See docs/NATIVE_APP_UX.md)
+- [x] Pull-to-refresh on discover, library, and artist profile pages
+- [x] Smooth transitions and animations (global CSS variables and classes)
+- [x] Haptic feedback composable (useHaptics)
+- [ ] Swipe gestures on track rows
+- [ ] Long-press context menus
+
 #### Discovery
 - [ ] Genre pages
 - [ ] Curated playlists

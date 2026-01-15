@@ -1,5 +1,12 @@
 <template>
   <div v-if="band">
+    <!-- Pull to Refresh Indicator -->
+    <PullToRefreshIndicator
+      :pull-distance="pullDistance"
+      :is-refreshing="isRefreshing"
+      :threshold="threshold"
+    />
+
     <!-- Hero Banner -->
     <div class="relative h-72 md:h-96 lg:h-[28rem] overflow-hidden">
       <!-- Banner Image -->
@@ -446,7 +453,7 @@ useHead(() => ({
   ],
 }))
 
-onMounted(async () => {
+const loadArtistData = async () => {
   try {
     const slug = route.params.artist as string
     band.value = await getBandBySlug(slug)
@@ -491,8 +498,17 @@ onMounted(async () => {
     }
   } catch (e) {
     console.error('Failed to load band:', e)
-  } finally {
-    loading.value = false
   }
+}
+
+// Pull to refresh
+const { pullDistance, isRefreshing, threshold } = usePullToRefresh({
+  onRefresh: loadArtistData
+})
+
+onMounted(async () => {
+  loading.value = true
+  await loadArtistData()
+  loading.value = false
 })
 </script>
