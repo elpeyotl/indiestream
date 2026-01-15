@@ -11,13 +11,11 @@
         <!-- Cover Art -->
         <div class="w-full md:w-80 shrink-0">
           <div class="aspect-square rounded-xl overflow-hidden shadow-2xl bg-zinc-800 relative">
-            <!-- Placeholder while loading -->
-            <div
+            <!-- Skeleton placeholder until image loads -->
+            <USkeleton
               v-if="!imageLoaded"
-              class="absolute inset-0 flex items-center justify-center bg-zinc-800"
-            >
-              <UIcon name="i-heroicons-musical-note" class="w-20 h-20 text-zinc-600" />
-            </div>
+              class="absolute inset-0 rounded-none"
+            />
             <img
               v-if="coverUrl"
               :src="coverUrl"
@@ -26,9 +24,6 @@
               :class="imageLoaded ? 'opacity-100' : 'opacity-0'"
               @load="imageLoaded = true"
             />
-            <div v-else-if="!coverUrl && !loading" class="w-full h-full flex items-center justify-center">
-              <UIcon name="i-heroicons-musical-note" class="w-20 h-20 text-zinc-600" />
-            </div>
           </div>
         </div>
 
