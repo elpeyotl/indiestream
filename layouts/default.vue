@@ -186,27 +186,92 @@
                 </template>
               </UPopover>
 
-              <UDropdown
-                :items="userMenuItems"
-                :popper="{ placement: 'bottom-end' }"
+              <!-- User Menu Button -->
+              <UButton
+                color="gray"
+                variant="ghost"
+                class="flex items-center gap-2"
+                @click="userMenuOpen = true"
               >
-                <UButton
-                  color="gray"
-                  variant="ghost"
-                  class="flex items-center gap-2"
-                >
-                  <UAvatar
-                    :src="user.user_metadata?.avatar_url"
-                    :alt="displayName"
-                    size="xs"
-                  />
-                  <span class="hidden sm:inline">{{ displayName }}</span>
-                  <UIcon
-                    name="i-heroicons-chevron-down-20-solid"
-                    class="w-4 h-4"
-                  />
-                </UButton>
-              </UDropdown>
+                <UAvatar
+                  :src="user.user_metadata?.avatar_url"
+                  :alt="displayName"
+                  size="xs"
+                />
+                <span class="hidden sm:inline">{{ displayName }}</span>
+                <UIcon
+                  name="i-heroicons-chevron-down-20-solid"
+                  class="w-4 h-4"
+                />
+              </UButton>
+
+              <!-- User Menu Slideover -->
+              <USlideover
+                v-model="userMenuOpen"
+                :side="isMobile ? 'bottom' : 'right'"
+              >
+                  <div class="flex flex-col h-full">
+                    <!-- Header -->
+                    <div class="flex items-center gap-4 p-6 border-b border-zinc-800">
+                      <UAvatar
+                        :src="user.user_metadata?.avatar_url"
+                        :alt="displayName"
+                        size="lg"
+                      />
+                      <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-zinc-100 truncate">{{ displayName }}</p>
+                        <p class="text-sm text-zinc-400 truncate">{{ user.email }}</p>
+                      </div>
+                      <UButton
+                        color="gray"
+                        variant="ghost"
+                        icon="i-heroicons-x-mark"
+                        @click="userMenuOpen = false"
+                      />
+                    </div>
+
+                    <!-- Menu Items -->
+                    <div class="flex-1 overflow-y-auto p-2">
+                      <NuxtLink
+                        to="/dashboard"
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 transition-colors"
+                        @click="userMenuOpen = false"
+                      >
+                        <UIcon name="i-heroicons-home" class="w-5 h-5 text-zinc-400" />
+                        <span class="text-zinc-100">Dashboard</span>
+                      </NuxtLink>
+
+                      <NuxtLink
+                        to="/dashboard/settings"
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 transition-colors"
+                        @click="userMenuOpen = false"
+                      >
+                        <UIcon name="i-heroicons-cog-6-tooth" class="w-5 h-5 text-zinc-400" />
+                        <span class="text-zinc-100">Settings</span>
+                      </NuxtLink>
+
+                      <NuxtLink
+                        v-if="isAdmin"
+                        to="/admin"
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 transition-colors"
+                        @click="userMenuOpen = false"
+                      >
+                        <UIcon name="i-heroicons-shield-check" class="w-5 h-5 text-zinc-400" />
+                        <span class="text-zinc-100">Admin</span>
+                      </NuxtLink>
+
+                      <div class="my-2 border-t border-zinc-800" />
+
+                      <button
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 transition-colors w-full text-left"
+                        @click="handleSignOutFromMenu"
+                      >
+                        <UIcon name="i-heroicons-arrow-right-on-rectangle" class="w-5 h-5 text-zinc-400" />
+                        <span class="text-zinc-100">Sign out</span>
+                      </button>
+                    </div>
+                  </div>
+              </USlideover>
             </template>
           </div>
         </div>
@@ -342,9 +407,17 @@
 </template>
 
 <script setup lang="ts">
+import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
 import BokehBackground from "~/components/backgrounds/BokehBackground.vue";
 import { APP_VERSION } from "~/utils/version";
 import type { Notification } from "~/composables/useNotifications";
+
+// Responsive breakpoint detection
+const breakpoints = useBreakpoints(breakpointsTailwind);
+const isMobile = breakpoints.smaller("md");
+
+// User menu state
+const userMenuOpen = ref(false);
 
 const user = useSupabaseUser();
 const client = useSupabaseClient();
@@ -432,6 +505,11 @@ const handleSignOut = async () => {
       icon: "i-heroicons-exclamation-triangle",
     });
   }
+};
+
+const handleSignOutFromMenu = async () => {
+  userMenuOpen.value = false;
+  await handleSignOut();
 };
 
 const userMenuItems = computed(() => {
