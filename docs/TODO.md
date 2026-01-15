@@ -83,7 +83,9 @@
 #### User Features
 - [x] User profile page (public profiles with followed artists, settings page with avatar upload)
 - [x] Listening stats/wrapped (comprehensive stats dashboard with This Year/Last Month/All Time views)
-- [x] "Where your money went" monthly breakdown (My Impact page with All Time/Last Month views)
+- [x] "Where your money went" monthly breakdown (My Impact page with This Month/Last Month/All Time views)
+- [x] Social sharing of impact stats (shareable URLs with customizable visibility, colorful share cards)
+- [x] Public impact stats on user profiles (opt-in privacy toggle in settings)
 
 ### Lower Priority
 
@@ -94,10 +96,10 @@
 - [x] Delete users (cascades to all their data)
 - [x] Change user roles (user/artist/admin)
 - [x] PRO export for SUISA/GEMA reporting (CSV with ISRC, composers, territories)
-- [ ] Artist/band management (list, delete, feature/unfeature)
+- [x] Artist/band management (list, delete, feature/unfeature, full edit, verify, suspend)
 - [ ] Content moderation queue (review flagged/new uploads)
 - [ ] Track approval workflow
-- [ ] Artist verification system
+- [ ] Artist verification system (submission workflow)
 - [ ] Revenue dashboard (subscriptions, payouts)
 - [ ] Growth metrics over time
 
@@ -160,6 +162,8 @@ All migrations should be run in Supabase SQL Editor in order:
 11. `20260114_artist_payouts.sql` - Stripe Connect, artist balances, payouts tables
 12. `20260115_playlists.sql` - Collaborative playlists with owner/editor/viewer roles
 13. `20260114000000_add_profile_fields.sql` - User profile fields (avatar_key, bio, location, website)
+14. `20260115150000_impact_sharing.sql` - Impact sharing tokens and public profile visibility
+15. `20260116000000_admin_artist_management.sql` - Admin artist management (feature, verify, suspend, flags)
 
 ---
 

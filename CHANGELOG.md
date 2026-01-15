@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.14.0] - 2026-01-16
+
+### Added
+- **Admin Artist/Band Management**: New comprehensive artist management tools for admins
+  - New "Artists" tab in admin dashboard with searchable, filterable list
+  - List all artists with owner info, stats (albums, tracks, streams), status, and badges
+  - Filter by status (active, suspended, removed), featured status, and verified status
+  - **Full edit capabilities**: Admins can edit all artist fields including name, slug, bio, location, website, genres
+  - **Feature/unfeature artists**: Control which artists appear on the homepage
+  - **Verify artists**: Mark artists as verified with blue checkmark badge
+  - **Status management**: Set artist status to active, suspended, or removed with suspension reasons
+  - **Delete artists**: Remove artists and all associated data (albums, tracks, analytics, earnings)
+  - Pagination support for large artist lists
+  - Real-time search with debouncing
+
+### Database
+- **Migration 20260116000000_admin_artist_management.sql**: Added artist management fields
+  - `is_featured` (boolean): Whether artist is featured on homepage
+  - `featured_at` (timestamptz): When artist was featured
+  - `featured_by` (uuid): Admin who featured the artist
+  - `status` (text): Artist account status (active/suspended/removed)
+  - `flag_count` (integer): Number of flags/reports against artist
+  - `suspended_at` (timestamptz): When artist was suspended
+  - `suspended_by` (uuid): Admin who suspended the artist
+  - `suspension_reason` (text): Reason for suspension
+  - Created indexes for efficient admin queries
+  - Added RLS policies for admin full access
+
+### API
+- **GET /api/admin/bands**: List all bands with filters, search, and pagination
+- **PATCH /api/admin/bands/[id]**: Update any band field (admin full control)
+- **DELETE /api/admin/bands/[id]**: Delete band and cascade all data
+
 ## [0.13.1] - 2026-01-15
 
 ### Changed
