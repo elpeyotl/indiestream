@@ -54,13 +54,13 @@ export interface Collaborator {
   created_at?: string
 }
 
-// Global state
-const playlists = ref<Playlist[]>([])
-const loading = ref(false)
-
 export const usePlaylist = () => {
   const user = useSupabaseUser()
   const toast = useToast()
+
+  // Use useState for SSR-safe shared state
+  const playlists = useState<Playlist[]>('playlists', () => [])
+  const loading = useState<boolean>('playlistsLoading', () => false)
 
   // Fetch user's playlists
   const fetchPlaylists = async (): Promise<Playlist[]> => {

@@ -15,22 +15,16 @@ interface FreeTierData {
   resetsAt: string | null
 }
 
-// Global state (shared across all components)
-const globalSubscription = ref<SubscriptionData | null>(null)
-const globalFreeTierStatus = ref<FreeTierData | null>(null)
-const globalLoading = ref(false)
-const globalError = ref('')
-
 export const useSubscription = () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
   const config = useRuntimeConfig()
 
-  // Use global refs
-  const subscription = globalSubscription
-  const freeTierStatus = globalFreeTierStatus
-  const loading = globalLoading
-  const error = globalError
+  // Use useState for SSR-safe shared state
+  const subscription = useState<SubscriptionData | null>('subscription', () => null)
+  const freeTierStatus = useState<FreeTierData | null>('freeTierStatus', () => null)
+  const loading = useState<boolean>('subscriptionLoading', () => false)
+  const error = useState<string>('subscriptionError', () => '')
 
   // Check if user has an active subscription (must have a Stripe subscription ID)
   const isSubscribed = computed(() => {

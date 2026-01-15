@@ -1,8 +1,15 @@
 <script setup lang="ts">
+import type { PublicUserProfile } from '~/composables/useUserProfile'
+
 const route = useRoute()
 const userId = route.params.id as string
 
-const { profile, loading, error, fetchPublicProfile } = useUserProfile()
+const { fetchPublicProfile } = useUserProfile()
+
+// Local state for this page's profile (public profile, not own)
+const profile = ref<PublicUserProfile | null>(null)
+const loading = ref(true)
+const error = ref<string | null>(null)
 
 // Impact stats
 const impactStats = ref<any>(null)
@@ -30,7 +37,19 @@ const formatDuration = (seconds: number): string => {
 }
 
 onMounted(async () => {
-  fetchPublicProfile(userId)
+  loading.value = true
+  try {
+    // Use cached public profile fetch
+    const data = await fetchPublicProfile(userId)
+    profile.value = data
+    if (!data) {
+      error.value = 'User not found'
+    }
+  } catch (e: any) {
+    error.value = e.message || 'Failed to load profile'
+  } finally {
+    loading.value = false
+  }
 
   // Fetch public impact stats
   try {

@@ -46,11 +46,12 @@
           />
           <img
             v-if="band.avatar_url"
+            ref="avatarImgRef"
             :src="band.avatar_url"
             :alt="band.name"
             class="w-full h-full object-cover transition-opacity duration-300"
             :class="avatarLoaded ? 'opacity-100' : 'opacity-0'"
-            @load="avatarLoaded = true"
+            @load="avatarLoadedUrl = band.avatar_url"
           />
           <div v-else class="w-full h-full flex items-center justify-center">
             <span class="text-5xl font-bold text-white">
@@ -484,7 +485,10 @@ const band = ref<Band | null>(null)
 const albums = ref<Album[]>([])
 const albumCovers = ref<Record<string, string>>({})
 const loading = ref(true)
-const avatarLoaded = ref(false)
+// Track avatar loaded state per URL to handle navigation between artists
+const avatarLoadedUrl = ref<string | null>(null)
+const avatarLoaded = computed(() => avatarLoadedUrl.value === band.value?.avatar_url)
+const avatarImgRef = ref<HTMLImageElement | null>(null)
 const loadingPlayAll = ref(false)
 const isFollowing = ref(false)
 const loadingFollow = ref(false)
@@ -668,6 +672,17 @@ const fetchFollowers = async () => {
 watch(() => route.query.tab, (newTab) => {
   if (newTab === 'followers' && !followersLoaded.value && band.value) {
     fetchFollowers()
+  }
+}, { immediate: true })
+
+// Check if avatar image is already cached/complete when URL changes
+watch(() => band.value?.avatar_url, async (newUrl) => {
+  if (newUrl) {
+    // Wait for next tick so the img element is rendered with new src
+    await nextTick()
+    if (avatarImgRef.value?.complete && avatarImgRef.value?.naturalHeight > 0) {
+      avatarLoadedUrl.value = newUrl
+    }
   }
 }, { immediate: true })
 

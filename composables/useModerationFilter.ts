@@ -1,8 +1,9 @@
 // Composable to handle moderation filtering for tracks
 
 export const useModerationFilter = () => {
-  const moderationEnabled = ref(false)
-  const loaded = ref(false)
+  // Use useState for SSR-safe shared state
+  const moderationEnabled = useState<boolean>('moderationEnabled', () => false)
+  const loaded = useState<boolean>('moderationLoaded', () => false)
 
   // Fetch moderation setting (cached on server)
   const loadModerationSetting = async () => {

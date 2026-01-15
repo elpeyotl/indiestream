@@ -3,7 +3,7 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const { profile, loading, error, fetchOwnProfile, updateProfile, uploadAvatar } = useUserProfile()
+const { ownProfile: profile, ownProfileLoading: loading, fetchOwnProfile, updateProfile, uploadAvatar } = useUserProfile()
 const toast = useToast()
 
 // Form state

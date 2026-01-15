@@ -1,4 +1,5 @@
 // Authentication composable for Indiestream
+
 export const useAuth = () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
@@ -32,6 +33,11 @@ export const useAuth = () => {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+
+    // Clear user profile on logout
+    const { clearOwnProfile } = useUserProfile()
+    clearOwnProfile()
+
     navigateTo('/')
   }
 

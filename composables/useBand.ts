@@ -1,5 +1,22 @@
 // Band management composable for Indiestream
 
+// Cache configuration
+const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+
+// Module-level cache for bands (persists across navigation)
+interface CacheEntry<T> {
+  data: T
+  timestamp: number
+}
+
+const bandBySlugCache = new Map<string, CacheEntry<Band>>()
+const bandByIdCache = new Map<string, CacheEntry<Band>>()
+
+const isCacheValid = <T>(entry: CacheEntry<T> | undefined): entry is CacheEntry<T> => {
+  if (!entry) return false
+  return Date.now() - entry.timestamp < CACHE_TTL_MS
+}
+
 export interface Band {
   id: string
   owner_id: string
@@ -91,7 +108,15 @@ export const useBand = () => {
   }
 
   // Get a band by slug (public)
-  const getBandBySlug = async (slug: string): Promise<Band | null> => {
+  const getBandBySlug = async (slug: string, forceRefresh = false): Promise<Band | null> => {
+    // Check cache first
+    if (!forceRefresh) {
+      const cached = bandBySlugCache.get(slug)
+      if (isCacheValid(cached)) {
+        return cached.data
+      }
+    }
+
     const { data, error } = await supabase
       .from('bands')
       .select('*')
@@ -102,11 +127,27 @@ export const useBand = () => {
       if (error.code === 'PGRST116') return null // Not found
       throw error
     }
+
+    // Cache the result
+    if (data) {
+      const entry = { data, timestamp: Date.now() }
+      bandBySlugCache.set(slug, entry)
+      bandByIdCache.set(data.id, entry)
+    }
+
     return data
   }
 
   // Get a band by ID
-  const getBandById = async (id: string): Promise<Band | null> => {
+  const getBandById = async (id: string, forceRefresh = false): Promise<Band | null> => {
+    // Check cache first
+    if (!forceRefresh) {
+      const cached = bandByIdCache.get(id)
+      if (isCacheValid(cached)) {
+        return cached.data
+      }
+    }
+
     const { data, error } = await supabase
       .from('bands')
       .select('*')
@@ -117,6 +158,14 @@ export const useBand = () => {
       if (error.code === 'PGRST116') return null
       throw error
     }
+
+    // Cache the result
+    if (data) {
+      const entry = { data, timestamp: Date.now() }
+      bandByIdCache.set(id, entry)
+      bandBySlugCache.set(data.slug, entry)
+    }
+
     return data
   }
 
@@ -192,12 +241,23 @@ export const useBand = () => {
       .single()
 
     if (error) throw error
+
+    // Update cache with new data
+    if (data) {
+      const entry = { data, timestamp: Date.now() }
+      bandByIdCache.set(bandId, entry)
+      bandBySlugCache.set(data.slug, entry)
+    }
+
     return data
   }
 
   // Delete a band
   const deleteBand = async (bandId: string): Promise<void> => {
     if (!user.value) throw new Error('Must be logged in to delete a band')
+
+    // Get the band first to know its slug for cache invalidation
+    const band = bandByIdCache.get(bandId)?.data
 
     const { error } = await supabase
       .from('bands')
@@ -206,6 +266,34 @@ export const useBand = () => {
       .eq('owner_id', user.value.id)
 
     if (error) throw error
+
+    // Invalidate cache
+    bandByIdCache.delete(bandId)
+    if (band) {
+      bandBySlugCache.delete(band.slug)
+    }
+  }
+
+  // Invalidate band cache (useful after external updates)
+  const invalidateBandCache = (slugOrId?: string) => {
+    if (slugOrId) {
+      // Try to find and remove from both caches
+      const bySlug = bandBySlugCache.get(slugOrId)
+      const byId = bandByIdCache.get(slugOrId)
+
+      if (bySlug) {
+        bandBySlugCache.delete(slugOrId)
+        bandByIdCache.delete(bySlug.data.id)
+      }
+      if (byId) {
+        bandByIdCache.delete(slugOrId)
+        bandBySlugCache.delete(byId.data.slug)
+      }
+    } else {
+      // Clear all cache
+      bandBySlugCache.clear()
+      bandByIdCache.clear()
+    }
   }
 
   // Get featured/popular bands (for discover page)
@@ -230,5 +318,6 @@ export const useBand = () => {
     updateBand,
     deleteBand,
     getFeaturedBands,
+    invalidateBandCache,
   }
 }

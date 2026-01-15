@@ -69,6 +69,24 @@ export interface Album {
   }
 }
 
+// Cache configuration
+const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+
+// Module-level cache for albums (persists across navigation)
+interface CacheEntry<T> {
+  data: T
+  timestamp: number
+}
+
+const albumBySlugCache = new Map<string, CacheEntry<Album>>() // key: "bandSlug/albumSlug"
+const albumByIdCache = new Map<string, CacheEntry<Album>>()
+const bandAlbumsCache = new Map<string, CacheEntry<Album[]>>() // key: bandId
+
+const isCacheValid = <T>(entry: CacheEntry<T> | undefined): entry is CacheEntry<T> => {
+  if (!entry) return false
+  return Date.now() - entry.timestamp < CACHE_TTL_MS
+}
+
 export interface CreateAlbumInput {
   band_id: string
   title: string
@@ -157,7 +175,16 @@ export const useAlbum = () => {
   }
 
   // Get albums for a band
-  const getBandAlbums = async (bandId: string, includeUnpublished = false, filterModeration = true): Promise<Album[]> => {
+  const getBandAlbums = async (bandId: string, includeUnpublished = false, filterModeration = true, forceRefresh = false): Promise<Album[]> => {
+    // Only use cache for default case (published, with moderation filter)
+    const cacheKey = `${bandId}:${includeUnpublished}:${filterModeration}`
+    if (!forceRefresh) {
+      const cached = bandAlbumsCache.get(cacheKey)
+      if (isCacheValid(cached)) {
+        return cached.data
+      }
+    }
+
     let query = supabase
       .from('albums')
       .select('*, tracks(*)')
@@ -172,6 +199,8 @@ export const useAlbum = () => {
 
     if (error) throw error
 
+    let result: Album[] = data || []
+
     // Filter tracks by moderation status if enabled
     if (filterModeration && data) {
       const { filterTracks, filterAlbums, loadModerationSetting } = useModerationFilter()
@@ -182,14 +211,26 @@ export const useAlbum = () => {
         }
       }
       // Filter out albums with no approved tracks
-      return filterAlbums(data)
+      result = filterAlbums(data)
     }
 
-    return data || []
+    // Cache the result
+    bandAlbumsCache.set(cacheKey, { data: result, timestamp: Date.now() })
+
+    return result
   }
 
   // Get a single album by ID
-  const getAlbumById = async (albumId: string, filterModeration = true): Promise<Album | null> => {
+  const getAlbumById = async (albumId: string, filterModeration = true, forceRefresh = false): Promise<Album | null> => {
+    // Check cache first
+    const cacheKey = `${albumId}:${filterModeration}`
+    if (!forceRefresh) {
+      const cached = albumByIdCache.get(cacheKey)
+      if (isCacheValid(cached)) {
+        return cached.data
+      }
+    }
+
     const { data, error } = await supabase
       .from('albums')
       .select('*, tracks(*), band:bands(id, name, slug)')
@@ -216,11 +257,25 @@ export const useAlbum = () => {
       data.tracks.sort((a: Track, b: Track) => a.track_number - b.track_number)
     }
 
+    // Cache the result
+    if (data) {
+      albumByIdCache.set(cacheKey, { data, timestamp: Date.now() })
+    }
+
     return data
   }
 
   // Get album by band slug and album slug (public)
-  const getAlbumBySlug = async (bandSlug: string, albumSlug: string, filterModeration = true): Promise<Album | null> => {
+  const getAlbumBySlug = async (bandSlug: string, albumSlug: string, filterModeration = true, forceRefresh = false): Promise<Album | null> => {
+    // Check cache first
+    const cacheKey = `${bandSlug}/${albumSlug}:${filterModeration}`
+    if (!forceRefresh) {
+      const cached = albumBySlugCache.get(cacheKey)
+      if (isCacheValid(cached)) {
+        return cached.data
+      }
+    }
+
     // First get the band
     const { data: band } = await supabase
       .from('bands')
@@ -257,7 +312,29 @@ export const useAlbum = () => {
       data.tracks.sort((a: Track, b: Track) => a.track_number - b.track_number)
     }
 
+    // Cache the result
+    if (data) {
+      albumBySlugCache.set(cacheKey, { data, timestamp: Date.now() })
+    }
+
     return data
+  }
+
+  // Invalidate album cache (useful after mutations)
+  const invalidateAlbumCache = (bandId?: string) => {
+    if (bandId) {
+      // Clear albums for specific band
+      for (const key of bandAlbumsCache.keys()) {
+        if (key.startsWith(bandId)) {
+          bandAlbumsCache.delete(key)
+        }
+      }
+    } else {
+      // Clear all album caches
+      albumBySlugCache.clear()
+      albumByIdCache.clear()
+      bandAlbumsCache.clear()
+    }
   }
 
   // Create a new album
@@ -301,6 +378,9 @@ export const useAlbum = () => {
       throw error
     }
 
+    // Invalidate band albums cache
+    invalidateAlbumCache(input.band_id)
+
     return data
   }
 
@@ -319,11 +399,17 @@ export const useAlbum = () => {
       .single()
 
     if (error) throw error
+
+    // Invalidate caches for this album
+    if (data) {
+      invalidateAlbumCache(data.band_id)
+    }
+
     return data
   }
 
   // Delete an album
-  const deleteAlbum = async (albumId: string): Promise<void> => {
+  const deleteAlbum = async (albumId: string, bandId?: string): Promise<void> => {
     if (!user.value) throw new Error('Must be logged in to delete an album')
 
     const { error } = await supabase
@@ -332,6 +418,14 @@ export const useAlbum = () => {
       .eq('id', albumId)
 
     if (error) throw error
+
+    // Invalidate cache
+    if (bandId) {
+      invalidateAlbumCache(bandId)
+    } else {
+      // If bandId not provided, clear all album caches
+      invalidateAlbumCache()
+    }
   }
 
   // Create a new track
@@ -580,6 +674,7 @@ export const useAlbum = () => {
     reorderTracks,
     getUploadUrl,
     getStreamUrl,
+    invalidateAlbumCache,
     // Track credits
     getTrackCredits,
     getCreditsForTracks,

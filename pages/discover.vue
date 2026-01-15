@@ -177,9 +177,12 @@
 import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
 
-const client = useSupabaseClient()
-const { getStreamUrl } = useAlbum()
-const { moderationEnabled, loadModerationSetting, filterTracks, filterAlbums } = useModerationFilter()
+const {
+  getFeaturedArtists,
+  getNewReleases,
+  getAllArtists,
+  loadMoreArtists: loadMoreArtistsFromComposable,
+} = useDiscover()
 
 const loading = ref(true)
 const loadingMore = ref(false)
@@ -190,165 +193,48 @@ const allArtists = ref<Band[]>([])
 const albumCovers = ref<Record<string, string>>({})
 const hasMoreArtists = ref(false)
 const artistPage = ref(0)
-const pageSize = 12
 
-const formatNumber = (num: number): string => {
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
-  if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
-  return num.toString()
-}
-
-const loadFeaturedArtists = async () => {
+const loadData = async (forceRefresh = false) => {
   try {
-    // Featured = verified artists with most streams
-    const { data, error } = await client
-      .from('bands')
-      .select('id, name, slug, theme_color, total_streams, is_verified, avatar_key, avatar_url')
-      .eq('is_verified', true)
-      .order('total_streams', { ascending: false })
-      .limit(6)
+    const [featured, releases, artists] = await Promise.all([
+      getFeaturedArtists(forceRefresh),
+      getNewReleases(forceRefresh),
+      getAllArtists(forceRefresh),
+    ])
 
-    if (error) throw error
-
-    // Load avatar URLs from keys (or use direct URL if no key)
-    const artists = (data || []) as any[]
-    for (const artist of artists) {
-      if (artist.avatar_key) {
-        try {
-          artist.avatar_url = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar:', e)
-        }
-      }
-      // avatar_url from DB is used as fallback if no avatar_key
-    }
-    featuredArtists.value = artists as Band[]
-  } catch (e) {
-    console.error('Failed to load featured artists:', e)
-  }
-}
-
-const loadNewReleases = async () => {
-  try {
-    // Load moderation setting first
-    await loadModerationSetting()
-
-    const { data, error } = await client
-      .from('albums')
-      .select(`
-        id,
-        title,
-        slug,
-        release_type,
-        release_date,
-        cover_key,
-        cover_url,
-        band:bands!inner (
-          id,
-          name,
-          slug
-        ),
-        tracks (
-          id,
-          moderation_status
-        )
-      `)
-      .eq('is_published', true)
-      .order('created_at', { ascending: false })
-      .limit(20) // Fetch more since some may be filtered out
-
-    if (error) throw error
-
-    // Map and filter albums
-    let albums = (data || []).map(album => ({
-      ...album,
-      band: Array.isArray(album.band) ? album.band[0] : album.band
-    }))
-
-    // Filter out albums with no approved tracks when moderation is enabled
-    if (moderationEnabled.value) {
-      albums = albums.filter(album => {
-        if (!album.tracks || album.tracks.length === 0) return false
-        return album.tracks.some((track: any) => track.moderation_status === 'approved')
-      })
-    }
-
-    newReleases.value = albums.slice(0, 10) // Return max 10 after filtering
-
-    // Load cover URLs (use direct URL as fallback if no key)
-    for (const album of newReleases.value) {
-      if (album.cover_key) {
-        try {
-          albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
-        } catch (e) {
-          console.error('Failed to load cover:', e)
-        }
-      } else if (album.cover_url) {
-        albumCovers.value[album.id] = album.cover_url
-      }
-    }
-  } catch (e) {
-    console.error('Failed to load new releases:', e)
-  }
-}
-
-const loadAllArtists = async (reset = false) => {
-  if (reset) {
+    featuredArtists.value = featured
+    newReleases.value = releases.albums
+    albumCovers.value = releases.covers
+    allArtists.value = artists.artists
+    hasMoreArtists.value = artists.hasMore
     artistPage.value = 0
-    allArtists.value = []
-  }
-
-  try {
-    const { data, error } = await client
-      .from('bands')
-      .select('id, name, slug, theme_color, total_streams, avatar_key, avatar_url')
-      .order('total_streams', { ascending: false })
-      .range(artistPage.value * pageSize, (artistPage.value + 1) * pageSize - 1)
-
-    if (error) throw error
-
-    // Load avatar URLs from keys (or use direct URL if no key)
-    const artists = (data || []) as any[]
-    for (const artist of artists) {
-      if (artist.avatar_key) {
-        try {
-          artist.avatar_url = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar:', e)
-        }
-      }
-      // avatar_url from DB is used as fallback if no avatar_key
-    }
-    allArtists.value = reset ? (artists as Band[]) : [...allArtists.value, ...(artists as Band[])]
-    hasMoreArtists.value = artists.length === pageSize
   } catch (e) {
-    console.error('Failed to load artists:', e)
+    console.error('Failed to load discover data:', e)
   }
 }
 
 const loadMoreArtists = async () => {
   loadingMore.value = true
-  artistPage.value += 1
-  await loadAllArtists()
-  loadingMore.value = false
+  try {
+    artistPage.value += 1
+    const result = await loadMoreArtistsFromComposable(artistPage.value)
+    allArtists.value = [...allArtists.value, ...result.artists]
+    hasMoreArtists.value = result.hasMore
+  } catch (e) {
+    console.error('Failed to load more artists:', e)
+  } finally {
+    loadingMore.value = false
+  }
 }
 
-const refreshData = async () => {
-  await Promise.all([
-    loadFeaturedArtists(),
-    loadNewReleases(),
-    loadAllArtists(true),
-  ])
-}
-
-// Pull to refresh
+// Pull to refresh - force refresh to bypass cache
 const { pullDistance, isRefreshing, threshold } = usePullToRefresh({
-  onRefresh: refreshData
+  onRefresh: () => loadData(true)
 })
 
 onMounted(async () => {
   loading.value = true
-  await refreshData()
+  await loadData()
   loading.value = false
 })
 </script>

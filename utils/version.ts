@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.14.1'
+export const APP_VERSION = '0.15.0'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,19 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.15.0',
+    date: '2026-01-15',
+    changes: [
+      { type: 'added', description: 'Data caching for discover, artist, and album pages - instant back navigation' },
+      { type: 'added', description: 'User profile caching with 10-minute TTL' },
+      { type: 'fixed', description: 'Avatar flickering on artist page when navigating between artists' },
+      { type: 'fixed', description: 'Hydration mismatch errors by migrating composables to useState' },
+      { type: 'fixed', description: 'Landing page flash for logged-in users on mobile' },
+      { type: 'changed', description: 'Composables now use SSR-safe useState for shared reactive state' },
+      { type: 'removed', description: 'Pinia dependency (replaced with simpler composable pattern)' },
+    ],
+  },
   {
     version: '0.7.0',
     date: '2026-01-20',

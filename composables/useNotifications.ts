@@ -12,16 +12,18 @@ export interface Notification {
   created_at: string
 }
 
-// Shared state across components
-const notifications = ref<Notification[]>([])
-const unreadCount = ref(0)
-const loading = ref(false)
-const lastFetch = ref<number>(0)
-const realtimeChannel = ref<RealtimeChannel | null>(null)
+// Keep realtime channel as module-level (not reactive, client-only)
+let realtimeChannel: RealtimeChannel | null = null
 
 export const useNotifications = () => {
   const user = useSupabaseUser()
   const client = useSupabaseClient()
+
+  // Use useState for SSR-safe shared state
+  const notifications = useState<Notification[]>('notifications', () => [])
+  const unreadCount = useState<number>('notificationsUnreadCount', () => 0)
+  const loading = useState<boolean>('notificationsLoading', () => false)
+  const lastFetch = useState<number>('notificationsLastFetch', () => 0)
 
   // Fetch unread count (lightweight, for badge)
   const fetchUnreadCount = async () => {
@@ -168,9 +170,9 @@ export const useNotifications = () => {
 
   // Subscribe to real-time notifications
   const subscribeToRealtime = () => {
-    if (!user.value || realtimeChannel.value) return
+    if (!user.value || realtimeChannel) return
 
-    realtimeChannel.value = client
+    realtimeChannel = client
       .channel(`notifications:${user.value.id}`)
       .on(
         'postgres_changes',
@@ -192,9 +194,9 @@ export const useNotifications = () => {
 
   // Unsubscribe from real-time notifications
   const unsubscribeFromRealtime = () => {
-    if (realtimeChannel.value) {
-      client.removeChannel(realtimeChannel.value)
-      realtimeChannel.value = null
+    if (realtimeChannel) {
+      client.removeChannel(realtimeChannel)
+      realtimeChannel = null
     }
   }
 

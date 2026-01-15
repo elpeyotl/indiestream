@@ -242,20 +242,9 @@
 import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
 
-// Redirect authenticated users to discover page
-const user = useSupabaseUser()
-const router = useRouter()
-
-// Immediate redirect for logged-in users
-if (process.client && user.value) {
-  router.replace('/discover')
-}
-
-// Watch for auth state changes
-watch(user, (newUser) => {
-  if (newUser) {
-    router.replace('/discover')
-  }
+// Redirect authenticated users to discover page (handled by middleware)
+definePageMeta({
+  middleware: 'landing-redirect'
 })
 
 const client = useSupabaseClient()
