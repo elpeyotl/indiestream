@@ -12,6 +12,7 @@ export default defineNuxtConfig({
 
   // PWA configuration
   pwa: {
+    strategies: 'generateSW',
     registerType: 'autoUpdate',
     manifest: {
       name: 'Indiestream',
@@ -42,8 +43,8 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: '/',
       globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
+      navigateFallbackDenylist: [/^\/api\//],
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
@@ -52,7 +53,7 @@ export default defineNuxtConfig({
             cacheName: 'supabase-cache',
             expiration: {
               maxEntries: 50,
-              maxAgeSeconds: 60 * 60, // 1 hour
+              maxAgeSeconds: 60 * 60,
             },
           },
         },
@@ -62,8 +63,7 @@ export default defineNuxtConfig({
       installPrompt: true,
     },
     devOptions: {
-      enabled: true,
-      type: 'module',
+      enabled: false,
     },
   },
 
@@ -109,6 +109,7 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
         {
           rel: 'stylesheet',
