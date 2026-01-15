@@ -8,6 +8,47 @@
       <p class="text-zinc-400 mt-1">Here's what's happening with your music</p>
     </div>
 
+    <!-- My Impact Hero Card (Subscribers Only) -->
+    <UCard
+      v-if="isSubscribed && !impactLoading"
+      class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100">Your Impact</h2>
+        <UIcon name="i-heroicons-chart-bar" class="w-6 h-6 text-violet-400" />
+      </div>
+
+      <!-- Key stats grid -->
+      <div v-if="impactStats" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+        <div>
+          <p class="text-2xl font-bold text-violet-400">
+            {{ formatCurrency(impactStats.totalEarned) }}
+          </p>
+          <p class="text-sm text-zinc-400">Earned by Artists</p>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-violet-400">{{ impactStats.artistsSupported }}</p>
+          <p class="text-sm text-zinc-400">Artists Supported</p>
+        </div>
+        <div class="col-span-2 md:col-span-1">
+          <p class="text-2xl font-bold text-violet-400">
+            {{ formatCurrency(impactStats.thisMonth) }}
+          </p>
+          <p class="text-sm text-zinc-400">This Month</p>
+        </div>
+      </div>
+
+      <!-- Empty state for new subscribers -->
+      <div v-else class="text-center py-4">
+        <UIcon name="i-heroicons-musical-note" class="w-12 h-12 mx-auto mb-2 text-zinc-600" />
+        <p class="text-zinc-400 text-sm">Start listening to see your impact!</p>
+      </div>
+
+      <UButton to="/dashboard/my-impact" color="violet" block>
+        View Full Impact Report
+      </UButton>
+    </UCard>
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <NuxtLink to="/dashboard/listening" class="block">
@@ -336,6 +377,7 @@ const client = useSupabaseClient()
 const { getUserBands } = useBand()
 const { getStreamUrl } = useAlbum()
 const { subscription, isSubscribed, freeTierStatus, loading: subscriptionLoading, openCustomerPortal, fetchSubscription } = useSubscription()
+const { distribution, fetchDistribution, loading: impactLoading } = useMoneyDistribution()
 
 const bands = ref<Band[]>([])
 const bandsLoading = ref(true)
@@ -377,6 +419,35 @@ const listeningStats = ref({
   totalStreams: 0,
   uniqueArtists: 0,
 })
+
+// Impact stats for hero card
+const impactStats = computed(() => {
+  if (!distribution.value || !isSubscribed.value) return null
+
+  // Calculate this month's earnings
+  const now = new Date()
+  const currentMonth = now.getMonth()
+  const currentYear = now.getFullYear()
+
+  // We'll use the "last-month" data if available, otherwise show 0
+  let thisMonthEarned = 0
+  if (distribution.value.period === 'last-month') {
+    thisMonthEarned = distribution.value.artistPoolCents
+  }
+
+  return {
+    totalEarned: distribution.value.artistPoolCents,
+    artistsSupported: distribution.value.artistBreakdown.length,
+    thisMonth: thisMonthEarned,
+  }
+})
+
+const formatCurrency = (cents: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100)
+}
 
 const subscriptionBadge = computed(() => {
   if (!subscription.value) return 'Free'
@@ -451,9 +522,21 @@ const loadListeningStats = async () => {
   }
 }
 
+// Watch for subscription status changes and fetch impact data
+watch(isSubscribed, (newValue) => {
+  if (newValue && !distribution.value) {
+    fetchDistribution('all-time')
+  }
+})
+
 onMounted(async () => {
   // Refresh subscription status on mount (in case webhook updated it)
   fetchSubscription()
+
+  // Load impact stats for subscribers
+  if (isSubscribed.value) {
+    fetchDistribution('all-time')
+  }
 
   try {
     bands.value = await getUserBands()

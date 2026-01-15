@@ -8,22 +8,41 @@
     />
 
     <!-- Header -->
-    <div class="mb-8">
+    <div class="mb-6">
       <h1 class="text-3xl font-bold text-zinc-100">Your Library</h1>
       <p class="text-zinc-400 mt-1">Artists, albums, playlists, and tracks you've saved</p>
     </div>
 
-    <!-- Tabs -->
-    <UTabs v-model="activeTab" :items="tabs" class="w-full">
-      <template #item="{ item }">
-        <!-- Playlists Tab -->
-        <div v-if="item.key === 'playlists'" class="py-6">
+    <!-- Native-style Tab Selector (Sticky) -->
+    <div class="sticky top-[73px] z-40 -mx-4 px-4 py-3 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/50 mb-6">
+      <div class="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
+        <button
+          v-for="(tab, index) in tabs"
+          :key="tab.key"
+          @click="handleTabChange(index)"
+          :class="[
+            'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 snap-start active:scale-95',
+            activeTab === index
+              ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/25'
+              : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300'
+          ]"
+        >
+          <UIcon :name="tab.icon" class="w-4 h-4" />
+          <span>{{ tab.label }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div>
+      <!-- Playlists Tab -->
+      <div v-if="activeTab === 0">
           <div v-if="loading" class="flex items-center justify-center py-20">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
           </div>
 
           <!-- Create Playlist Button -->
-          <div v-if="!loading && (userPlaylists.length > 0 || tracks.length > 0)" class="flex justify-end mb-6">
+          <div v-if="!loading && (userPlaylists.length > 0 || tracks.length > 0)" class="flex justify-start mb-6">
             <UButton color="violet" variant="soft" @click="showCreatePlaylist = true">
               <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
               Create Playlist
@@ -126,7 +145,7 @@
         </div>
 
         <!-- Artists Tab -->
-        <div v-if="item.key === 'artists'" class="py-6">
+        <div v-if="activeTab === 1">
           <div v-if="loading" class="flex items-center justify-center py-20">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
           </div>
@@ -175,7 +194,7 @@
         </div>
 
         <!-- Albums Tab -->
-        <div v-else-if="item.key === 'albums'" class="py-6">
+        <div v-else-if="activeTab === 2">
           <div v-if="loading" class="flex items-center justify-center py-20">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
           </div>
@@ -224,7 +243,7 @@
         </div>
 
         <!-- Tracks Tab -->
-        <div v-else-if="item.key === 'tracks'" class="py-6">
+        <div v-else-if="activeTab === 3">
           <div v-if="loading" class="flex items-center justify-center py-20">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
           </div>
@@ -317,8 +336,7 @@
             </div>
           </div>
         </div>
-      </template>
-    </UTabs>
+    </div>
 
     <!-- Create Playlist Modal -->
     <UModal v-model="showCreatePlaylist">
@@ -390,9 +408,18 @@ const { getStreamUrl } = useAlbum()
 const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = useLibrary()
 const { playTrackFromLibrary, playPlaylist } = usePlayer()
 const { playlists: userPlaylists, fetchPlaylists, createPlaylist, getPlaylist } = usePlaylist()
+const haptics = useHaptics()
 
 const loading = ref(true)
 const activeTab = ref(0)
+
+// Handle tab change with haptic feedback
+const handleTabChange = (index: number) => {
+  if (activeTab.value !== index) {
+    haptics.light()
+    activeTab.value = index
+  }
+}
 
 const artists = ref<FollowedArtist[]>([])
 const albums = ref<SavedAlbum[]>([])

@@ -8,6 +8,10 @@ const hideOnRoutes = [
   '/discover',
   '/library',
   '/artists',
+  '/dashboard',
+  '/dashboard/settings',
+  '/dashboard/listening',
+  '/dashboard/my-impact',
   '/login',
   '/register',
   '/pricing',
@@ -19,7 +23,11 @@ const hideOnRoutes = [
 ]
 
 const showBack = computed(() => {
-  return !hideOnRoutes.includes(route.path)
+  // Normalize path (remove trailing slash)
+  const normalizedPath = route.path.endsWith('/') && route.path !== '/'
+    ? route.path.slice(0, -1)
+    : route.path
+  return !hideOnRoutes.includes(normalizedPath)
 })
 
 const goBack = () => {

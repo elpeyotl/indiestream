@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.12.0] - 2026-01-15
+
+### Added
+- **My Impact Prominence**: Enhanced visibility of the My Impact feature for subscribers:
+  - **Mobile Bottom Nav**: Added "My Impact" button (heart icon) to mobile bottom navigation for subscribers, replacing Search button (Search remains accessible via top nav)
+  - **Dashboard Hero Card**: Prominent gradient card at top of dashboard showing:
+    - Total earnings sent to artists (all-time)
+    - Number of artists supported
+    - This month's impact earnings
+    - "View Full Impact Report" CTA button
+    - Empty state for new subscribers with encouraging message
+  - **Navigation Reordering**: Mobile nav now ordered: Discover → Library → Listening → Impact
+  - Reinforces Indiestream's "Stream Fair. Support Direct." value proposition
+  - Back button automatically hidden on My Impact page
+
+### Technical
+- Integrated global `useSubscription` composable for consistent subscription status
+- Added subscription-aware conditional rendering in mobile navigation
+- Implemented real-time impact stats calculation from `useMoneyDistribution`
+- Added watcher for subscription status changes to fetch impact data dynamically
+
 ## [0.11.0] - 2026-01-14
 
 ### Added

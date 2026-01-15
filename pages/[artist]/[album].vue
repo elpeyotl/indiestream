@@ -2,7 +2,10 @@
   <div v-if="album && band">
     <!-- Album Header -->
     <div class="container mx-auto px-4 py-12">
-      <!-- Back Button -->
+      <!-- Back Button (Desktop only - mobile shows in header) -->
+      <div class="hidden md:block mb-4">
+        <BackButton />
+      </div>
 
       <div class="flex flex-col md:flex-row gap-8">
         <!-- Cover Art -->

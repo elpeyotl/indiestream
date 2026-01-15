@@ -28,7 +28,10 @@
 
     <!-- Profile Info -->
     <div class="container mx-auto px-4 -mt-32 md:-mt-40 relative z-10">
-      <!-- Back Button -->
+      <!-- Back Button (Desktop only - mobile shows in header) -->
+      <div class="hidden md:block mb-4">
+        <BackButton />
+      </div>
 
       <div class="flex flex-col md:flex-row gap-6 items-start">
         <!-- Avatar -->

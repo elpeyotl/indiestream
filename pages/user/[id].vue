@@ -43,17 +43,6 @@ const artistsToShow = computed(() =>
 
     <!-- Profile content -->
     <div v-else-if="profile" class="max-w-4xl mx-auto">
-      <!-- Back button -->
-      <UButton
-        variant="ghost"
-        color="gray"
-        icon="i-heroicons-arrow-left"
-        @click="$router.back()"
-        class="mb-6"
-      >
-        Back
-      </UButton>
-
       <!-- Profile header -->
       <UCard class="mb-6">
         <div class="flex flex-col items-center text-center">

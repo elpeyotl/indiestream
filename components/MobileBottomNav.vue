@@ -18,15 +18,6 @@
         <span class="text-xs font-medium">Discover</span>
       </NuxtLink>
 
-      <!-- Search -->
-      <button
-        @click="openSearch"
-        class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 text-zinc-400 hover:text-zinc-100"
-      >
-        <UIcon name="i-heroicons-magnifying-glass" class="w-6 h-6" />
-        <span class="text-xs font-medium">Search</span>
-      </button>
-
       <!-- Library -->
       <NuxtLink
         to="/library"
@@ -40,19 +31,42 @@
         <span class="text-xs font-medium">Library</span>
       </NuxtLink>
 
-      <!-- Profile -->
+      <!-- My Listening -->
       <NuxtLink
-        v-if="user"
-        :to="`/user/${user.id}`"
+        to="/dashboard/listening"
         class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
-        :class="isActive(`/user/${user.id}`) ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
+        :class="isActive('/dashboard/listening') ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
       >
         <UIcon
-          :name="isActive(`/user/${user.id}`) ? 'i-heroicons-user-circle-solid' : 'i-heroicons-user-circle'"
+          :name="isActive('/dashboard/listening') ? 'i-heroicons-chart-bar-solid' : 'i-heroicons-chart-bar'"
           class="w-6 h-6"
         />
-        <span class="text-xs font-medium">Profile</span>
+        <span class="text-xs font-medium">Listening</span>
       </NuxtLink>
+
+      <!-- My Impact (Subscribers) / Search (Non-subscribers) -->
+      <NuxtLink
+        v-if="isSubscribed"
+        to="/dashboard/my-impact"
+        class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
+        :class="isActive('/dashboard/my-impact') ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
+      >
+        <UIcon
+          :name="isActive('/dashboard/my-impact') ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+          class="w-6 h-6"
+        />
+        <span class="text-xs font-medium">Impact</span>
+      </NuxtLink>
+
+      <!-- Search (Non-subscribers) -->
+      <button
+        v-else
+        @click="openSearch"
+        class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 text-zinc-400 hover:text-zinc-100"
+      >
+        <UIcon name="i-heroicons-magnifying-glass" class="w-6 h-6" />
+        <span class="text-xs font-medium">Search</span>
+      </button>
 
       <!-- Now Playing (only when music is playing) -->
       <button
@@ -71,6 +85,7 @@
 const user = useSupabaseUser()
 const route = useRoute()
 const { currentTrack } = usePlayer()
+const { isSubscribed } = useSubscription()
 
 // Check if current route is active
 const isActive = (path: string): boolean => {

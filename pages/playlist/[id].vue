@@ -1,5 +1,10 @@
 <template>
   <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- Back Button (Desktop only - mobile shows in header) -->
+    <div class="hidden md:block mb-4">
+      <BackButton />
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-20">
       <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />

@@ -11,9 +11,9 @@
         <div class="flex items-center justify-between">
           <!-- Back Button or Logo -->
           <div class="flex items-center gap-4">
-            <BackButton />
-            <!-- Logo (hidden on mobile for clean native feel) -->
-            <NuxtLink to="/" class="hidden md:flex items-center gap-2 group">
+            <BackButton class="md:hidden" />
+            <!-- Logo -->
+            <NuxtLink to="/" class="flex items-center gap-2 group">
               <div
                 class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center"
               >
@@ -305,16 +305,6 @@ const userMenuItems = computed(() => {
         label: "Dashboard",
         icon: "i-heroicons-home",
         to: "/dashboard",
-      },
-      {
-        label: "Library",
-        icon: "i-heroicons-heart",
-        to: "/library",
-      },
-      {
-        label: "My Listening",
-        icon: "i-heroicons-musical-note",
-        to: "/dashboard/listening",
       },
       {
         label: "Settings",
