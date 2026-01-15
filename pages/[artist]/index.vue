@@ -28,6 +28,8 @@
 
     <!-- Profile Info -->
     <div class="container mx-auto px-4 -mt-32 md:-mt-40 relative z-10">
+      <!-- Back Button -->
+
       <div class="flex flex-col md:flex-row gap-6 items-start">
         <!-- Avatar -->
         <div

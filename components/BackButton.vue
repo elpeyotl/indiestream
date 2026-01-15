@@ -2,15 +2,24 @@
 const router = useRouter()
 const route = useRoute()
 
-// Determine if we should show the back button
-const showBack = computed(() => {
-  // Don't show on top-level pages
-  const topLevelRoutes = ['/', '/discover', '/library', '/artists', '/login', '/register', '/pricing', '/about', '/contact', '/for-artists', '/terms', '/privacy']
+// Simpler approach: show on all pages except these
+const hideOnRoutes = [
+  '/',
+  '/discover',
+  '/library',
+  '/artists',
+  '/login',
+  '/register',
+  '/pricing',
+  '/about',
+  '/contact',
+  '/for-artists',
+  '/terms',
+  '/privacy'
+]
 
-  // Show back button if:
-  // 1. Not on a top-level route
-  // 2. Has navigation history
-  return !topLevelRoutes.includes(route.path) && window.history.length > 1
+const showBack = computed(() => {
+  return !hideOnRoutes.includes(route.path)
 })
 
 const goBack = () => {
@@ -19,12 +28,15 @@ const goBack = () => {
 </script>
 
 <template>
-  <button
-    v-if="showBack"
-    @click="goBack"
-    class="fixed top-4 left-4 z-50 flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900/80 backdrop-blur-lg border border-zinc-800 text-zinc-100 hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-200 active:scale-95 shadow-lg md:top-6 md:left-6"
-    aria-label="Go back"
-  >
-    <UIcon name="i-heroicons-arrow-left" class="w-5 h-5" />
-  </button>
+  <Transition name="fade">
+    <button
+      v-if="showBack"
+      @click="goBack"
+      class="inline-flex items-center gap-1.5 px-2 py-1.5 -ml-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 rounded-lg transition-all duration-200 active:scale-95"
+      aria-label="Go back"
+    >
+      <UIcon name="i-heroicons-chevron-left" class="w-5 h-5" />
+      <span class="text-sm font-medium hidden sm:inline">Back</span>
+    </button>
+  </Transition>
 </template>

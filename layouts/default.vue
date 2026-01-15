@@ -3,29 +3,30 @@
     <!-- Bokeh Background -->
     <BokehBackground :audio-data="audioData" />
 
-    <!-- Global Back Button -->
-    <BackButton />
-
     <!-- Header -->
     <header
       class="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50"
     >
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
-          <!-- Logo -->
-          <NuxtLink to="/" class="flex items-center gap-2 group">
-            <div
-              class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center"
-            >
-              <span class="text-white font-bold text-sm">IS</span>
-            </div>
-            <div class="text-xl font-bold">
-              <span
-                class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent"
-                >Indie</span
-              ><span class="text-zinc-100">stream</span>
-            </div>
-          </NuxtLink>
+          <!-- Back Button or Logo -->
+          <div class="flex items-center gap-4">
+            <BackButton />
+            <!-- Logo (hidden on mobile when back button shows) -->
+            <NuxtLink to="/" class="flex items-center gap-2 group">
+              <div
+                class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center"
+              >
+                <span class="text-white font-bold text-sm">IS</span>
+              </div>
+              <div class="text-xl font-bold">
+                <span
+                  class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent"
+                  >Indie</span
+                ><span class="text-zinc-100">stream</span>
+              </div>
+            </NuxtLink>
+          </div>
 
           <!-- Navigation -->
           <nav class="hidden md:flex items-center gap-6">

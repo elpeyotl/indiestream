@@ -2,6 +2,8 @@
   <div v-if="album && band">
     <!-- Album Header -->
     <div class="container mx-auto px-4 py-12">
+      <!-- Back Button -->
+
       <div class="flex flex-col md:flex-row gap-8">
         <!-- Cover Art -->
         <div class="w-full md:w-80 shrink-0">
