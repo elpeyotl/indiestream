@@ -17,8 +17,9 @@
 - **User Menu**: Now uses slideover panel instead of dropdown menu
 
 ### Fixed
-- Mobile player no longer overlaps bottom navigation
+- Mobile player no longer overlaps bottom navigation (accounts for safe area insets)
 - Stream counts hidden from public artist pages (visible only to artist owners)
+- Album page layout shift on mobile - now uses skeleton loading with smooth image fade-in
 
 ## [0.14.0] - 2026-01-16
 
