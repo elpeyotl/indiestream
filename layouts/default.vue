@@ -12,8 +12,8 @@
           <!-- Back Button or Logo -->
           <div class="flex items-center gap-4">
             <BackButton />
-            <!-- Logo (hidden on mobile when back button shows) -->
-            <NuxtLink to="/" class="flex items-center gap-2 group">
+            <!-- Logo (hidden on mobile for clean native feel) -->
+            <NuxtLink to="/" class="hidden md:flex items-center gap-2 group">
               <div
                 class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center"
               >
