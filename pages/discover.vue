@@ -13,9 +13,35 @@
       <p class="text-zinc-400">Find your next favorite artist</p>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+    <!-- Loading Skeletons -->
+    <div v-if="loading" class="space-y-12">
+      <!-- Featured Artists Skeleton -->
+      <section>
+        <div class="h-7 w-48 skeleton mb-4"></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div v-for="i in 6" :key="`featured-${i}`" class="space-y-2">
+            <div class="w-full pb-[100%] relative">
+              <div class="absolute inset-0 rounded-lg skeleton"></div>
+            </div>
+            <div class="h-5 skeleton w-3/4"></div>
+            <div class="h-4 skeleton w-1/2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- New Releases Skeleton -->
+      <section>
+        <div class="h-7 w-48 skeleton mb-4"></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <div v-for="i in 5" :key="`release-${i}`" class="space-y-2">
+            <div class="w-full pb-[100%] relative">
+              <div class="absolute inset-0 rounded-lg skeleton"></div>
+            </div>
+            <div class="h-5 skeleton w-full"></div>
+            <div class="h-4 skeleton w-2/3"></div>
+          </div>
+        </div>
+      </section>
     </div>
 
     <template v-else>
@@ -29,9 +55,9 @@
             v-for="artist in featuredArtists"
             :key="artist.id"
             :to="`/${artist.slug}`"
-            class="group"
+            class="group card-interactive"
           >
-            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl transition-shadow">
+            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
               <img
                 v-if="artist.avatar_url"
                 :src="artist.avatar_url"
@@ -62,9 +88,9 @@
             v-for="album in newReleases"
             :key="album.id"
             :to="`/${album.band?.slug}/${album.slug}`"
-            class="group"
+            class="group card-interactive"
           >
-            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
+            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
               <div class="absolute inset-0">
                 <img
                   v-if="albumCovers[album.id]"
@@ -96,9 +122,9 @@
             v-for="artist in allArtists"
             :key="artist.id"
             :to="`/${artist.slug}`"
-            class="group"
+            class="group card-interactive"
           >
-            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl transition-shadow">
+            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
               <img
                 v-if="artist.avatar_url"
                 :src="artist.avatar_url"
