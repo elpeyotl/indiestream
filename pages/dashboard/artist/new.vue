@@ -171,6 +171,126 @@
           </div>
         </UFormGroup>
 
+        <!-- Social Links Section -->
+        <div class="border-t border-zinc-800 pt-6 mt-2">
+          <h3 class="text-lg font-semibold text-zinc-100 mb-1">Social Links</h3>
+          <p class="text-sm text-zinc-400 mb-4">Help us verify your profile by adding your social media links (at least one recommended)</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Website -->
+            <UFormGroup label="Website" hint="Optional">
+              <UInput
+                v-model="form.website"
+                placeholder="https://yoursite.com"
+                size="lg"
+                :disabled="loading"
+              >
+                <template #leading>
+                  <UIcon name="i-heroicons-globe-alt" class="w-4 h-4 text-zinc-400" />
+                </template>
+              </UInput>
+            </UFormGroup>
+
+            <!-- Instagram -->
+            <UFormGroup label="Instagram" hint="Optional">
+              <UInput
+                v-model="form.instagram"
+                placeholder="@username or full URL"
+                size="lg"
+                :disabled="loading"
+              >
+                <template #leading>
+                  <UIcon name="i-simple-icons-instagram" class="w-4 h-4 text-zinc-400" />
+                </template>
+              </UInput>
+            </UFormGroup>
+
+            <!-- Spotify -->
+            <UFormGroup label="Spotify" hint="Optional">
+              <UInput
+                v-model="form.spotify"
+                placeholder="Spotify artist URL"
+                size="lg"
+                :disabled="loading"
+              >
+                <template #leading>
+                  <UIcon name="i-simple-icons-spotify" class="w-4 h-4 text-zinc-400" />
+                </template>
+              </UInput>
+            </UFormGroup>
+
+            <!-- YouTube -->
+            <UFormGroup label="YouTube" hint="Optional">
+              <UInput
+                v-model="form.youtube"
+                placeholder="YouTube channel URL"
+                size="lg"
+                :disabled="loading"
+              >
+                <template #leading>
+                  <UIcon name="i-simple-icons-youtube" class="w-4 h-4 text-zinc-400" />
+                </template>
+              </UInput>
+            </UFormGroup>
+
+            <!-- SoundCloud -->
+            <UFormGroup label="SoundCloud" hint="Optional">
+              <UInput
+                v-model="form.soundcloud"
+                placeholder="SoundCloud profile URL"
+                size="lg"
+                :disabled="loading"
+              >
+                <template #leading>
+                  <UIcon name="i-simple-icons-soundcloud" class="w-4 h-4 text-zinc-400" />
+                </template>
+              </UInput>
+            </UFormGroup>
+
+            <!-- Bandcamp -->
+            <UFormGroup label="Bandcamp" hint="Optional">
+              <UInput
+                v-model="form.bandcamp"
+                placeholder="Bandcamp page URL"
+                size="lg"
+                :disabled="loading"
+              >
+                <template #leading>
+                  <UIcon name="i-simple-icons-bandcamp" class="w-4 h-4 text-zinc-400" />
+                </template>
+              </UInput>
+            </UFormGroup>
+
+            <!-- Twitter/X -->
+            <UFormGroup label="Twitter / X" hint="Optional">
+              <UInput
+                v-model="form.twitter"
+                placeholder="@username or full URL"
+                size="lg"
+                :disabled="loading"
+              >
+                <template #leading>
+                  <UIcon name="i-simple-icons-x" class="w-4 h-4 text-zinc-400" />
+                </template>
+              </UInput>
+            </UFormGroup>
+
+            <!-- TikTok -->
+            <UFormGroup label="TikTok" hint="Optional">
+              <UInput
+                v-model="form.tiktok"
+                placeholder="@username or full URL"
+                size="lg"
+                :disabled="loading"
+              >
+                <template #leading>
+                  <UIcon name="i-simple-icons-tiktok" class="w-4 h-4 text-zinc-400" />
+                </template>
+              </UInput>
+            </UFormGroup>
+          </div>
+        </div>
+
         <!-- Submit -->
         <div class="flex justify-end gap-3 pt-4">
           <UButton
@@ -211,6 +331,15 @@ const form = reactive({
   bio: '',
   location: '',
   genres: [] as string[],
+  // Social links
+  website: '',
+  instagram: '',
+  spotify: '',
+  youtube: '',
+  soundcloud: '',
+  bandcamp: '',
+  twitter: '',
+  tiktok: '',
 })
 
 const genreInput = ref('')
@@ -312,6 +441,15 @@ const handleSubmit = async () => {
       bio: form.bio.trim() || undefined,
       location: form.location.trim() || undefined,
       genres: form.genres,
+      // Social links
+      website: form.website.trim() || undefined,
+      instagram: form.instagram.trim() || undefined,
+      spotify: form.spotify.trim() || undefined,
+      youtube: form.youtube.trim() || undefined,
+      soundcloud: form.soundcloud.trim() || undefined,
+      bandcamp: form.bandcamp.trim() || undefined,
+      twitter: form.twitter.trim() || undefined,
+      tiktok: form.tiktok.trim() || undefined,
     })
 
     // Then upload the avatar
@@ -335,8 +473,13 @@ const handleSubmit = async () => {
       toast.add({ title: 'Photo upload issue', description: 'Profile created but photo upload failed. You can add it later in settings.', color: 'amber', icon: 'i-heroicons-exclamation-triangle' })
     }
 
-    toast.add({ title: 'Artist profile created', color: 'green', icon: 'i-heroicons-check-circle' })
-    // Redirect to the new band's management page
+    toast.add({
+      title: 'Artist profile submitted!',
+      description: 'Your profile is pending review. We\'ll notify you when it\'s approved.',
+      color: 'green',
+      icon: 'i-heroicons-clock',
+    })
+    // Redirect to the new band's management page (they'll see pending status there)
     router.push(`/dashboard/artist/${band.id}`)
   } catch (e: any) {
     toast.add({ title: 'Creation failed', description: e.message || 'Failed to create artist profile', color: 'red', icon: 'i-heroicons-exclamation-triangle' })

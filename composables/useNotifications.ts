@@ -99,8 +99,10 @@ export const useNotifications = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'track_approved':
+      case 'artist_approved':
         return 'i-heroicons-check-circle'
       case 'track_rejected':
+      case 'artist_rejected':
         return 'i-heroicons-x-circle'
       case 'track_revision':
         return 'i-heroicons-exclamation-triangle'
@@ -115,8 +117,10 @@ export const useNotifications = () => {
   const getNotificationColor = (type: string) => {
     switch (type) {
       case 'track_approved':
+      case 'artist_approved':
         return 'text-green-400'
       case 'track_rejected':
+      case 'artist_rejected':
         return 'text-red-400'
       case 'track_revision':
         return 'text-orange-400'

@@ -101,7 +101,7 @@
           </p>
 
           <!-- Actions -->
-          <div class="flex gap-3">
+          <div class="flex flex-wrap gap-3 items-center">
             <UButton color="violet" size="lg" :loading="loadingPlayAll" @click="handlePlayAll">
               <UIcon name="i-heroicons-play" class="w-5 h-5 mr-1" />
               Play All
@@ -119,16 +119,89 @@
               />
               {{ isFollowing ? 'Following' : 'Follow' }}
             </UButton>
-            <UButton
-              v-if="band.website"
-              color="gray"
-              variant="ghost"
-              size="lg"
-              :to="band.website"
-              target="_blank"
-            >
-              <UIcon name="i-heroicons-globe-alt" class="w-5 h-5" />
-            </UButton>
+            <!-- Social Links -->
+            <div v-if="hasAnySocialLink || band.website" class="flex gap-1">
+              <UButton
+                v-if="band.website"
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :to="band.website"
+                target="_blank"
+              >
+                <UIcon name="i-heroicons-globe-alt" class="w-5 h-5" />
+              </UButton>
+              <UButton
+                v-if="band.instagram"
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :to="formatSocialUrl(band.instagram, 'instagram')"
+                target="_blank"
+              >
+                <UIcon name="i-simple-icons-instagram" class="w-5 h-5" />
+              </UButton>
+              <UButton
+                v-if="band.spotify"
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :to="formatSocialUrl(band.spotify, 'spotify')"
+                target="_blank"
+              >
+                <UIcon name="i-simple-icons-spotify" class="w-5 h-5" />
+              </UButton>
+              <UButton
+                v-if="band.youtube"
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :to="formatSocialUrl(band.youtube, 'youtube')"
+                target="_blank"
+              >
+                <UIcon name="i-simple-icons-youtube" class="w-5 h-5" />
+              </UButton>
+              <UButton
+                v-if="band.soundcloud"
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :to="formatSocialUrl(band.soundcloud, 'soundcloud')"
+                target="_blank"
+              >
+                <UIcon name="i-simple-icons-soundcloud" class="w-5 h-5" />
+              </UButton>
+              <UButton
+                v-if="band.bandcamp"
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :to="formatSocialUrl(band.bandcamp, 'bandcamp')"
+                target="_blank"
+              >
+                <UIcon name="i-simple-icons-bandcamp" class="w-5 h-5" />
+              </UButton>
+              <UButton
+                v-if="band.twitter"
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :to="formatSocialUrl(band.twitter, 'twitter')"
+                target="_blank"
+              >
+                <UIcon name="i-simple-icons-x" class="w-5 h-5" />
+              </UButton>
+              <UButton
+                v-if="band.tiktok"
+                color="gray"
+                variant="ghost"
+                size="lg"
+                :to="formatSocialUrl(band.tiktok, 'tiktok')"
+                target="_blank"
+              >
+                <UIcon name="i-simple-icons-tiktok" class="w-5 h-5" />
+              </UButton>
+            </div>
           </div>
         </div>
       </div>
@@ -190,6 +263,76 @@
                 <UIcon name="i-heroicons-globe-alt" class="w-5 h-5 text-zinc-400" />
                 <a :href="band.website" target="_blank" class="text-violet-400 hover:text-violet-300">
                   {{ band.website }}
+                </a>
+              </div>
+            </div>
+
+            <!-- Social Links -->
+            <div v-if="hasAnySocialLink" class="mt-6">
+              <h4 class="text-sm font-semibold text-zinc-400 mb-3">Connect</h4>
+              <div class="flex flex-wrap gap-2">
+                <a
+                  v-if="band.instagram"
+                  :href="formatSocialUrl(band.instagram, 'instagram')"
+                  target="_blank"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                >
+                  <UIcon name="i-simple-icons-instagram" class="w-4 h-4" />
+                  <span class="text-sm">Instagram</span>
+                </a>
+                <a
+                  v-if="band.spotify"
+                  :href="formatSocialUrl(band.spotify, 'spotify')"
+                  target="_blank"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                >
+                  <UIcon name="i-simple-icons-spotify" class="w-4 h-4" />
+                  <span class="text-sm">Spotify</span>
+                </a>
+                <a
+                  v-if="band.youtube"
+                  :href="formatSocialUrl(band.youtube, 'youtube')"
+                  target="_blank"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                >
+                  <UIcon name="i-simple-icons-youtube" class="w-4 h-4" />
+                  <span class="text-sm">YouTube</span>
+                </a>
+                <a
+                  v-if="band.soundcloud"
+                  :href="formatSocialUrl(band.soundcloud, 'soundcloud')"
+                  target="_blank"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                >
+                  <UIcon name="i-simple-icons-soundcloud" class="w-4 h-4" />
+                  <span class="text-sm">SoundCloud</span>
+                </a>
+                <a
+                  v-if="band.bandcamp"
+                  :href="formatSocialUrl(band.bandcamp, 'bandcamp')"
+                  target="_blank"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                >
+                  <UIcon name="i-simple-icons-bandcamp" class="w-4 h-4" />
+                  <span class="text-sm">Bandcamp</span>
+                </a>
+                <a
+                  v-if="band.twitter"
+                  :href="formatSocialUrl(band.twitter, 'twitter')"
+                  target="_blank"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                >
+                  <UIcon name="i-simple-icons-x" class="w-4 h-4" />
+                  <span class="text-sm">X / Twitter</span>
+                </a>
+                <a
+                  v-if="band.tiktok"
+                  :href="formatSocialUrl(band.tiktok, 'tiktok')"
+                  target="_blank"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                >
+                  <UIcon name="i-simple-icons-tiktok" class="w-4 h-4" />
+                  <span class="text-sm">TikTok</span>
                 </a>
               </div>
             </div>
@@ -319,6 +462,27 @@ const formatNumber = (num: number): string => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
   return num.toString()
+}
+
+// Social links helpers
+const hasAnySocialLink = computed(() => {
+  return !!(band.value?.instagram || band.value?.twitter || band.value?.youtube ||
+            band.value?.spotify || band.value?.soundcloud || band.value?.bandcamp || band.value?.tiktok)
+})
+
+const formatSocialUrl = (value: string, platform: string): string => {
+  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  const username = value.replace(/^@/, '')
+  switch (platform) {
+    case 'instagram': return `https://instagram.com/${username}`
+    case 'twitter': return `https://x.com/${username}`
+    case 'youtube': return `https://youtube.com/${username}`
+    case 'spotify': return value // Usually full URLs
+    case 'soundcloud': return `https://soundcloud.com/${username}`
+    case 'bandcamp': return value // Usually full URLs
+    case 'tiktok': return `https://tiktok.com/@${username}`
+    default: return value
+  }
 }
 
 // Check follow status

@@ -24,7 +24,7 @@
         },
       }"
     >
-      <!-- Custom header for Track Moderation tab with badge -->
+      <!-- Custom header for tabs with badge -->
       <template #default="{ item, index, selected }">
         <span class="truncate">{{ item.label }}</span>
         <span
@@ -32,6 +32,12 @@
           class="ml-2 flex-shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-red-500 text-white min-w-[1.25rem]"
         >
           {{ pendingModerationCount > 99 ? '99+' : pendingModerationCount }}
+        </span>
+        <span
+          v-if="item.slot === 'artist-approvals' && pendingArtistCount > 0"
+          class="ml-2 flex-shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-orange-500 text-white min-w-[1.25rem]"
+        >
+          {{ pendingArtistCount > 99 ? '99+' : pendingArtistCount }}
         </span>
       </template>
 
@@ -328,6 +334,164 @@
                   Next
                 </UButton>
               </div>
+            </div>
+          </UCard>
+        </div>
+      </template>
+
+      <!-- Artist Approvals Tab -->
+      <template #artist-approvals>
+        <div class="py-6 space-y-6">
+          <!-- Stats Summary -->
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <UCard class="bg-zinc-900/50 border-zinc-800">
+              <div class="text-center">
+                <p class="text-3xl font-bold text-orange-400">{{ pendingArtistCount }}</p>
+                <p class="text-sm text-zinc-400">Pending Approval</p>
+              </div>
+            </UCard>
+            <UCard class="bg-zinc-900/50 border-zinc-800">
+              <div class="text-center">
+                <p class="text-3xl font-bold text-green-400">{{ pendingArtists.filter(a => a.status === 'active').length }}</p>
+                <p class="text-sm text-zinc-400">Active Artists</p>
+              </div>
+            </UCard>
+            <UCard class="bg-zinc-900/50 border-zinc-800">
+              <div class="text-center">
+                <p class="text-3xl font-bold text-red-400">{{ pendingArtists.filter(a => a.status === 'removed').length }}</p>
+                <p class="text-sm text-zinc-400">Rejected</p>
+              </div>
+            </UCard>
+          </div>
+
+          <!-- Filters -->
+          <div class="flex flex-wrap gap-4">
+            <USelectMenu
+              v-model="artistApprovalsStatusFilter"
+              :options="[
+                { label: 'Pending', value: 'pending' },
+                { label: 'Active', value: 'active' },
+                { label: 'Rejected', value: 'removed' },
+                { label: 'All', value: 'all' },
+              ]"
+              value-attribute="value"
+              option-attribute="label"
+              size="lg"
+              class="w-40"
+              @update:model-value="loadArtistApprovals"
+            />
+            <UButton color="gray" @click="loadArtistApprovals">
+              <UIcon name="i-heroicons-arrow-path" class="w-4 h-4" />
+            </UButton>
+          </div>
+
+          <!-- Artist Approvals Table -->
+          <UCard class="bg-zinc-900/50 border-zinc-800">
+            <div v-if="artistApprovalsLoading" class="flex justify-center py-12">
+              <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
+            </div>
+
+            <div v-else-if="pendingArtists.length === 0" class="text-center py-12 text-zinc-400">
+              <UIcon name="i-heroicons-check-circle" class="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No artists to review</p>
+              <p class="text-sm mt-1">{{ artistApprovalsStatusFilter === 'pending' ? 'All artist profiles have been reviewed!' : 'No artists found with this status.' }}</p>
+            </div>
+
+            <div v-else class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-zinc-800">
+                    <th class="text-left py-3 px-4 text-sm font-medium text-zinc-400">Artist</th>
+                    <th class="text-left py-3 px-4 text-sm font-medium text-zinc-400">Bio</th>
+                    <th class="text-left py-3 px-4 text-sm font-medium text-zinc-400">Owner</th>
+                    <th class="text-left py-3 px-4 text-sm font-medium text-zinc-400">Status</th>
+                    <th class="text-left py-3 px-4 text-sm font-medium text-zinc-400">Created</th>
+                    <th class="text-right py-3 px-4 text-sm font-medium text-zinc-400">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="artist in pendingArtists"
+                    :key="artist.id"
+                    class="border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer"
+                    @click="openArtistDetail(artist)"
+                  >
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-3">
+                        <div
+                          v-if="artist.avatar_url"
+                          class="w-10 h-10 rounded-full bg-cover bg-center flex-shrink-0"
+                          :style="{ backgroundImage: `url(${artist.avatar_url})` }"
+                        />
+                        <div
+                          v-else
+                          class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center flex-shrink-0"
+                        >
+                          <UIcon name="i-heroicons-user" class="w-5 h-5 text-violet-400" />
+                        </div>
+                        <div>
+                          <p class="font-medium text-zinc-100">{{ artist.name }}</p>
+                          <p v-if="artist.genres?.length" class="text-xs text-zinc-500">{{ artist.genres.slice(0, 2).join(', ') }}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 px-4 max-w-xs">
+                      <p class="text-sm text-zinc-400 truncate" :title="artist.bio || 'No bio'">
+                        {{ artist.bio || 'No bio provided' }}
+                      </p>
+                    </td>
+                    <td class="py-3 px-4">
+                      <p class="text-sm text-zinc-300">{{ artist.owner?.email || 'Unknown' }}</p>
+                    </td>
+                    <td class="py-3 px-4">
+                      <UBadge
+                        :color="artist.status === 'pending' ? 'orange' : artist.status === 'active' ? 'green' : 'red'"
+                        variant="subtle"
+                        size="xs"
+                      >
+                        {{ artist.status === 'removed' ? 'Rejected' : artist.status }}
+                      </UBadge>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-zinc-400">
+                      {{ formatDate(artist.created_at) }}
+                    </td>
+                    <td class="py-3 px-4 text-right" @click.stop>
+                      <div class="flex justify-end gap-1">
+                        <UButton
+                          v-if="artist.status === 'pending'"
+                          color="green"
+                          variant="ghost"
+                          size="xs"
+                          title="Approve"
+                          :loading="artistActionLoading"
+                          @click="approveArtist(artist)"
+                        >
+                          <UIcon name="i-heroicons-check" class="w-4 h-4" />
+                        </UButton>
+                        <UButton
+                          v-if="artist.status === 'pending'"
+                          color="red"
+                          variant="ghost"
+                          size="xs"
+                          title="Reject"
+                          @click="openRejectArtistModal(artist)"
+                        >
+                          <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+                        </UButton>
+                        <UButton
+                          color="gray"
+                          variant="ghost"
+                          size="xs"
+                          title="View Details"
+                          @click="openArtistDetail(artist)"
+                        >
+                          <UIcon name="i-heroicons-eye" class="w-4 h-4" />
+                        </UButton>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </UCard>
         </div>
@@ -869,6 +1033,273 @@
         </div>
       </template>
     </UTabs>
+
+    <!-- Reject Artist Modal -->
+    <UModal v-model="showRejectArtistModal">
+      <UCard>
+        <template #header>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-x-circle" class="w-5 h-5 text-red-400" />
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-zinc-100">Reject Artist</h3>
+              <p class="text-sm text-zinc-400">{{ artistToReject?.name }}</p>
+            </div>
+          </div>
+        </template>
+
+        <div class="space-y-4">
+          <p class="text-zinc-300">
+            Please provide a reason for rejecting this artist profile. This will be sent to the artist.
+          </p>
+          <UTextarea
+            v-model="rejectArtistReason"
+            placeholder="Enter reason for rejection..."
+            :rows="3"
+            autofocus
+          />
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <UButton
+              color="gray"
+              variant="ghost"
+              @click="showRejectArtistModal = false"
+            >
+              Cancel
+            </UButton>
+            <UButton
+              color="red"
+              :loading="artistActionLoading"
+              :disabled="!rejectArtistReason.trim()"
+              @click="rejectArtist"
+            >
+              Reject Artist
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
+
+    <!-- Artist Detail Modal -->
+    <UModal v-model="showArtistDetailModal" :ui="{ width: 'sm:max-w-2xl' }">
+      <UCard v-if="selectedArtist">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div
+                v-if="selectedArtist.avatar_url"
+                class="w-16 h-16 rounded-xl bg-cover bg-center flex-shrink-0"
+                :style="{ backgroundImage: `url(${selectedArtist.avatar_url})` }"
+              />
+              <div
+                v-else
+                class="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center flex-shrink-0"
+              >
+                <UIcon name="i-heroicons-user" class="w-8 h-8 text-violet-400" />
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold text-zinc-100">{{ selectedArtist.name }}</h3>
+                <p class="text-sm text-zinc-400">{{ selectedArtist.slug }}</p>
+              </div>
+            </div>
+            <UBadge
+              :color="selectedArtist.status === 'pending' ? 'orange' : selectedArtist.status === 'active' ? 'green' : 'red'"
+              variant="subtle"
+            >
+              {{ selectedArtist.status === 'removed' ? 'Rejected' : selectedArtist.status }}
+            </UBadge>
+          </div>
+        </template>
+
+        <div class="space-y-6">
+          <!-- Bio -->
+          <div>
+            <h4 class="text-sm font-medium text-zinc-400 mb-2">Bio</h4>
+            <p class="text-zinc-200 whitespace-pre-wrap">{{ selectedArtist.bio || 'No bio provided' }}</p>
+          </div>
+
+          <!-- Details Grid -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <h4 class="text-sm font-medium text-zinc-400 mb-1">Location</h4>
+              <p class="text-zinc-200">{{ selectedArtist.location || 'Not specified' }}</p>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium text-zinc-400 mb-1">Website</h4>
+              <p v-if="selectedArtist.website" class="text-violet-400">
+                <a :href="selectedArtist.website" target="_blank" rel="noopener" class="hover:underline">
+                  {{ selectedArtist.website }}
+                </a>
+              </p>
+              <p v-else class="text-zinc-500">Not specified</p>
+            </div>
+          </div>
+
+          <!-- Genres -->
+          <div v-if="selectedArtist.genres?.length">
+            <h4 class="text-sm font-medium text-zinc-400 mb-2">Genres</h4>
+            <div class="flex flex-wrap gap-2">
+              <UBadge
+                v-for="genre in selectedArtist.genres"
+                :key="genre"
+                color="violet"
+                variant="soft"
+              >
+                {{ genre }}
+              </UBadge>
+            </div>
+          </div>
+
+          <!-- Social Links -->
+          <div v-if="hasAnySocialLink(selectedArtist)">
+            <h4 class="text-sm font-medium text-zinc-400 mb-3">Social Links</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <a
+                v-if="selectedArtist.instagram"
+                :href="formatSocialUrl(selectedArtist.instagram, 'instagram')"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center gap-2 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+              >
+                <UIcon name="i-simple-icons-instagram" class="w-5 h-5 text-pink-400" />
+                <span class="text-sm text-zinc-200 truncate">{{ selectedArtist.instagram }}</span>
+                <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 text-zinc-500 ml-auto" />
+              </a>
+              <a
+                v-if="selectedArtist.spotify"
+                :href="formatSocialUrl(selectedArtist.spotify, 'spotify')"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center gap-2 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+              >
+                <UIcon name="i-simple-icons-spotify" class="w-5 h-5 text-green-400" />
+                <span class="text-sm text-zinc-200 truncate">Spotify</span>
+                <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 text-zinc-500 ml-auto" />
+              </a>
+              <a
+                v-if="selectedArtist.youtube"
+                :href="formatSocialUrl(selectedArtist.youtube, 'youtube')"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center gap-2 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+              >
+                <UIcon name="i-simple-icons-youtube" class="w-5 h-5 text-red-500" />
+                <span class="text-sm text-zinc-200 truncate">YouTube</span>
+                <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 text-zinc-500 ml-auto" />
+              </a>
+              <a
+                v-if="selectedArtist.soundcloud"
+                :href="formatSocialUrl(selectedArtist.soundcloud, 'soundcloud')"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center gap-2 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+              >
+                <UIcon name="i-simple-icons-soundcloud" class="w-5 h-5 text-orange-400" />
+                <span class="text-sm text-zinc-200 truncate">SoundCloud</span>
+                <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 text-zinc-500 ml-auto" />
+              </a>
+              <a
+                v-if="selectedArtist.bandcamp"
+                :href="formatSocialUrl(selectedArtist.bandcamp, 'bandcamp')"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center gap-2 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+              >
+                <UIcon name="i-simple-icons-bandcamp" class="w-5 h-5 text-teal-400" />
+                <span class="text-sm text-zinc-200 truncate">Bandcamp</span>
+                <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 text-zinc-500 ml-auto" />
+              </a>
+              <a
+                v-if="selectedArtist.twitter"
+                :href="formatSocialUrl(selectedArtist.twitter, 'twitter')"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center gap-2 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+              >
+                <UIcon name="i-simple-icons-x" class="w-5 h-5 text-zinc-300" />
+                <span class="text-sm text-zinc-200 truncate">{{ selectedArtist.twitter }}</span>
+                <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 text-zinc-500 ml-auto" />
+              </a>
+              <a
+                v-if="selectedArtist.tiktok"
+                :href="formatSocialUrl(selectedArtist.tiktok, 'tiktok')"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center gap-2 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+              >
+                <UIcon name="i-simple-icons-tiktok" class="w-5 h-5 text-zinc-300" />
+                <span class="text-sm text-zinc-200 truncate">{{ selectedArtist.tiktok }}</span>
+                <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 text-zinc-500 ml-auto" />
+              </a>
+              <a
+                v-if="selectedArtist.facebook"
+                :href="formatSocialUrl(selectedArtist.facebook, 'facebook')"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center gap-2 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+              >
+                <UIcon name="i-simple-icons-facebook" class="w-5 h-5 text-blue-400" />
+                <span class="text-sm text-zinc-200 truncate">Facebook</span>
+                <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 text-zinc-500 ml-auto" />
+              </a>
+            </div>
+          </div>
+
+          <!-- No Social Links Warning -->
+          <div v-else class="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-yellow-400" />
+              <p class="text-sm text-yellow-200">No social links provided - verification may be difficult</p>
+            </div>
+          </div>
+
+          <!-- Owner Info -->
+          <div class="p-4 bg-zinc-800/50 rounded-lg">
+            <h4 class="text-sm font-medium text-zinc-400 mb-2">Submitted By</h4>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-zinc-200">{{ selectedArtist.owner?.display_name || selectedArtist.owner?.email || 'Unknown' }}</p>
+                <p v-if="selectedArtist.owner?.display_name" class="text-sm text-zinc-500">{{ selectedArtist.owner?.email }}</p>
+              </div>
+              <p class="text-sm text-zinc-400">{{ formatDate(selectedArtist.created_at) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-between">
+            <UButton
+              color="gray"
+              variant="ghost"
+              @click="showArtistDetailModal = false"
+            >
+              Close
+            </UButton>
+            <div v-if="selectedArtist.status === 'pending'" class="flex gap-2">
+              <UButton
+                color="red"
+                variant="soft"
+                @click="showArtistDetailModal = false; openRejectArtistModal(selectedArtist)"
+              >
+                <UIcon name="i-heroicons-x-mark" class="w-4 h-4 mr-1" />
+                Reject
+              </UButton>
+              <UButton
+                color="green"
+                :loading="artistActionLoading"
+                @click="approveArtist(selectedArtist); showArtistDetailModal = false"
+              >
+                <UIcon name="i-heroicons-check" class="w-4 h-4 mr-1" />
+                Approve Artist
+              </UButton>
+            </div>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
 
     <!-- Track Detail Modal -->
     <UModal v-model="showTrackDetailModal" :ui="{ width: 'sm:max-w-3xl' }">
@@ -1433,6 +1864,12 @@ const tabs = computed(() => [
     icon: 'i-heroicons-shield-check',
     badge: pendingModerationCount.value > 0 ? pendingModerationCount.value : undefined,
   },
+  {
+    label: 'Artist Approvals',
+    slot: 'artist-approvals',
+    icon: 'i-heroicons-user-plus',
+    badge: pendingArtistCount.value > 0 ? pendingArtistCount.value : undefined,
+  },
   { label: 'Users', slot: 'users', icon: 'i-heroicons-users' },
   { label: 'Artists', slot: 'artists', icon: 'i-heroicons-musical-note' },
   { label: 'Payouts', slot: 'payouts', icon: 'i-heroicons-banknotes' },
@@ -1441,6 +1878,9 @@ const tabs = computed(() => [
 
 // Pending moderation count (fetched separately for badge)
 const pendingModerationCount = ref(0)
+
+// Pending artist approvals count
+const pendingArtistCount = ref(0)
 
 // Stats
 const statsLoading = ref(true)
@@ -1573,6 +2013,45 @@ const showTrackDetailModal = ref(false)
 const selectedQueueItem = ref<ModerationQueueItem | null>(null)
 const loadingTrackDetail = ref(false)
 
+// Artist Approvals Queue
+interface PendingArtist {
+  id: string
+  name: string
+  slug: string
+  bio: string | null
+  location: string | null
+  website: string | null
+  avatar_key: string | null
+  avatar_url: string | null
+  genres: string[]
+  status: string
+  created_at: string
+  // Social links
+  instagram: string | null
+  twitter: string | null
+  facebook: string | null
+  youtube: string | null
+  spotify: string | null
+  soundcloud: string | null
+  bandcamp: string | null
+  tiktok: string | null
+  owner: {
+    id: string
+    email: string
+    display_name: string | null
+  } | null
+}
+
+const pendingArtists = ref<PendingArtist[]>([])
+const artistApprovalsLoading = ref(false)
+const artistApprovalsStatusFilter = ref('pending')
+const showRejectArtistModal = ref(false)
+const artistToReject = ref<PendingArtist | null>(null)
+const rejectArtistReason = ref('')
+const artistActionLoading = ref(false)
+const showArtistDetailModal = ref(false)
+const selectedArtist = ref<PendingArtist | null>(null)
+
 // Moderation actions
 const moderationActionLoading = ref(false)
 const moderationNotes = ref('')
@@ -1673,6 +2152,53 @@ const formatDate = (dateStr: string): string => {
     month: 'short',
     day: 'numeric',
   })
+}
+
+// Check if artist has any social links
+const hasAnySocialLink = (artist: PendingArtist): boolean => {
+  return !!(
+    artist.instagram ||
+    artist.twitter ||
+    artist.facebook ||
+    artist.youtube ||
+    artist.spotify ||
+    artist.soundcloud ||
+    artist.bandcamp ||
+    artist.tiktok
+  )
+}
+
+// Format social URL (handle both usernames and full URLs)
+const formatSocialUrl = (value: string, platform: string): string => {
+  // If it already looks like a URL, return as-is
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    return value
+  }
+
+  // Remove @ if present
+  const username = value.replace(/^@/, '')
+
+  // Build URL based on platform
+  switch (platform) {
+    case 'instagram':
+      return `https://instagram.com/${username}`
+    case 'twitter':
+      return `https://x.com/${username}`
+    case 'tiktok':
+      return `https://tiktok.com/@${username}`
+    case 'facebook':
+      return `https://facebook.com/${username}`
+    case 'youtube':
+      return `https://youtube.com/${username}`
+    case 'spotify':
+      return value // Spotify URLs are complex, assume they passed a full URL
+    case 'soundcloud':
+      return `https://soundcloud.com/${username}`
+    case 'bandcamp':
+      return `https://${username}.bandcamp.com`
+    default:
+      return value
+  }
 }
 
 // Load stats
@@ -2253,6 +2779,112 @@ const loadModerationQueue = async (page = 1) => {
   }
 }
 
+// Load artist approvals queue
+const loadArtistApprovals = async () => {
+  artistApprovalsLoading.value = true
+  try {
+    const data = await $fetch<{
+      bands: PendingArtist[]
+      total: number
+      pendingCount: number
+    }>('/api/admin/artist-approvals', {
+      query: {
+        status: artistApprovalsStatusFilter.value,
+      },
+    })
+
+    pendingArtists.value = data.bands
+    pendingArtistCount.value = data.pendingCount
+  } catch (e: any) {
+    console.error('Failed to load artist approvals:', e)
+    toast.add({
+      title: 'Failed to load artist approvals',
+      description: e.message,
+      color: 'red',
+    })
+  } finally {
+    artistApprovalsLoading.value = false
+  }
+}
+
+// Approve artist
+const approveArtist = async (artist: PendingArtist) => {
+  artistActionLoading.value = true
+  try {
+    await $fetch(`/api/admin/artist-approvals/${artist.id}/approve`, {
+      method: 'POST',
+    })
+
+    toast.add({
+      title: 'Artist Approved',
+      description: `${artist.name} has been approved`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+    })
+
+    // Reload the list
+    await loadArtistApprovals()
+  } catch (e: any) {
+    console.error('Failed to approve artist:', e)
+    toast.add({
+      title: 'Failed to approve artist',
+      description: e.message,
+      color: 'red',
+    })
+  } finally {
+    artistActionLoading.value = false
+  }
+}
+
+// Open reject artist modal
+// Open artist detail modal
+const openArtistDetail = (artist: PendingArtist) => {
+  selectedArtist.value = artist
+  showArtistDetailModal.value = true
+}
+
+const openRejectArtistModal = (artist: PendingArtist) => {
+  artistToReject.value = artist
+  rejectArtistReason.value = ''
+  showRejectArtistModal.value = true
+}
+
+// Reject artist
+const rejectArtist = async () => {
+  if (!artistToReject.value || !rejectArtistReason.value.trim()) return
+
+  artistActionLoading.value = true
+  try {
+    await $fetch(`/api/admin/artist-approvals/${artistToReject.value.id}/reject`, {
+      method: 'POST',
+      body: { reason: rejectArtistReason.value },
+    })
+
+    toast.add({
+      title: 'Artist Rejected',
+      description: `${artistToReject.value.name} has been rejected`,
+      color: 'red',
+      icon: 'i-heroicons-x-circle',
+    })
+
+    showRejectArtistModal.value = false
+    artistToReject.value = null
+    rejectArtistReason.value = ''
+
+    // Reload the list
+    await loadArtistApprovals()
+  } catch (e: any) {
+    console.error('Failed to reject artist:', e)
+    toast.add({
+      title: 'Failed to reject artist',
+      description: e.message,
+      color: 'red',
+    })
+  } finally {
+    artistActionLoading.value = false
+  }
+}
+
 // Helper functions
 const getStatusColor = (status: string): string => {
   switch (status) {
@@ -2589,6 +3221,7 @@ onMounted(() => {
   loadUsers()
   loadBands()
   loadModerationQueue()
+  loadArtistApprovals()
   fetchPendingCount()
   loadPlatformSettings()
   applyPreset('last-quarter')

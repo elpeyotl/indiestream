@@ -1,5 +1,36 @@
 <template>
   <div v-if="band" class="container mx-auto px-4 py-8">
+    <!-- Pending Approval Banner -->
+    <div v-if="band.status === 'pending'" class="mb-6 p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+          <UIcon name="i-heroicons-clock" class="w-5 h-5 text-orange-400" />
+        </div>
+        <div>
+          <h3 class="font-semibold text-orange-200">Profile Pending Approval</h3>
+          <p class="text-sm text-orange-200/80 mt-1">
+            Your artist profile is being reviewed by our team. You'll receive a notification once it's approved.
+            Until then, your profile won't be visible to other users and you won't be able to upload music.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suspended Banner -->
+    <div v-if="band.status === 'suspended'" class="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-400" />
+        </div>
+        <div>
+          <h3 class="font-semibold text-red-200">Profile Suspended</h3>
+          <p class="text-sm text-red-200/80 mt-1">
+            Your artist profile has been suspended. Please contact support for more information.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Header -->
     <div class="flex items-start justify-between mb-8">
       <div>
@@ -28,6 +59,9 @@
           <div>
             <div class="flex items-center gap-2">
               <h1 class="text-2xl font-bold text-zinc-100">{{ band.name }}</h1>
+              <UBadge v-if="band.status === 'pending'" color="orange" variant="subtle" size="xs">
+                Pending
+              </UBadge>
               <UIcon
                 v-if="band.is_verified"
                 name="i-heroicons-check-badge"
@@ -35,6 +69,7 @@
               />
             </div>
             <NuxtLink
+              v-if="band.status === 'active'"
               :to="`/${band.slug}`"
               class="text-sm text-violet-400 hover:text-violet-300"
               target="_blank"
@@ -42,11 +77,19 @@
               indiestream.art/{{ band.slug }}
               <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 inline" />
             </NuxtLink>
+            <span v-else class="text-sm text-zinc-500">
+              indiestream.art/{{ band.slug }} (not visible until approved)
+            </span>
           </div>
         </div>
       </div>
 
-      <UButton color="violet" to="/dashboard/artist/upload">
+      <UButton
+        color="violet"
+        :to="band.status === 'active' ? '/dashboard/artist/upload' : undefined"
+        :disabled="band.status !== 'active'"
+        :title="band.status !== 'active' ? 'You can upload music once your profile is approved' : ''"
+      >
         <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
         Upload Music
       </UButton>
@@ -90,8 +133,13 @@
               <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-violet-400" />
             </div>
             <h3 class="text-lg font-semibold text-zinc-100 mb-2">No releases yet</h3>
-            <p class="text-zinc-400 mb-6">Upload your first album or single to get started.</p>
-            <UButton color="violet" to="/dashboard/artist/upload">
+            <p v-if="band?.status === 'active'" class="text-zinc-400 mb-6">Upload your first album or single to get started.</p>
+            <p v-else class="text-zinc-400 mb-6">Once your profile is approved, you'll be able to upload music here.</p>
+            <UButton
+              color="violet"
+              :to="band?.status === 'active' ? '/dashboard/artist/upload' : undefined"
+              :disabled="band?.status !== 'active'"
+            >
               <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
               Upload Music
             </UButton>
@@ -618,8 +666,118 @@
                 size="lg"
                 placeholder="https://yourwebsite.com"
                 :disabled="saving"
-              />
+              >
+                <template #leading>
+                  <UIcon name="i-heroicons-globe-alt" class="w-4 h-4 text-zinc-400" />
+                </template>
+              </UInput>
             </UFormGroup>
+
+            <!-- Social Links Section -->
+            <div class="border-t border-zinc-800 pt-6 mt-2">
+              <h3 class="text-lg font-semibold text-zinc-100 mb-1">Social Links</h3>
+              <p class="text-sm text-zinc-400 mb-4">Connect with your fans on other platforms</p>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Instagram -->
+                <UFormGroup label="Instagram">
+                  <UInput
+                    v-model="editForm.instagram"
+                    placeholder="@username or full URL"
+                    size="lg"
+                    :disabled="saving"
+                  >
+                    <template #leading>
+                      <UIcon name="i-simple-icons-instagram" class="w-4 h-4 text-zinc-400" />
+                    </template>
+                  </UInput>
+                </UFormGroup>
+
+                <!-- Spotify -->
+                <UFormGroup label="Spotify">
+                  <UInput
+                    v-model="editForm.spotify"
+                    placeholder="Spotify artist URL"
+                    size="lg"
+                    :disabled="saving"
+                  >
+                    <template #leading>
+                      <UIcon name="i-simple-icons-spotify" class="w-4 h-4 text-zinc-400" />
+                    </template>
+                  </UInput>
+                </UFormGroup>
+
+                <!-- YouTube -->
+                <UFormGroup label="YouTube">
+                  <UInput
+                    v-model="editForm.youtube"
+                    placeholder="YouTube channel URL"
+                    size="lg"
+                    :disabled="saving"
+                  >
+                    <template #leading>
+                      <UIcon name="i-simple-icons-youtube" class="w-4 h-4 text-zinc-400" />
+                    </template>
+                  </UInput>
+                </UFormGroup>
+
+                <!-- SoundCloud -->
+                <UFormGroup label="SoundCloud">
+                  <UInput
+                    v-model="editForm.soundcloud"
+                    placeholder="SoundCloud profile URL"
+                    size="lg"
+                    :disabled="saving"
+                  >
+                    <template #leading>
+                      <UIcon name="i-simple-icons-soundcloud" class="w-4 h-4 text-zinc-400" />
+                    </template>
+                  </UInput>
+                </UFormGroup>
+
+                <!-- Bandcamp -->
+                <UFormGroup label="Bandcamp">
+                  <UInput
+                    v-model="editForm.bandcamp"
+                    placeholder="Bandcamp page URL"
+                    size="lg"
+                    :disabled="saving"
+                  >
+                    <template #leading>
+                      <UIcon name="i-simple-icons-bandcamp" class="w-4 h-4 text-zinc-400" />
+                    </template>
+                  </UInput>
+                </UFormGroup>
+
+                <!-- Twitter/X -->
+                <UFormGroup label="Twitter / X">
+                  <UInput
+                    v-model="editForm.twitter"
+                    placeholder="@username or full URL"
+                    size="lg"
+                    :disabled="saving"
+                  >
+                    <template #leading>
+                      <UIcon name="i-simple-icons-x" class="w-4 h-4 text-zinc-400" />
+                    </template>
+                  </UInput>
+                </UFormGroup>
+
+                <!-- TikTok -->
+                <UFormGroup label="TikTok">
+                  <UInput
+                    v-model="editForm.tiktok"
+                    placeholder="@username or full URL"
+                    size="lg"
+                    :disabled="saving"
+                  >
+                    <template #leading>
+                      <UIcon name="i-simple-icons-tiktok" class="w-4 h-4 text-zinc-400" />
+                    </template>
+                  </UInput>
+                </UFormGroup>
+              </div>
+            </div>
 
             <!-- Genres -->
             <UFormGroup label="Genres">
@@ -1190,6 +1348,14 @@ const editForm = reactive({
   website: '',
   theme_color: '#8B5CF6',
   genres: [] as string[],
+  // Social links
+  instagram: '',
+  twitter: '',
+  youtube: '',
+  spotify: '',
+  soundcloud: '',
+  bandcamp: '',
+  tiktok: '',
 })
 
 // Album edit/delete state
@@ -1809,6 +1975,14 @@ const saveSettings = async () => {
       website: editForm.website || undefined,
       theme_color: editForm.theme_color,
       genres: editForm.genres,
+      // Social links
+      instagram: editForm.instagram || undefined,
+      twitter: editForm.twitter || undefined,
+      youtube: editForm.youtube || undefined,
+      spotify: editForm.spotify || undefined,
+      soundcloud: editForm.soundcloud || undefined,
+      bandcamp: editForm.bandcamp || undefined,
+      tiktok: editForm.tiktok || undefined,
     })
     band.value = updated
     toast.add({ title: 'Settings saved', color: 'green', icon: 'i-heroicons-check-circle' })
@@ -2131,6 +2305,14 @@ onMounted(async () => {
       editForm.website = band.value.website || ''
       editForm.theme_color = band.value.theme_color || '#8B5CF6'
       editForm.genres = [...(band.value.genres || [])]
+      // Social links
+      editForm.instagram = band.value.instagram || ''
+      editForm.twitter = band.value.twitter || ''
+      editForm.youtube = band.value.youtube || ''
+      editForm.spotify = band.value.spotify || ''
+      editForm.soundcloud = band.value.soundcloud || ''
+      editForm.bandcamp = band.value.bandcamp || ''
+      editForm.tiktok = band.value.tiktok || ''
 
       // Load avatar URL from key if available
       if (band.value.avatar_key) {

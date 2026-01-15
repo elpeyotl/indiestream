@@ -22,7 +22,8 @@
         </div>
 
         <div v-else-if="bands.length === 0" class="text-center py-8">
-          <p class="text-zinc-400 mb-4">You need an artist profile to upload music.</p>
+          <p class="text-zinc-400 mb-4">You need an approved artist profile to upload music.</p>
+          <p class="text-sm text-zinc-500 mb-4">If your profile is pending approval, please wait for an admin to review it.</p>
           <UButton color="violet" to="/dashboard/artist/new">
             Create Artist Profile
           </UButton>
@@ -633,7 +634,8 @@ onMounted(async () => {
         }
       }
     }
-    bands.value = loadedBands
+    // Only show active bands (pending/suspended can't upload)
+    bands.value = loadedBands.filter(b => b.status === 'active')
   } catch (e) {
     console.error('Failed to load bands:', e)
   } finally {

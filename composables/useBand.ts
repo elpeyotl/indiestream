@@ -15,11 +15,21 @@ export interface Band {
   theme_color: string
   genres: string[]
   is_verified: boolean
+  status: 'pending' | 'active' | 'suspended' | 'removed'
   total_streams: number
   total_earnings_cents: number
   follower_count: number
   created_at: string
   updated_at: string
+  // Social links
+  instagram: string | null
+  twitter: string | null
+  facebook: string | null
+  youtube: string | null
+  spotify: string | null
+  soundcloud: string | null
+  bandcamp: string | null
+  tiktok: string | null
 }
 
 export interface CreateBandInput {
@@ -28,6 +38,16 @@ export interface CreateBandInput {
   bio?: string
   location?: string
   genres?: string[]
+  // Social links
+  website?: string
+  instagram?: string
+  twitter?: string
+  facebook?: string
+  youtube?: string
+  spotify?: string
+  soundcloud?: string
+  bandcamp?: string
+  tiktok?: string
 }
 
 export interface UpdateBandInput {
@@ -41,6 +61,15 @@ export interface UpdateBandInput {
   banner_key?: string
   theme_color?: string
   genres?: string[]
+  // Social links
+  instagram?: string
+  twitter?: string
+  facebook?: string
+  youtube?: string
+  spotify?: string
+  soundcloud?: string
+  bandcamp?: string
+  tiktok?: string
 }
 
 export const useBand = () => {
@@ -124,6 +153,16 @@ export const useBand = () => {
         bio: input.bio || null,
         location: input.location || null,
         genres: input.genres || [],
+        // Social links
+        website: input.website || null,
+        instagram: input.instagram || null,
+        twitter: input.twitter || null,
+        facebook: input.facebook || null,
+        youtube: input.youtube || null,
+        spotify: input.spotify || null,
+        soundcloud: input.soundcloud || null,
+        bandcamp: input.bandcamp || null,
+        tiktok: input.tiktok || null,
       })
       .select()
       .single()
