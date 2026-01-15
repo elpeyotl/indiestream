@@ -150,7 +150,7 @@
 
 ## Database Migrations to Run
 All migrations should be run in Supabase SQL Editor in order:
-1. `20260111150000_initial_schema.sql` - Core tables
+1. `20260111150000_initial_schema.sql` - Core tables (includes moderation_queue table)
 2. `20260111160000_add_storage_keys.sql` - R2 storage columns
 3. `20260111170000_listening_history.sql` - Listening history table
 4. `20260111180000_add_avatar_banner_keys.sql` - Avatar/banner keys for bands
@@ -160,11 +160,30 @@ All migrations should be run in Supabase SQL Editor in order:
 8. `20260112130000_add_subscriptions.sql` - Stripe subscription fields
 9. `20260112140000_add_free_tier_tracking.sql` - Free tier with 5 plays/month
 10. `20260113_add_rights_metadata.sql` - ISRC/ISWC, track credits, album rights metadata
-11. `20260114_artist_payouts.sql` - Stripe Connect, artist balances, payouts tables
-12. `20260115_playlists.sql` - Collaborative playlists with owner/editor/viewer roles
-13. `20260114000000_add_profile_fields.sql` - User profile fields (avatar_key, bio, location, website)
-14. `20260115150000_impact_sharing.sql` - Impact sharing tokens and public profile visibility
-15. `20260116000000_admin_artist_management.sql` - Admin artist management (feature, verify, suspend, flags)
+11. `20260114000000_add_profile_fields.sql` - User profile fields (avatar_key, bio, location, website)
+12. `20260114_artist_payouts.sql` - Stripe Connect, artist balances, payouts tables
+13. `20260115120000_playlists.sql` - Collaborative playlists with owner/editor/viewer roles
+14. `20260115130000_fix_playlist_rls.sql` - Fix playlist RLS policies
+15. `20260115140000_fix_all_playlist_rls.sql` - Fix all playlist RLS policies
+16. `20260115150000_impact_sharing.sql` - Impact sharing tokens and public profile visibility
+17. `20260115_artist_own_music_exemption.sql` - Artists can listen to own music unlimited
+18. `20260116000000_admin_artist_management.sql` - Admin artist management (feature, verify, suspend, flags)
+19. `20260116_transparent_revenue_split.sql` - Transparent 70/15/15 revenue split
+20. `20260117000000_moderation_queue_trigger.sql` - Auto-populate moderation queue on track upload
+21. `20260117_backfill_country_codes.sql` - Backfill country codes
+22. `20260118000000_platform_settings.sql` - Platform settings table for admin config
+23. `20260118_unique_isrc.sql` - Unique ISRC constraint
+24. `20260119_remove_share_percentage.sql` - Remove share percentage from credits
+25. `20260120_user_level_stripe.sql` - User-level Stripe Connect
+26. `20260121000000_notifications.sql` - Notifications table
+27. `20260121000001_notifications_realtime.sql` - Enable realtime for notifications
+28. `20260122000000_artist_approval.sql` - Artist approval workflow
+29. `20260122000001_fix_bands_status_constraint.sql` - Fix bands status constraint
+30. `20260123000000_artist_social_links.sql` - Artist social media links
+31. `20260124000000_notifications_delete_policy.sql` - Notifications delete policy
+32. `20260125000000_moderation_queue_unique_track.sql` - Unique track constraint on moderation queue
+33. `20260125000001_pending_update_status.sql` - Add pending_update status for re-review
+34. `20260125000002_pending_update_rls.sql` - RLS for pending_update status
 
 ---
 
