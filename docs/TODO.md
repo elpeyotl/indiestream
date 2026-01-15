@@ -9,6 +9,7 @@
 - [x] Track upload with audio files to R2
 - [x] Audio player with queue management
 - [x] Player controls: shuffle, repeat (off/all/one), heart/favorite
+- [x] Media Session API (lock screen controls on mobile)
 - [x] Stream tracking (counts after 30 seconds)
 - [x] Listening history for logged-in users
 
@@ -97,9 +98,9 @@
 - [x] Change user roles (user/artist/admin)
 - [x] PRO export for SUISA/GEMA reporting (CSV with ISRC, composers, territories)
 - [x] Artist/band management (list, delete, feature/unfeature, full edit, verify, suspend)
-- [ ] Content moderation queue (review flagged/new uploads)
-- [ ] Track approval workflow
-- [ ] Artist verification system (submission workflow)
+- [x] Content moderation queue (review flagged/new uploads)
+- [x] Track approval workflow (pending → approved/rejected, re-review on edits)
+- [x] Artist verification system (admin can verify artists with badge)
 - [ ] Revenue dashboard (subscriptions, payouts)
 - [ ] Growth metrics over time
 
