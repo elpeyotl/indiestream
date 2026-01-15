@@ -9,19 +9,27 @@ export default <RouterConfig>{
       return new Promise((resolve) => {
         setTimeout(() => {
           resolve(savedPosition)
-        }, 100)
+        }, 250) // Match page transition duration
       })
     }
 
     // If navigating to a hash, scroll to element
     if (to.hash) {
-      return {
-        el: to.hash,
-        behavior: 'smooth',
-      }
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            el: to.hash,
+            behavior: 'smooth',
+          })
+        }, 250)
+      })
     }
 
-    // For new page navigations, scroll to top
-    return { top: 0, behavior: 'instant' }
+    // For new page navigations, scroll to top immediately
+    // Use window.scrollTo for instant scroll before transition
+    if (import.meta.client) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+    return { top: 0, left: 0 }
   },
 }
