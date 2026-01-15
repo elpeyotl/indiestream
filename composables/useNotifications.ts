@@ -95,6 +95,25 @@ export const useNotifications = () => {
     }
   }
 
+  // Delete a notification
+  const deleteNotification = async (id: string) => {
+    try {
+      // Check if notification was unread before deleting
+      const notification = notifications.value.find(n => n.id === id)
+      const wasUnread = notification && !notification.read
+
+      await $fetch(`/api/notifications/${id}`, { method: 'DELETE' })
+
+      // Update local state
+      notifications.value = notifications.value.filter(n => n.id !== id)
+      if (wasUnread) {
+        unreadCount.value = Math.max(0, unreadCount.value - 1)
+      }
+    } catch (e) {
+      console.error('Failed to delete notification:', e)
+    }
+  }
+
   // Get icon for notification type
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -187,6 +206,7 @@ export const useNotifications = () => {
     fetchNotifications,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
     getNotificationIcon,
     getNotificationColor,
     formatTime,

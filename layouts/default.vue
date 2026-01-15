@@ -141,20 +141,22 @@
                       </div>
 
                       <div v-else>
-                        <NuxtLink
+                        <div
                           v-for="notification in notifications"
                           :key="notification.id"
-                          :to="notification.link || '#'"
-                          class="block px-4 py-3 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/50 last:border-b-0"
+                          class="group relative px-4 py-3 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/50 last:border-b-0 cursor-pointer"
                           :class="{ 'bg-zinc-800/30': !notification.read }"
                           @click="handleNotificationClick(notification)"
                         >
-                          <div class="flex gap-3">
+                          <NuxtLink
+                            :to="notification.link || '#'"
+                            class="flex gap-3"
+                          >
                             <UIcon
                               :name="getNotificationIcon(notification.type)"
                               :class="['w-5 h-5 mt-0.5 flex-shrink-0', getNotificationColor(notification.type)]"
                             />
-                            <div class="flex-1 min-w-0">
+                            <div class="flex-1 min-w-0 pr-6">
                               <p class="font-medium text-sm text-zinc-100">
                                 {{ notification.title }}
                               </p>
@@ -169,8 +171,15 @@
                               v-if="!notification.read"
                               class="w-2 h-2 bg-violet-500 rounded-full flex-shrink-0 mt-2"
                             />
-                          </div>
-                        </NuxtLink>
+                          </NuxtLink>
+                          <!-- Delete button -->
+                          <button
+                            class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-zinc-700 transition-all text-zinc-400 hover:text-zinc-200"
+                            @click.stop.prevent="deleteNotification(notification.id)"
+                          >
+                            <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -351,6 +360,7 @@ const {
   fetchNotifications,
   markAsRead,
   markAllAsRead,
+  deleteNotification,
   getNotificationIcon,
   getNotificationColor,
   formatTime,
