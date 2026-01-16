@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.14.3] - 2026-01-16
+
+### Added
+- **Admin Payout System Improvements**:
+  - Selective artist payouts: Choose which artists to pay instead of paying all at once
+  - Payout history view showing all completed, pending, and failed payouts
+  - Individual loading states for "Pay Selected" and "Pay All" buttons
+- **My Profile link** in user menu (avatar dropdown)
+- **Payment History button** on dashboard subscription card
+
+### Changed
+- Subscription card UI simplified - removed redundant navigation buttons
+- Settings page: Save button moved to bottom after all settings for clarity
+- Payout calculations now correctly handle recalculation without doubling balances
+
+### Fixed
+- **Impact stats not showing on public profile**: API now correctly saves and reads `show_impact_publicly` setting
+- Stripe payout currency changed from USD to CHF to match account configuration
+- Payouts table now allows null period columns for combined user payouts
+
 ## [0.14.2] - 2026-01-16
 
 ### Added

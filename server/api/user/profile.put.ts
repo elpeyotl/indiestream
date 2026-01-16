@@ -28,15 +28,22 @@ export default defineEventHandler(async (event) => {
 
   const client = await serverSupabaseClient(event)
 
+  const updateData: Record<string, any> = {
+    display_name: body.displayName,
+    bio: body.bio,
+    location: body.location,
+    website: body.website,
+    updated_at: new Date().toISOString()
+  }
+
+  // Only include show_impact_publicly if explicitly provided
+  if (typeof body.showImpactPublicly === 'boolean') {
+    updateData.show_impact_publicly = body.showImpactPublicly
+  }
+
   const { data, error } = await client
     .from('profiles')
-    .update({
-      display_name: body.displayName,
-      bio: body.bio,
-      location: body.location,
-      website: body.website,
-      updated_at: new Date().toISOString()
-    })
+    .update(updateData)
     .eq('id', user.id)
     .select()
     .single()
@@ -58,6 +65,7 @@ export default defineEventHandler(async (event) => {
     location: data.location,
     website: data.website,
     role: data.role,
-    createdAt: data.created_at
+    createdAt: data.created_at,
+    showImpactPublicly: data.show_impact_publicly || false
   }
 })

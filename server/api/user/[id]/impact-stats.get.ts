@@ -17,11 +17,15 @@ export default defineEventHandler(async (event) => {
     .single()
 
   if (profileError || !profile) {
+    console.log('[impact-stats] Profile not found for user:', userId, profileError)
     throw createError({ statusCode: 404, statusMessage: 'User not found' })
   }
 
+  console.log('[impact-stats] User profile:', { userId, show_impact_publicly: profile.show_impact_publicly })
+
   if (!profile.show_impact_publicly) {
     // User has not opted in - return null (not an error)
+    console.log('[impact-stats] User has not opted in to public impact')
     return { impactPublic: false, stats: null }
   }
 
@@ -36,10 +40,12 @@ export default defineEventHandler(async (event) => {
     .eq('user_id', userId)
     .single()
 
+  console.log('[impact-stats] Subscription:', subscription)
   const isSubscribed = subscription && ['active', 'trialing'].includes(subscription.status)
 
   if (!isSubscribed) {
     // User is not subscribed, no impact to show
+    console.log('[impact-stats] User not subscribed')
     return { impactPublic: true, stats: null }
   }
 

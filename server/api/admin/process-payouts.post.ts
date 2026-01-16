@@ -164,9 +164,10 @@ export default defineEventHandler(async (event) => {
 
       try {
         // Create single Stripe transfer for all user's bands
+        // Note: Using CHF as that's the platform's default currency
         const transfer = await stripe.transfers.create({
           amount,
-          currency: 'usd',
+          currency: 'chf',
           destination: stripeAccountId,
           description: `Indiestream payout for ${userName} (${ownerData.bands.length} artist${ownerData.bands.length > 1 ? 's' : ''})`,
           metadata: {

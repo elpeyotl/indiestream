@@ -256,6 +256,15 @@
                       </NuxtLink>
 
                       <NuxtLink
+                        :to="`/user/${user?.id}`"
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 transition-colors"
+                        @click="userMenuOpen = false"
+                      >
+                        <UIcon name="i-heroicons-user-circle" class="w-5 h-5 text-zinc-400" />
+                        <span class="text-zinc-100">My Profile</span>
+                      </NuxtLink>
+
+                      <NuxtLink
                         to="/dashboard/settings"
                         class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 transition-colors"
                         @click="userMenuOpen = false"

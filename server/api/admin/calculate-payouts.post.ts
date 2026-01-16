@@ -168,8 +168,23 @@ export default defineEventHandler(async (event) => {
     // Create or update revenue period
     let periodId: string
 
+    // Track old earnings to subtract from balances when recalculating
+    const oldEarningsByBand = new Map<string, number>()
+
     if (existingPeriod) {
       periodId = existingPeriod.id
+
+      // Get old earnings before deleting (to subtract from balances)
+      const { data: oldEarnings } = await serviceClient
+        .from('artist_earnings')
+        .select('band_id, gross_earnings_cents')
+        .eq('revenue_period_id', periodId)
+
+      if (oldEarnings) {
+        for (const e of oldEarnings) {
+          oldEarningsByBand.set(e.band_id, e.gross_earnings_cents)
+        }
+      }
 
       // Delete existing earnings for this period
       await serviceClient
@@ -234,33 +249,39 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Failed to save artist earnings' })
     }
 
-    // Update artist balances
+    // Update artist balances using upsert
+    // When recalculating, subtract old earnings first, then add new
     for (const [bandId, data] of artistEarnings) {
-      await serviceClient
-        .from('artist_balances')
-        .upsert({
-          band_id: bandId,
-          balance_cents: data.grossCents,
-          lifetime_earnings_cents: data.grossCents,
-        }, {
-          onConflict: 'band_id',
-        })
-
-      // If record exists, add to existing balance
+      // First check if record exists to get current balance
       const { data: existing } = await serviceClient
         .from('artist_balances')
         .select('balance_cents, lifetime_earnings_cents')
         .eq('band_id', bandId)
-        .single()
+        .maybeSingle()
 
-      if (existing) {
-        await serviceClient
-          .from('artist_balances')
-          .update({
-            balance_cents: (existing.balance_cents || 0) + data.grossCents,
-            lifetime_earnings_cents: (existing.lifetime_earnings_cents || 0) + data.grossCents,
-          })
-          .eq('band_id', bandId)
+      const currentBalance = existing?.balance_cents || 0
+      const currentLifetime = existing?.lifetime_earnings_cents || 0
+
+      // Subtract old earnings for this period (if recalculating)
+      const oldEarnings = oldEarningsByBand.get(bandId) || 0
+
+      // New balance = current - old + new
+      const newBalance = Math.max(0, currentBalance - oldEarnings + data.grossCents)
+      const newLifetime = Math.max(0, currentLifetime - oldEarnings + data.grossCents)
+
+      // Use upsert to create or update
+      const { error: balanceError } = await serviceClient
+        .from('artist_balances')
+        .upsert({
+          band_id: bandId,
+          balance_cents: newBalance,
+          lifetime_earnings_cents: newLifetime,
+        }, {
+          onConflict: 'band_id',
+        })
+
+      if (balanceError) {
+        console.error(`Failed to update balance for band ${bandId}:`, balanceError)
       }
     }
 

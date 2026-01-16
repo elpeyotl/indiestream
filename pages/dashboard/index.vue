@@ -233,42 +233,6 @@
               color="gray"
               variant="ghost"
               size="sm"
-              to="/dashboard/my-impact"
-            >
-              <UIcon name="i-heroicons-chart-pie" class="w-4 h-4" />
-              My Impact
-            </UButton>
-            <UButton
-              color="gray"
-              variant="ghost"
-              size="sm"
-              to="/dashboard/stats"
-            >
-              <UIcon name="i-heroicons-chart-bar-square" class="w-4 h-4" />
-              Listening Stats
-            </UButton>
-            <UButton
-              color="gray"
-              variant="ghost"
-              size="sm"
-              :to="`/user/${user?.id}`"
-            >
-              <UIcon name="i-heroicons-user-circle" class="w-4 h-4" />
-              My Profile
-            </UButton>
-            <UButton
-              color="gray"
-              variant="ghost"
-              size="sm"
-              to="/dashboard/settings"
-            >
-              <UIcon name="i-heroicons-cog-6-tooth" class="w-4 h-4" />
-              Settings
-            </UButton>
-            <UButton
-              color="gray"
-              variant="ghost"
-              size="sm"
               to="/dashboard/payments"
             >
               Payment History

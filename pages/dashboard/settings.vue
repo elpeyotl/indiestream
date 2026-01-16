@@ -262,16 +262,6 @@ const handleSubmit = async () => {
           />
         </div>
 
-        <!-- Actions -->
-        <div class="flex gap-3 justify-end">
-          <UButton
-            type="submit"
-            color="violet"
-            :loading="saving"
-          >
-            {{ saving ? 'Saving...' : 'Save Changes' }}
-          </UButton>
-        </div>
       </form>
     </UCard>
 
@@ -292,12 +282,18 @@ const handleSubmit = async () => {
           </div>
         </label>
       </div>
-
-      <!-- Note: Privacy setting auto-saves with profile -->
-      <p class="text-xs text-zinc-500 mt-6 p-3 bg-zinc-900/50 rounded-lg">
-        <UIcon name="i-heroicons-information-circle" class="inline-block mr-1" />
-        Privacy settings are saved when you save your profile changes.
-      </p>
     </UCard>
+
+    <!-- Save Button - Fixed at bottom -->
+    <div class="mt-6 flex justify-end">
+      <UButton
+        color="violet"
+        size="lg"
+        :loading="saving"
+        @click="handleSubmit"
+      >
+        {{ saving ? 'Saving...' : 'Save Changes' }}
+      </UButton>
+    </div>
   </div>
 </template>

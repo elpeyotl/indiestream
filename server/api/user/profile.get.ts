@@ -46,6 +46,7 @@ export default defineEventHandler(async (event) => {
     location: profile.location,
     website: profile.website,
     role: profile.role,
-    createdAt: profile.created_at
+    createdAt: profile.created_at,
+    showImpactPublicly: profile.show_impact_publicly || false
   }
 })
