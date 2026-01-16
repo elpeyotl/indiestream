@@ -477,7 +477,7 @@ import type { Album } from '~/composables/useAlbum'
 const route = useRoute()
 const user = useSupabaseUser()
 const toast = useToast()
-const { getBandBySlug, getCachedImageUrl } = useBand()
+const { getBandBySlug } = useBand()
 const { getBandAlbums, getCachedCoverUrl } = useAlbum()
 const { playAlbum } = usePlayer()
 
@@ -703,17 +703,7 @@ const loadArtistData = async () => {
     band.value = await getBandBySlug(slug)
 
     if (band.value) {
-      // Load avatar URL from key if available (cached)
-      if (band.value.avatar_key) {
-        const avatarUrl = await getCachedImageUrl(band.value.avatar_key)
-        if (avatarUrl) band.value.avatar_url = avatarUrl
-      }
-
-      // Load banner URL from key if available (cached)
-      if (band.value.banner_key) {
-        const bannerUrl = await getCachedImageUrl(band.value.banner_key)
-        if (bannerUrl) band.value.banner_url = bannerUrl
-      }
+      // Avatar and banner URLs are now resolved by getBandBySlug
 
       // Load albums
       albums.value = await getBandAlbums(band.value.id)

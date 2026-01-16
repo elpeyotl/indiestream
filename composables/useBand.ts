@@ -109,7 +109,20 @@ export const useBand = () => {
     return data || []
   }
 
-  // Get a band by slug (public)
+  // Helper to resolve image URL
+  const resolveImageUrl = async (key: string | null | undefined): Promise<string | null> => {
+    if (!key) return null
+    try {
+      const encodedKey = btoa(key).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+      const response = await $fetch<{ url: string }>(`/api/stream/${encodedKey}`)
+      return response.url
+    } catch (e) {
+      console.error('Failed to get image URL:', e)
+      return null
+    }
+  }
+
+  // Get a band by slug (public) - includes resolved image URLs
   const getBandBySlug = async (slug: string, forceRefresh = false): Promise<Band | null> => {
     // Check cache first
     if (!forceRefresh) {
@@ -130,8 +143,15 @@ export const useBand = () => {
       throw error
     }
 
-    // Cache the result
+    // Resolve image URLs before caching
     if (data) {
+      if (data.avatar_key) {
+        data.avatar_url = await resolveImageUrl(data.avatar_key)
+      }
+      if (data.banner_key) {
+        data.banner_url = await resolveImageUrl(data.banner_key)
+      }
+
       const entry = { data, timestamp: Date.now() }
       bandBySlugCache.set(slug, entry)
       bandByIdCache.set(data.id, entry)
@@ -140,7 +160,7 @@ export const useBand = () => {
     return data
   }
 
-  // Get a band by ID
+  // Get a band by ID - includes resolved image URLs
   const getBandById = async (id: string, forceRefresh = false): Promise<Band | null> => {
     // Check cache first
     if (!forceRefresh) {
@@ -161,8 +181,15 @@ export const useBand = () => {
       throw error
     }
 
-    // Cache the result
+    // Resolve image URLs before caching
     if (data) {
+      if (data.avatar_key) {
+        data.avatar_url = await resolveImageUrl(data.avatar_key)
+      }
+      if (data.banner_key) {
+        data.banner_url = await resolveImageUrl(data.banner_key)
+      }
+
       const entry = { data, timestamp: Date.now() }
       bandByIdCache.set(id, entry)
       bandBySlugCache.set(data.slug, entry)
