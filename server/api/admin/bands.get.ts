@@ -39,6 +39,7 @@ export default defineEventHandler(async (event) => {
       id,
       name,
       slug,
+      tagline,
       bio,
       location,
       website,

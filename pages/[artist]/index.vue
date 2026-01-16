@@ -91,9 +91,9 @@
             </UBadge>
           </div>
 
-          <!-- Bio -->
-          <p v-if="band.bio" class="text-zinc-300 max-w-2xl mb-6">
-            {{ band.bio }}
+          <!-- Tagline -->
+          <p v-if="band.tagline" class="text-zinc-300 max-w-2xl mb-6">
+            {{ band.tagline }}
           </p>
 
           <!-- Actions -->

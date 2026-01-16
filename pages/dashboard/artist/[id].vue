@@ -635,8 +635,19 @@
               <UInput v-model="editForm.name" size="lg" :disabled="saving" />
             </UFormGroup>
 
+            <!-- Tagline -->
+            <UFormGroup label="Tagline" :hint="`${editForm.tagline?.length || 0}/150 characters`">
+              <UInput
+                v-model="editForm.tagline"
+                size="lg"
+                placeholder="A brief one-liner about your sound..."
+                :disabled="saving"
+                :maxlength="150"
+              />
+            </UFormGroup>
+
             <!-- Bio -->
-            <UFormGroup label="Bio">
+            <UFormGroup label="Bio" hint="Full bio shown in the About tab">
               <UTextarea
                 v-model="editForm.bio"
                 :rows="4"
@@ -1408,6 +1419,7 @@ const uploadingBanner = ref(false)
 
 const editForm = reactive({
   name: '',
+  tagline: '',
   bio: '',
   location: '',
   website: '',
@@ -2193,6 +2205,7 @@ const saveSettings = async () => {
   try {
     const updated = await updateBand(band.value.id, {
       name: editForm.name,
+      tagline: editForm.tagline || undefined,
       bio: editForm.bio || undefined,
       location: editForm.location || undefined,
       website: editForm.website || undefined,
@@ -2552,6 +2565,7 @@ onMounted(async () => {
     if (band.value) {
       // Populate edit form
       editForm.name = band.value.name
+      editForm.tagline = band.value.tagline || ''
       editForm.bio = band.value.bio || ''
       editForm.location = band.value.location || ''
       editForm.website = band.value.website || ''

@@ -1589,7 +1589,11 @@
             </UFormGroup>
           </div>
 
-          <UFormGroup label="Bio">
+          <UFormGroup label="Tagline" :hint="`${editBandForm.tagline?.length || 0}/150 characters`">
+            <UInput v-model="editBandForm.tagline" :maxlength="150" />
+          </UFormGroup>
+
+          <UFormGroup label="Bio" hint="Full bio shown in About tab">
             <UTextarea v-model="editBandForm.bio" rows="3" />
           </UFormGroup>
 
@@ -1728,6 +1732,7 @@ interface AdminBand {
   id: string
   name: string
   slug: string
+  tagline: string | null
   bio: string | null
   location: string | null
   website: string | null
@@ -1931,6 +1936,7 @@ const bandToEdit = ref<AdminBand | null>(null)
 const editBandForm = ref({
   name: '',
   slug: '',
+  tagline: '',
   bio: '',
   location: '',
   website: '',
@@ -2343,6 +2349,7 @@ const openEditBandModal = (band: AdminBand) => {
   editBandForm.value = {
     name: band.name,
     slug: band.slug,
+    tagline: band.tagline || '',
     bio: band.bio || '',
     location: band.location || '',
     website: band.website || '',
@@ -2372,6 +2379,7 @@ const handleUpdateBand = async () => {
       body: {
         name: editBandForm.value.name,
         slug: editBandForm.value.slug,
+        tagline: editBandForm.value.tagline,
         bio: editBandForm.value.bio,
         location: editBandForm.value.location,
         website: editBandForm.value.website,

@@ -24,6 +24,7 @@ export interface Band {
   owner_id: string
   name: string
   slug: string
+  tagline: string | null
   bio: string | null
   location: string | null
   website: string | null
@@ -54,6 +55,7 @@ export interface Band {
 export interface CreateBandInput {
   name: string
   slug: string
+  tagline?: string
   bio?: string
   location?: string
   genres?: string[]
@@ -71,6 +73,7 @@ export interface CreateBandInput {
 
 export interface UpdateBandInput {
   name?: string
+  tagline?: string
   bio?: string
   location?: string
   website?: string
@@ -228,6 +231,7 @@ export const useBand = () => {
         owner_id: user.value.id,
         name: input.name,
         slug: input.slug,
+        tagline: input.tagline || null,
         bio: input.bio || null,
         location: input.location || null,
         genres: input.genres || [],

@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
   // Basic fields (admin can edit all)
   if (body.name !== undefined) updates.name = body.name
   if (body.slug !== undefined) updates.slug = body.slug
+  if (body.tagline !== undefined) updates.tagline = body.tagline
   if (body.bio !== undefined) updates.bio = body.bio
   if (body.location !== undefined) updates.location = body.location
   if (body.website !== undefined) updates.website = body.website
