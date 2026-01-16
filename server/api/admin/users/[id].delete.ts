@@ -62,6 +62,10 @@ export default defineEventHandler(async (event) => {
     // Delete user's follows
     await serviceClient.from('follows').delete().eq('user_id', userId)
 
+    // Delete user's playlist tracks and playlists
+    await serviceClient.from('playlist_tracks').delete().eq('added_by', userId)
+    await serviceClient.from('playlists').delete().eq('user_id', userId)
+
     // Delete profile (should cascade from auth.users, but do it explicitly)
     const { error: profileDeleteError } = await serviceClient
       .from('profiles')
