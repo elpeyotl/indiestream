@@ -75,7 +75,7 @@
       </div>
 
       <!-- Response Times -->
-      <div class="grid md:grid-cols-2 gap-6">
+      <div class="grid md:grid-cols-3 gap-6">
         <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
           <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
             <UIcon name="i-heroicons-clock" class="w-6 h-6 text-violet-400" />
@@ -91,6 +91,14 @@
           <h3 class="font-semibold text-zinc-100 mb-2">Artist Support</h3>
           <p class="text-zinc-400 text-sm">Select "Artist Support" in the form above for priority help</p>
         </div>
+
+        <NuxtLink to="/bugs" class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center hover:border-zinc-700 transition-colors">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+            <UIcon name="i-heroicons-bug-ant" class="w-6 h-6 text-red-400" />
+          </div>
+          <h3 class="font-semibold text-zinc-100 mb-2">Report a Bug</h3>
+          <p class="text-zinc-400 text-sm">Found something broken? Let us know</p>
+        </NuxtLink>
       </div>
 
       <!-- FAQ Link -->

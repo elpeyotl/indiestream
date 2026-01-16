@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.14.2] - 2026-01-16
+
+### Added
+- **Bug Report Page**: New `/bugs` page with embedded Tally form for user feedback
+  - Auto-captures technical context (user ID, browser, screen size, timezone, timestamp)
+  - Hidden field pre-fills device info for easier debugging
+  - Dark theme styling to match IndieStream
+- **Admin Album Management**: Full CRUD for albums in admin panel
+  - New "Albums" tab with search, filters (published/draft), and pagination
+  - Edit all album fields including track moderation status
+  - Shared `AlbumEditModal` component for DRY code reuse
+  - Delete albums with cascading track/credit removal
+
+### Changed
+- Contact page now includes "Report a Bug" card linking to `/bugs`
+
 ## [0.14.1] - 2026-01-16
 
 ### Added
