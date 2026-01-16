@@ -290,8 +290,11 @@
     <!-- Mobile Bottom Navigation -->
     <MobileBottomNav />
 
-    <!-- Footer -->
-    <footer class="mt-20 border-t border-zinc-800 bg-zinc-950">
+    <!-- Footer - Hidden on mobile for logged-in users -->
+    <footer
+      class="mt-20 border-t border-zinc-800 bg-zinc-950"
+      :class="{ 'hidden md:block': user }"
+    >
       <div class="container mx-auto px-4 py-12">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
           <!-- Brand -->
