@@ -1,12 +1,5 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <!-- Pull to Refresh Indicator -->
-    <PullToRefreshIndicator
-      :pull-distance="pullDistance"
-      :is-refreshing="isRefreshing"
-      :threshold="threshold"
-    />
-
     <!-- Header -->
     <div class="mb-6">
       <h1 class="text-3xl font-bold text-zinc-100">Your Library</h1>
@@ -14,7 +7,7 @@
     </div>
 
     <!-- Native-style Tab Selector (Sticky) -->
-    <div class="sticky top-[73px] z-40 -mx-4 px-4 py-3 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/50 mb-6">
+    <div class="sticky top-[73px] z-40 -mx-4 px-4 py-3 mb-6">
       <div class="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
         <button
           v-for="(tab, index) in tabs"
@@ -624,9 +617,7 @@ const loadPlaylistCovers = async () => {
 }
 
 // Pull to refresh
-const { pullDistance, isRefreshing, threshold } = usePullToRefresh({
-  onRefresh: loadLibrary
-})
+usePullToRefresh(loadLibrary)
 
 onMounted(() => {
   loadLibrary()

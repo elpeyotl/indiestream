@@ -1,12 +1,5 @@
 <template>
   <div v-if="band">
-    <!-- Pull to Refresh Indicator -->
-    <PullToRefreshIndicator
-      :pull-distance="pullDistance"
-      :is-refreshing="isRefreshing"
-      :threshold="threshold"
-    />
-
     <!-- Hero Banner -->
     <div class="relative h-72 md:h-96 lg:h-[28rem] overflow-hidden">
       <!-- Banner Image -->
@@ -726,10 +719,8 @@ const loadArtistData = async () => {
   }
 }
 
-// Pull to refresh
-const { pullDistance, isRefreshing, threshold } = usePullToRefresh({
-  onRefresh: loadArtistData
-})
+// Pull to refresh - just register the callback, indicator is in layout
+usePullToRefresh(loadArtistData)
 
 onMounted(async () => {
   loading.value = true

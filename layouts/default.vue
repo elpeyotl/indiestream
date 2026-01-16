@@ -1,5 +1,12 @@
 <template>
   <div class="min-h-screen bg-zinc-950 text-zinc-50">
+    <!-- Global Pull to Refresh Indicator -->
+    <PullToRefreshIndicator
+      :pull-distance="pullDistance"
+      :is-refreshing="isRefreshing"
+      :threshold="threshold"
+    />
+
     <!-- Bokeh Background -->
     <BokehBackground :audio-data="audioData" />
 
@@ -34,20 +41,23 @@
             <template v-if="user">
               <NuxtLink
                 to="/discover"
-                class="text-zinc-400 hover:text-violet-400 transition-colors"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
+                <UIcon name="i-heroicons-globe-alt" class="w-4 h-4" />
                 Discover
               </NuxtLink>
               <NuxtLink
                 to="/artists"
-                class="text-zinc-400 hover:text-violet-400 transition-colors"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
+                <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
                 Artists
               </NuxtLink>
               <NuxtLink
                 to="/library"
-                class="text-zinc-400 hover:text-violet-400 transition-colors"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
+                <UIcon name="i-heroicons-bookmark" class="w-4 h-4" />
                 Library
               </NuxtLink>
             </template>
@@ -56,26 +66,30 @@
             <template v-else>
               <NuxtLink
                 to="/discover"
-                class="text-zinc-400 hover:text-violet-400 transition-colors"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
+                <UIcon name="i-heroicons-globe-alt" class="w-4 h-4" />
                 Discover
               </NuxtLink>
               <NuxtLink
                 to="/artists"
-                class="text-zinc-400 hover:text-violet-400 transition-colors"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
+                <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
                 Artists
               </NuxtLink>
               <NuxtLink
                 to="/pricing"
-                class="text-zinc-400 hover:text-violet-400 transition-colors"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
+                <UIcon name="i-heroicons-currency-dollar" class="w-4 h-4" />
                 Pricing
               </NuxtLink>
               <NuxtLink
                 to="/for-artists"
-                class="text-zinc-400 hover:text-violet-400 transition-colors"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
+                <UIcon name="i-heroicons-microphone" class="w-4 h-4" />
                 For Artists
               </NuxtLink>
             </template>
@@ -96,8 +110,8 @@
 
             <!-- Logged In -->
             <template v-else>
-              <!-- Notifications Bell -->
-              <UPopover :popper="{ placement: 'bottom-end' }">
+              <!-- Notifications Bell (only show when there are notifications) -->
+              <UPopover v-if="unreadCount > 0" :popper="{ placement: 'bottom-end' }">
                 <UButton
                   color="gray"
                   variant="ghost"
@@ -414,6 +428,9 @@ import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
 import BokehBackground from "~/components/backgrounds/BokehBackground.vue";
 import { APP_VERSION } from "~/utils/version";
 import type { Notification } from "~/composables/useNotifications";
+
+// Global pull-to-refresh setup (listeners live here, pages register callbacks)
+const { pullDistance, isRefreshing, threshold } = useGlobalPullToRefresh();
 
 // Responsive breakpoint detection
 const breakpoints = useBreakpoints(breakpointsTailwind);

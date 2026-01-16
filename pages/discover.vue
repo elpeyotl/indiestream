@@ -1,12 +1,5 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <!-- Pull to Refresh Indicator -->
-    <PullToRefreshIndicator
-      :pull-distance="pullDistance"
-      :is-refreshing="isRefreshing"
-      :threshold="threshold"
-    />
-
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-zinc-100 mb-2">Discover</h1>
@@ -228,9 +221,7 @@ const loadMoreArtists = async () => {
 }
 
 // Pull to refresh - force refresh to bypass cache
-const { pullDistance, isRefreshing, threshold } = usePullToRefresh({
-  onRefresh: () => loadData(true)
-})
+usePullToRefresh(() => loadData(true))
 
 onMounted(async () => {
   loading.value = true

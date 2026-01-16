@@ -23,7 +23,7 @@
           </div>
 
           <!-- Main Content -->
-          <div class="flex-1 flex flex-col items-center justify-start px-8 pb-8 overflow-y-auto">
+          <div class="flex-1 flex flex-col items-center justify-center px-8 pb-8 overflow-hidden">
             <!-- Large Cover - scales based on viewport height -->
             <div class="w-full max-w-[min(24rem,40vh)] aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl mb-4 mt-2 shrink-0">
               <img
@@ -632,6 +632,20 @@ const onVolumeChange = (e: Event) => {
   const target = e.target as HTMLInputElement
   setVolume(parseFloat(target.value))
 }
+
+// Prevent body scroll when expanded
+watch(isExpanded, (expanded) => {
+  if (expanded) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+})
+
+// Clean up body overflow on unmount
+onUnmounted(() => {
+  document.body.style.overflow = ''
+})
 
 // Close expanded view or queue on escape
 onMounted(() => {

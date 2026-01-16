@@ -1,65 +1,40 @@
-import { ref, onMounted, onUnmounted, type Ref } from 'vue'
+// Global pull-to-refresh composable
+// Listeners are set up once in the layout, pages just register their refresh callback
 
-interface PullToRefreshOptions {
-  /**
-   * Callback function to execute when refresh is triggered
-   */
-  onRefresh: () => Promise<void>
+const THRESHOLD = 80
+const MAX_PULL_DISTANCE = 120
 
-  /**
-   * Distance in pixels required to trigger refresh (default: 80)
-   */
-  threshold?: number
+// Global state using useState for SSR safety
+const useGlobalPullToRefreshState = () => {
+  const pullDistance = useState<number>('ptr-distance', () => 0)
+  const isRefreshing = useState<boolean>('ptr-refreshing', () => false)
+  const isPulling = useState<boolean>('ptr-pulling', () => false)
+  const refreshCallback = useState<(() => Promise<void>) | null>('ptr-callback', () => null)
 
-  /**
-   * Maximum pull distance in pixels (default: 120)
-   */
-  maxPullDistance?: number
-
-  /**
-   * Enable haptic feedback (default: true)
-   */
-  hapticFeedback?: boolean
+  return { pullDistance, isRefreshing, isPulling, refreshCallback }
 }
 
 /**
- * Composable for implementing native-feeling pull-to-refresh on mobile
- *
- * @example
- * const { pullDistance, isRefreshing } = usePullToRefresh({
- *   onRefresh: async () => {
- *     await fetchData()
- *   }
- * })
+ * Use in layout to set up global pull-to-refresh listeners
  */
-export const usePullToRefresh = (options: PullToRefreshOptions) => {
-  const {
-    onRefresh,
-    threshold = 80,
-    maxPullDistance = 120,
-    hapticFeedback = true
-  } = options
-
-  const pullDistance = ref(0)
-  const isRefreshing = ref(false)
-  const isPulling = ref(false)
+export const useGlobalPullToRefresh = () => {
+  const { pullDistance, isRefreshing, isPulling, refreshCallback } = useGlobalPullToRefreshState()
 
   let startY = 0
   let currentY = 0
-  let scrollableElement: HTMLElement | null = null
+  let listenersSetup = false
 
   const vibrate = (pattern: number | number[]) => {
-    if (hapticFeedback && 'vibrate' in navigator) {
+    if ('vibrate' in navigator) {
       navigator.vibrate(pattern)
     }
   }
 
   const handleTouchStart = (e: TouchEvent) => {
-    // Only start if we're at the top of the page and not already refreshing
     if (isRefreshing.value) return
 
     const scrollTop = window.scrollY || document.documentElement.scrollTop
-    if (scrollTop === 0) {
+    if (scrollTop <= 0) {
       startY = e.touches[0].clientY
       isPulling.value = true
     }
@@ -71,18 +46,13 @@ export const usePullToRefresh = (options: PullToRefreshOptions) => {
     currentY = e.touches[0].clientY
     const deltaY = currentY - startY
 
-    // Only allow pulling down (positive deltaY)
     if (deltaY > 0) {
-      // Prevent default scrolling behavior when pulling
       e.preventDefault()
-
-      // Apply resistance curve (diminishing returns as you pull further)
       const resistance = 0.5
-      const distance = Math.min(deltaY * resistance, maxPullDistance)
+      const distance = Math.min(deltaY * resistance, MAX_PULL_DISTANCE)
       pullDistance.value = distance
 
-      // Haptic feedback when reaching threshold
-      if (distance >= threshold && deltaY - 1 < threshold) {
+      if (distance >= THRESHOLD && (deltaY * resistance) - 1 < THRESHOLD) {
         vibrate(10)
       }
     }
@@ -93,24 +63,21 @@ export const usePullToRefresh = (options: PullToRefreshOptions) => {
 
     isPulling.value = false
 
-    // Trigger refresh if threshold was reached
-    if (pullDistance.value >= threshold) {
+    if (pullDistance.value >= THRESHOLD && refreshCallback.value) {
       isRefreshing.value = true
-      vibrate([10, 50, 10]) // Success pattern
+      vibrate([10, 50, 10])
 
       try {
-        await onRefresh()
+        await refreshCallback.value()
       } catch (error) {
         console.error('Pull-to-refresh error:', error)
       } finally {
-        // Smooth animation back to 0
         setTimeout(() => {
           isRefreshing.value = false
           pullDistance.value = 0
         }, 300)
       }
     } else {
-      // Didn't reach threshold, animate back to 0
       pullDistance.value = 0
     }
 
@@ -118,29 +85,76 @@ export const usePullToRefresh = (options: PullToRefreshOptions) => {
     currentY = 0
   }
 
-  onMounted(() => {
-    // Only enable on mobile devices
-    if (process.client && window.innerWidth < 768) {
-      scrollableElement = document.body
+  const setupListeners = () => {
+    if (!process.client || listenersSetup) return
+    if (window.innerWidth >= 768) return // Only mobile
 
-      scrollableElement.addEventListener('touchstart', handleTouchStart, { passive: true })
-      scrollableElement.addEventListener('touchmove', handleTouchMove, { passive: false })
-      scrollableElement.addEventListener('touchend', handleTouchEnd, { passive: true })
-    }
+    document.body.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.body.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.body.addEventListener('touchend', handleTouchEnd, { passive: true })
+    listenersSetup = true
+  }
+
+  const cleanupListeners = () => {
+    if (!process.client || !listenersSetup) return
+
+    document.body.removeEventListener('touchstart', handleTouchStart)
+    document.body.removeEventListener('touchmove', handleTouchMove)
+    document.body.removeEventListener('touchend', handleTouchEnd)
+    listenersSetup = false
+  }
+
+  onMounted(() => {
+    setupListeners()
   })
 
   onUnmounted(() => {
-    if (scrollableElement) {
-      scrollableElement.removeEventListener('touchstart', handleTouchStart)
-      scrollableElement.removeEventListener('touchmove', handleTouchMove)
-      scrollableElement.removeEventListener('touchend', handleTouchEnd)
-    }
+    cleanupListeners()
   })
 
   return {
     pullDistance,
     isRefreshing,
     isPulling,
-    threshold
+    threshold: THRESHOLD
+  }
+}
+
+/**
+ * Use in pages to register a refresh callback
+ *
+ * @example
+ * usePullToRefresh(async () => {
+ *   await loadData()
+ * })
+ */
+export const usePullToRefresh = (onRefresh: () => Promise<void>) => {
+  const { pullDistance, isRefreshing, isPulling, refreshCallback } = useGlobalPullToRefreshState()
+
+  // Register the callback when component mounts
+  onMounted(() => {
+    refreshCallback.value = onRefresh
+  })
+
+  // Clear callback when component unmounts
+  onUnmounted(() => {
+    if (refreshCallback.value === onRefresh) {
+      refreshCallback.value = null
+    }
+  })
+
+  // Update callback when route changes (in case same component instance is reused)
+  if (process.client) {
+    const route = useRoute()
+    watch(() => route.fullPath, () => {
+      refreshCallback.value = onRefresh
+    })
+  }
+
+  return {
+    pullDistance,
+    isRefreshing,
+    isPulling,
+    threshold: THRESHOLD
   }
 }
