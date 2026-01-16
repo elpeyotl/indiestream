@@ -63,7 +63,7 @@
               </li>
               <li class="flex items-start gap-2">
                 <UIcon name="i-heroicons-x-mark" class="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                Need millions of streams to earn
+                Free streaming loopholes = no royalties
               </li>
             </ul>
           </div>
@@ -91,7 +91,7 @@
               </li>
               <li class="flex items-start gap-2">
                 <UIcon name="i-heroicons-check" class="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                Every stream counts more
+                Every stream generates royalties
               </li>
             </ul>
           </div>

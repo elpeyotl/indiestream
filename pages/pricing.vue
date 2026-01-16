@@ -216,6 +216,18 @@
                 <UIcon name="i-heroicons-x-mark" class="w-5 h-5 text-zinc-600 mx-auto" />
               </td>
             </tr>
+            <tr>
+              <td class="p-4 text-zinc-300">Every stream generates royalties</td>
+              <td class="p-4 text-center">
+                <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500 mx-auto" />
+              </td>
+              <td class="p-4 text-center text-zinc-500">Only paid streams</td>
+            </tr>
+            <tr>
+              <td class="p-4 text-zinc-300">Free streaming loophole</td>
+              <td class="p-4 text-center text-green-400 font-semibold">None</td>
+              <td class="p-4 text-center text-zinc-500">Unlimited free plays</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -266,6 +278,10 @@ const faqItems = [
   {
     label: 'How does the artist payment work?',
     content: 'Unlike traditional streaming services that use a royalty pool, your subscription is divided based on your actual listening. If you spend 50% of your listening time on one artist, they receive 50% of the artist share. Your $9.99 is split: 70% ($6.99) to artists, 15% ($1.50) to performance royalty societies (SUISA, GEMA, etc.), and 15% ($1.50) platform fee.',
+  },
+  {
+    label: 'Do you pay royalties on every stream?',
+    content: 'Yes! Unlike some platforms that allow unlimited free streaming (generating no royalties), every stream on Indiestream from a paying subscriber generates revenue for both artists and royalty societies (SUISA, GEMA, ASCAP, BMI, etc.). Our free tier only offers 30-second previews, ensuring all full-length plays are properly compensated. No loopholes.',
   },
   {
     label: 'Can I cancel anytime?',
