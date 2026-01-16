@@ -7,43 +7,9 @@
     </div>
 
     <!-- Tabs -->
-    <UTabs
-      v-model="currentTab"
-      :items="tabs"
-      class="w-full"
-      :ui="{
-        list: {
-          background: 'bg-zinc-900/50',
-          marker: {
-            background: 'bg-violet-500/20',
-          },
-          tab: {
-            active: 'text-violet-400',
-            inactive: 'text-zinc-400 hover:text-zinc-200',
-          },
-        },
-      }"
-    >
-      <!-- Custom header for tabs with badge -->
-      <template #default="{ item, index, selected }">
-        <span class="truncate">{{ item.label }}</span>
-        <span
-          v-if="item.slot === 'moderation' && pendingModerationCount > 0"
-          class="ml-2 flex-shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-red-500 text-white min-w-[1.25rem]"
-        >
-          {{ pendingModerationCount > 99 ? '99+' : pendingModerationCount }}
-        </span>
-        <span
-          v-if="item.slot === 'artist-approvals' && pendingArtistCount > 0"
-          class="ml-2 flex-shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-orange-500 text-white min-w-[1.25rem]"
-        >
-          {{ pendingArtistCount > 99 ? '99+' : pendingArtistCount }}
-        </span>
-      </template>
-
-      <!-- Overview Tab -->
+    <PillTabs v-model="currentTab" :tabs="tabs">
       <template #overview>
-        <div class="py-6 space-y-6">
+        <div class="space-y-6">
           <!-- Platform Stats -->
           <div v-if="statsLoading" class="flex justify-center py-8">
             <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 text-zinc-400 animate-spin" />
@@ -1032,7 +998,7 @@
           </UCard>
         </div>
       </template>
-    </UTabs>
+    </PillTabs>
 
     <!-- Reject Artist Modal -->
     <UModal v-model="showRejectArtistModal">

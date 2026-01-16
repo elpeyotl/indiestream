@@ -124,10 +124,8 @@
     </div>
 
     <!-- Tabs -->
-    <UTabs v-model="currentTab" :items="tabs" class="w-full">
-      <!-- Releases Tab -->
+    <PillTabs v-model="currentTab" :tabs="tabs">
       <template #releases>
-        <div class="py-6">
           <div v-if="albums.length === 0" class="text-center py-12">
             <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
               <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-violet-400" />
@@ -198,7 +196,6 @@
               </div>
             </div>
           </div>
-        </div>
       </template>
 
       <!-- Analytics Tab -->
@@ -846,7 +843,7 @@
           </form>
         </div>
       </template>
-    </UTabs>
+    </PillTabs>
 
     <!-- Delete Artist Confirmation Modal -->
     <UModal v-model="showDeleteModal">

@@ -65,7 +65,7 @@
 
           <!-- Actions -->
           <div class="flex gap-3">
-            <UButton color="violet" size="lg" @click="playAll">
+            <UButton color="violet" size="lg" :loading="loadingPlay" @click="playAll">
               <UIcon name="i-heroicons-play" class="w-5 h-5 mr-1" />
               Play All
             </UButton>
@@ -113,7 +113,10 @@
                 @click="playTrack(track)"
               >
                 <td class="px-4 py-4">
-                  <span v-if="isTrackPlaying(track)" class="text-violet-400">
+                  <span v-if="loadingTrackId === track.id" class="text-violet-400">
+                    <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
+                  </span>
+                  <span v-else-if="isTrackPlaying(track)" class="text-violet-400">
                     <UIcon name="i-heroicons-speaker-wave" class="w-4 h-4 animate-pulse" />
                   </span>
                   <template v-else>
@@ -295,7 +298,7 @@ import type { Album, Track, TrackCredit } from '~/composables/useAlbum'
 const route = useRoute()
 const { getAlbumBySlug, getBandAlbums, getCachedCoverUrl, getCreditsForTracks } = useAlbum()
 const { getBandBySlug } = useBand()
-const { playAlbum, playTrack: playerPlayTrack, currentTrack, isPlaying } = usePlayer()
+const { playAlbum, playTrack: playerPlayTrack, currentTrack, isPlaying, isLoading: playerLoading } = usePlayer()
 const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
 
 const album = ref<Album | null>(null)
@@ -305,6 +308,8 @@ const loading = ref(true)
 const coverUrl = ref<string | null>(null)
 const imageLoaded = ref(false)
 const savingAlbum = ref(false)
+const loadingPlay = ref(false)
+const loadingTrackId = ref<string | null>(null)
 const trackCredits = ref<Record<string, TrackCredit[]>>({})
 const expandedTrack = ref<string | null>(null)
 
@@ -348,16 +353,26 @@ const formatNumber = (num: number): string => {
 }
 
 // Player actions
-const playAll = () => {
-  if (!album.value) return
-  playAlbum(album.value, coverUrl.value, 0)
+const playAll = async () => {
+  if (!album.value || loadingPlay.value) return
+  loadingPlay.value = true
+  try {
+    await playAlbum(album.value, coverUrl.value, 0)
+  } finally {
+    loadingPlay.value = false
+  }
 }
 
-const playTrack = (track: Track) => {
-  if (!album.value) return
-  // Find track index
-  const index = album.value.tracks?.findIndex(t => t.id === track.id) || 0
-  playAlbum(album.value, coverUrl.value, index)
+const playTrack = async (track: Track) => {
+  if (!album.value || loadingTrackId.value) return
+  loadingTrackId.value = track.id
+  try {
+    // Find track index
+    const index = album.value.tracks?.findIndex(t => t.id === track.id) || 0
+    await playAlbum(album.value, coverUrl.value, index)
+  } finally {
+    loadingTrackId.value = null
+  }
 }
 
 // Check if track is currently playing

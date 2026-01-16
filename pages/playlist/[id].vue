@@ -53,6 +53,7 @@
               v-if="playlist.playlist_tracks?.length > 0"
               color="violet"
               size="lg"
+              :loading="loadingPlay"
               @click="playAll"
             >
               <UIcon name="i-heroicons-play" class="w-5 h-5 mr-1" />
@@ -171,9 +172,16 @@
             <div v-else class="w-full h-full flex items-center justify-center">
               <UIcon name="i-heroicons-musical-note" class="w-4 h-4 text-zinc-600" />
             </div>
-            <!-- Play overlay on hover -->
-            <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity">
-              <UIcon name="i-heroicons-play" class="w-5 h-5 text-white" />
+            <!-- Loading/Play overlay -->
+            <div
+              class="absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity"
+              :class="loadingTrackIndex === index ? 'opacity-100' : 'opacity-0 group-hover/cover:opacity-100'"
+            >
+              <UIcon
+                :name="loadingTrackIndex === index ? 'i-heroicons-arrow-path' : 'i-heroicons-play'"
+                :class="loadingTrackIndex === index ? 'animate-spin' : ''"
+                class="w-5 h-5 text-white"
+              />
             </div>
           </div>
 
@@ -405,7 +413,7 @@ const {
   removeCollaborator,
   generateShareLink,
 } = usePlaylist()
-const { playPlaylist } = usePlayer()
+const { playPlaylist, isLoading: playerLoading } = usePlayer()
 
 const playlistId = route.params.id as string
 
@@ -433,6 +441,10 @@ const shareUrl = ref('')
 
 // Drag and drop
 const draggedIndex = ref<number | null>(null)
+
+// Loading states for play
+const loadingPlay = ref(false)
+const loadingTrackIndex = ref<number | null>(null)
 
 const totalDuration = computed(() => {
   if (!playlist.value?.playlist_tracks) return 0
@@ -524,22 +536,32 @@ const loadTrackCovers = async () => {
   }
 }
 
-const playAll = () => {
-  if (!playlist.value?.playlist_tracks) return
-  const tracks = playlist.value.playlist_tracks.map((item) => ({
-    ...item.track,
-    coverUrl: trackCovers.value[item.track.id] || null,
-  }))
-  playPlaylist(tracks, 0)
+const playAll = async () => {
+  if (!playlist.value?.playlist_tracks || loadingPlay.value) return
+  loadingPlay.value = true
+  try {
+    const tracks = playlist.value.playlist_tracks.map((item) => ({
+      ...item.track,
+      coverUrl: trackCovers.value[item.track.id] || null,
+    }))
+    await playPlaylist(tracks, 0)
+  } finally {
+    loadingPlay.value = false
+  }
 }
 
-const playFromIndex = (index: number) => {
-  if (!playlist.value?.playlist_tracks) return
-  const tracks = playlist.value.playlist_tracks.map((item) => ({
-    ...item.track,
-    coverUrl: trackCovers.value[item.track.id] || null,
-  }))
-  playPlaylist(tracks, index)
+const playFromIndex = async (index: number) => {
+  if (!playlist.value?.playlist_tracks || loadingTrackIndex.value !== null) return
+  loadingTrackIndex.value = index
+  try {
+    const tracks = playlist.value.playlist_tracks.map((item) => ({
+      ...item.track,
+      coverUrl: trackCovers.value[item.track.id] || null,
+    }))
+    await playPlaylist(tracks, index)
+  } finally {
+    loadingTrackIndex.value = null
+  }
 }
 
 const handleSave = async () => {

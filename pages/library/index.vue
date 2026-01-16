@@ -6,30 +6,9 @@
       <p class="text-zinc-400 mt-1">Artists, albums, playlists, and tracks you've saved</p>
     </div>
 
-    <!-- Native-style Tab Selector (Sticky) -->
-    <div class="sticky top-[73px] z-40 -mx-4 px-4 py-3 mb-6">
-      <div class="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
-        <button
-          v-for="(tab, index) in tabs"
-          :key="tab.key"
-          @click="handleTabChange(index)"
-          :class="[
-            'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 snap-start active:scale-95',
-            activeTab === index
-              ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/25'
-              : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300'
-          ]"
-        >
-          <UIcon :name="tab.icon" class="w-4 h-4" />
-          <span>{{ tab.label }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Tab Content -->
-    <div>
-      <!-- Playlists Tab -->
-      <div v-if="activeTab === 0">
+    <!-- Tab Selector -->
+    <PillTabs v-model="activeTab" :tabs="tabs" sticky>
+      <template #playlists>
           <div v-if="loading" class="flex items-center justify-center py-20">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
           </div>
@@ -77,10 +56,12 @@
                       color="violet"
                       size="lg"
                       :ui="{ rounded: 'rounded-full' }"
-                      class="opacity-0 group-hover:opacity-100 transition-opacity shadow-lg shrink-0"
+                      :loading="loadingPlayId === 'liked'"
+                      :class="loadingPlayId === 'liked' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+                      class="transition-opacity shadow-lg shrink-0"
                       @click.prevent.stop="playLikedSongs"
                     >
-                      <UIcon name="i-heroicons-play-solid" class="w-6 h-6" />
+                      <UIcon v-if="loadingPlayId !== 'liked'" name="i-heroicons-play-solid" class="w-6 h-6" />
                     </UButton>
                   </div>
                 </div>
@@ -125,20 +106,21 @@
                       color="violet"
                       size="lg"
                       :ui="{ rounded: 'rounded-full' }"
-                      class="opacity-0 group-hover:opacity-100 transition-opacity shadow-lg shrink-0"
+                      :loading="loadingPlayId === playlist.id"
+                      :class="loadingPlayId === playlist.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+                      class="transition-opacity shadow-lg shrink-0"
                       @click.prevent.stop="playPlaylistById(playlist.id)"
                     >
-                      <UIcon name="i-heroicons-play-solid" class="w-6 h-6" />
+                      <UIcon v-if="loadingPlayId !== playlist.id" name="i-heroicons-play-solid" class="w-6 h-6" />
                     </UButton>
                   </div>
                 </div>
               </div>
             </NuxtLink>
           </div>
-        </div>
+      </template>
 
-        <!-- Artists Tab -->
-        <div v-if="activeTab === 1">
+      <template #artists>
           <div v-if="loading" class="flex items-center justify-center py-20">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
           </div>
@@ -184,10 +166,9 @@
               </p>
             </NuxtLink>
           </div>
-        </div>
+      </template>
 
-        <!-- Albums Tab -->
-        <div v-else-if="activeTab === 2">
+      <template #albums>
           <div v-if="loading" class="flex items-center justify-center py-20">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
           </div>
@@ -233,10 +214,9 @@
               </p>
             </NuxtLink>
           </div>
-        </div>
+      </template>
 
-        <!-- Tracks Tab -->
-        <div v-else-if="activeTab === 3">
+      <template #tracks>
           <div v-if="loading" class="flex items-center justify-center py-20">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
           </div>
@@ -262,12 +242,19 @@
             >
               <!-- Index / Play -->
               <div class="w-8 text-center shrink-0">
-                <span class="text-sm text-zinc-500 group-hover:hidden">{{ index + 1 }}</span>
                 <UIcon
-                  name="i-heroicons-play"
-                  class="w-4 h-4 text-zinc-100 hidden group-hover:inline cursor-pointer"
-                  @click.prevent="playTrack(item)"
+                  v-if="loadingPlayId === item.track.id"
+                  name="i-heroicons-arrow-path"
+                  class="w-4 h-4 text-violet-400 animate-spin"
                 />
+                <template v-else>
+                  <span class="text-sm text-zinc-500 group-hover:hidden">{{ index + 1 }}</span>
+                  <UIcon
+                    name="i-heroicons-play"
+                    class="w-4 h-4 text-zinc-100 hidden group-hover:inline cursor-pointer"
+                    @click.prevent="playTrack(item)"
+                  />
+                </template>
               </div>
 
               <!-- Cover -->
@@ -328,8 +315,8 @@
               />
             </div>
           </div>
-        </div>
-    </div>
+      </template>
+    </PillTabs>
 
     <!-- Create Playlist Modal -->
     <UModal v-model="showCreatePlaylist">
@@ -399,20 +386,10 @@ definePageMeta({
 
 const { getStreamUrl } = useAlbum()
 const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = useLibrary()
-const { playTrackFromLibrary, playPlaylist } = usePlayer()
+const { playTrackFromLibrary, playPlaylist, isLoading: playerLoading } = usePlayer()
 const { playlists: userPlaylists, fetchPlaylists, createPlaylist, getPlaylist } = usePlaylist()
-const haptics = useHaptics()
-
 const loading = ref(true)
 const activeTab = ref(0)
-
-// Handle tab change with haptic feedback
-const handleTabChange = (index: number) => {
-  if (activeTab.value !== index) {
-    haptics.light()
-    activeTab.value = index
-  }
-}
 
 const artists = ref<FollowedArtist[]>([])
 const albums = ref<SavedAlbum[]>([])
@@ -422,6 +399,7 @@ const artistAvatars = ref<Record<string, string>>({})
 const albumCovers = ref<Record<string, string>>({})
 const trackCovers = ref<Record<string, string>>({})
 const playlistCovers = ref<Record<string, string[]>>({})
+const loadingPlayId = ref<string | null>(null) // Track which playlist/liked is loading
 
 // Create playlist modal
 const showCreatePlaylist = ref(false)
@@ -446,10 +424,10 @@ const handleCreatePlaylist = async () => {
 }
 
 const tabs = computed(() => [
-  { key: 'playlists', label: `Playlists (${userPlaylists.value.length})`, icon: 'i-heroicons-queue-list' },
-  { key: 'artists', label: `Artists (${artists.value.length})`, icon: 'i-heroicons-user-group' },
-  { key: 'albums', label: `Albums (${albums.value.length})`, icon: 'i-heroicons-square-3-stack-3d' },
-  { key: 'tracks', label: `Liked Songs (${tracks.value.length})`, icon: 'i-heroicons-heart' },
+  { slot: 'playlists', label: `Playlists (${userPlaylists.value.length})`, icon: 'i-heroicons-queue-list' },
+  { slot: 'artists', label: `Artists (${artists.value.length})`, icon: 'i-heroicons-user-group' },
+  { slot: 'albums', label: `Albums (${albums.value.length})`, icon: 'i-heroicons-square-3-stack-3d' },
+  { slot: 'tracks', label: `Liked Songs (${tracks.value.length})`, icon: 'i-heroicons-heart' },
 ])
 
 const formatDuration = (seconds: number): string => {
@@ -463,25 +441,36 @@ const handleUnlike = async (trackId: string) => {
   tracks.value = tracks.value.filter(t => t.track.id !== trackId)
 }
 
-const playTrack = (item: LikedTrack) => {
-  // Play track from library - implementation in usePlayer
-  playTrackFromLibrary(item.track, trackCovers.value[item.track.id] || null)
+const playTrack = async (item: LikedTrack) => {
+  if (loadingPlayId.value) return
+  loadingPlayId.value = item.track.id
+  try {
+    await playTrackFromLibrary(item.track, trackCovers.value[item.track.id] || null)
+  } finally {
+    loadingPlayId.value = null
+  }
 }
 
 // Play all liked songs as a playlist
-const playLikedSongs = () => {
-  if (tracks.value.length === 0) return
+const playLikedSongs = async () => {
+  if (tracks.value.length === 0 || loadingPlayId.value) return
+  loadingPlayId.value = 'liked'
+  try {
+    const playableTracks = tracks.value.map((item) => ({
+      ...item.track,
+      coverUrl: trackCovers.value[item.track.id] || null,
+    }))
 
-  const playableTracks = tracks.value.map((item) => ({
-    ...item.track,
-    coverUrl: trackCovers.value[item.track.id] || null,
-  }))
-
-  playPlaylist(playableTracks, 0)
+    await playPlaylist(playableTracks, 0)
+  } finally {
+    loadingPlayId.value = null
+  }
 }
 
 // Play a playlist by ID (fetches tracks and plays)
 const playPlaylistById = async (playlistId: string) => {
+  if (loadingPlayId.value) return
+  loadingPlayId.value = playlistId
   try {
     const playlist = await getPlaylist(playlistId)
     if (!playlist?.playlist_tracks?.length) return
@@ -506,9 +495,11 @@ const playPlaylistById = async (playlistId: string) => {
       })
     )
 
-    playPlaylist(playableTracks, 0)
+    await playPlaylist(playableTracks, 0)
   } catch (e) {
     console.error('Failed to play playlist:', e)
+  } finally {
+    loadingPlayId.value = null
   }
 }
 

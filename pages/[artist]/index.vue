@@ -205,10 +205,8 @@
 
     <!-- Content Tabs -->
     <div class="container mx-auto px-4 py-12">
-      <UTabs v-model="selectedTabIndex" :items="tabs" class="w-full">
-        <template #item="{ item }">
-          <!-- Releases Tab -->
-          <div v-if="item.key === 'releases'" class="py-6">
+      <PillTabs v-model="selectedTabIndex" :tabs="tabs">
+        <template #releases>
             <div v-if="albums.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               <NuxtLink
                 v-for="album in albums"
@@ -242,10 +240,10 @@
               <UIcon name="i-heroicons-musical-note" class="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No releases yet</p>
             </div>
-          </div>
+        </template>
 
-          <!-- About Tab -->
-          <div v-else-if="item.key === 'about'" class="py-6 max-w-2xl">
+        <template #about>
+          <div class="max-w-2xl">
             <h3 class="text-lg font-semibold text-zinc-100 mb-4">About {{ band.name }}</h3>
             <p v-if="band.bio" class="text-zinc-300 whitespace-pre-line">{{ band.bio }}</p>
             <p v-else class="text-zinc-400">No bio available.</p>
@@ -333,9 +331,9 @@
               </div>
             </div>
           </div>
+        </template>
 
-          <!-- Followers Tab -->
-          <div v-else-if="item.key === 'followers'" class="py-6">
+        <template #followers>
             <!-- Loading state -->
             <div v-if="followersLoading" class="flex items-center justify-center py-12">
               <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-zinc-400" />
@@ -383,9 +381,8 @@
               <p>No followers yet</p>
               <p class="text-sm mt-2">Be the first to follow {{ band.name }}!</p>
             </div>
-          </div>
         </template>
-      </UTabs>
+      </PillTabs>
     </div>
   </div>
 
@@ -487,23 +484,27 @@ const isFollowing = ref(false)
 const loadingFollow = ref(false)
 
 const tabs = [
-  { key: 'releases', label: 'Releases' },
-  { key: 'about', label: 'About' },
-  { key: 'followers', label: 'Followers' },
+  { slot: 'releases', label: 'Releases', icon: 'i-heroicons-musical-note' },
+  { slot: 'about', label: 'About', icon: 'i-heroicons-information-circle' },
+  { slot: 'followers', label: 'Followers', icon: 'i-heroicons-user-group' },
 ]
 
-// Selected tab synced with URL query
-const selectedTabIndex = computed({
-  get: () => {
-    const tabKey = (route.query.tab as string) || 'releases'
-    const index = tabs.findIndex(t => t.key === tabKey)
-    return index >= 0 ? index : 0
-  },
-  set: (index: number) => {
-    const tab = tabs[index]
-    if (tab) {
-      navigateTo({ query: { ...route.query, tab: tab.key } }, { replace: true })
-    }
+// Initialize tab from URL query
+const getInitialTab = () => {
+  const tabSlot = (route.query.tab as string) || 'releases'
+  const index = tabs.findIndex(t => t.slot === tabSlot)
+  return index >= 0 ? index : 0
+}
+
+const selectedTabIndex = ref(getInitialTab())
+
+// Update URL when tab changes (without scrolling)
+watch(selectedTabIndex, (index) => {
+  const tab = tabs[index]
+  if (tab && process.client) {
+    const url = new URL(window.location.href)
+    url.searchParams.set('tab', tab.slot)
+    window.history.replaceState({}, '', url.toString())
   }
 })
 
