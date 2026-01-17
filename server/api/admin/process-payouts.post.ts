@@ -1,6 +1,7 @@
 // Admin: Process Stripe transfers for users with combined band balance >= minimum
 import Stripe from 'stripe'
 import { serverSupabaseUser, serverSupabaseClient, serverSupabaseServiceRole } from '#supabase/server'
+import { sendPayoutSuccessEmail, sendPayoutFailedEmail } from '~/server/utils/email'
 
 interface ProcessPayoutsRequest {
   userIds?: string[] // Optional: specific users to pay out
@@ -115,7 +116,7 @@ export default defineEventHandler(async (event) => {
     // Get Stripe info for eligible users
     const { data: profiles, error: profilesError } = await serviceClient
       .from('profiles')
-      .select('id, display_name, stripe_account_id, stripe_account_status')
+      .select('id, email, display_name, stripe_account_id, stripe_account_status')
       .in('id', targetOwnerIds)
 
     if (profilesError) {
@@ -222,6 +223,22 @@ export default defineEventHandler(async (event) => {
 
         processed++
         console.log(`Payout successful: ${userName} - $${(amount / 100).toFixed(2)} (${ownerData.bands.length} bands) - ${transfer.id}`)
+
+        // Send payout success email
+        if (profile?.email) {
+          try {
+            await sendPayoutSuccessEmail({
+              to: profile.email,
+              artistName: userName,
+              amount: amount / 100,
+              currency: 'CHF',
+              bands: bandNames,
+              transferId: transfer.id,
+            })
+          } catch (emailError) {
+            console.error('Failed to send payout success email:', emailError)
+          }
+        }
       } catch (stripeError: any) {
         console.error(`Stripe transfer failed for ${userName}:`, stripeError)
 
@@ -248,6 +265,21 @@ export default defineEventHandler(async (event) => {
         })
 
         failed++
+
+        // Send payout failed email
+        if (profile?.email) {
+          try {
+            await sendPayoutFailedEmail({
+              to: profile.email,
+              artistName: userName,
+              amount: amount / 100,
+              currency: 'CHF',
+              errorMessage: stripeError.message,
+            })
+          } catch (emailError) {
+            console.error('Failed to send payout failed email:', emailError)
+          }
+        }
       }
     }
 

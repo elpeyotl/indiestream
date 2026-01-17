@@ -1,5 +1,6 @@
 // POST /api/admin/artist-approvals/[id]/reject - Reject an artist profile
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { sendArtistRejectedEmail } from '~/server/utils/email'
 
 export default defineEventHandler(async (event) => {
   // Verify admin access
@@ -74,6 +75,27 @@ export default defineEventHandler(async (event) => {
       message: `Your artist profile "${band.name}" was not approved: ${reason}`,
       link: '/dashboard',
     })
+
+    // Send rejection email
+    const { data: ownerProfile } = await client
+      .from('profiles')
+      .select('email, display_name')
+      .eq('id', band.owner_id)
+      .single()
+
+    if (ownerProfile?.email) {
+      try {
+        await sendArtistRejectedEmail({
+          to: ownerProfile.email,
+          artistName: ownerProfile.display_name || 'Artist',
+          bandName: band.name,
+          reason,
+        })
+      } catch (emailError) {
+        console.error('Failed to send rejection email:', emailError)
+        // Don't fail the request if email fails
+      }
+    }
   }
 
   return {

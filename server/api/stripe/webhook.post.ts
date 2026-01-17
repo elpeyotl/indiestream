@@ -1,5 +1,6 @@
 import Stripe from 'stripe'
 import { serverSupabaseServiceRole } from '#supabase/server'
+import { sendWelcomeEmail, sendSubscriptionConfirmedEmail, sendPaymentFailedEmail } from '~/server/utils/email'
 
 // Helper to safely convert Unix timestamp to ISO string
 const toISOString = (timestamp: number | undefined | null): string | null => {
@@ -71,6 +72,47 @@ export default defineEventHandler(async (event) => {
             console.error('Failed to upsert subscription:', upsertError)
           } else {
             console.log('Subscription created/updated successfully')
+
+            // Send welcome and subscription emails
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email, display_name')
+              .eq('id', userId)
+              .single()
+
+            if (profile?.email) {
+              const periodEndDate = subscription.current_period_end
+                ? new Date(subscription.current_period_end * 1000).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : ''
+
+              // Get invoice amount
+              const invoiceAmount = session.amount_total ? session.amount_total / 100 : 9.99
+
+              try {
+                // Send welcome email
+                await sendWelcomeEmail({
+                  to: profile.email,
+                  userName: profile.display_name || 'Listener',
+                  subscriptionTier: 'listener',
+                })
+
+                // Send subscription confirmation
+                await sendSubscriptionConfirmedEmail({
+                  to: profile.email,
+                  userName: profile.display_name || 'Listener',
+                  tier: 'Listener',
+                  amount: invoiceAmount,
+                  currency: (session.currency || 'chf').toUpperCase(),
+                  periodEnd: periodEndDate,
+                })
+              } catch (emailError) {
+                console.error('Failed to send subscription emails:', emailError)
+              }
+            }
           }
         }
         break
@@ -167,6 +209,30 @@ export default defineEventHandler(async (event) => {
               .from('subscriptions')
               .update({ status: 'past_due' })
               .eq('user_id', sub.user_id)
+
+            // Send payment failed email
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email, display_name')
+              .eq('id', sub.user_id)
+              .single()
+
+            if (profile?.email) {
+              const invoiceAmount = invoice.amount_due ? invoice.amount_due / 100 : 9.99
+              const config = useRuntimeConfig()
+
+              try {
+                await sendPaymentFailedEmail({
+                  to: profile.email,
+                  userName: profile.display_name || 'Listener',
+                  amount: invoiceAmount,
+                  currency: (invoice.currency || 'chf').toUpperCase(),
+                  updatePaymentUrl: `${config.public.appUrl}/settings/billing`,
+                })
+              } catch (emailError) {
+                console.error('Failed to send payment failed email:', emailError)
+              }
+            }
           }
         }
         break

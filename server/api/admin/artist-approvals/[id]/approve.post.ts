@@ -1,5 +1,6 @@
 // POST /api/admin/artist-approvals/[id]/approve - Approve an artist profile
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { sendArtistApprovedEmail } from '~/server/utils/email'
 
 export default defineEventHandler(async (event) => {
   // Verify admin access
@@ -64,6 +65,28 @@ export default defineEventHandler(async (event) => {
       message: `Your artist profile "${band.name}" has been approved. You can now upload music!`,
       link: `/dashboard/artist/${bandId}`,
     })
+
+    // Send approval email
+    const { data: ownerProfile } = await client
+      .from('profiles')
+      .select('email, display_name')
+      .eq('id', band.owner_id)
+      .single()
+
+    if (ownerProfile?.email) {
+      const config = useRuntimeConfig()
+      try {
+        await sendArtistApprovedEmail({
+          to: ownerProfile.email,
+          artistName: ownerProfile.display_name || 'Artist',
+          bandName: band.name,
+          dashboardUrl: `${config.public.appUrl}/dashboard/artist/${bandId}`,
+        })
+      } catch (emailError) {
+        console.error('Failed to send approval email:', emailError)
+        // Don't fail the request if email fails
+      }
+    }
   }
 
   return {
