@@ -22,8 +22,14 @@
             </UButton>
           </div>
 
-          <!-- Main Content -->
-          <div class="flex-1 flex flex-col items-center justify-center px-8 pb-8 overflow-hidden">
+          <!-- Main Content (swipeable area) -->
+          <div
+            ref="swipeArea"
+            class="flex-1 flex flex-col items-center justify-center px-8 pb-8 overflow-hidden touch-pan-y"
+            @touchstart="onTouchStart"
+            @touchmove="onTouchMove"
+            @touchend="onTouchEnd"
+          >
             <!-- Large Cover - scales based on viewport height -->
             <div class="w-full max-w-[min(24rem,40vh)] aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl mb-4 mt-2 shrink-0">
               <img
@@ -594,6 +600,55 @@ const { isTrackLiked, toggleTrackLike } = useLibrary()
 
 const isExpanded = ref(false)
 const showQueue = ref(false)
+
+// Swipe gesture handling for expanded view
+const swipeArea = ref<HTMLElement | null>(null)
+const touchStartX = ref(0)
+const touchStartY = ref(0)
+const touchCurrentX = ref(0)
+const isSwiping = ref(false)
+const swipeThreshold = 80 // Minimum distance to trigger skip
+
+const onTouchStart = (e: TouchEvent) => {
+  touchStartX.value = e.touches[0].clientX
+  touchStartY.value = e.touches[0].clientY
+  touchCurrentX.value = e.touches[0].clientX
+  isSwiping.value = false
+}
+
+const onTouchMove = (e: TouchEvent) => {
+  touchCurrentX.value = e.touches[0].clientX
+  const deltaX = touchCurrentX.value - touchStartX.value
+  const deltaY = e.touches[0].clientY - touchStartY.value
+
+  // Only consider horizontal swipes (more horizontal than vertical movement)
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
+    isSwiping.value = true
+  }
+}
+
+const onTouchEnd = () => {
+  if (!isSwiping.value) return
+
+  const deltaX = touchCurrentX.value - touchStartX.value
+
+  if (deltaX > swipeThreshold) {
+    // Swipe right -> previous track
+    if (queueIndex.value > 0) {
+      playPrevious()
+    }
+  } else if (deltaX < -swipeThreshold) {
+    // Swipe left -> next track
+    if (queueIndex.value < queue.value.length - 1 || repeatMode.value !== 'off') {
+      playNext()
+    }
+  }
+
+  // Reset state
+  isSwiping.value = false
+  touchStartX.value = 0
+  touchCurrentX.value = 0
+}
 
 // Heart/favorite functionality
 const isCurrentTrackLiked = computed(() => {
