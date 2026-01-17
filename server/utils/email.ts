@@ -1,6 +1,6 @@
-// Email utilities using Resend and React Email templates
+// Email utilities using Resend and MJML templates
 import { Resend } from 'resend'
-import { render } from '@react-email/render'
+import mjml2html from 'mjml'
 
 let resendClient: Resend | null = null
 
@@ -27,7 +27,8 @@ export const sendEmail = async (options: SendEmailOptions) => {
   const config = useRuntimeConfig()
   const client = getResendClient()
 
-  const fromAddress = options.from || `Indiestream <noreply@${config.public.emailDomain || 'indiestream.art'}>`
+  // Use Resend's test domain for development, or configure RESEND_FROM_EMAIL for production
+  const fromAddress = options.from || `Indiestream <${config.resendFromEmail || 'onboarding@resend.dev'}>`
 
   try {
     const { data, error } = await client.emails.send({
@@ -106,26 +107,30 @@ export interface PayoutFailedEmailData {
   errorMessage: string
 }
 
-// Helper to render React Email templates to HTML
-export const renderEmailTemplate = async (template: React.ReactElement): Promise<string> => {
-  return render(template)
+// Helper to render MJML templates to HTML
+export const renderEmailTemplate = (mjmlTemplate: string): string => {
+  const { html, errors } = mjml2html(mjmlTemplate)
+  if (errors && errors.length > 0) {
+    console.error('[Email] MJML compilation errors:', errors)
+  }
+  return html
 }
 
-// Wrapper functions for each email type (will be implemented with templates)
+// Wrapper functions for each email type
 export const sendWelcomeEmail = async (data: WelcomeEmailData) => {
-  const { WelcomeEmail } = await import('../emails/WelcomeEmail')
-  const html = await renderEmailTemplate(WelcomeEmail(data))
+  const { getWelcomeEmailTemplate } = await import('../emails/WelcomeEmail')
+  const html = renderEmailTemplate(getWelcomeEmailTemplate(data))
 
   return sendEmail({
     to: data.to,
-    subject: 'Welcome to Indiestream! 🎵',
+    subject: 'Welcome to Indiestream!',
     html,
   })
 }
 
 export const sendSubscriptionConfirmedEmail = async (data: SubscriptionConfirmedEmailData) => {
-  const { SubscriptionConfirmedEmail } = await import('../emails/SubscriptionConfirmedEmail')
-  const html = await renderEmailTemplate(SubscriptionConfirmedEmail(data))
+  const { getSubscriptionConfirmedEmailTemplate } = await import('../emails/SubscriptionConfirmedEmail')
+  const html = renderEmailTemplate(getSubscriptionConfirmedEmailTemplate(data))
 
   return sendEmail({
     to: data.to,
@@ -135,8 +140,8 @@ export const sendSubscriptionConfirmedEmail = async (data: SubscriptionConfirmed
 }
 
 export const sendPaymentFailedEmail = async (data: PaymentFailedEmailData) => {
-  const { PaymentFailedEmail } = await import('../emails/PaymentFailedEmail')
-  const html = await renderEmailTemplate(PaymentFailedEmail(data))
+  const { getPaymentFailedEmailTemplate } = await import('../emails/PaymentFailedEmail')
+  const html = renderEmailTemplate(getPaymentFailedEmailTemplate(data))
 
   return sendEmail({
     to: data.to,
@@ -146,19 +151,19 @@ export const sendPaymentFailedEmail = async (data: PaymentFailedEmailData) => {
 }
 
 export const sendArtistApprovedEmail = async (data: ArtistApprovedEmailData) => {
-  const { ArtistApprovedEmail } = await import('../emails/ArtistApprovedEmail')
-  const html = await renderEmailTemplate(ArtistApprovedEmail(data))
+  const { getArtistApprovedEmailTemplate } = await import('../emails/ArtistApprovedEmail')
+  const html = renderEmailTemplate(getArtistApprovedEmailTemplate(data))
 
   return sendEmail({
     to: data.to,
-    subject: `${data.bandName} is now live on Indiestream! 🎉`,
+    subject: `${data.bandName} is now live on Indiestream!`,
     html,
   })
 }
 
 export const sendArtistRejectedEmail = async (data: ArtistRejectedEmailData) => {
-  const { ArtistRejectedEmail } = await import('../emails/ArtistRejectedEmail')
-  const html = await renderEmailTemplate(ArtistRejectedEmail(data))
+  const { getArtistRejectedEmailTemplate } = await import('../emails/ArtistRejectedEmail')
+  const html = renderEmailTemplate(getArtistRejectedEmailTemplate(data))
 
   return sendEmail({
     to: data.to,
@@ -168,19 +173,19 @@ export const sendArtistRejectedEmail = async (data: ArtistRejectedEmailData) => 
 }
 
 export const sendPayoutSuccessEmail = async (data: PayoutSuccessEmailData) => {
-  const { PayoutSuccessEmail } = await import('../emails/PayoutSuccessEmail')
-  const html = await renderEmailTemplate(PayoutSuccessEmail(data))
+  const { getPayoutSuccessEmailTemplate } = await import('../emails/PayoutSuccessEmail')
+  const html = renderEmailTemplate(getPayoutSuccessEmailTemplate(data))
 
   return sendEmail({
     to: data.to,
-    subject: `Payout of ${data.currency} ${data.amount.toFixed(2)} processed! 💰`,
+    subject: `Payout of ${data.currency} ${data.amount.toFixed(2)} processed!`,
     html,
   })
 }
 
 export const sendPayoutFailedEmail = async (data: PayoutFailedEmailData) => {
-  const { PayoutFailedEmail } = await import('../emails/PayoutFailedEmail')
-  const html = await renderEmailTemplate(PayoutFailedEmail(data))
+  const { getPayoutFailedEmailTemplate } = await import('../emails/PayoutFailedEmail')
+  const html = renderEmailTemplate(getPayoutFailedEmailTemplate(data))
 
   return sendEmail({
     to: data.to,

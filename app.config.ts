@@ -9,8 +9,8 @@ export default defineAppConfig({
   brand: {
     name: 'Indiestream',
     tagline: 'Stream Fair. Support Direct.',
-    domain: 'indiestream.art',
-    url: 'https://indiestream.art',
+    domain: 'indiestream.vercel.app',
+    url: 'https://indiestream.vercel.app',
   },
 
   // Color System - Electric Purple Theme

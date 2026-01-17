@@ -148,6 +148,7 @@ export default defineNuxtConfig({
     r2BucketName: process.env.R2_BUCKET_NAME,
     r2AccountId: process.env.R2_ACCOUNT_ID,
     resendApiKey: process.env.RESEND_API_KEY,
+    resendFromEmail: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
     contactEmail: process.env.CONTACT_EMAIL || 'hello.indiestream@gmail.com',
 
     // Public keys (exposed to client)
@@ -155,7 +156,7 @@ export default defineNuxtConfig({
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-      appUrl: process.env.APP_URL || 'https://indiestream.art',
+      appUrl: process.env.APP_URL || 'https://indiestream.vercel.app',
     },
   },
 })
