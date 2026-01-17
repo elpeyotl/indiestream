@@ -44,8 +44,3 @@ tests/fixtures/.auth/
 # Supabase
 supabase/.branches
 supabase/.temp
-
-# Capacitor native projects (generated)
-ios/
-android/
-www/
