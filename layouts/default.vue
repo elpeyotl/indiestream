@@ -12,7 +12,7 @@
 
     <!-- Header -->
     <header
-      class="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50"
+      class="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50 safe-area-header"
     >
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
