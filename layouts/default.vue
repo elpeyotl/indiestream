@@ -313,6 +313,9 @@
     <!-- Mobile Bottom Navigation -->
     <MobileBottomNav />
 
+    <!-- PWA Install Prompt -->
+    <PwaInstallPrompt />
+
     <!-- Footer - Hidden on mobile for logged-in users -->
     <footer
       class="mt-20 border-t border-zinc-800 bg-zinc-950"
