@@ -132,7 +132,7 @@
             Stream music that supports artists directly
           </p>
           <UButton to="/pricing" color="violet" size="lg" block>
-            Join Indiestream
+            Join Fairstream
           </UButton>
         </div>
       </UCard>
@@ -142,7 +142,7 @@
         <p class="text-sm text-zinc-500">
           Shared via
           <NuxtLink to="/" class="text-violet-400 hover:underline font-medium">
-            Indiestream
+            Fairstream
           </NuxtLink>
            · Stream Fair. Support Direct.
         </p>
@@ -222,15 +222,15 @@ onMounted(async () => {
 useHead({
   title: computed(() =>
     impactData.value
-      ? `${impactData.value.user.displayName}'s Indiestream Impact`
-      : 'Indiestream Impact Share'
+      ? `${impactData.value.user.displayName}'s Fairstream Impact`
+      : 'Fairstream Impact Share'
   ),
   meta: [
-    { name: 'description', content: 'See how my listening supports artists directly on Indiestream' },
+    { name: 'description', content: 'See how my listening supports artists directly on Fairstream' },
     { property: 'og:title', content: computed(() =>
       impactData.value
-        ? `${impactData.value.user.displayName}'s Indiestream Impact`
-        : 'Indiestream Impact Share'
+        ? `${impactData.value.user.displayName}'s Fairstream Impact`
+        : 'Fairstream Impact Share'
     ) },
     { property: 'og:description', content: 'Stream Fair. Support Direct.' },
     { property: 'og:type', content: 'website' },

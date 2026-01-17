@@ -12,7 +12,7 @@
           </div>
 
           <div class="flex-1 min-w-0">
-            <h3 class="font-semibold text-zinc-100 text-sm">Install Indiestream</h3>
+            <h3 class="font-semibold text-zinc-100 text-sm">Install Fairstream</h3>
             <p class="text-zinc-400 text-xs mt-0.5">
               Get lock screen controls, faster loading, and a native app experience.
             </p>
@@ -116,21 +116,21 @@ const showManualInstructions = () => {
 
   if (isIOS) {
     toast.add({
-      title: 'Install Indiestream',
+      title: 'Install Fairstream',
       description: 'Tap the Share button, then "Add to Home Screen"',
       icon: 'i-heroicons-arrow-up-on-square',
       timeout: 8000,
     })
   } else if (isAndroid) {
     toast.add({
-      title: 'Install Indiestream',
+      title: 'Install Fairstream',
       description: 'Tap the menu (3 dots), then "Add to Home Screen" or "Install App"',
       icon: 'i-heroicons-ellipsis-vertical',
       timeout: 8000,
     })
   } else {
     toast.add({
-      title: 'Install Indiestream',
+      title: 'Install Fairstream',
       description: 'Use the browser menu to install this app',
       icon: 'i-heroicons-information-circle',
       timeout: 5000,

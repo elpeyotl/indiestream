@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-zinc-100 mb-2">Artists</h1>
-      <p class="text-zinc-400">Discover independent artists on Indiestream</p>
+      <p class="text-zinc-400">Discover independent artists on Fairstream</p>
     </div>
 
     <!-- Filters -->

@@ -8,14 +8,14 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">1. Acceptance of Terms</h2>
           <p class="text-zinc-400 mb-4">
-            By accessing or using Indiestream ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
+            By accessing or using Fairstream ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
           </p>
         </section>
 
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">2. Description of Service</h2>
           <p class="text-zinc-400 mb-4">
-            Indiestream is a music streaming platform that connects independent artists with listeners. We provide:
+            Fairstream is a music streaming platform that connects independent artists with listeners. We provide:
           </p>
           <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4">
             <li>Music streaming services for subscribers</li>
@@ -47,12 +47,12 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">5. Artist Terms</h2>
           <p class="text-zinc-400 mb-4">
-            Artists who upload content to Indiestream agree that:
+            Artists who upload content to Fairstream agree that:
           </p>
           <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4">
             <li>They own or have the rights to distribute all uploaded content</li>
             <li>Content does not infringe on any third-party rights</li>
-            <li>They grant Indiestream a license to stream and distribute their content</li>
+            <li>They grant Fairstream a license to stream and distribute their content</li>
             <li>Revenue will be distributed according to our payment terms</li>
           </ul>
         </section>
@@ -73,7 +73,7 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">7. Intellectual Property</h2>
           <p class="text-zinc-400 mb-4">
-            Artists retain full ownership of their content. By uploading to Indiestream, you grant us a non-exclusive license to stream, display, and distribute your content on the platform.
+            Artists retain full ownership of their content. By uploading to Fairstream, you grant us a non-exclusive license to stream, display, and distribute your content on the platform.
           </p>
         </section>
 
@@ -94,7 +94,7 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">10. Limitation of Liability</h2>
           <p class="text-zinc-400 mb-4">
-            Indiestream shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service.
+            Fairstream shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service.
           </p>
         </section>
 
@@ -119,9 +119,9 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'Terms of Service | Indiestream',
+  title: 'Terms of Service | Fairstream',
   meta: [
-    { name: 'description', content: 'Terms of Service for Indiestream music streaming platform.' },
+    { name: 'description', content: 'Terms of Service for Fairstream music streaming platform.' },
   ],
 })
 </script>

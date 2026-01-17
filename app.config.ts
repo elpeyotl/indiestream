@@ -7,7 +7,7 @@ export default defineAppConfig({
 
   // Brand Identity
   brand: {
-    name: 'Indiestream',
+    name: 'Fairstream',
     tagline: 'Stream Fair. Support Direct.',
     domain: 'indiestream.vercel.app',
     url: 'https://indiestream.vercel.app',

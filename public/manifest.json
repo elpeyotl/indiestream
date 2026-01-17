@@ -1,6 +1,6 @@
 {
-  "name": "Indiestream",
-  "short_name": "Indiestream",
+  "name": "Fairstream",
+  "short_name": "Fairstream",
   "description": "Stream Fair. Support Direct.",
   "start_url": "/discover",
   "display": "standalone",

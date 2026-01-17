@@ -93,9 +93,9 @@ onMounted(() => {
 })
 
 useHead({
-  title: 'Report a Bug | Indiestream',
+  title: 'Report a Bug | Fairstream',
   meta: [
-    { name: 'description', content: 'Report bugs and issues you find on Indiestream. Help us improve the platform.' },
+    { name: 'description', content: 'Report bugs and issues you find on Fairstream. Help us improve the platform.' },
   ],
 })
 </script>

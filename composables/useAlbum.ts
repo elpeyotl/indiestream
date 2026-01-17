@@ -1,4 +1,4 @@
-// Album and Track management composable for Indiestream
+// Album and Track management composable for Fairstream
 
 export interface Track {
   id: string

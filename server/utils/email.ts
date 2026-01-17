@@ -28,7 +28,7 @@ export const sendEmail = async (options: SendEmailOptions) => {
   const client = getResendClient()
 
   // Use Resend's test domain for development, or configure RESEND_FROM_EMAIL for production
-  const fromAddress = options.from || `Indiestream <${config.resendFromEmail || 'onboarding@resend.dev'}>`
+  const fromAddress = options.from || `Fairstream <${config.resendFromEmail || 'onboarding@resend.dev'}>`
 
   try {
     const { data, error } = await client.emails.send({
@@ -123,7 +123,7 @@ export const sendWelcomeEmail = async (data: WelcomeEmailData) => {
 
   return sendEmail({
     to: data.to,
-    subject: 'Welcome to Indiestream!',
+    subject: 'Welcome to Fairstream!',
     html,
   })
 }
@@ -134,7 +134,7 @@ export const sendSubscriptionConfirmedEmail = async (data: SubscriptionConfirmed
 
   return sendEmail({
     to: data.to,
-    subject: 'Your Indiestream subscription is active',
+    subject: 'Your Fairstream subscription is active',
     html,
   })
 }
@@ -156,7 +156,7 @@ export const sendArtistApprovedEmail = async (data: ArtistApprovedEmailData) => 
 
   return sendEmail({
     to: data.to,
-    subject: `${data.bandName} is now live on Indiestream!`,
+    subject: `${data.bandName} is now live on Fairstream!`,
     html,
   })
 }

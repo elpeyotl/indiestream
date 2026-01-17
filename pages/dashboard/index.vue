@@ -182,7 +182,7 @@
               />
             </div>
             <p class="text-sm text-zinc-400 truncate">
-              indiestream.art/{{ band.slug }}
+              fairstream.fm/{{ band.slug }}
             </p>
           </div>
 

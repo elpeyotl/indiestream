@@ -75,7 +75,7 @@
         <!-- URL Slug -->
         <UFormGroup label="Your URL" required>
           <template #hint>
-            <span class="text-zinc-500">indiestream.art/</span>
+            <span class="text-zinc-500">fairstream.fm/</span>
           </template>
           <div class="relative">
             <UInput

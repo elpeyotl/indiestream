@@ -170,7 +170,7 @@ export default defineEventHandler(async (event) => {
           amount,
           currency: 'chf',
           destination: stripeAccountId,
-          description: `Indiestream payout for ${userName} (${ownerData.bands.length} artist${ownerData.bands.length > 1 ? 's' : ''})`,
+          description: `Fairstream payout for ${userName} (${ownerData.bands.length} artist${ownerData.bands.length > 1 ? 's' : ''})`,
           metadata: {
             user_id: ownerId,
             band_count: ownerData.bands.length.toString(),

@@ -15,8 +15,8 @@ export default defineNuxtConfig({
     strategies: 'generateSW',
     registerType: 'autoUpdate',
     manifest: {
-      name: 'Indiestream',
-      short_name: 'Indiestream',
+      name: 'Fairstream',
+      short_name: 'Fairstream',
       description: 'Stream Fair. Support Direct.',
       theme_color: '#8b5cf6',
       background_color: '#09090b',
@@ -94,7 +94,7 @@ export default defineNuxtConfig({
   // App configuration
   app: {
     head: {
-      title: 'Indiestream - Stream Fair. Support Direct.',
+      title: 'Fairstream - Stream Fair. Support Direct.',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover' },
@@ -106,7 +106,7 @@ export default defineNuxtConfig({
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-        { name: 'apple-mobile-web-app-title', content: 'Indiestream' },
+        { name: 'apple-mobile-web-app-title', content: 'Fairstream' },
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },

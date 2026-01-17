@@ -2,7 +2,7 @@
   <div class="container mx-auto px-4 py-12">
     <!-- Hero -->
     <div class="text-center mb-16">
-      <h1 class="text-4xl md:text-5xl font-bold text-zinc-100 mb-6">How Indiestream Works</h1>
+      <h1 class="text-4xl md:text-5xl font-bold text-zinc-100 mb-6">How Fairstream Works</h1>
       <p class="text-xl text-zinc-400 max-w-2xl mx-auto">
         A fairer way to stream music. Your subscription supports the artists you actually listen to.
       </p>
@@ -152,7 +152,7 @@
 
       <!-- Artist Benefits -->
       <div class="bg-gradient-to-r from-fuchsia-900/30 to-violet-900/30 rounded-2xl p-8 border border-fuchsia-500/30">
-        <h3 class="font-semibold text-zinc-100 mb-6 text-center">Why Artists Love Indiestream</h3>
+        <h3 class="font-semibold text-zinc-100 mb-6 text-center">Why Artists Love Fairstream</h3>
         <div class="grid md:grid-cols-2 gap-6">
           <div class="flex items-start gap-3">
             <UIcon name="i-heroicons-check-circle" class="w-6 h-6 text-green-400 mt-0.5" />
@@ -189,7 +189,7 @@
     <!-- CTA -->
     <div class="text-center">
       <h2 class="text-2xl font-bold text-zinc-100 mb-4">Ready to Get Started?</h2>
-      <p class="text-zinc-400 mb-8">Join thousands of artists and listeners on Indiestream.</p>
+      <p class="text-zinc-400 mb-8">Join thousands of artists and listeners on Fairstream.</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <UButton color="violet" size="lg" to="/register">
           Start Listening
@@ -204,9 +204,9 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'How It Works | Indiestream',
+  title: 'How It Works | Fairstream',
   meta: [
-    { name: 'description', content: 'Learn how Indiestream works for listeners and artists. Fair streaming where your subscription supports the artists you love.' },
+    { name: 'description', content: 'Learn how Fairstream works for listeners and artists. Fair streaming where your subscription supports the artists you love.' },
   ],
 })
 </script>

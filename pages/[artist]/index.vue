@@ -682,11 +682,11 @@ watch(() => band.value?.avatar_url, async (newUrl) => {
 
 // Set page meta based on band
 useHead(() => ({
-  title: band.value ? `${band.value.name} | Indiestream` : 'Artist | Indiestream',
+  title: band.value ? `${band.value.name} | Fairstream` : 'Artist | Fairstream',
   meta: [
     {
       name: 'description',
-      content: band.value?.bio || `Listen to ${band.value?.name || 'this artist'} on Indiestream`,
+      content: band.value?.bio || `Listen to ${band.value?.name || 'this artist'} on Fairstream`,
     },
   ],
 }))

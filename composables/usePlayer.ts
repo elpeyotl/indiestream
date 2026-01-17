@@ -1,4 +1,4 @@
-// Global audio player composable for Indiestream
+// Global audio player composable for Fairstream
 import type { Track, Album } from './useAlbum'
 
 export type RepeatMode = 'off' | 'all' | 'one'

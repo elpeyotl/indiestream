@@ -94,7 +94,7 @@ const loadDocument = async () => {
 }
 
 useHead({
-  title: computed(() => `${docTitles[slug.value] || 'Documentation'} - Indiestream`),
+  title: computed(() => `${docTitles[slug.value] || 'Documentation'} - Fairstream`),
 })
 
 onMounted(loadDocument)

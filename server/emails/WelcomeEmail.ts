@@ -13,7 +13,7 @@ export const getWelcomeEmailTemplate = ({
 
   const content = `
     <mj-text align="center" font-size="28px" font-weight="700" color="#f4f4f5" padding-bottom="24px">
-      Welcome to Indiestream!
+      Welcome to Fairstream!
     </mj-text>
 
     <mj-text>
@@ -21,17 +21,17 @@ export const getWelcomeEmailTemplate = ({
     </mj-text>
 
     <mj-text>
-      Thanks for joining Indiestream! You're now part of a community that supports independent artists directly.
+      Thanks for joining Fairstream! You're now part of a community that supports independent artists directly.
     </mj-text>
 
     <mj-text padding="20px 24px" background-color="#1e1b4b" border-radius="12px" border-left="4px solid #8b5cf6" color="#c4b5fd">
-      When you stream on Indiestream, <span class="highlight"><strong>70% goes directly to artists</strong></span> - that's 2x more than other platforms.
+      When you stream on Fairstream, <span class="highlight"><strong>70% goes directly to artists</strong></span> - that's 2x more than other platforms.
     </mj-text>
 
     <mj-divider />
 
     <mj-text font-size="18px" font-weight="600" color="#f4f4f5" padding-bottom="16px">
-      What makes Indiestream different?
+      What makes Fairstream different?
     </mj-text>
 
     <mj-text font-size="14px" line-height="22px" padding-bottom="8px">
@@ -54,7 +54,7 @@ export const getWelcomeEmailTemplate = ({
     </mj-text>
   `
 
-  return wrapInBaseTemplate(content, 'Welcome to Indiestream! Start discovering independent music.')
+  return wrapInBaseTemplate(content, 'Welcome to Fairstream! Start discovering independent music.')
 }
 
 export default getWelcomeEmailTemplate

@@ -28,7 +28,7 @@ export const getSubscriptionConfirmedEmailTemplate = ({
     </mj-text>
 
     <mj-text>
-      Your Indiestream subscription is now active. You have unlimited access to stream all the music on our platform.
+      Your Fairstream subscription is now active. You have unlimited access to stream all the music on our platform.
     </mj-text>
 
     <mj-text padding="20px 24px" background-color="#09090b" border-radius="12px">

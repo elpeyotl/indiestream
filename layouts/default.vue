@@ -419,7 +419,7 @@
           class="mt-8 pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-zinc-500 text-sm"
         >
           <p>
-            &copy; 2026 Indiestream. ❤️ Built for independent artists. Designed
+            &copy; 2026 Fairstream. ❤️ Built for independent artists. Designed
             for fans.
           </p>
           <NuxtLink

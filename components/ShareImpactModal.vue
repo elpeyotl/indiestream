@@ -210,7 +210,7 @@ const copyShareUrl = async () => {
 }
 
 const shareToTwitter = () => {
-  const text = `Check out my Indiestream impact! I've supported artists directly with my listening. 🎵`
+  const text = `Check out my Fairstream impact! I've supported artists directly with my listening. 🎵`
   const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl.value)}`
   window.open(url, '_blank', 'width=550,height=420')
 }

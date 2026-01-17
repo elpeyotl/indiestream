@@ -1,4 +1,4 @@
-// Authentication composable for Indiestream
+// Authentication composable for Fairstream
 
 export const useAuth = () => {
   const supabase = useSupabaseClient()

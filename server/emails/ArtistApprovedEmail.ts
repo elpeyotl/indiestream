@@ -24,7 +24,7 @@ export const getArtistApprovedEmailTemplate = ({
     </mj-text>
 
     <mj-text>
-      Great news! <span class="highlight-violet"><strong>${bandName}</strong></span> has been approved and is now live on Indiestream.
+      Great news! <span class="highlight-violet"><strong>${bandName}</strong></span> has been approved and is now live on Fairstream.
     </mj-text>
 
     <mj-text>
@@ -57,7 +57,7 @@ export const getArtistApprovedEmailTemplate = ({
     </mj-text>
   `
 
-  return wrapInBaseTemplate(content, `${bandName} is now live on Indiestream!`)
+  return wrapInBaseTemplate(content, `${bandName} is now live on Fairstream!`)
 }
 
 export default getArtistApprovedEmailTemplate

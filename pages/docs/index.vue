@@ -4,7 +4,7 @@
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-zinc-100 mb-2">Documentation</h1>
       <p class="text-zinc-400">
-        Internal documentation for Indiestream development. This page is not linked publicly.
+        Internal documentation for Fairstream development. This page is not linked publicly.
       </p>
     </div>
 
@@ -32,7 +32,7 @@
     <div class="mt-12 pt-8 border-t border-zinc-800">
       <p class="text-zinc-500 text-sm">
         These docs are for internal use and development planning.
-        <NuxtLink to="/" class="text-violet-400 hover:text-violet-300">Return to Indiestream</NuxtLink>
+        <NuxtLink to="/" class="text-violet-400 hover:text-violet-300">Return to Fairstream</NuxtLink>
       </p>
     </div>
   </div>
@@ -91,6 +91,6 @@ const docs = [
 ]
 
 useHead({
-  title: 'Documentation - Indiestream',
+  title: 'Documentation - Fairstream',
 })
 </script>

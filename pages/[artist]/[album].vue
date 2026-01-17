@@ -413,12 +413,12 @@ const toggleCredits = (trackId: string) => {
 // Set page meta
 useHead(() => ({
   title: album.value && band.value
-    ? `${album.value.title} by ${band.value.name} | Indiestream`
-    : 'Album | Indiestream',
+    ? `${album.value.title} by ${band.value.name} | Fairstream`
+    : 'Album | Fairstream',
   meta: [
     {
       name: 'description',
-      content: album.value?.description || `Listen to ${album.value?.title || 'this album'} on Indiestream`,
+      content: album.value?.description || `Listen to ${album.value?.title || 'this album'} on Fairstream`,
     },
   ],
 }))

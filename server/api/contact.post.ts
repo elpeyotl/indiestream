@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     await resend.emails.send({
-      from: 'Indiestream Contact <onboarding@resend.dev>',
+      from: 'Fairstream Contact <onboarding@resend.dev>',
       to: config.contactEmail,
       replyTo: body.email,
       subject: `[Contact] ${body.subject}`,
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
         <p>${body.message.replace(/\n/g, '<br />')}</p>
         <hr />
         <p style="color: #666; font-size: 12px;">
-          This message was sent from the Indiestream contact form.
+          This message was sent from the Fairstream contact form.
         </p>
       `,
     })

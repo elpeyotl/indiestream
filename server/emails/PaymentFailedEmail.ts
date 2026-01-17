@@ -27,7 +27,7 @@ export const getPaymentFailedEmailTemplate = ({
     </mj-text>
 
     <mj-text>
-      We couldn't process your payment of <span class="highlight"><strong>${formattedAmount}</strong></span> for your Indiestream subscription.
+      We couldn't process your payment of <span class="highlight"><strong>${formattedAmount}</strong></span> for your Fairstream subscription.
     </mj-text>
 
     <mj-text padding="16px 20px" background-color="#292524" border-radius="8px" border-left="4px solid #f59e0b" color="#fbbf24" font-size="14px" line-height="22px">
