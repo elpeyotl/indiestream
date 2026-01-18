@@ -30,31 +30,11 @@
             @touchmove="onTouchMove"
             @touchend="onTouchEnd"
           >
-            <!-- Carousel Container for Album Covers -->
-            <div class="w-full max-w-[min(24rem,40vh)] relative mb-4 mt-2 shrink-0 overflow-visible">
-              <!-- Previous Track Cover (positioned left) -->
+            <!-- Album Cover with slide transition -->
+            <div class="w-full max-w-[min(24rem,40vh)] relative mb-4 mt-2 shrink-0 overflow-hidden">
               <div
-                v-if="previousTrack"
-                class="absolute top-0 right-full mr-6 w-full aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-xl opacity-40 scale-[0.85]"
-                :style="adjacentCoverStyle(-1)"
-                :class="{ 'swipe-transition': isAnimating }"
-              >
-                <img
-                  v-if="previousTrack.coverUrl"
-                  :src="previousTrack.coverUrl"
-                  :alt="previousTrack.albumTitle"
-                  class="w-full h-full object-cover"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center">
-                  <UIcon name="i-heroicons-musical-note" class="w-20 h-20 text-zinc-600" />
-                </div>
-              </div>
-
-              <!-- Current Track Cover (center) -->
-              <div
-                class="w-full aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl"
-                :style="currentCoverStyle"
-                :class="{ 'swipe-transition': isAnimating }"
+                class="w-full aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl cover-slide"
+                :class="slideClass"
               >
                 <img
                   v-if="currentTrack.coverUrl"
@@ -64,24 +44,6 @@
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
                   <UIcon name="i-heroicons-musical-note" class="w-24 h-24 text-zinc-600" />
-                </div>
-              </div>
-
-              <!-- Next Track Cover (positioned right) -->
-              <div
-                v-if="nextTrack"
-                class="absolute top-0 left-full ml-6 w-full aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-xl opacity-40 scale-[0.85]"
-                :style="adjacentCoverStyle(1)"
-                :class="{ 'swipe-transition': isAnimating }"
-              >
-                <img
-                  v-if="nextTrack.coverUrl"
-                  :src="nextTrack.coverUrl"
-                  :alt="nextTrack.albumTitle"
-                  class="w-full h-full object-cover"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center">
-                  <UIcon name="i-heroicons-musical-note" class="w-20 h-20 text-zinc-600" />
                 </div>
               </div>
             </div>
@@ -182,7 +144,7 @@
                 variant="ghost"
                 size="xl"
                 :disabled="queueIndex <= 0"
-                @click="playPrevious"
+                @click="handlePreviousClick"
               >
                 <UIcon name="i-heroicons-backward" class="w-8 h-8" />
               </UButton>
@@ -206,7 +168,7 @@
                 variant="ghost"
                 size="xl"
                 :disabled="queueIndex >= queue.length - 1 && repeatMode === 'off'"
-                @click="playNext"
+                @click="handleNextClick"
               >
                 <UIcon name="i-heroicons-forward" class="w-8 h-8" />
               </UButton>
@@ -403,7 +365,7 @@
                 size="xs"
                 class="w-8 h-8 sm:w-9 sm:h-9"
                 :disabled="queueIndex <= 0"
-                @click.stop="playPrevious"
+                @click.stop="handlePreviousClick"
               >
                 <UIcon name="i-heroicons-backward" class="w-4 h-4 sm:w-5 sm:h-5" />
               </UButton>
@@ -429,7 +391,7 @@
                 size="xs"
                 class="w-8 h-8 sm:w-9 sm:h-9"
                 :disabled="queueIndex >= queue.length - 1 && repeatMode === 'off'"
-                @click.stop="playNext"
+                @click.stop="handleNextClick"
               >
                 <UIcon name="i-heroicons-forward" class="w-4 h-4 sm:w-5 sm:h-5" />
               </UButton>
@@ -644,132 +606,72 @@ const { isTrackLiked, toggleTrackLike } = useLibrary()
 const isExpanded = ref(false)
 const showQueue = ref(false)
 
-// Swipe gesture handling for expanded view with carousel animation
+// Track navigation direction for slide animation
+const slideDirection = ref<'left' | 'right' | null>(null)
+const isAnimating = ref(false)
 const swipeArea = ref<HTMLElement | null>(null)
+
+// Computed class for slide animation
+const slideClass = computed(() => {
+  if (!isAnimating.value) return ''
+  return slideDirection.value === 'left' ? 'slide-in-left' : 'slide-in-right'
+})
+
+// Watch for track changes to trigger animation
+watch(() => currentTrack.value?.id, (newId, oldId) => {
+  if (newId && oldId && newId !== oldId) {
+    // Trigger animation
+    isAnimating.value = true
+    // Reset animation state after it completes
+    setTimeout(() => {
+      isAnimating.value = false
+    }, 280)
+  }
+})
+
+// Simple swipe gesture handling for mobile
 const touchStartX = ref(0)
 const touchStartY = ref(0)
-const touchCurrentX = ref(0)
-const isSwiping = ref(false)
-const isAnimating = ref(false)
-const swipeOffset = ref(0) // Current swipe offset in pixels
-const swipeThreshold = 80 // Minimum distance to trigger skip
-
-// Get previous and next tracks for carousel display
-const previousTrack = computed(() => {
-  if (queueIndex.value > 0) {
-    return queue.value[queueIndex.value - 1]
-  }
-  return null
-})
-
-const nextTrack = computed(() => {
-  if (queueIndex.value < queue.value.length - 1) {
-    return queue.value[queueIndex.value + 1]
-  }
-  return null
-})
-
-// Current cover transform style - follows the swipe and scales
-const currentCoverStyle = computed(() => {
-  const absOffset = Math.abs(swipeOffset.value)
-  const maxOffset = 150
-  const scale = 1 - (Math.min(absOffset, maxOffset) / maxOffset) * 0.08
-  return {
-    transform: `translateX(${swipeOffset.value}px) scale(${scale})`,
-  }
-})
-
-// Adjacent covers move with the swipe
-const adjacentCoverStyle = (direction: number) => {
-  // direction: -1 for previous (left), 1 for next (right)
-  return {
-    transform: `translateX(${swipeOffset.value}px)`,
-  }
-}
+const swipeThreshold = 80
 
 const onTouchStart = (e: TouchEvent) => {
   touchStartX.value = e.touches[0].clientX
   touchStartY.value = e.touches[0].clientY
-  touchCurrentX.value = e.touches[0].clientX
-  isSwiping.value = false
-  isAnimating.value = false
-  swipeOffset.value = 0
 }
 
 const onTouchMove = (e: TouchEvent) => {
-  touchCurrentX.value = e.touches[0].clientX
-  const deltaX = touchCurrentX.value - touchStartX.value
-  const deltaY = e.touches[0].clientY - touchStartY.value
+  // Just track - we don't move the cover during swipe anymore
+}
 
-  // Only consider horizontal swipes (more horizontal than vertical movement)
-  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-    isSwiping.value = true
-    // Apply resistance at boundaries
-    const canGoNext = queueIndex.value < queue.value.length - 1 || repeatMode.value !== 'off'
-    const canGoPrev = queueIndex.value > 0
+const onTouchEnd = (e: TouchEvent) => {
+  const touchEndX = e.changedTouches[0].clientX
+  const touchEndY = e.changedTouches[0].clientY
+  const deltaX = touchEndX - touchStartX.value
+  const deltaY = touchEndY - touchStartY.value
 
-    if ((deltaX > 0 && !canGoPrev) || (deltaX < 0 && !canGoNext)) {
-      // Apply resistance when at boundary
-      swipeOffset.value = deltaX * 0.2
-    } else {
-      swipeOffset.value = deltaX
+  // Only handle horizontal swipes
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
+    if (deltaX > 0 && queueIndex.value > 0) {
+      // Swipe right -> previous track (new cover comes from left)
+      slideDirection.value = 'right'
+      playPrevious()
+    } else if (deltaX < 0 && (queueIndex.value < queue.value.length - 1 || repeatMode.value !== 'off')) {
+      // Swipe left -> next track (new cover comes from right)
+      slideDirection.value = 'left'
+      playNext()
     }
   }
 }
 
-const onTouchEnd = () => {
-  const deltaX = touchCurrentX.value - touchStartX.value
+// Button click handlers (set direction before navigation)
+const handlePreviousClick = () => {
+  slideDirection.value = 'right'
+  playPrevious()
+}
 
-  if (isSwiping.value) {
-    const goingToPrevious = deltaX > swipeThreshold && queueIndex.value > 0
-    const goingToNext = deltaX < -swipeThreshold && (queueIndex.value < queue.value.length - 1 || repeatMode.value !== 'off')
-
-    // Enable animation class
-    isAnimating.value = true
-
-    // Use double RAF to ensure the browser has painted the transition class
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (goingToPrevious || goingToNext) {
-          // Get container width to slide completely off-screen
-          const containerWidth = swipeArea.value?.offsetWidth || 400
-
-          // Animate the cover sliding off in the swipe direction
-          swipeOffset.value = goingToPrevious ? containerWidth : -containerWidth
-
-          // After the slide animation completes, change track and reset
-          setTimeout(() => {
-            // Disable animation temporarily to reset position instantly
-            isAnimating.value = false
-            swipeOffset.value = 0
-
-            // Change track
-            if (goingToPrevious) {
-              playPrevious()
-            } else {
-              playNext()
-            }
-          }, 350)
-        } else {
-          // Swipe wasn't far enough, animate back to center
-          swipeOffset.value = 0
-
-          // Reset animation flag after transition
-          setTimeout(() => {
-            isAnimating.value = false
-          }, 350)
-        }
-      })
-    })
-  } else {
-    // No swipe detected, just reset
-    swipeOffset.value = 0
-  }
-
-  // Reset state
-  isSwiping.value = false
-  touchStartX.value = 0
-  touchCurrentX.value = 0
+const handleNextClick = () => {
+  slideDirection.value = 'left'
+  playNext()
 }
 
 // Heart/favorite functionality
@@ -874,10 +776,39 @@ onMounted(() => {
   opacity: 0;
 }
 
-/* Smooth swipe transition for carousel */
-.swipe-transition {
-  transition: transform 350ms cubic-bezier(0.33, 1, 0.68, 1);
+/* Slide animations for album cover */
+.cover-slide {
   will-change: transform;
+}
+
+.slide-in-left {
+  animation: slideInFromRight 280ms cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+.slide-in-right {
+  animation: slideInFromLeft 280ms cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+@keyframes slideInFromRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* Custom range input styling */
