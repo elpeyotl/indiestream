@@ -1,19 +1,11 @@
 <template>
   <div class="container mx-auto px-4 py-8 max-w-5xl">
-    <!-- Header -->
-    <div class="mb-8">
-      <NuxtLink to="/dashboard" class="text-zinc-400 hover:text-zinc-300 text-sm flex items-center gap-1 mb-4">
-        <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
-        Back to Dashboard
-      </NuxtLink>
-      <h1 class="text-3xl font-bold text-zinc-100">Earnings & Payouts</h1>
-      <p class="text-zinc-400 mt-2">Combined earnings across all your artists</p>
-    </div>
+    <DashboardPageHeader
+      title="Earnings & Payouts"
+      description="Combined earnings across all your artists"
+    />
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
     <template v-else-if="earnings">
       <!-- Stripe Connect Status -->

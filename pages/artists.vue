@@ -35,10 +35,7 @@
       />
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
     <template v-else>
       <!-- Artists Grid -->
@@ -94,18 +91,14 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="text-center py-20">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center">
-          <UIcon name="i-heroicons-user-group" class="w-10 h-10 text-violet-400" />
-        </div>
-        <h2 class="text-2xl font-bold text-zinc-100 mb-2">No Artists Found</h2>
-        <p class="text-zinc-400 mb-6">
-          {{ searchQuery ? `No artists match "${searchQuery}"` : 'No artists available yet' }}
-        </p>
-        <UButton v-if="searchQuery" color="violet" variant="outline" @click="clearSearch">
-          Clear Search
-        </UButton>
-      </div>
+      <EmptyState
+        v-else
+        icon="i-heroicons-user-group"
+        title="No Artists Found"
+        :description="searchQuery ? `No artists match &quot;${searchQuery}&quot;` : 'No artists available yet'"
+        :action-label="searchQuery ? 'Clear Search' : undefined"
+        @action="clearSearch"
+      />
 
       <!-- Load More -->
       <div v-if="hasMore && artists.length > 0" class="mt-12 text-center">

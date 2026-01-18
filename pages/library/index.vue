@@ -9,9 +9,7 @@
     <!-- Tab Selector -->
     <PillTabs v-model="activeTab" :tabs="tabs" sticky>
       <template #playlists>
-          <div v-if="loading" class="flex items-center justify-center py-20">
-            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
-          </div>
+          <LoadingSpinner v-if="loading" />
 
           <!-- Create Playlist Button -->
           <div v-if="!loading && (userPlaylists.length > 0 || tracks.length > 0)" class="flex justify-start mb-6">
@@ -22,19 +20,15 @@
           </div>
 
           <!-- Empty State (no playlists and no liked tracks) -->
-          <div v-if="!loading && userPlaylists.length === 0 && tracks.length === 0" class="text-center py-16">
-            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center">
-              <UIcon name="i-heroicons-queue-list" class="w-10 h-10 text-violet-400" />
-            </div>
-            <h3 class="text-xl font-semibold text-zinc-100 mb-2">No playlists yet</h3>
-            <p class="text-zinc-400 mb-6 max-w-md mx-auto">
-              Create playlists to organize your favorite tracks and share them with friends.
-            </p>
-            <UButton color="violet" @click="showCreatePlaylist = true">
-              <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
-              Create Playlist
-            </UButton>
-          </div>
+          <EmptyState
+            v-if="!loading && userPlaylists.length === 0 && tracks.length === 0"
+            icon="i-heroicons-queue-list"
+            title="No playlists yet"
+            description="Create playlists to organize your favorite tracks and share them with friends."
+            action-label="Create Playlist"
+            action-icon="i-heroicons-plus"
+            @action="showCreatePlaylist = true"
+          />
 
           <!-- Playlist Grid (includes Liked Songs as first item) -->
           <div v-else-if="!loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -121,22 +115,16 @@
       </template>
 
       <template #artists>
-          <div v-if="loading" class="flex items-center justify-center py-20">
-            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
-          </div>
+          <LoadingSpinner v-if="loading" />
 
-          <div v-else-if="artists.length === 0" class="text-center py-16">
-            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center">
-              <UIcon name="i-heroicons-user-group" class="w-10 h-10 text-violet-400" />
-            </div>
-            <h3 class="text-xl font-semibold text-zinc-100 mb-2">No followed artists yet</h3>
-            <p class="text-zinc-400 mb-6 max-w-md mx-auto">
-              Follow your favorite artists to see them here. You'll be notified when they release new music.
-            </p>
-            <UButton color="violet" to="/discover">
-              Discover Artists
-            </UButton>
-          </div>
+          <EmptyState
+            v-else-if="artists.length === 0"
+            icon="i-heroicons-user-group"
+            title="No followed artists yet"
+            description="Follow your favorite artists to see them here. You'll be notified when they release new music."
+            action-label="Discover Artists"
+            action-to="/discover"
+          />
 
           <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             <NuxtLink
@@ -169,22 +157,16 @@
       </template>
 
       <template #albums>
-          <div v-if="loading" class="flex items-center justify-center py-20">
-            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
-          </div>
+          <LoadingSpinner v-if="loading" />
 
-          <div v-else-if="albums.length === 0" class="text-center py-16">
-            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-fuchsia-500/20 flex items-center justify-center">
-              <UIcon name="i-heroicons-square-3-stack-3d" class="w-10 h-10 text-fuchsia-400" />
-            </div>
-            <h3 class="text-xl font-semibold text-zinc-100 mb-2">No saved albums yet</h3>
-            <p class="text-zinc-400 mb-6 max-w-md mx-auto">
-              Save albums to your library to access them quickly and show support for the artists.
-            </p>
-            <UButton color="violet" to="/discover">
-              Discover Music
-            </UButton>
-          </div>
+          <EmptyState
+            v-else-if="albums.length === 0"
+            icon="i-heroicons-square-3-stack-3d"
+            title="No saved albums yet"
+            description="Save albums to your library to access them quickly and show support for the artists."
+            action-label="Discover Music"
+            action-to="/discover"
+          />
 
           <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             <NuxtLink
@@ -217,22 +199,16 @@
       </template>
 
       <template #tracks>
-          <div v-if="loading" class="flex items-center justify-center py-20">
-            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
-          </div>
+          <LoadingSpinner v-if="loading" />
 
-          <div v-else-if="tracks.length === 0" class="text-center py-16">
-            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-teal-500/20 flex items-center justify-center">
-              <UIcon name="i-heroicons-heart" class="w-10 h-10 text-teal-400" />
-            </div>
-            <h3 class="text-xl font-semibold text-zinc-100 mb-2">No liked tracks yet</h3>
-            <p class="text-zinc-400 mb-6 max-w-md mx-auto">
-              Like tracks by clicking the heart icon while browsing or playing music.
-            </p>
-            <UButton color="violet" to="/discover">
-              Discover Music
-            </UButton>
-          </div>
+          <EmptyState
+            v-else-if="tracks.length === 0"
+            icon="i-heroicons-heart"
+            title="No liked tracks yet"
+            description="Like tracks by clicking the heart icon while browsing or playing music."
+            action-label="Discover Music"
+            action-to="/discover"
+          />
 
           <div v-else class="space-y-1">
             <div

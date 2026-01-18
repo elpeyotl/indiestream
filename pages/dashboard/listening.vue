@@ -1,14 +1,9 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <!-- Header -->
-    <div class="mb-8">
-      <NuxtLink to="/dashboard" class="text-zinc-400 hover:text-zinc-300 text-sm flex items-center gap-1 mb-4">
-        <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
-        Back to Dashboard
-      </NuxtLink>
-      <h1 class="text-3xl font-bold text-zinc-100">Your Listening</h1>
-      <p class="text-zinc-400 mt-1">Track your music journey and see which artists you've supported</p>
-    </div>
+    <DashboardPageHeader
+      title="Your Listening"
+      description="Track your music journey and see which artists you've supported"
+    />
 
     <!-- Promo Card for Stats -->
     <UCard class="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/30 mb-6">
@@ -67,10 +62,7 @@
       </UButton>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
     <template v-else>
       <!-- Recent Listening History -->
@@ -80,23 +72,14 @@
         </template>
 
         <!-- Empty state for free tier users -->
-        <div v-if="history.length === 0 && !isSubscribed" class="text-center py-12">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
-            <UIcon name="i-heroicons-chart-bar" class="w-8 h-8 text-violet-400" />
-          </div>
-          <h3 class="text-lg font-semibold text-zinc-100 mb-2">Track your listening history</h3>
-          <p class="text-zinc-400 mb-6 max-w-md mx-auto">
-            Subscribe to see your full listening history and support artists with every stream.
-          </p>
-          <div class="flex gap-3 justify-center">
-            <UButton color="violet" to="/pricing">
-              Upgrade to Track
-            </UButton>
-            <UButton color="gray" variant="outline" to="/discover">
-              Discover Music
-            </UButton>
-          </div>
-        </div>
+        <EmptyState
+          v-if="history.length === 0 && !isSubscribed"
+          icon="i-heroicons-chart-bar"
+          title="Track your listening history"
+          description="Subscribe to see your full listening history and support artists with every stream."
+          action-label="Upgrade to Track"
+          action-to="/pricing"
+        />
 
         <!-- Empty state for subscribers -->
         <div v-else-if="history.length === 0" class="text-center py-12">

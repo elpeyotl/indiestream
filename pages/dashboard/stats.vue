@@ -1,14 +1,9 @@
 <template>
   <div class="container mx-auto px-4 py-8 max-w-6xl">
-    <!-- Header -->
-    <div class="mb-8">
-      <NuxtLink to="/dashboard" class="text-zinc-400 hover:text-zinc-300 text-sm flex items-center gap-1 mb-4">
-        <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
-        Back to Dashboard
-      </NuxtLink>
-      <h1 class="text-3xl font-bold text-zinc-100">Your Music Journey</h1>
-      <p class="text-zinc-400 mt-2">Discover your listening patterns and favorite artists</p>
-    </div>
+    <DashboardPageHeader
+      title="Your Music Journey"
+      description="Discover your listening patterns and favorite artists"
+    />
 
     <!-- Period Toggle -->
     <div class="mb-6">
@@ -40,38 +35,28 @@
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
-    </div>
+    <LoadingSpinner v-if="loading" />
 
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center py-12">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
-        <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-red-400" />
-      </div>
-      <h3 class="text-lg font-semibold text-zinc-100 mb-2">Failed to Load Stats</h3>
-      <p class="text-zinc-400 mb-6">{{ error }}</p>
-      <UButton color="violet" @click="loadStats">
-        Try Again
-      </UButton>
-    </div>
+    <EmptyState
+      v-else-if="error"
+      icon="i-heroicons-exclamation-triangle"
+      :title="'Failed to Load Stats'"
+      :description="error"
+      action-label="Try Again"
+      color="red"
+      @action="loadStats"
+    />
 
     <!-- Content -->
     <template v-else-if="stats">
-      <!-- Empty State -->
-      <div v-if="stats.totalStreams === 0" class="text-center py-12">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
-          <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-violet-400" />
-        </div>
-        <h3 class="text-lg font-semibold text-zinc-100 mb-2">No Listening Data</h3>
-        <p class="text-zinc-400 mb-6 max-w-md mx-auto">
-          You haven't listened to any music {{ periodDescription }} yet. Start exploring to unlock your stats!
-        </p>
-        <UButton color="violet" to="/discover">
-          Discover Music
-        </UButton>
-      </div>
+      <EmptyState
+        v-if="stats.totalStreams === 0"
+        icon="i-heroicons-musical-note"
+        title="No Listening Data"
+        :description="`You haven't listened to any music ${periodDescription} yet. Start exploring to unlock your stats!`"
+        action-label="Discover Music"
+        action-to="/discover"
+      />
 
       <!-- Stats Content -->
       <div v-else class="space-y-8">
