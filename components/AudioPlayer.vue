@@ -723,22 +723,42 @@ const onTouchEnd = () => {
   if (isSwiping.value) {
     isAnimating.value = true
 
-    if (deltaX > swipeThreshold && queueIndex.value > 0) {
-      // Swipe right -> previous track
-      playPrevious()
-    } else if (deltaX < -swipeThreshold && (queueIndex.value < queue.value.length - 1 || repeatMode.value !== 'off')) {
-      // Swipe left -> next track
-      playNext()
+    const goingToPrevious = deltaX > swipeThreshold && queueIndex.value > 0
+    const goingToNext = deltaX < -swipeThreshold && (queueIndex.value < queue.value.length - 1 || repeatMode.value !== 'off')
+
+    if (goingToPrevious || goingToNext) {
+      // Get container width to slide completely off-screen
+      const containerWidth = swipeArea.value?.offsetWidth || 400
+
+      // Animate the cover sliding off in the swipe direction
+      swipeOffset.value = goingToPrevious ? containerWidth : -containerWidth
+
+      // After the slide animation completes, change track and reset
+      setTimeout(() => {
+        // Disable animation temporarily to reset position instantly
+        isAnimating.value = false
+        swipeOffset.value = 0
+
+        // Change track
+        if (goingToPrevious) {
+          playPrevious()
+        } else {
+          playNext()
+        }
+      }, 300)
+    } else {
+      // Swipe wasn't far enough, animate back to center
+      swipeOffset.value = 0
+
+      // Reset animation flag after transition
+      setTimeout(() => {
+        isAnimating.value = false
+      }, 300)
     }
+  } else {
+    // No swipe detected, just reset
+    swipeOffset.value = 0
   }
-
-  // Animate back to center
-  swipeOffset.value = 0
-
-  // Reset animation flag after transition
-  setTimeout(() => {
-    isAnimating.value = false
-  }, 300)
 
   // Reset state
   isSwiping.value = false
