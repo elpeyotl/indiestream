@@ -98,10 +98,7 @@
 
           <!-- Actions -->
           <div class="flex flex-wrap gap-3 items-center">
-            <UButton color="violet" size="lg" :loading="loadingPlayAll" @click="handlePlayAll">
-              <UIcon v-if="!loadingPlayAll" name="i-heroicons-play" class="w-5 h-5 mr-1" />
-              Play All
-            </UButton>
+            <PlayAllButton :loading="loadingPlayAll" @click="handlePlayAll" />
             <UButton
               :color="isFollowing ? 'violet' : 'gray'"
               :variant="isFollowing ? 'solid' : 'outline'"
