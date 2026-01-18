@@ -37,7 +37,7 @@
                 v-if="previousTrack"
                 class="absolute top-0 right-full mr-6 w-full aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-xl opacity-40 scale-[0.85]"
                 :style="adjacentCoverStyle(-1)"
-                :class="{ 'transition-all duration-300 ease-out': isAnimating }"
+                :class="{ 'swipe-transition': isAnimating }"
               >
                 <img
                   v-if="previousTrack.coverUrl"
@@ -54,7 +54,7 @@
               <div
                 class="w-full aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl"
                 :style="currentCoverStyle"
-                :class="{ 'transition-all duration-300 ease-out': isAnimating }"
+                :class="{ 'swipe-transition': isAnimating }"
               >
                 <img
                   v-if="currentTrack.coverUrl"
@@ -72,7 +72,7 @@
                 v-if="nextTrack"
                 class="absolute top-0 left-full ml-6 w-full aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-xl opacity-40 scale-[0.85]"
                 :style="adjacentCoverStyle(1)"
-                :class="{ 'transition-all duration-300 ease-out': isAnimating }"
+                :class="{ 'swipe-transition': isAnimating }"
               >
                 <img
                   v-if="nextTrack.coverUrl"
@@ -702,7 +702,7 @@ const onTouchMove = (e: TouchEvent) => {
   const deltaY = e.touches[0].clientY - touchStartY.value
 
   // Only consider horizontal swipes (more horizontal than vertical movement)
-  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
     isSwiping.value = true
     // Apply resistance at boundaries
     const canGoNext = queueIndex.value < queue.value.length - 1 || repeatMode.value !== 'off'
@@ -721,40 +721,46 @@ const onTouchEnd = () => {
   const deltaX = touchCurrentX.value - touchStartX.value
 
   if (isSwiping.value) {
-    isAnimating.value = true
-
     const goingToPrevious = deltaX > swipeThreshold && queueIndex.value > 0
     const goingToNext = deltaX < -swipeThreshold && (queueIndex.value < queue.value.length - 1 || repeatMode.value !== 'off')
 
-    if (goingToPrevious || goingToNext) {
-      // Get container width to slide completely off-screen
-      const containerWidth = swipeArea.value?.offsetWidth || 400
+    // Enable animation class
+    isAnimating.value = true
 
-      // Animate the cover sliding off in the swipe direction
-      swipeOffset.value = goingToPrevious ? containerWidth : -containerWidth
+    // Use double RAF to ensure the browser has painted the transition class
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (goingToPrevious || goingToNext) {
+          // Get container width to slide completely off-screen
+          const containerWidth = swipeArea.value?.offsetWidth || 400
 
-      // After the slide animation completes, change track and reset
-      setTimeout(() => {
-        // Disable animation temporarily to reset position instantly
-        isAnimating.value = false
-        swipeOffset.value = 0
+          // Animate the cover sliding off in the swipe direction
+          swipeOffset.value = goingToPrevious ? containerWidth : -containerWidth
 
-        // Change track
-        if (goingToPrevious) {
-          playPrevious()
+          // After the slide animation completes, change track and reset
+          setTimeout(() => {
+            // Disable animation temporarily to reset position instantly
+            isAnimating.value = false
+            swipeOffset.value = 0
+
+            // Change track
+            if (goingToPrevious) {
+              playPrevious()
+            } else {
+              playNext()
+            }
+          }, 350)
         } else {
-          playNext()
-        }
-      }, 300)
-    } else {
-      // Swipe wasn't far enough, animate back to center
-      swipeOffset.value = 0
+          // Swipe wasn't far enough, animate back to center
+          swipeOffset.value = 0
 
-      // Reset animation flag after transition
-      setTimeout(() => {
-        isAnimating.value = false
-      }, 300)
-    }
+          // Reset animation flag after transition
+          setTimeout(() => {
+            isAnimating.value = false
+          }, 350)
+        }
+      })
+    })
   } else {
     // No swipe detected, just reset
     swipeOffset.value = 0
@@ -866,6 +872,12 @@ onMounted(() => {
 .slide-up-queue-leave-to {
   transform: translateY(20px);
   opacity: 0;
+}
+
+/* Smooth swipe transition for carousel */
+.swipe-transition {
+  transition: transform 350ms cubic-bezier(0.33, 1, 0.68, 1);
+  will-change: transform;
 }
 
 /* Custom range input styling */
