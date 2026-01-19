@@ -60,6 +60,12 @@ const docFiles: Record<string, string> = {
   'notes': 'NOTES.md',
   'brand': 'BRAND.md',
   'supabase-setup': 'SUPABASE_SETUP.md',
+  'deployment-strategy': 'deployment-strategy.md',
+  'architecture': 'ARCHITECTURE.md',
+  'business-case': 'BUSINESS_CASE.md',
+  'domain-migration': 'DOMAIN_MIGRATION.md',
+  'native-app-ux': 'NATIVE_APP_UX.md',
+  'content-protection-policy': 'content-protection-policy.md',
 }
 
 const docTitles: Record<string, string> = {
@@ -69,6 +75,12 @@ const docTitles: Record<string, string> = {
   'notes': 'Development Notes',
   'brand': 'Brand Guidelines',
   'supabase-setup': 'Supabase Setup',
+  'deployment-strategy': 'Deployment Strategy',
+  'architecture': 'Architecture',
+  'business-case': 'Business Case',
+  'domain-migration': 'Domain Migration',
+  'native-app-ux': 'Native App UX',
+  'content-protection-policy': 'Content Protection Policy',
 }
 
 const loadDocument = async () => {

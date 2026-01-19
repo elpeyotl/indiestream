@@ -6,6 +6,12 @@ const docFiles: Record<string, string> = {
   'notes': 'NOTES.md',
   'brand': 'BRAND.md',
   'supabase-setup': 'SUPABASE_SETUP.md',
+  'deployment-strategy': 'deployment-strategy.md',
+  'architecture': 'ARCHITECTURE.md',
+  'business-case': 'BUSINESS_CASE.md',
+  'domain-migration': 'DOMAIN_MIGRATION.md',
+  'native-app-ux': 'NATIVE_APP_UX.md',
+  'content-protection-policy': 'content-protection-policy.md',
 }
 
 export default defineEventHandler(async (event) => {

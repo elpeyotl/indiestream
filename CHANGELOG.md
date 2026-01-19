@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.18.4] - 2026-01-19
+
+### Added
+- **Deployment Strategy Documentation**: Comprehensive go-live plan with environment setup, invite-only beta system, and launch checklist
+  - Available at `/docs/deployment-strategy` and as PDF
+  - Covers Dev + Prod environment setup, database migration, Stripe/R2 configuration
+  - Invite-only access feature design for controlled beta launch
+- **Complete Documentation Index**: All 12 docs now accessible from `/docs` page
+  - Added: Architecture, Business Case, Domain Migration, Native App UX, Content Protection Policy
+
 ## [0.18.3] - 2026-01-19
 
 ### Added
