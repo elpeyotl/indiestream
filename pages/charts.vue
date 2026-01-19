@@ -27,145 +27,166 @@
     </div>
 
     <template v-else>
-      <!-- Top Tracks -->
-      <section class="mb-12">
-        <h2 class="text-xl font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-          <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-violet-400" />
-          Top Tracks
-        </h2>
+      <!-- Charts Grid: 3 columns on desktop, 2 on tablet, 1 on mobile -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
+        <!-- Top Tracks -->
+        <section>
+          <h2 class="text-xl font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+            <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-violet-400" />
+            Top Tracks
+          </h2>
 
-        <div v-if="charts.tracks.length > 0" class="space-y-2">
-          <div
-            v-for="(track, index) in charts.tracks.slice(0, 10)"
-            :key="track.id"
-            class="flex items-center gap-4 p-3 rounded-lg bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors group cursor-pointer"
-            @click="playTrack(track)"
-          >
-            <!-- Rank -->
-            <div class="w-8 text-center">
-              <span
-                class="text-lg font-bold"
-                :class="index < 3 ? 'text-violet-400' : 'text-zinc-500'"
-              >
-                {{ index + 1 }}
-              </span>
-            </div>
-
-            <!-- Cover -->
-            <div class="w-12 h-12 rounded overflow-hidden bg-zinc-800 shrink-0 relative">
-              <img
-                v-if="trackCovers[track.id]"
-                :src="trackCovers[track.id]"
-                :alt="track.title"
-                class="w-full h-full object-cover"
-              />
-              <div v-else class="w-full h-full flex items-center justify-center">
-                <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-zinc-600" />
+          <div v-if="charts.tracks.length > 0" class="space-y-2">
+            <div
+              v-for="(track, index) in charts.tracks.slice(0, 10)"
+              :key="track.id"
+              class="flex items-center gap-3 p-2 rounded-lg bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors group cursor-pointer"
+              @click="playTrack(track)"
+            >
+              <!-- Rank -->
+              <div class="w-6 text-center shrink-0">
+                <span
+                  class="text-sm font-bold"
+                  :class="index < 3 ? 'text-violet-400' : 'text-zinc-500'"
+                >
+                  {{ index + 1 }}
+                </span>
               </div>
-              <!-- Play overlay -->
-              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <UIcon name="i-heroicons-play" class="w-6 h-6 text-white" />
+
+              <!-- Cover -->
+              <div class="w-10 h-10 rounded overflow-hidden bg-zinc-800 shrink-0 relative">
+                <img
+                  v-if="trackCovers[track.id]"
+                  :src="trackCovers[track.id]"
+                  :alt="track.title"
+                  class="w-full h-full object-cover"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-4 h-4 text-zinc-600" />
+                </div>
+                <!-- Play overlay -->
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <UIcon name="i-heroicons-play" class="w-4 h-4 text-white" />
+                </div>
               </div>
-            </div>
 
-            <!-- Info -->
-            <div class="flex-1 min-w-0">
-              <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
-                {{ track.title }}
-              </p>
-              <NuxtLink
-                :to="`/${track.album?.band?.slug}`"
-                class="text-sm text-zinc-400 hover:text-violet-400 truncate block"
-                @click.stop
-              >
-                {{ track.album?.band?.name }}
-              </NuxtLink>
-            </div>
+              <!-- Info -->
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
+                  {{ track.title }}
+                </p>
+                <NuxtLink
+                  :to="`/${track.album?.band?.slug}`"
+                  class="text-xs text-zinc-400 hover:text-violet-400 truncate block"
+                  @click.stop
+                >
+                  {{ track.album?.band?.name }}
+                </NuxtLink>
+              </div>
 
-            <!-- Streams -->
-            <div class="text-right shrink-0">
-              <p class="text-zinc-100 font-medium">{{ formatNumber(track.streams) }}</p>
-              <p class="text-xs text-zinc-500">streams</p>
+              <!-- Streams -->
+              <div class="text-right shrink-0">
+                <p class="text-xs text-zinc-400">{{ formatNumber(track.streams) }}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <EmptyState
-          v-else
-          icon="i-heroicons-musical-note"
-          title="No Data Yet"
-          description="Not enough streams to show charts"
-          class="py-8"
-        />
-      </section>
+          <EmptyState
+            v-else
+            icon="i-heroicons-musical-note"
+            title="No Data Yet"
+            description="Not enough streams to show charts"
+            class="py-8"
+          />
+        </section>
 
-      <!-- Top Albums -->
-      <section class="mb-12">
-        <h2 class="text-xl font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-          <UIcon name="i-heroicons-square-3-stack-3d" class="w-5 h-5 text-violet-400" />
-          Top Albums
-        </h2>
+        <!-- Top Albums -->
+        <section>
+          <h2 class="text-xl font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+            <UIcon name="i-heroicons-square-3-stack-3d" class="w-5 h-5 text-violet-400" />
+            Top Albums
+          </h2>
 
-        <div v-if="charts.albums.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          <NuxtLink
-            v-for="(album, index) in charts.albums.slice(0, 10)"
-            :key="album.id"
-            :to="`/${album.band?.slug}/${album.slug}`"
-            class="group relative"
-          >
-            <!-- Rank badge -->
-            <div
-              class="absolute -top-2 -left-2 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold z-10"
-              :class="index < 3 ? 'bg-violet-500 text-white' : 'bg-zinc-700 text-zinc-300'"
+          <div v-if="charts.albums.length > 0" class="space-y-2">
+            <NuxtLink
+              v-for="(album, index) in charts.albums.slice(0, 10)"
+              :key="album.id"
+              :to="`/${album.band?.slug}/${album.slug}`"
+              class="flex items-center gap-3 p-2 rounded-lg bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors group"
             >
-              {{ index + 1 }}
-            </div>
-
-            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl transition-all">
-              <img
-                v-if="albumCovers[album.id]"
-                :src="albumCovers[album.id]"
-                :alt="album.title"
-                class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div v-else class="absolute inset-0 flex items-center justify-center">
-                <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+              <!-- Rank -->
+              <div class="w-6 text-center shrink-0">
+                <span
+                  class="text-sm font-bold"
+                  :class="index < 3 ? 'text-violet-400' : 'text-zinc-500'"
+                >
+                  {{ index + 1 }}
+                </span>
               </div>
-            </div>
-            <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
-              {{ album.title }}
-            </p>
-            <p class="text-sm text-zinc-400 truncate">{{ album.band?.name }}</p>
-            <p class="text-xs text-zinc-500">{{ formatNumber(album.streams) }} streams</p>
-          </NuxtLink>
-        </div>
 
-        <EmptyState
-          v-else
-          icon="i-heroicons-square-3-stack-3d"
-          title="No Data Yet"
-          description="Not enough streams to show album charts"
-          class="py-8"
-        />
-      </section>
+              <!-- Cover -->
+              <div class="w-10 h-10 rounded overflow-hidden bg-zinc-800 shrink-0">
+                <img
+                  v-if="albumCovers[album.id]"
+                  :src="albumCovers[album.id]"
+                  :alt="album.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-4 h-4 text-zinc-600" />
+                </div>
+              </div>
 
-      <!-- Top Artists -->
-      <section class="mb-12">
-        <h2 class="text-xl font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-          <UIcon name="i-heroicons-user-group" class="w-5 h-5 text-violet-400" />
-          Top Artists
-        </h2>
+              <!-- Info -->
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
+                  {{ album.title }}
+                </p>
+                <p class="text-xs text-zinc-400 truncate">{{ album.band?.name }}</p>
+              </div>
 
-        <div v-if="charts.artists.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <NuxtLink
-            v-for="(artist, index) in charts.artists.slice(0, 12)"
-            :key="artist.id"
-            :to="`/${artist.slug}`"
-            class="group text-center"
-          >
-            <!-- Avatar with rank -->
-            <div class="relative inline-block mb-3">
-              <div class="w-24 h-24 mx-auto rounded-full overflow-hidden bg-zinc-800 shadow-lg group-hover:shadow-xl group-hover:ring-2 group-hover:ring-violet-500/50 transition-all">
+              <!-- Streams -->
+              <div class="text-right shrink-0">
+                <p class="text-xs text-zinc-400">{{ formatNumber(album.streams) }}</p>
+              </div>
+            </NuxtLink>
+          </div>
+
+          <EmptyState
+            v-else
+            icon="i-heroicons-square-3-stack-3d"
+            title="No Data Yet"
+            description="Not enough streams to show album charts"
+            class="py-8"
+          />
+        </section>
+
+        <!-- Top Artists -->
+        <section>
+          <h2 class="text-xl font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+            <UIcon name="i-heroicons-user-group" class="w-5 h-5 text-violet-400" />
+            Top Artists
+          </h2>
+
+          <div v-if="charts.artists.length > 0" class="space-y-2">
+            <NuxtLink
+              v-for="(artist, index) in charts.artists.slice(0, 10)"
+              :key="artist.id"
+              :to="`/${artist.slug}`"
+              class="flex items-center gap-3 p-2 rounded-lg bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors group"
+            >
+              <!-- Rank -->
+              <div class="w-6 text-center shrink-0">
+                <span
+                  class="text-sm font-bold"
+                  :class="index < 3 ? 'text-violet-400' : 'text-zinc-500'"
+                >
+                  {{ index + 1 }}
+                </span>
+              </div>
+
+              <!-- Avatar -->
+              <div class="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 shrink-0">
                 <img
                   v-if="artistAvatars[artist.id]"
                   :src="artistAvatars[artist.id]"
@@ -177,33 +198,34 @@
                   class="w-full h-full flex items-center justify-center"
                   :style="{ background: `linear-gradient(135deg, ${artist.theme_color || '#8B5CF6'} 0%, #c026d3 100%)` }"
                 >
-                  <span class="text-3xl font-bold text-white">{{ artist.name.charAt(0) }}</span>
+                  <span class="text-sm font-bold text-white">{{ artist.name.charAt(0) }}</span>
                 </div>
               </div>
-              <!-- Rank badge -->
-              <div
-                class="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                :class="index < 3 ? 'bg-violet-500 text-white' : 'bg-zinc-700 text-zinc-300'"
-              >
-                {{ index + 1 }}
+
+              <!-- Info -->
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
+                  {{ artist.name }}
+                </p>
+                <p class="text-xs text-zinc-500">{{ artist.genres?.slice(0, 2).join(', ') || 'Artist' }}</p>
               </div>
-            </div>
 
-            <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
-              {{ artist.name }}
-            </p>
-            <p class="text-xs text-zinc-500">{{ formatNumber(artist.streams) }} streams</p>
-          </NuxtLink>
-        </div>
+              <!-- Streams -->
+              <div class="text-right shrink-0">
+                <p class="text-xs text-zinc-400">{{ formatNumber(artist.streams) }}</p>
+              </div>
+            </NuxtLink>
+          </div>
 
-        <EmptyState
-          v-else
-          icon="i-heroicons-user-group"
-          title="No Data Yet"
-          description="Not enough streams to show artist charts"
-          class="py-8"
-        />
-      </section>
+          <EmptyState
+            v-else
+            icon="i-heroicons-user-group"
+            title="No Data Yet"
+            description="Not enough streams to show artist charts"
+            class="py-8"
+          />
+        </section>
+      </div>
     </template>
   </div>
 </template>
