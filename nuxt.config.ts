@@ -110,9 +110,10 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-title', content: 'Fairstream' },
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' },
+        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
-        { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         {
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap'
