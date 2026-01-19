@@ -66,7 +66,8 @@
                 </div>
                 <!-- Play overlay -->
                 <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <UIcon name="i-heroicons-play" class="w-4 h-4 text-white" />
+                  <UIcon v-if="loadingPlayId === track.id" name="i-heroicons-arrow-path" class="w-4 h-4 text-white animate-spin" />
+                  <UIcon v-else name="i-heroicons-play" class="w-4 h-4 text-white" />
                 </div>
               </div>
 
@@ -108,10 +109,9 @@
           </h2>
 
           <div v-if="charts.albums.length > 0" class="space-y-2">
-            <NuxtLink
+            <div
               v-for="(album, index) in charts.albums.slice(0, 10)"
               :key="album.id"
-              :to="`/${album.band?.slug}/${album.slug}`"
               class="flex items-center gap-3 p-2 rounded-lg bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors group"
             >
               <!-- Rank -->
@@ -124,32 +124,37 @@
                 </span>
               </div>
 
-              <!-- Cover -->
-              <div class="w-10 h-10 rounded overflow-hidden bg-zinc-800 shrink-0">
+              <!-- Cover with play button -->
+              <div class="w-10 h-10 rounded overflow-hidden bg-zinc-800 shrink-0 relative cursor-pointer" @click="playAlbum(album)">
                 <img
                   v-if="albumCovers[album.id]"
                   :src="albumCovers[album.id]"
                   :alt="album.title"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  class="w-full h-full object-cover"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
                   <UIcon name="i-heroicons-musical-note" class="w-4 h-4 text-zinc-600" />
                 </div>
+                <!-- Play overlay -->
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <UIcon v-if="loadingPlayId === album.id" name="i-heroicons-arrow-path" class="w-4 h-4 text-white animate-spin" />
+                  <UIcon v-else name="i-heroicons-play" class="w-4 h-4 text-white" />
+                </div>
               </div>
 
               <!-- Info -->
-              <div class="flex-1 min-w-0">
+              <NuxtLink :to="`/${album.band?.slug}/${album.slug}`" class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
                   {{ album.title }}
                 </p>
                 <p class="text-xs text-zinc-400 truncate">{{ album.band?.name }}</p>
-              </div>
+              </NuxtLink>
 
               <!-- Streams -->
               <div class="text-right shrink-0">
                 <p class="text-xs text-zinc-400">{{ formatNumber(album.streams) }}</p>
               </div>
-            </NuxtLink>
+            </div>
           </div>
 
           <EmptyState
@@ -169,10 +174,9 @@
           </h2>
 
           <div v-if="charts.artists.length > 0" class="space-y-2">
-            <NuxtLink
+            <div
               v-for="(artist, index) in charts.artists.slice(0, 10)"
               :key="artist.id"
-              :to="`/${artist.slug}`"
               class="flex items-center gap-3 p-2 rounded-lg bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors group"
             >
               <!-- Rank -->
@@ -185,13 +189,13 @@
                 </span>
               </div>
 
-              <!-- Avatar -->
-              <div class="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 shrink-0">
+              <!-- Avatar with play button -->
+              <div class="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 shrink-0 relative cursor-pointer" @click="playArtist(artist)">
                 <img
                   v-if="artistAvatars[artist.id]"
                   :src="artistAvatars[artist.id]"
                   :alt="artist.name"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  class="w-full h-full object-cover"
                 />
                 <div
                   v-else
@@ -200,21 +204,26 @@
                 >
                   <span class="text-sm font-bold text-white">{{ artist.name.charAt(0) }}</span>
                 </div>
+                <!-- Play overlay -->
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                  <UIcon v-if="loadingPlayId === artist.id" name="i-heroicons-arrow-path" class="w-4 h-4 text-white animate-spin" />
+                  <UIcon v-else name="i-heroicons-play" class="w-4 h-4 text-white" />
+                </div>
               </div>
 
               <!-- Info -->
-              <div class="flex-1 min-w-0">
+              <NuxtLink :to="`/${artist.slug}`" class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
                   {{ artist.name }}
                 </p>
                 <p class="text-xs text-zinc-500">{{ artist.genres?.slice(0, 2).join(', ') || 'Artist' }}</p>
-              </div>
+              </NuxtLink>
 
               <!-- Streams -->
               <div class="text-right shrink-0">
                 <p class="text-xs text-zinc-400">{{ formatNumber(artist.streams) }}</p>
               </div>
-            </NuxtLink>
+            </div>
           </div>
 
           <EmptyState
@@ -231,8 +240,8 @@
 </template>
 
 <script setup lang="ts">
-const { getCachedCoverUrl } = useAlbum()
-const { setQueue } = usePlayer()
+const { getCachedCoverUrl, getAlbumById } = useAlbum()
+const { setQueue, playPlaylist } = usePlayer()
 
 // Client-side cache for chart data (persists across navigation)
 interface ChartCache {
@@ -243,6 +252,7 @@ const CHART_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 const chartDataCache = useState<Record<string, ChartCache>>('charts-cache', () => ({}))
 
 const loading = ref(true)
+const loadingPlayId = ref<string | null>(null)
 const selectedPeriod = ref('7d')
 
 const periodOptions = [
@@ -357,6 +367,90 @@ const playTrack = async (track: any) => {
 
   const trackIndex = charts.value.tracks.findIndex(t => t.id === track.id)
   setQueue(queue, trackIndex >= 0 ? trackIndex : 0)
+}
+
+const playAlbum = async (album: any) => {
+  if (loadingPlayId.value) return
+  loadingPlayId.value = album.id
+
+  try {
+    // Fetch album with tracks
+    const fullAlbum = await getAlbumById(album.id)
+    if (!fullAlbum?.tracks?.length) return
+
+    // Get cover URL
+    const coverUrl = albumCovers.value[album.id] || null
+
+    // Filter tracks with audio and map to playlist format
+    const playableTracks = fullAlbum.tracks
+      .filter(t => t.audio_key)
+      .map(t => ({
+        id: t.id,
+        title: t.title,
+        duration_seconds: t.duration_seconds,
+        audio_key: t.audio_key,
+        coverUrl,
+        album: {
+          id: fullAlbum.id,
+          title: fullAlbum.title,
+          slug: fullAlbum.slug,
+          band: fullAlbum.band,
+        },
+      }))
+
+    if (playableTracks.length > 0) {
+      await playPlaylist(playableTracks, 0)
+    }
+  } catch (e) {
+    console.error('Failed to play album:', e)
+  } finally {
+    loadingPlayId.value = null
+  }
+}
+
+const playArtist = async (artist: any) => {
+  if (loadingPlayId.value) return
+  loadingPlayId.value = artist.id
+
+  try {
+    // Fetch random tracks from this artist
+    const tracks = await $fetch<Array<{
+      id: string
+      title: string
+      audioKey: string
+      duration: number
+      albumTitle: string
+      albumSlug: string
+      coverKey: string | null
+    }>>(`/api/artists/${artist.id}/tracks`, {
+      query: { shuffle: 'true', limit: 20 },
+    })
+
+    if (!tracks?.length) return
+
+    // Build queue with cover URLs
+    const queue = await Promise.all(
+      tracks.map(async (t) => ({
+        id: t.id,
+        title: t.title,
+        artist: artist.name,
+        artistSlug: artist.slug,
+        albumTitle: t.albumTitle,
+        albumSlug: t.albumSlug,
+        coverUrl: await getCachedCoverUrl(t.coverKey),
+        duration: t.duration,
+        audioKey: t.audioKey,
+      }))
+    )
+
+    if (queue.length > 0) {
+      await setQueue(queue, 0)
+    }
+  } catch (e) {
+    console.error('Failed to play artist:', e)
+  } finally {
+    loadingPlayId.value = null
+  }
 }
 
 onMounted(loadCharts)

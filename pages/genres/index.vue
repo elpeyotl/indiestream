@@ -8,7 +8,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      <div v-for="i in 15" :key="i" class="h-24 skeleton rounded-xl" />
+      <div v-for="i in 15" :key="i" class="h-32 skeleton rounded-xl" />
     </div>
 
     <!-- Genre Grid -->
@@ -17,14 +17,59 @@
         v-for="genre in genres"
         :key="genre.slug"
         :to="`/genres/${genre.slug}`"
-        class="group relative h-24 rounded-xl overflow-hidden"
-        :style="{ background: getGenreGradient(genre.name) }"
+        class="group relative h-32 rounded-xl overflow-hidden"
       >
-        <div class="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
-        <div class="relative h-full flex flex-col justify-end p-4">
-          <h3 class="font-bold text-white text-lg">{{ genre.name }}</h3>
-          <p class="text-white/70 text-sm">{{ genre.artistCount }} {{ genre.artistCount === 1 ? 'artist' : 'artists' }}</p>
+        <!-- Background: Avatar collage or gradient fallback -->
+        <div class="absolute inset-0">
+          <!-- 4-image grid collage -->
+          <div v-if="genreAvatars[genre.slug]?.length >= 4" class="grid grid-cols-2 grid-rows-2 h-full w-full">
+            <img
+              v-for="(url, idx) in genreAvatars[genre.slug].slice(0, 4)"
+              :key="idx"
+              :src="url"
+              :alt="genre.name"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <!-- 2-image split -->
+          <div v-else-if="genreAvatars[genre.slug]?.length >= 2" class="grid grid-cols-2 h-full w-full">
+            <img
+              v-for="(url, idx) in genreAvatars[genre.slug].slice(0, 2)"
+              :key="idx"
+              :src="url"
+              :alt="genre.name"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <!-- Single image -->
+          <div v-else-if="genreAvatars[genre.slug]?.length === 1" class="h-full w-full">
+            <img
+              :src="genreAvatars[genre.slug][0]"
+              :alt="genre.name"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <!-- Gradient fallback -->
+          <div v-else class="h-full w-full" :style="{ background: getGenreGradient(genre.name) }" />
         </div>
+
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 group-hover:from-black/70 group-hover:via-black/30 transition-colors" />
+
+        <!-- Content -->
+        <div class="relative h-full flex flex-col justify-end p-4">
+          <h3 class="font-bold text-white text-lg drop-shadow-lg">{{ genre.name }}</h3>
+          <p class="text-white/80 text-sm drop-shadow">{{ genre.artistCount }} {{ genre.artistCount === 1 ? 'artist' : 'artists' }}</p>
+        </div>
+
+        <!-- Play button (bottom right) -->
+        <button
+          class="absolute bottom-2 right-2 w-10 h-10 rounded-full bg-violet-500 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 shadow-lg hover:bg-violet-400 hover:scale-105"
+          @click.prevent.stop="playGenre(genre)"
+        >
+          <UIcon v-if="loadingPlayId === genre.slug" name="i-heroicons-arrow-path" class="w-5 h-5 text-white animate-spin" />
+          <UIcon v-else name="i-heroicons-play-solid" class="w-5 h-5 text-white ml-0.5" />
+        </button>
       </NuxtLink>
     </div>
 
@@ -39,14 +84,20 @@
 </template>
 
 <script setup lang="ts">
+const { getCachedCoverUrl } = useAlbum()
+const { setQueue } = usePlayer()
+
 interface Genre {
   name: string
   slug: string
   artistCount: number
+  avatarKeys: string[]
 }
 
 const loading = ref(true)
+const loadingPlayId = ref<string | null>(null)
 const genres = ref<Genre[]>([])
+const genreAvatars = ref<Record<string, string[]>>({})
 
 // Generate consistent gradient colors based on genre name
 const getGenreGradient = (name: string): string => {
@@ -69,10 +120,77 @@ const getGenreGradient = (name: string): string => {
   return gradients[Math.abs(hash) % gradients.length]
 }
 
+const playGenre = async (genre: Genre) => {
+  if (loadingPlayId.value) return
+  loadingPlayId.value = genre.slug
+
+  try {
+    // Fetch random tracks from this genre
+    const tracks = await $fetch<Array<{
+      id: string
+      title: string
+      audioKey: string
+      duration: number
+      albumTitle: string
+      albumSlug: string
+      coverKey: string | null
+      artistName: string
+      artistSlug: string
+    }>>(`/api/genres/${genre.slug}/tracks`, {
+      query: { shuffle: 'true', limit: 20 },
+    })
+
+    if (!tracks?.length) return
+
+    // Build queue with cover URLs
+    const queue = await Promise.all(
+      tracks.map(async (t) => ({
+        id: t.id,
+        title: t.title,
+        artist: t.artistName,
+        artistSlug: t.artistSlug,
+        albumTitle: t.albumTitle,
+        albumSlug: t.albumSlug,
+        coverUrl: await getCachedCoverUrl(t.coverKey),
+        duration: t.duration,
+        audioKey: t.audioKey,
+      }))
+    )
+
+    if (queue.length > 0) {
+      await setQueue(queue, 0)
+    }
+  } catch (e) {
+    console.error('Failed to play genre:', e)
+  } finally {
+    loadingPlayId.value = null
+  }
+}
+
+const loadAvatars = async () => {
+  // Load avatar URLs for all genres in parallel
+  const avatarPromises = genres.value.map(async (genre) => {
+    if (!genre.avatarKeys?.length) return
+
+    const urls: string[] = []
+    for (const key of genre.avatarKeys) {
+      const url = await getCachedCoverUrl(key)
+      if (url) urls.push(url)
+    }
+    if (urls.length > 0) {
+      genreAvatars.value[genre.slug] = urls
+    }
+  })
+
+  await Promise.all(avatarPromises)
+}
+
 onMounted(async () => {
   try {
     const data = await $fetch('/api/genres')
     genres.value = data.genres
+    // Load avatars after genres are loaded (non-blocking)
+    loadAvatars()
   } catch (e) {
     console.error('Failed to load genres:', e)
   } finally {
