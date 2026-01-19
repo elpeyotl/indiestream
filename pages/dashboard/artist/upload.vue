@@ -1164,6 +1164,17 @@ const startUpload = async () => {
       })
       createdAlbum.value = album
       toast.add({ title: 'Release published!', description: `"${albumForm.title}" is now live`, color: 'green', icon: 'i-heroicons-check-circle' })
+
+      // Notify followers of the new release (async, don't block)
+      $fetch(`/api/albums/${album.id}/notify-followers`, { method: 'POST' })
+        .then((result: any) => {
+          if (result.notified > 0) {
+            console.log(`[New Release] Notified ${result.notified} followers`)
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to notify followers:', err)
+        })
       step.value = 3
     } else {
       // Some tracks failed - keep as draft

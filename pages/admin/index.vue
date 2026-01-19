@@ -4017,6 +4017,9 @@ const openEditAlbumModal = async (album: AdminAlbum) => {
 const handleSaveAlbum = async (form: AlbumEditForm, tracks: EditableTrack[]) => {
   if (!albumToEdit.value) return
 
+  // Check if album is being published (was not published, now is)
+  const isBeingPublished = !albumToEdit.value.is_published && form.is_published
+
   savingAlbum.value = true
   try {
     await $fetch(`/api/admin/albums/${albumToEdit.value.id}`, {
@@ -4042,6 +4045,24 @@ const handleSaveAlbum = async (form: AlbumEditForm, tracks: EditableTrack[]) => 
         })),
       },
     })
+
+    // Notify followers if album was just published
+    if (isBeingPublished) {
+      $fetch(`/api/albums/${albumToEdit.value.id}/notify-followers`, { method: 'POST' })
+        .then((result: any) => {
+          if (result.notified > 0) {
+            toast.add({
+              title: 'Followers notified',
+              description: `${result.notified} follower(s) were notified of the new release`,
+              color: 'blue',
+              icon: 'i-heroicons-bell',
+            })
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to notify followers:', err)
+        })
+    }
 
     toast.add({
       title: 'Album updated',

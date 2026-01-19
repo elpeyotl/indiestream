@@ -101,8 +101,8 @@
 - [x] Content moderation queue (review flagged/new uploads)
 - [x] Track approval workflow (pending → approved/rejected, re-review on edits)
 - [x] Artist verification system (admin can verify artists with badge)
-- [ ] Revenue dashboard (subscriptions, payouts)
-- [ ] Growth metrics over time
+- [x] Revenue dashboard (subscriptions, payouts, charts)
+- [x] Growth metrics over time (subscriber growth, artist growth charts)
 
 #### Platform
 - [ ] Mobile responsive improvements
@@ -110,7 +110,7 @@
 - [ ] Offline playback (for subscribers)
 - [x] Social login (Google OAuth)
 - [ ] Apple login
-- [ ] Email notifications (new releases from followed artists)
+- [x] Email notifications (new releases from followed artists)
 
 #### Native App UX (Phase 1 - See docs/NATIVE_APP_UX.md)
 - [x] Smart landing page redirect (logged-in users → /discover)

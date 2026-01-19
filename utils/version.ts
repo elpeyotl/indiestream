@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.16.0'
+export const APP_VERSION = '0.17.0'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.17.0',
+    date: '2026-01-19',
+    changes: [
+      { type: 'added', description: 'New Release Email Notifications: Followers receive emails when artists publish new music' },
+      { type: 'added', description: 'In-app notifications for new releases from followed artists' },
+      { type: 'added', description: 'Notification API endpoint for album publishing' },
+    ],
+  },
   {
     version: '0.16.0',
     date: '2026-01-19',

@@ -117,6 +117,18 @@ export interface TrackRemovedEmailData {
   details?: string
 }
 
+export interface NewReleaseEmailData {
+  to: string
+  followerName: string
+  bandName: string
+  bandSlug: string
+  albumTitle: string
+  albumSlug: string
+  releaseType: 'album' | 'ep' | 'single'
+  description?: string | null
+  coverUrl?: string | null
+}
+
 // Helper to render MJML templates to HTML
 export const renderEmailTemplate = (mjmlTemplate: string): string => {
   const { html, errors } = mjml2html(mjmlTemplate)
@@ -211,6 +223,17 @@ export const sendTrackRemovedEmail = async (data: TrackRemovedEmailData) => {
   return sendEmail({
     to: data.to,
     subject: `Track Removed: ${data.trackTitle}`,
+    html,
+  })
+}
+
+export const sendNewReleaseEmail = async (data: NewReleaseEmailData) => {
+  const { getNewReleaseEmailTemplate } = await import('../emails/NewReleaseEmail')
+  const html = renderEmailTemplate(getNewReleaseEmailTemplate(data))
+
+  return sendEmail({
+    to: data.to,
+    subject: `New Release: ${data.albumTitle} by ${data.bandName}`,
     html,
   })
 }

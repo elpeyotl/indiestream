@@ -2371,6 +2371,9 @@ const handleAlbumCoverSelect = async (e: Event) => {
 const handleSaveAlbum = async () => {
   if (!albumToEdit.value || !editAlbumForm.title.trim()) return
 
+  // Check if album is being published (was not published, now is)
+  const isBeingPublished = !albumToEdit.value.is_published && editAlbumForm.is_published
+
   savingAlbum.value = true
   let tracksResetToReview = 0
 
@@ -2456,6 +2459,24 @@ const handleSaveAlbum = async () => {
     if (index !== -1) {
       const tracksForStorage = editAlbumTracks.value.map(({ showCredits, ...track }) => track)
       albums.value[index] = { ...albums.value[index], ...updated, tracks: tracksForStorage as Track[] }
+    }
+
+    // Notify followers if album was just published
+    if (isBeingPublished) {
+      $fetch(`/api/albums/${albumToEdit.value.id}/notify-followers`, { method: 'POST' })
+        .then((result: any) => {
+          if (result.notified > 0) {
+            toast.add({
+              title: 'Followers notified',
+              description: `${result.notified} follower(s) were notified of the new release`,
+              color: 'blue',
+              icon: 'i-heroicons-bell',
+            })
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to notify followers:', err)
+        })
     }
 
     // Show appropriate toast based on whether tracks were reset to review
