@@ -146,7 +146,10 @@ export const useLibrary = () => {
     if (!user.value) return []
 
     try {
-      return await $fetch<LikedTrack[]>('/api/library/tracks/list')
+      const data = await $fetch<LikedTrack[]>('/api/library/tracks/list')
+      // Update the IDs set from fetched data
+      data.forEach(item => likedTrackIds.value.add(item.track.id))
+      return data
     } catch (e) {
       console.error('Failed to fetch liked tracks:', e)
       return []
@@ -248,7 +251,10 @@ export const useLibrary = () => {
     if (!user.value) return []
 
     try {
-      return await $fetch<SavedAlbum[]>('/api/library/albums/list')
+      const data = await $fetch<SavedAlbum[]>('/api/library/albums/list')
+      // Update the IDs set from fetched data
+      data.forEach(item => savedAlbumIds.value.add(item.album.id))
+      return data
     } catch (e) {
       console.error('Failed to fetch saved albums:', e)
       return []

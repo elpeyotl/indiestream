@@ -1,18 +1,36 @@
 // GET /api/charts/trending - Get trending tracks, albums, and artists
 import { serverSupabaseServiceRole } from '#supabase/server'
 
+// In-memory cache for chart data (reduces DB load for popular endpoint)
+interface ChartCache {
+  data: any
+  timestamp: number
+}
+const chartCache = new Map<string, ChartCache>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
 export default defineEventHandler(async (event) => {
-  // Use service role to bypass RLS for aggregate chart data
-  const client = await serverSupabaseServiceRole(event)
   const query = getQuery(event)
 
   const period = (query.period as string) || '7d' // 7d, 30d, all
   const limit = Math.min(parseInt(query.limit as string) || 20, 50)
 
+  // Check cache first
+  const cacheKey = `${period}-${limit}`
+  const cached = chartCache.get(cacheKey)
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data
+  }
+
+  // Use service role to bypass RLS for aggregate chart data
+  const client = await serverSupabaseServiceRole(event)
+
   // For "all" time, use the stream_count/total_streams fields directly
   // For time-based periods, use listening_history
   if (period === 'all') {
-    return await getAllTimeCharts(client, limit)
+    const result = await getAllTimeCharts(client, limit)
+    chartCache.set(cacheKey, { data: result, timestamp: Date.now() })
+    return result
   }
 
   // Calculate date range for time-based queries
@@ -33,12 +51,16 @@ export default defineEventHandler(async (event) => {
   if (tracksError) {
     console.error('Failed to fetch track streams:', tracksError)
     // Fall back to all-time charts if listening_history query fails
-    return await getAllTimeCharts(client, limit)
+    const result = await getAllTimeCharts(client, limit)
+    chartCache.set(cacheKey, { data: result, timestamp: Date.now() })
+    return result
   }
 
   // If no listening history data, fall back to all-time charts
   if (!trackStreams || trackStreams.length === 0) {
-    return await getAllTimeCharts(client, limit)
+    const result = await getAllTimeCharts(client, limit)
+    chartCache.set(cacheKey, { data: result, timestamp: Date.now() })
+    return result
   }
 
   // Count streams per track
@@ -157,12 +179,17 @@ export default defineEventHandler(async (event) => {
       .sort((a, b) => b.streams - a.streams)
   }
 
-  return {
+  const result = {
     period,
     tracks: topTracks,
     albums: topAlbums,
     artists: topArtists,
   }
+
+  // Cache the result
+  chartCache.set(cacheKey, { data: result, timestamp: Date.now() })
+
+  return result
 })
 
 // Helper function to get all-time charts using stream_count/total_streams

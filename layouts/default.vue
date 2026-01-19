@@ -498,14 +498,17 @@ const {
 } = useNotifications();
 
 // Fetch unread count on mount and when user changes, subscribe to realtime
-watch(user, async (newUser) => {
-  if (newUser) {
-    await fetchUnreadCount();
-    subscribeToRealtime();
-  } else {
-    unsubscribeFromRealtime();
-  }
-}, { immediate: true });
+// Only run on client-side to avoid SSR auth session issues
+if (import.meta.client) {
+  watch(user, async (newUser) => {
+    if (newUser) {
+      await fetchUnreadCount();
+      subscribeToRealtime();
+    } else {
+      unsubscribeFromRealtime();
+    }
+  }, { immediate: true });
+}
 
 // Cleanup on unmount
 onUnmounted(() => {

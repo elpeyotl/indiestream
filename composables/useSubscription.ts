@@ -15,16 +15,21 @@ interface FreeTierData {
   resetsAt: string | null
 }
 
+// Cache configuration
+const SUBSCRIPTION_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
 export const useSubscription = () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
-  const config = useRuntimeConfig()
 
   // Use useState for SSR-safe shared state
   const subscription = useState<SubscriptionData | null>('subscription', () => null)
   const freeTierStatus = useState<FreeTierData | null>('freeTierStatus', () => null)
   const loading = useState<boolean>('subscriptionLoading', () => false)
   const error = useState<string>('subscriptionError', () => '')
+  // Track last fetch time to prevent redundant calls
+  const lastFetchTime = useState<number>('subscriptionLastFetch', () => 0)
+  const lastUserId = useState<string | null>('subscriptionLastUserId', () => null)
 
   // Check if user has an active subscription (must have a Stripe subscription ID)
   const isSubscribed = computed(() => {
@@ -51,11 +56,36 @@ export const useSubscription = () => {
     return freeTierStatus.value?.playsRemaining ?? 5
   })
 
+  // Check if we should skip fetching (already have fresh data)
+  const shouldSkipFetch = () => {
+    if (!user.value) return false
+    // Skip if we have data for this user and it's still fresh
+    if (
+      lastUserId.value === user.value.id &&
+      subscription.value !== null &&
+      Date.now() - lastFetchTime.value < SUBSCRIPTION_CACHE_TTL
+    ) {
+      return true
+    }
+    return false
+  }
+
   // Fetch subscription status
-  const fetchSubscription = async () => {
+  const fetchSubscription = async (force = false) => {
     if (!user.value) {
       subscription.value = null
       freeTierStatus.value = null
+      lastUserId.value = null
+      return
+    }
+
+    // Skip fetch if we already have fresh data for this user
+    if (!force && shouldSkipFetch()) {
+      return
+    }
+
+    // Prevent concurrent fetches
+    if (loading.value) {
       return
     }
 
@@ -75,6 +105,8 @@ export const useSubscription = () => {
       }
 
       subscription.value = data
+      lastFetchTime.value = Date.now()
+      lastUserId.value = user.value.id
     } catch (e: any) {
       console.error('Error fetching subscription:', e)
       error.value = e.message

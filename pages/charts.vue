@@ -231,8 +231,16 @@
 </template>
 
 <script setup lang="ts">
-const { getStreamUrl } = useAlbum()
-const { playTrack: playFromPlayer, setQueue } = usePlayer()
+const { getStreamUrl, getCachedCoverUrl } = useAlbum()
+const { setQueue } = usePlayer()
+
+// Client-side cache for chart data (persists across navigation)
+interface ChartCache {
+  data: ChartData
+  timestamp: number
+}
+const CHART_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+const chartDataCache = useState<Record<string, ChartCache>>('charts-cache', () => ({}))
 
 const loading = ref(true)
 const selectedPeriod = ref('7d')
@@ -266,6 +274,18 @@ const formatNumber = (num: number): string => {
 }
 
 const loadCharts = async () => {
+  const cacheKey = selectedPeriod.value
+
+  // Check client-side cache first
+  const cached = chartDataCache.value[cacheKey]
+  if (cached && Date.now() - cached.timestamp < CHART_CACHE_TTL) {
+    charts.value = cached.data
+    loading.value = false
+    // Still load images in the background
+    await loadImages()
+    return
+  }
+
   loading.value = true
   try {
     const data = await $fetch('/api/charts/trending', {
@@ -274,43 +294,54 @@ const loadCharts = async () => {
 
     charts.value = data as ChartData
 
-    // Load cover images for tracks
-    for (const track of charts.value.tracks) {
-      if (track.album?.cover_key && !trackCovers.value[track.id]) {
-        try {
-          trackCovers.value[track.id] = await getStreamUrl(track.album.cover_key)
-        } catch (e) {
-          console.error('Failed to load track cover:', e)
-        }
-      }
+    // Cache the chart data
+    chartDataCache.value[cacheKey] = {
+      data: charts.value,
+      timestamp: Date.now(),
     }
 
-    // Load cover images for albums
-    for (const album of charts.value.albums) {
-      if (album.cover_key && !albumCovers.value[album.id]) {
-        try {
-          albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
-        } catch (e) {
-          console.error('Failed to load album cover:', e)
-        }
-      }
-    }
-
-    // Load avatars for artists
-    for (const artist of charts.value.artists) {
-      if (artist.avatar_key && !artistAvatars.value[artist.id]) {
-        try {
-          artistAvatars.value[artist.id] = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          console.error('Failed to load artist avatar:', e)
-        }
-      }
-    }
+    await loadImages()
   } catch (e) {
     console.error('Failed to load charts:', e)
   } finally {
     loading.value = false
   }
+}
+
+// Load images using the cached cover URL helper
+const loadImages = async () => {
+  // Load cover images for tracks (parallel)
+  await Promise.all(
+    charts.value.tracks.map(async (track) => {
+      if (track.album?.cover_key && !trackCovers.value[track.id]) {
+        const url = await getCachedCoverUrl(track.album.cover_key)
+        if (url) trackCovers.value[track.id] = url
+      }
+    })
+  )
+
+  // Load cover images for albums (parallel)
+  await Promise.all(
+    charts.value.albums.map(async (album) => {
+      if (album.cover_key && !albumCovers.value[album.id]) {
+        const url = await getCachedCoverUrl(album.cover_key)
+        if (url) albumCovers.value[album.id] = url
+      }
+    })
+  )
+
+  // Load avatars for artists (parallel)
+  await Promise.all(
+    charts.value.artists.map(async (artist) => {
+      if (artist.avatar_key && !artistAvatars.value[artist.id]) {
+        try {
+          artistAvatars.value[artist.id] = await getStreamUrl(artist.avatar_key)
+        } catch (e) {
+          // Ignore avatar load errors
+        }
+      }
+    })
+  )
 }
 
 const playTrack = async (track: any) => {

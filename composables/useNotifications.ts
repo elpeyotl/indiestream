@@ -25,7 +25,7 @@ export const useNotifications = () => {
   const loading = useState<boolean>('notificationsLoading', () => false)
   const lastFetch = useState<number>('notificationsLastFetch', () => 0)
 
-  // Fetch unread count (lightweight, for badge)
+  // Fetch unread count (lightweight, for badge) - always fresh, no caching
   const fetchUnreadCount = async () => {
     if (!user.value) {
       unreadCount.value = 0
@@ -35,8 +35,11 @@ export const useNotifications = () => {
     try {
       const { count } = await $fetch<{ count: number }>('/api/notifications/unread-count')
       unreadCount.value = count
-    } catch (e) {
-      console.error('Failed to fetch unread count:', e)
+    } catch (e: any) {
+      // Silently ignore auth errors during session initialization
+      if (e?.statusCode !== 401 && e?.statusCode !== 500) {
+        console.error('Failed to fetch unread count:', e)
+      }
     }
   }
 
@@ -61,8 +64,11 @@ export const useNotifications = () => {
 
       // Update unread count from fetched data
       unreadCount.value = data.filter(n => !n.read).length
-    } catch (e) {
-      console.error('Failed to fetch notifications:', e)
+    } catch (e: any) {
+      // Silently ignore auth errors during session initialization
+      if (e?.statusCode !== 401 && e?.statusCode !== 500) {
+        console.error('Failed to fetch notifications:', e)
+      }
     } finally {
       loading.value = false
     }
