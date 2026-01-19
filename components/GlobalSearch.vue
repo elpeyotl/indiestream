@@ -47,7 +47,7 @@
                   :key="artist.id"
                   :to="`/${artist.slug}`"
                   class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
-                  @click="closeSearch"
+                  @click="saveAndClose"
                 >
                   <div
                     class="w-10 h-10 rounded-lg overflow-hidden shrink-0"
@@ -80,7 +80,7 @@
                   :key="album.id"
                   :to="`/${album.band?.slug}/${album.slug}`"
                   class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
-                  @click="closeSearch"
+                  @click="saveAndClose"
                 >
                   <div class="w-10 h-10 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
                     <img
@@ -110,7 +110,7 @@
                   :key="track.id"
                   :to="`/${track.band_slug}/${track.album_slug}`"
                   class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
-                  @click="closeSearch"
+                  @click="saveAndClose"
                 >
                   <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
                     <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-zinc-400" />
@@ -125,26 +125,59 @@
           </div>
         </div>
 
-        <!-- Quick Links (when no query) -->
-        <div v-else class="mt-4">
-          <h3 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Quick Links</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <NuxtLink
-              to="/discover"
-              class="flex items-center gap-2 p-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 transition-colors"
-              @click="closeSearch"
-            >
-              <UIcon name="i-heroicons-sparkles" class="w-5 h-5 text-violet-400" />
-              <span class="text-zinc-200">Discover</span>
-            </NuxtLink>
-            <NuxtLink
-              to="/artists"
-              class="flex items-center gap-2 p-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 transition-colors"
-              @click="closeSearch"
-            >
-              <UIcon name="i-heroicons-user-group" class="w-5 h-5 text-fuchsia-400" />
-              <span class="text-zinc-200">Artists</span>
-            </NuxtLink>
+        <!-- Recent Searches & Quick Links (when no query) -->
+        <div v-else class="mt-4 space-y-4">
+          <!-- Recent Searches -->
+          <div v-if="recentSearches.length > 0">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Recent Searches</h3>
+              <button
+                class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                @click="clearRecentSearches"
+              >
+                Clear
+              </button>
+            </div>
+            <div class="space-y-1">
+              <div
+                v-for="search in recentSearches"
+                :key="search.query"
+                class="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-800 transition-colors group cursor-pointer"
+                @click="useRecentSearch(search.query)"
+              >
+                <UIcon name="i-heroicons-clock" class="w-4 h-4 text-zinc-500" />
+                <span class="flex-1 text-zinc-300 truncate">{{ search.query }}</span>
+                <button
+                  class="opacity-0 group-hover:opacity-100 p-1 hover:bg-zinc-700 rounded transition-all"
+                  @click.stop="removeRecentSearch(search.query)"
+                >
+                  <UIcon name="i-heroicons-x-mark" class="w-3 h-3 text-zinc-500" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Links -->
+          <div>
+            <h3 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Quick Links</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <NuxtLink
+                to="/discover"
+                class="flex items-center gap-2 p-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 transition-colors"
+                @click="closeSearch"
+              >
+                <UIcon name="i-heroicons-sparkles" class="w-5 h-5 text-violet-400" />
+                <span class="text-zinc-200">Discover</span>
+              </NuxtLink>
+              <NuxtLink
+                to="/artists"
+                class="flex items-center gap-2 p-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 transition-colors"
+                @click="closeSearch"
+              >
+                <UIcon name="i-heroicons-user-group" class="w-5 h-5 text-fuchsia-400" />
+                <span class="text-zinc-200">Artists</span>
+              </NuxtLink>
+            </div>
           </div>
         </div>
 
@@ -161,6 +194,7 @@
 <script setup lang="ts">
 const client = useSupabaseClient()
 const { getStreamUrl } = useAlbum()
+const { recentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } = useRecentActivity()
 
 const isOpen = ref(false)
 const query = ref('')
@@ -193,6 +227,20 @@ const openSearch = () => {
 
 const closeSearch = () => {
   isOpen.value = false
+}
+
+// Save search query when navigating to results
+const saveAndClose = () => {
+  if (query.value.trim()) {
+    addRecentSearch(query.value.trim())
+  }
+  closeSearch()
+}
+
+// Use a recent search
+const useRecentSearch = (searchQuery: string) => {
+  query.value = searchQuery
+  performSearch()
 }
 
 // Keyboard shortcut

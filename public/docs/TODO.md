@@ -15,11 +15,12 @@
 
 ### Discovery & Navigation
 - [x] Home page with featured artists and new releases
-- [x] Discover page with artist grid
+- [x] Discover page with artist grid and recently played
 - [x] Artists page with search and genre filters
-- [x] Global search (Cmd+K) for artists, albums, tracks
+- [x] Global search (Cmd+K) for artists, albums, tracks with recent searches
 - [x] Artist public profile pages
 - [x] Album detail pages with track listing
+- [x] Recently played tracks (discover preview + library history tab)
 
 ### Preview System
 - [x] 30-second preview for non-logged-in users
@@ -101,8 +102,8 @@
 - [x] Content moderation queue (review flagged/new uploads)
 - [x] Track approval workflow (pending → approved/rejected, re-review on edits)
 - [x] Artist verification system (admin can verify artists with badge)
-- [ ] Revenue dashboard (subscriptions, payouts)
-- [ ] Growth metrics over time
+- [x] Revenue dashboard (subscriptions, payouts, charts)
+- [x] Growth metrics over time (subscriber growth, artist growth charts)
 
 #### Platform
 - [ ] Mobile responsive improvements
@@ -110,7 +111,7 @@
 - [ ] Offline playback (for subscribers)
 - [x] Social login (Google OAuth)
 - [ ] Apple login
-- [ ] Email notifications (new releases from followed artists)
+- [x] Email notifications (new releases from followed artists)
 
 #### Native App UX (Phase 1 - See docs/NATIVE_APP_UX.md)
 - [x] Smart landing page redirect (logged-in users → /discover)
@@ -126,10 +127,10 @@
 - [ ] Long-press context menus
 
 #### Discovery
-- [ ] Genre pages
+- [x] Genre pages (browse by genre, genre detail pages with artist filtering)
 - [ ] Curated playlists
 - [ ] "Similar artists" recommendations
-- [ ] Charts/trending
+- [x] Charts/trending (top tracks, albums, artists by period)
 
 #### Merchandise / Store (Nice to Have)
 - [ ] Digital downloads (albums, stems, sample packs)

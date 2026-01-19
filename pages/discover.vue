@@ -38,6 +38,57 @@
     </div>
 
     <template v-else>
+      <!-- Recently Played (for logged-in users) -->
+      <section v-if="user && recentlyPlayed.length > 0" class="mb-12">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
+            <UIcon name="i-heroicons-clock" class="w-5 h-5 text-violet-400" />
+            Recently Played
+          </h2>
+          <NuxtLink to="/library?tab=history" class="text-sm text-violet-400 hover:text-violet-300">
+            View All
+          </NuxtLink>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <div
+            v-for="track in recentlyPlayed.slice(0, 5)"
+            :key="track.id"
+            class="group card-interactive cursor-pointer"
+            @click="playRecentTrack(track)"
+          >
+            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
+              <div class="absolute inset-0">
+                <img
+                  v-if="track.coverUrl"
+                  v-fade-image
+                  :src="track.coverUrl"
+                  :alt="track.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+                </div>
+              </div>
+              <!-- Play overlay -->
+              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div class="w-12 h-12 rounded-full bg-violet-500 flex items-center justify-center">
+                  <UIcon name="i-heroicons-play" class="w-6 h-6 text-white ml-0.5" />
+                </div>
+              </div>
+            </div>
+            <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ track.title }}</p>
+            <NuxtLink
+              :to="`/${track.artistSlug}`"
+              class="text-sm text-zinc-400 truncate block hover:text-violet-400"
+              @click.stop
+            >
+              {{ track.artistName }}
+            </NuxtLink>
+          </div>
+        </div>
+      </section>
+
       <!-- Featured Artists -->
       <section v-if="featuredArtists.length > 0" class="mb-12">
         <div class="flex items-center justify-between mb-4">
@@ -208,6 +259,7 @@
 <script setup lang="ts">
 import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
+import type { RecentlyPlayedTrack } from '~/composables/useRecentActivity'
 
 interface FeaturedPlaylist {
   id: string
@@ -234,6 +286,9 @@ const {
 } = useDiscover()
 
 const { getStreamUrl } = useAlbum()
+const { fetchRecentlyPlayed, recentlyPlayed, loadingRecentlyPlayed } = useRecentActivity()
+const user = useSupabaseUser()
+const { setQueue } = usePlayer()
 
 const loading = ref(true)
 const loadingMore = ref(false)
@@ -295,9 +350,32 @@ const loadData = async (forceRefresh = false) => {
 
     // Also load featured playlists
     await loadFeaturedPlaylists()
+
+    // Load recently played for logged-in users
+    if (user.value) {
+      await fetchRecentlyPlayed(10)
+    }
   } catch (e) {
     console.error('Failed to load discover data:', e)
   }
+}
+
+// Play a recently played track
+const playRecentTrack = (track: RecentlyPlayedTrack) => {
+  const queue = recentlyPlayed.value.map(t => ({
+    id: t.id,
+    title: t.title,
+    artist: t.artistName,
+    artistSlug: t.artistSlug,
+    albumTitle: t.albumTitle,
+    albumSlug: t.albumSlug,
+    coverUrl: t.coverUrl || null,
+    duration: 0, // Will be loaded by player
+    audioKey: '', // Will be loaded by player
+  }))
+
+  const trackIndex = recentlyPlayed.value.findIndex(t => t.id === track.id)
+  setQueue(queue, trackIndex >= 0 ? trackIndex : 0)
 }
 
 const loadMoreArtists = async () => {

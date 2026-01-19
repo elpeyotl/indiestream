@@ -302,6 +302,83 @@
             </div>
           </div>
       </template>
+
+      <template #history>
+          <LoadingSpinner v-if="loadingHistory" />
+
+          <EmptyState
+            v-else-if="recentlyPlayed.length === 0"
+            icon="i-heroicons-clock"
+            title="No listening history"
+            description="Start listening to music to see your history here."
+            action-label="Discover Music"
+            action-to="/discover"
+          />
+
+          <div v-else class="space-y-1">
+            <div
+              v-for="(track, index) in recentlyPlayed"
+              :key="`${track.id}-${index}`"
+              class="flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors group cursor-pointer"
+              @click="playHistoryTrack(track, index)"
+            >
+              <!-- Index / Play -->
+              <div class="w-8 text-center shrink-0">
+                <UIcon
+                  v-if="loadingPlayId === `history-${track.id}`"
+                  name="i-heroicons-arrow-path"
+                  class="w-4 h-4 text-violet-400 animate-spin"
+                />
+                <template v-else>
+                  <span class="text-sm text-zinc-500 group-hover:hidden">{{ index + 1 }}</span>
+                  <UIcon
+                    name="i-heroicons-play"
+                    class="w-4 h-4 text-zinc-100 hidden group-hover:inline"
+                  />
+                </template>
+              </div>
+
+              <!-- Cover -->
+              <div class="w-10 h-10 rounded bg-zinc-800 shrink-0 overflow-hidden">
+                <img
+                  v-if="track.coverUrl"
+                  :src="track.coverUrl"
+                  :alt="track.title"
+                  class="w-full h-full object-cover"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-4 h-4 text-zinc-600" />
+                </div>
+              </div>
+
+              <!-- Track Info -->
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-zinc-100 truncate">{{ track.title }}</p>
+                <NuxtLink
+                  :to="`/${track.artistSlug}`"
+                  class="text-sm text-zinc-400 hover:text-violet-400 truncate block"
+                  @click.stop
+                >
+                  {{ track.artistName }}
+                </NuxtLink>
+              </div>
+
+              <!-- Album -->
+              <NuxtLink
+                :to="`/${track.artistSlug}/${track.albumSlug}`"
+                class="hidden md:block text-sm text-zinc-500 hover:text-zinc-300 truncate max-w-[200px]"
+                @click.stop
+              >
+                {{ track.albumTitle }}
+              </NuxtLink>
+
+              <!-- Played time -->
+              <span class="text-sm text-zinc-500 hidden sm:block">
+                {{ formatRelativeTime(track.playedAt) }}
+              </span>
+            </div>
+          </div>
+      </template>
     </PillTabs>
 
     <!-- Create Playlist Modal -->
@@ -373,6 +450,7 @@
 import type { SavedAlbum, LikedTrack, FollowedArtist } from '~/composables/useLibrary'
 import type { Playlist } from '~/composables/usePlaylist'
 import type { PlayerTrack } from '~/composables/usePlayer'
+import type { RecentlyPlayedTrack } from '~/composables/useRecentActivity'
 
 definePageMeta({
   middleware: 'auth',
@@ -380,9 +458,12 @@ definePageMeta({
 
 const { getStreamUrl } = useAlbum()
 const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = useLibrary()
-const { playTrackFromLibrary, playPlaylist, isLoading: playerLoading } = usePlayer()
+const { playTrackFromLibrary, playPlaylist, isLoading: playerLoading, setQueue } = usePlayer()
 const { playlists: userPlaylists, fetchPlaylists, createPlaylist, getPlaylist } = usePlaylist()
+const { fetchRecentlyPlayed, recentlyPlayed } = useRecentActivity()
+const route = useRoute()
 const loading = ref(true)
+const loadingHistory = ref(false)
 const activeTab = ref(0)
 
 const artists = ref<FollowedArtist[]>([])
@@ -426,12 +507,52 @@ const tabs = computed(() => [
   { slot: 'artists', label: `Artists (${artists.value.length})`, icon: 'i-heroicons-user-group' },
   { slot: 'albums', label: `Albums (${albums.value.length})`, icon: 'i-heroicons-square-3-stack-3d' },
   { slot: 'tracks', label: `Liked Songs (${tracks.value.length})`, icon: 'i-heroicons-heart' },
+  { slot: 'history', label: 'History', icon: 'i-heroicons-clock' },
 ])
 
 const formatDuration = (seconds: number): string => {
   const mins = Math.floor(seconds / 60)
   const secs = seconds % 60
   return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+const formatRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return date.toLocaleDateString()
+}
+
+// Play a track from history
+const playHistoryTrack = async (track: RecentlyPlayedTrack, index: number) => {
+  if (loadingPlayId.value) return
+  loadingPlayId.value = `history-${track.id}`
+
+  try {
+    const queue = recentlyPlayed.value.map(t => ({
+      id: t.id,
+      title: t.title,
+      artist: t.artistName,
+      artistSlug: t.artistSlug,
+      albumTitle: t.albumTitle,
+      albumSlug: t.albumSlug,
+      coverUrl: t.coverUrl || null,
+      duration: 0,
+      audioKey: '',
+    }))
+
+    setQueue(queue, index)
+  } finally {
+    loadingPlayId.value = null
+  }
 }
 
 const handleUnlike = async (trackId: string) => {
@@ -634,6 +755,33 @@ const loadPlaylistCovers = async () => {
     })
   )
 }
+
+// Load history when tab is selected
+const loadHistory = async () => {
+  if (recentlyPlayed.value.length > 0) return // Already loaded
+  loadingHistory.value = true
+  try {
+    await fetchRecentlyPlayed(20)
+  } finally {
+    loadingHistory.value = false
+  }
+}
+
+// Watch for tab changes to load history lazily
+watch(activeTab, (newTab) => {
+  // History tab is index 4
+  if (newTab === 4) {
+    loadHistory()
+  }
+})
+
+// Handle URL query param for deep linking (e.g., /library?tab=history)
+onMounted(() => {
+  const tabParam = route.query.tab as string
+  if (tabParam === 'history') {
+    activeTab.value = 4
+  }
+})
 
 // Pull to refresh
 usePullToRefresh(loadLibrary)
