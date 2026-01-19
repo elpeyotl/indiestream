@@ -126,10 +126,10 @@
 - [ ] Long-press context menus
 
 #### Discovery
-- [ ] Genre pages
+- [x] Genre pages (browse by genre, genre detail pages with artist filtering)
 - [ ] Curated playlists
 - [ ] "Similar artists" recommendations
-- [ ] Charts/trending
+- [x] Charts/trending (top tracks, albums, artists by period)
 
 #### Merchandise / Store (Nice to Have)
 - [ ] Digital downloads (albums, stems, sample packs)

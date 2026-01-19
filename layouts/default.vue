@@ -46,11 +46,18 @@
                 Discover
               </NuxtLink>
               <NuxtLink
-                to="/artists"
+                to="/charts"
                 class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
-                <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
-                Artists
+                <UIcon name="i-heroicons-chart-bar" class="w-4 h-4" />
+                Charts
+              </NuxtLink>
+              <NuxtLink
+                to="/genres"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                <UIcon name="i-heroicons-tag" class="w-4 h-4" />
+                Genres
               </NuxtLink>
               <NuxtLink
                 to="/library"
@@ -71,11 +78,18 @@
                 Discover
               </NuxtLink>
               <NuxtLink
-                to="/artists"
+                to="/charts"
                 class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
-                <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
-                Artists
+                <UIcon name="i-heroicons-chart-bar" class="w-4 h-4" />
+                Charts
+              </NuxtLink>
+              <NuxtLink
+                to="/genres"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                <UIcon name="i-heroicons-tag" class="w-4 h-4" />
+                Genres
               </NuxtLink>
               <NuxtLink
                 to="/pricing"
@@ -83,13 +97,6 @@
               >
                 <UIcon name="i-heroicons-currency-dollar" class="w-4 h-4" />
                 Pricing
-              </NuxtLink>
-              <NuxtLink
-                to="/for-artists"
-                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
-              >
-                <UIcon name="i-heroicons-microphone" class="w-4 h-4" />
-                For Artists
               </NuxtLink>
             </template>
           </nav>

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.18.0] - 2026-01-19
+
+### Added
+- **Genre Pages**: Browse all genres at `/genres` with artist counts per genre
+- **Genre Detail Pages**: View all artists in a specific genre at `/genres/[genre]` with colorful gradient headers
+- **Charts Page**: Top tracks, albums, and artists with time period filters (This Week, This Month, All Time)
+- **Navigation**: Added Charts and Genres links to main navigation for both logged-in and logged-out users
+
 ## [0.17.1] - 2026-01-19
 
 ### Fixed

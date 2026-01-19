@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.17.1'
+export const APP_VERSION = '0.18.0'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.18.0',
+    date: '2026-01-19',
+    changes: [
+      { type: 'added', description: 'Genre Pages: Browse all genres at /genres with artist counts' },
+      { type: 'added', description: 'Genre Detail Pages: View all artists in a specific genre at /genres/[genre]' },
+      { type: 'added', description: 'Charts Page: Top tracks, albums, and artists with time period filters (7d, 30d, all time)' },
+      { type: 'added', description: 'Navigation: Added Charts and Genres links to main navigation' },
+    ],
+  },
   {
     version: '0.17.1',
     date: '2026-01-19',
