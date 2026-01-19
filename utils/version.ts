@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.15.0'
+export const APP_VERSION = '0.16.0'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,20 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.16.0',
+    date: '2026-01-19',
+    changes: [
+      { type: 'added', description: 'Admin Revenue Dashboard: New Revenue tab with comprehensive financial metrics' },
+      { type: 'added', description: 'Revenue Trend Chart: Line chart showing monthly revenue over last 12 months' },
+      { type: 'added', description: 'Revenue Split Chart: Doughnut chart visualizing 70/15/15 split (Artists/CMO/Platform)' },
+      { type: 'added', description: 'Subscriber Growth Chart: Track new and total subscribers over time' },
+      { type: 'added', description: 'Artist Growth Chart: Track new and total artists joining the platform' },
+      { type: 'added', description: 'Top Earning Artists: Ranked list by lifetime earnings (includes paid out amounts)' },
+      { type: 'added', description: 'Subscriber Metrics: Active, trialing, canceled, and past due counts' },
+      { type: 'fixed', description: 'Top artists now correctly shows lifetime earnings instead of just current balance' },
+    ],
+  },
   {
     version: '0.15.0',
     date: '2026-01-19',
