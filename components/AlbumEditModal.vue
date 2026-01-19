@@ -36,7 +36,7 @@
             />
             <UButton
               color="gray"
-              variant="soft"
+              variant="ghost"
               size="sm"
               :loading="uploadingCover"
               :disabled="saving"
@@ -360,18 +360,42 @@
                     </UButton>
                   </div>
 
-                  <!-- Add Credit Button -->
-                  <UButton
-                    color="gray"
-                    variant="dashed"
-                    size="xs"
-                    class="w-full"
-                    :disabled="saving"
-                    @click="track.credits.push({ role: 'composer', name: '', ipi_number: '' })"
-                  >
-                    <UIcon name="i-heroicons-plus" class="w-3 h-3 mr-1" />
-                    Add Credit
-                  </UButton>
+                  <!-- Action Buttons -->
+                  <div class="flex gap-2">
+                    <UButton
+                      color="gray"
+                      variant="dashed"
+                      size="xs"
+                      class="flex-1"
+                      :disabled="saving"
+                      @click="track.credits.push({ role: 'composer', name: '', ipi_number: '' })"
+                    >
+                      <UIcon name="i-heroicons-plus" class="w-3 h-3 mr-1" />
+                      Add Credit
+                    </UButton>
+                    <UButton
+                      v-if="canCopyCredits(index)"
+                      color="gray"
+                      variant="outline"
+                      size="xs"
+                      :disabled="saving"
+                      @click="copyCredits(index)"
+                    >
+                      <UIcon name="i-heroicons-clipboard-document" class="w-3 h-3 mr-1" />
+                      Copy
+                    </UButton>
+                    <UButton
+                      v-if="copiedCredits && copiedCredits.length > 0"
+                      color="violet"
+                      variant="outline"
+                      size="xs"
+                      :disabled="saving"
+                      @click="pasteCredits(index)"
+                    >
+                      <UIcon name="i-heroicons-clipboard-document-check" class="w-3 h-3 mr-1" />
+                      Paste
+                    </UButton>
+                  </div>
                 </div>
               </div>
             </div>
@@ -469,6 +493,10 @@ const coverPreview = ref<string | null>(null)
 // Drag state
 const draggedIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
+
+// Credits copy/paste state
+const copiedCredits = ref<Array<{ role: string; name: string; ipi_number: string | null }> | null>(null)
+const toast = useToast()
 
 // Options
 const releaseTypeOptions = [
@@ -584,6 +612,28 @@ const onDrop = (targetIndex: number) => {
   emit('tracks-reorder', localTracks.value)
   draggedIndex.value = null
   dragOverIndex.value = null
+}
+
+// Credits copy/paste functions
+const canCopyCredits = (trackIndex: number) => {
+  const track = localTracks.value[trackIndex]
+  return track.credits.length > 0 && track.credits.every(c => c.name.trim() && c.role)
+}
+
+const copyCredits = (trackIndex: number) => {
+  const track = localTracks.value[trackIndex]
+  copiedCredits.value = JSON.parse(JSON.stringify(track.credits))
+  toast.add({ title: 'Credits copied', color: 'green', icon: 'i-heroicons-clipboard-document' })
+}
+
+const pasteCredits = (trackIndex: number) => {
+  if (!copiedCredits.value) return
+  const track = localTracks.value[trackIndex]
+  // Append copied credits to existing ones
+  for (const credit of copiedCredits.value) {
+    track.credits.push({ ...credit })
+  }
+  track.showCredits = true
 }
 
 // Save handler
