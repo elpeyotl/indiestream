@@ -5,9 +5,9 @@
 const getAppUrl = () => {
   try {
     const config = useRuntimeConfig()
-    return config.public.appUrl || 'https://indiestream.vercel.app'
+    return config.public.appUrl || 'https://fairstream.fm'
   } catch {
-    return 'https://indiestream.vercel.app'
+    return 'https://fairstream.fm'
   }
 }
 

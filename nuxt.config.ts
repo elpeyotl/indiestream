@@ -157,7 +157,7 @@ export default defineNuxtConfig({
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-      appUrl: process.env.APP_URL || 'https://indiestream.vercel.app',
+      appUrl: process.env.APP_URL || 'https://fairstream.fm',
     },
   },
 })

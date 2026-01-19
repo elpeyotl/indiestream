@@ -21,15 +21,11 @@
             <BackButton class="md:hidden" />
             <!-- Logo -->
             <NuxtLink to="/" class="flex items-center gap-2 group">
-              <div
-                class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center"
-              >
-                <span class="text-white font-bold text-sm">IS</span>
-              </div>
+              <img src="/logo.svg" alt="Fairstream" class="w-8 h-8" />
               <div class="text-xl font-bold">
                 <span
                   class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent"
-                  >Indie</span
+                  >Fair</span
                 ><span class="text-zinc-100">stream</span>
               </div>
             </NuxtLink>
@@ -326,15 +322,11 @@
           <!-- Brand -->
           <div class="col-span-1 md:col-span-2">
             <div class="flex items-center gap-2 mb-4">
-              <div
-                class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center"
-              >
-                <span class="text-white font-bold text-sm">IS</span>
-              </div>
+              <img src="/logo.svg" alt="Fairstream" class="w-8 h-8" />
               <div class="text-xl font-bold">
                 <span
                   class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent"
-                  >Indie</span
+                  >Fair</span
                 ><span class="text-zinc-100">stream</span>
               </div>
             </div>

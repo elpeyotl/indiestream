@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const config = useRuntimeConfig()
-  const baseUrl = config.public.appUrl || 'https://indiestream.art'
+  const baseUrl = config.public.appUrl || 'https://fairstream.fm'
 
   return {
     token: data,

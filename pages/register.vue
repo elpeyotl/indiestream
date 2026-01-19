@@ -4,11 +4,9 @@
       <!-- Logo -->
       <div class="text-center mb-8">
         <NuxtLink to="/" class="inline-flex items-center gap-2">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
-            <span class="text-white font-bold">IS</span>
-          </div>
+          <img src="/logo.svg" alt="Fairstream" class="w-10 h-10" />
           <span class="text-2xl font-bold">
-            <span class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Indie</span><span class="text-zinc-100">stream</span>
+            <span class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Fair</span><span class="text-zinc-100">stream</span>
           </span>
         </NuxtLink>
       </div>

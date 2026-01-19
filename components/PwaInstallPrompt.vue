@@ -7,9 +7,7 @@
       <div class="bg-zinc-900 border border-zinc-700 rounded-xl p-4 shadow-2xl">
         <div class="flex items-start gap-3">
           <!-- App Icon -->
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-bold text-lg">IS</span>
-          </div>
+          <img src="/logo.svg" alt="Fairstream" class="w-12 h-12 flex-shrink-0" />
 
           <div class="flex-1 min-w-0">
             <h3 class="font-semibold text-zinc-100 text-sm">Install Fairstream</h3>

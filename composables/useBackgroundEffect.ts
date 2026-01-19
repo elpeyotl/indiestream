@@ -26,7 +26,7 @@ export const backgroundOptions: BackgroundOption[] = [
   { value: 'equalizer', label: 'Equalizer', description: 'Audio bars' },
 ]
 
-const STORAGE_KEY = 'indiestream-background-effect'
+const STORAGE_KEY = 'fairstream-background-effect'
 
 // Shared state
 const currentEffect = ref<BackgroundEffect>('particles')
