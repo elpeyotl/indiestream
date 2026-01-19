@@ -109,6 +109,48 @@
         </div>
       </section>
 
+      <!-- Featured Playlists -->
+      <section v-if="featuredPlaylists.length > 0" class="mb-12">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
+            <UIcon name="i-heroicons-star" class="w-5 h-5 text-violet-400" />
+            Featured Playlists
+          </h2>
+          <NuxtLink to="/playlists" class="text-sm text-violet-400 hover:text-violet-300">
+            View All
+          </NuxtLink>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <NuxtLink
+            v-for="playlist in featuredPlaylists"
+            :key="playlist.id"
+            :to="`/playlists/${playlist.id}`"
+            class="group card-interactive"
+          >
+            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
+              <div class="absolute inset-0">
+                <img
+                  v-if="playlistCovers[playlist.id]"
+                  v-fade-image
+                  :src="playlistCovers[playlist.id]"
+                  :alt="playlist.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20">
+                  <UIcon name="i-heroicons-queue-list" class="w-12 h-12 text-violet-400" />
+                </div>
+              </div>
+            </div>
+            <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ playlist.title }}</p>
+            <p class="text-sm text-zinc-400 truncate">{{ playlist.track_count }} tracks</p>
+            <p v-if="playlist.owner?.display_name" class="text-xs text-zinc-500 truncate">
+              By {{ playlist.owner.display_name }}
+            </p>
+          </NuxtLink>
+        </div>
+      </section>
+
       <!-- All Artists -->
       <section v-if="allArtists.length > 0" class="mb-12">
         <div class="flex items-center justify-between mb-4">
@@ -170,12 +212,26 @@
 import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
 
+interface FeaturedPlaylist {
+  id: string
+  title: string
+  description: string | null
+  track_count: number
+  cover_key: string | null
+  owner: {
+    id: string
+    display_name: string | null
+  } | null
+}
+
 const {
   getFeaturedArtists,
   getNewReleases,
   getAllArtists,
   loadMoreArtists: loadMoreArtistsFromComposable,
 } = useDiscover()
+
+const { getStreamUrl } = useAlbum()
 
 const loading = ref(true)
 const loadingMore = ref(false)
@@ -184,8 +240,30 @@ const featuredArtists = ref<Band[]>([])
 const newReleases = ref<Album[]>([])
 const allArtists = ref<Band[]>([])
 const albumCovers = ref<Record<string, string>>({})
+const featuredPlaylists = ref<FeaturedPlaylist[]>([])
+const playlistCovers = ref<Record<string, string>>({})
 const hasMoreArtists = ref(false)
 const artistPage = ref(0)
+
+const loadFeaturedPlaylists = async () => {
+  try {
+    const data = await $fetch<{ playlists: FeaturedPlaylist[] }>('/api/playlists/featured')
+    featuredPlaylists.value = data.playlists
+
+    // Load cover images
+    for (const playlist of data.playlists) {
+      if (playlist.cover_key && !playlistCovers.value[playlist.id]) {
+        try {
+          playlistCovers.value[playlist.id] = await getStreamUrl(playlist.cover_key)
+        } catch (e) {
+          console.error('Failed to load playlist cover:', e)
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load featured playlists:', e)
+  }
+}
 
 const loadData = async (forceRefresh = false) => {
   try {
@@ -201,6 +279,9 @@ const loadData = async (forceRefresh = false) => {
     allArtists.value = artists.artists
     hasMoreArtists.value = artists.hasMore
     artistPage.value = 0
+
+    // Also load featured playlists
+    await loadFeaturedPlaylists()
   } catch (e) {
     console.error('Failed to load discover data:', e)
   }

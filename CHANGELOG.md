@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.18.1] - 2026-01-19
+
+### Added
+- **Featured Playlists System**:
+  - Admin Playlists tab to manage, feature, and mark playlists as curated
+  - Featured playlists displayed on Discover page with cover art support
+  - API endpoints for featured playlists (`/api/playlists/featured`) and admin management
+  - Database migration adding `is_featured`, `is_curated`, `featured_at`, `featured_by`, `cover_key` columns to playlists table
+  - RLS policies for admin playlist management
+
 ## [0.18.0] - 2026-01-19
 
 ### Added
