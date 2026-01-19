@@ -8,6 +8,8 @@ export type BackgroundEffect =
   | 'constellation'
   | 'vinyl'
   | 'equalizer'
+  | 'trip'
+  | 'tunnel'
 
 export interface BackgroundOption {
   value: BackgroundEffect
@@ -19,11 +21,13 @@ export const backgroundOptions: BackgroundOption[] = [
   { value: 'none', label: 'None', description: 'No background effect' },
   { value: 'particles', label: 'Particles', description: 'Floating particles' },
   { value: 'gradient-orbs', label: 'Gradient Orbs', description: 'Soft glowing orbs' },
-  { value: 'noise', label: 'Film Grain', description: 'Subtle analog texture' },
+  { value: 'noise', label: 'Inferno', description: 'Rising embers & flames' },
   { value: 'bokeh', label: 'Bokeh Lights', description: 'Soft focus lights' },
   { value: 'constellation', label: 'Constellation', description: 'Connected stars' },
   { value: 'vinyl', label: 'Vinyl Grooves', description: 'Spinning record' },
   { value: 'equalizer', label: 'Equalizer', description: 'Audio bars' },
+  { value: 'trip', label: 'Trippy', description: 'Psychedelic visuals' },
+  { value: 'tunnel', label: 'Tunnel', description: 'Hypnotic wormhole' },
 ]
 
 const STORAGE_KEY = 'fairstream-background-effect'

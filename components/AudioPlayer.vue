@@ -10,8 +10,14 @@
           v-if="isExpanded"
           class="fixed inset-0 bg-zinc-950/95 backdrop-blur-xl z-40 flex flex-col"
         >
-          <!-- Close Button -->
-          <div class="flex justify-end p-4">
+          <!-- Dynamic Background Effect (z-0 so it stays behind content) -->
+          <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <DynamicBackground :audio-data="audioData" />
+          </div>
+
+          <!-- Header with Background Selector and Close Button -->
+          <div class="flex justify-between items-center p-4">
+            <BackgroundSelector />
             <UButton
               color="gray"
               variant="ghost"
@@ -311,12 +317,12 @@
         </div>
 
         <div class="container mx-auto px-4">
-          <div class="flex items-center gap-2 sm:gap-4 h-16 md:h-20">
-            <!-- Track Info (clickable to expand) -->
-            <div
-              class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
-              @click="isExpanded = true"
-            >
+          <div
+            class="flex items-center gap-2 sm:gap-4 h-16 md:h-20 cursor-pointer"
+            @click="isExpanded = true"
+          >
+            <!-- Track Info -->
+            <div class="flex items-center gap-3 flex-1 min-w-0">
               <!-- Cover -->
               <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
                 <img
@@ -432,7 +438,7 @@
             </div>
 
             <!-- Time, Queue & Volume (Desktop only) -->
-            <div class="hidden md:flex items-center gap-4 flex-1 justify-end">
+            <div class="hidden md:flex items-center gap-4 flex-1 justify-end" @click.stop>
               <!-- Time -->
               <div class="text-xs text-zinc-400 font-mono">
                 {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
@@ -599,6 +605,8 @@ const {
   // Shuffle and repeat
   shuffleEnabled,
   repeatMode,
+  // Audio visualizer data
+  audioData,
 } = usePlayer()
 
 const { isTrackLiked, toggleTrackLike } = useLibrary()

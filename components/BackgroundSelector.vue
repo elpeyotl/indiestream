@@ -1,5 +1,5 @@
 <template>
-  <UPopover :popper="{ placement: 'bottom-end' }">
+  <UPopover :popper="{ placement: 'bottom-start' }" :ui="{ container: 'z-[100]' }">
     <UButton
       color="gray"
       variant="ghost"
@@ -9,7 +9,7 @@
     />
 
     <template #panel>
-      <div class="p-3 w-64">
+      <div class="p-3 w-64 bg-zinc-900 rounded-lg border border-zinc-800 shadow-xl">
         <p class="text-xs font-medium text-zinc-400 mb-2">Background Effect</p>
         <div class="space-y-1">
           <button
@@ -53,11 +53,13 @@ const getIcon = (effect: BackgroundEffect): string => {
     'none': 'i-heroicons-x-mark',
     'particles': 'i-heroicons-sparkles',
     'gradient-orbs': 'i-heroicons-sun',
-    'noise': 'i-heroicons-film',
+    'noise': 'i-heroicons-fire',
     'bokeh': 'i-heroicons-light-bulb',
     'constellation': 'i-heroicons-star',
     'vinyl': 'i-heroicons-circle-stack',
     'equalizer': 'i-heroicons-bars-3-bottom-left',
+    'trip': 'i-heroicons-eye',
+    'tunnel': 'i-heroicons-arrow-path-rounded-square',
   }
   return icons[effect] || 'i-heroicons-sparkles'
 }
