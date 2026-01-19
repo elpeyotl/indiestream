@@ -249,8 +249,57 @@
                   option-attribute="label"
                 />
               </UFormGroup>
-              <UFormGroup label="Genres">
-                <UInput v-model="editBandForm.genresInput" placeholder="rock, pop, indie" />
+              <UFormGroup label="Genres" hint="Select from existing or type new">
+                <div class="space-y-2">
+                  <div class="flex gap-2">
+                    <UInput
+                      v-model="genreInput"
+                      placeholder="Search or add genre..."
+                      class="flex-1"
+                      :disabled="editBandForm.genres.length >= 5"
+                      @input="searchGenres"
+                      @keydown.enter.prevent="addGenre"
+                      @keydown.tab.prevent="selectFirstSuggestion"
+                    />
+                    <UButton
+                      color="gray"
+                      size="sm"
+                      :disabled="!genreInput.trim() || editBandForm.genres.length >= 5"
+                      @click="addGenre"
+                    >
+                      Add
+                    </UButton>
+                  </div>
+                  <!-- Genre suggestions dropdown -->
+                  <div v-if="genreSuggestions.length > 0 && genreInput.trim()" class="bg-zinc-800 rounded-lg border border-zinc-700 max-h-40 overflow-y-auto">
+                    <button
+                      v-for="suggestion in genreSuggestions"
+                      :key="suggestion"
+                      type="button"
+                      class="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 first:rounded-t-lg last:rounded-b-lg"
+                      @click="selectGenre(suggestion)"
+                    >
+                      {{ suggestion }}
+                    </button>
+                  </div>
+                  <!-- Selected genres -->
+                  <div v-if="editBandForm.genres.length" class="flex flex-wrap gap-2">
+                    <UBadge
+                      v-for="(genre, index) in editBandForm.genres"
+                      :key="index"
+                      color="violet"
+                      variant="soft"
+                      class="cursor-pointer"
+                      @click="removeGenre(index)"
+                    >
+                      {{ genre }}
+                      <UIcon name="i-heroicons-x-mark" class="w-3 h-3 ml-1" />
+                    </UBadge>
+                  </div>
+                  <p v-if="editBandForm.genres.length >= 5" class="text-xs text-zinc-500">
+                    Maximum 5 genres reached
+                  </p>
+                </div>
               </UFormGroup>
             </div>
 
@@ -383,8 +432,13 @@ const editBandForm = ref({
   is_verified: false,
   is_featured: false,
   suspension_reason: '',
-  genresInput: '',
+  genres: [] as string[],
 })
+
+// Genre handling
+const genreInput = ref('')
+const allGenres = ref<string[]>([])
+const genreSuggestions = ref<string[]>([])
 
 // Delete band
 const showDeleteBandModal = ref(false)
@@ -424,6 +478,66 @@ const loadBands = async (page = 1) => {
   }
 }
 
+// Load all existing genres for autocomplete
+const loadAllGenres = async () => {
+  try {
+    const data = await $fetch('/api/genres')
+    allGenres.value = data.genres.map((g: { name: string }) => g.name)
+  } catch (e) {
+    console.error('Failed to load genres:', e)
+  }
+}
+
+const searchGenres = () => {
+  const query = genreInput.value.toLowerCase().trim()
+  if (!query) {
+    genreSuggestions.value = []
+    return
+  }
+
+  // Filter existing genres that match the query and aren't already selected
+  genreSuggestions.value = allGenres.value
+    .filter(g =>
+      g.toLowerCase().includes(query) &&
+      !editBandForm.value.genres.some(selected => selected.toLowerCase() === g.toLowerCase())
+    )
+    .slice(0, 5)
+}
+
+const addGenre = () => {
+  const genre = genreInput.value.trim()
+  if (genre && editBandForm.value.genres.length < 5) {
+    // Check if already exists (case-insensitive)
+    if (!editBandForm.value.genres.some(g => g.toLowerCase() === genre.toLowerCase())) {
+      // If it matches an existing genre, use that casing
+      const existing = allGenres.value.find(g => g.toLowerCase() === genre.toLowerCase())
+      editBandForm.value.genres.push(existing || genre)
+    }
+    genreInput.value = ''
+    genreSuggestions.value = []
+  }
+}
+
+const selectGenre = (genre: string) => {
+  if (editBandForm.value.genres.length < 5 && !editBandForm.value.genres.includes(genre)) {
+    editBandForm.value.genres.push(genre)
+  }
+  genreInput.value = ''
+  genreSuggestions.value = []
+}
+
+const selectFirstSuggestion = () => {
+  if (genreSuggestions.value.length > 0) {
+    selectGenre(genreSuggestions.value[0])
+  } else if (genreInput.value.trim()) {
+    addGenre()
+  }
+}
+
+const removeGenre = (index: number) => {
+  editBandForm.value.genres.splice(index, 1)
+}
+
 const openEditBandModal = (band: AdminBand) => {
   bandToEdit.value = band
   editBandForm.value = {
@@ -437,8 +551,10 @@ const openEditBandModal = (band: AdminBand) => {
     is_verified: band.is_verified,
     is_featured: band.is_featured,
     suspension_reason: band.suspension_reason || '',
-    genresInput: band.genres?.join(', ') || '',
+    genres: [...(band.genres || [])],
   }
+  genreInput.value = ''
+  genreSuggestions.value = []
   showEditBandModal.value = true
 }
 
@@ -447,12 +563,6 @@ const handleUpdateBand = async () => {
 
   updatingBand.value = true
   try {
-    // Parse genres from comma-separated string
-    const genres = editBandForm.value.genresInput
-      .split(',')
-      .map(g => g.trim())
-      .filter(g => g.length > 0)
-
     await $fetch(`/api/admin/bands/${bandToEdit.value.id}`, {
       method: 'PATCH',
       body: {
@@ -466,7 +576,7 @@ const handleUpdateBand = async () => {
         is_verified: editBandForm.value.is_verified,
         is_featured: editBandForm.value.is_featured,
         suspension_reason: editBandForm.value.suspension_reason,
-        genres,
+        genres: editBandForm.value.genres,
       },
     })
 
@@ -533,5 +643,6 @@ const handleDeleteBand = async () => {
 
 onMounted(() => {
   loadBands()
+  loadAllGenres()
 })
 </script>
