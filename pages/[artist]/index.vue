@@ -1,5 +1,6 @@
 <template>
-  <div v-if="band">
+  <div>
+    <div v-if="band">
     <!-- Hero Banner -->
     <div class="relative h-72 md:h-96 lg:h-[28rem] overflow-hidden">
       <!-- Banner Image -->
@@ -383,76 +384,77 @@
     </div>
   </div>
 
-  <!-- Loading Skeleton -->
-  <div v-else-if="loading">
-    <!-- Hero Banner Skeleton -->
-    <div class="relative h-72 md:h-96 lg:h-[28rem] overflow-hidden">
-      <USkeleton class="absolute inset-0 rounded-none" />
-      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/20" />
+    <!-- Loading Skeleton -->
+    <div v-else-if="loading">
+      <!-- Hero Banner Skeleton -->
+      <div class="relative h-72 md:h-96 lg:h-[28rem] overflow-hidden">
+        <USkeleton class="absolute inset-0 rounded-none" />
+        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/20" />
+      </div>
+
+      <!-- Profile Info Skeleton -->
+      <div class="container mx-auto px-4 -mt-32 md:-mt-40 relative z-10">
+        <!-- Back Button placeholder -->
+        <div class="hidden md:block mb-4">
+          <USkeleton class="h-10 w-24 rounded-lg" />
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-6 items-start">
+          <!-- Avatar Skeleton -->
+          <USkeleton class="w-36 h-36 md:w-48 md:h-48 rounded-2xl shrink-0" />
+
+          <!-- Info Skeleton -->
+          <div class="flex-1 pt-4">
+            <USkeleton class="h-10 w-64 mb-4" />
+            <div class="flex gap-4 mb-4">
+              <USkeleton class="h-5 w-24" />
+              <USkeleton class="h-5 w-20" />
+            </div>
+            <div class="flex gap-2 mb-4">
+              <USkeleton class="h-6 w-16 rounded-full" />
+              <USkeleton class="h-6 w-20 rounded-full" />
+              <USkeleton class="h-6 w-14 rounded-full" />
+            </div>
+            <USkeleton class="h-16 w-full max-w-xl mb-6" />
+            <div class="flex gap-3">
+              <USkeleton class="h-11 w-28 rounded-lg" />
+              <USkeleton class="h-11 w-24 rounded-lg" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs Skeleton -->
+        <div class="mt-8">
+          <div class="flex gap-4 border-b border-zinc-800 pb-2">
+            <USkeleton class="h-8 w-20" />
+            <USkeleton class="h-8 w-16" />
+            <USkeleton class="h-8 w-24" />
+          </div>
+        </div>
+
+        <!-- Album Grid Skeleton -->
+        <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+          <div v-for="i in 5" :key="i" class="space-y-3">
+            <USkeleton class="aspect-square rounded-lg" />
+            <USkeleton class="h-5 w-3/4" />
+            <USkeleton class="h-4 w-1/2" />
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Profile Info Skeleton -->
-    <div class="container mx-auto px-4 -mt-32 md:-mt-40 relative z-10">
-      <!-- Back Button placeholder -->
-      <div class="hidden md:block mb-4">
-        <USkeleton class="h-10 w-24 rounded-lg" />
-      </div>
-
-      <div class="flex flex-col md:flex-row gap-6 items-start">
-        <!-- Avatar Skeleton -->
-        <USkeleton class="w-36 h-36 md:w-48 md:h-48 rounded-2xl shrink-0" />
-
-        <!-- Info Skeleton -->
-        <div class="flex-1 pt-4">
-          <USkeleton class="h-10 w-64 mb-4" />
-          <div class="flex gap-4 mb-4">
-            <USkeleton class="h-5 w-24" />
-            <USkeleton class="h-5 w-20" />
-          </div>
-          <div class="flex gap-2 mb-4">
-            <USkeleton class="h-6 w-16 rounded-full" />
-            <USkeleton class="h-6 w-20 rounded-full" />
-            <USkeleton class="h-6 w-14 rounded-full" />
-          </div>
-          <USkeleton class="h-16 w-full max-w-xl mb-6" />
-          <div class="flex gap-3">
-            <USkeleton class="h-11 w-28 rounded-lg" />
-            <USkeleton class="h-11 w-24 rounded-lg" />
-          </div>
+    <!-- Not Found -->
+    <div v-else class="min-h-screen flex items-center justify-center">
+      <div class="text-center">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-zinc-800 flex items-center justify-center">
+          <UIcon name="i-heroicons-user" class="w-10 h-10 text-zinc-500" />
         </div>
+        <h1 class="text-2xl font-bold text-zinc-100 mb-2">Artist Not Found</h1>
+        <p class="text-zinc-400 mb-6">This artist profile doesn't exist or has been removed.</p>
+        <UButton color="violet" to="/">
+          Back to Home
+        </UButton>
       </div>
-
-      <!-- Tabs Skeleton -->
-      <div class="mt-8">
-        <div class="flex gap-4 border-b border-zinc-800 pb-2">
-          <USkeleton class="h-8 w-20" />
-          <USkeleton class="h-8 w-16" />
-          <USkeleton class="h-8 w-24" />
-        </div>
-      </div>
-
-      <!-- Album Grid Skeleton -->
-      <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-        <div v-for="i in 5" :key="i" class="space-y-3">
-          <USkeleton class="aspect-square rounded-lg" />
-          <USkeleton class="h-5 w-3/4" />
-          <USkeleton class="h-4 w-1/2" />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Not Found -->
-  <div v-else class="min-h-screen flex items-center justify-center">
-    <div class="text-center">
-      <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-zinc-800 flex items-center justify-center">
-        <UIcon name="i-heroicons-user" class="w-10 h-10 text-zinc-500" />
-      </div>
-      <h1 class="text-2xl font-bold text-zinc-100 mb-2">Artist Not Found</h1>
-      <p class="text-zinc-400 mb-6">This artist profile doesn't exist or has been removed.</p>
-      <UButton color="violet" to="/">
-        Back to Home
-      </UButton>
     </div>
   </div>
 </template>
@@ -719,6 +721,15 @@ const loadArtistData = async () => {
 
 // Pull to refresh - just register the callback, indicator is in layout
 usePullToRefresh(loadArtistData)
+
+// Watch for artist slug changes (e.g., navigating from menu)
+watch(() => route.params.artist, async (newSlug, oldSlug) => {
+  if (newSlug && newSlug !== oldSlug) {
+    loading.value = true
+    await loadArtistData()
+    loading.value = false
+  }
+})
 
 onMounted(async () => {
   loading.value = true

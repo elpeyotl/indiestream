@@ -1,5 +1,6 @@
 <template>
-  <div v-if="album && band">
+  <div>
+    <div v-if="album && band">
     <!-- Album Header -->
     <div class="container mx-auto px-4 py-12">
       <!-- Back Button (Desktop only - mobile shows in header) -->
@@ -153,12 +154,7 @@
                 </td>
                 <td class="px-4 py-4 text-right">
                   <div class="flex items-center justify-end gap-1">
-                    <AddToPlaylistMenu
-                      :track-id="track.id"
-                      :track-title="track.title"
-                      class="opacity-0 group-hover:opacity-60"
-                      @click.stop
-                    />
+                    <!-- Heart button (always visible when liked) -->
                     <UButton
                       :color="isTrackLiked(track.id) ? 'red' : 'gray'"
                       variant="ghost"
@@ -166,6 +162,21 @@
                       :icon="isTrackLiked(track.id) ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
                       :class="isTrackLiked(track.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'"
                       @click.stop="handleLikeTrack(track.id)"
+                    />
+                    <!-- Desktop: Dropdown menu -->
+                    <TrackActionsMenu
+                      :track="getPlayerTrack(track)"
+                      :show-on-hover="true"
+                      class="hidden md:block"
+                    />
+                    <!-- Mobile: Opens bottom sheet -->
+                    <UButton
+                      color="gray"
+                      variant="ghost"
+                      size="xs"
+                      icon="i-heroicons-ellipsis-vertical"
+                      class="md:hidden"
+                      @click.stop="openActionsSheet(track)"
                     />
                   </div>
                 </td>
@@ -224,76 +235,85 @@
     </div>
   </div>
 
-  <!-- Loading Skeleton -->
-  <div v-else-if="loading" class="container mx-auto px-4 py-12">
-    <!-- Back Button placeholder -->
-    <div class="hidden md:block mb-4">
-      <USkeleton class="h-10 w-24 rounded-lg" />
-    </div>
-
-    <div class="flex flex-col md:flex-row gap-8">
-      <!-- Cover Art Skeleton -->
-      <div class="w-full md:w-80 shrink-0">
-        <USkeleton class="aspect-square rounded-xl" />
+    <!-- Loading Skeleton -->
+    <div v-else-if="loading" class="container mx-auto px-4 py-12">
+      <!-- Back Button placeholder -->
+      <div class="hidden md:block mb-4">
+        <USkeleton class="h-10 w-24 rounded-lg" />
       </div>
 
-      <!-- Album Info Skeleton -->
-      <div class="flex-1">
-        <USkeleton class="h-4 w-16 mb-2" />
-        <USkeleton class="h-12 w-3/4 mb-4" />
-        <USkeleton class="h-6 w-32 mb-6" />
-        <div class="flex gap-4 mb-6">
-          <USkeleton class="h-5 w-24" />
-          <USkeleton class="h-5 w-20" />
-          <USkeleton class="h-5 w-16" />
+      <div class="flex flex-col md:flex-row gap-8">
+        <!-- Cover Art Skeleton -->
+        <div class="w-full md:w-80 shrink-0">
+          <USkeleton class="aspect-square rounded-xl" />
         </div>
-        <USkeleton class="h-16 w-full max-w-xl mb-8" />
-        <div class="flex gap-3">
-          <USkeleton class="h-11 w-28 rounded-lg" />
-          <USkeleton class="h-11 w-24 rounded-lg" />
-          <USkeleton class="h-11 w-11 rounded-lg" />
+
+        <!-- Album Info Skeleton -->
+        <div class="flex-1">
+          <USkeleton class="h-4 w-16 mb-2" />
+          <USkeleton class="h-12 w-3/4 mb-4" />
+          <USkeleton class="h-6 w-32 mb-6" />
+          <div class="flex gap-4 mb-6">
+            <USkeleton class="h-5 w-24" />
+            <USkeleton class="h-5 w-20" />
+            <USkeleton class="h-5 w-16" />
+          </div>
+          <USkeleton class="h-16 w-full max-w-xl mb-8" />
+          <div class="flex gap-3">
+            <USkeleton class="h-11 w-28 rounded-lg" />
+            <USkeleton class="h-11 w-24 rounded-lg" />
+            <USkeleton class="h-11 w-11 rounded-lg" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Track List Skeleton -->
+      <div class="mt-12 bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
+        <div class="border-b border-zinc-800 px-4 py-3">
+          <div class="flex gap-4">
+            <USkeleton class="h-4 w-8" />
+            <USkeleton class="h-4 w-32" />
+          </div>
+        </div>
+        <div v-for="i in 5" :key="i" class="px-4 py-4 border-b border-zinc-800/50">
+          <div class="flex items-center gap-4">
+            <USkeleton class="h-4 w-6" />
+            <USkeleton class="h-5 w-48" />
+            <USkeleton class="h-4 w-12 ml-auto" />
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Track List Skeleton -->
-    <div class="mt-12 bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
-      <div class="border-b border-zinc-800 px-4 py-3">
-        <div class="flex gap-4">
-          <USkeleton class="h-4 w-8" />
-          <USkeleton class="h-4 w-32" />
+    <!-- Not Found -->
+    <div v-else class="min-h-screen flex items-center justify-center">
+      <div class="text-center">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-zinc-800 flex items-center justify-center">
+          <UIcon name="i-heroicons-musical-note" class="w-10 h-10 text-zinc-500" />
         </div>
-      </div>
-      <div v-for="i in 5" :key="i" class="px-4 py-4 border-b border-zinc-800/50">
-        <div class="flex items-center gap-4">
-          <USkeleton class="h-4 w-6" />
-          <USkeleton class="h-5 w-48" />
-          <USkeleton class="h-4 w-12 ml-auto" />
-        </div>
+        <h1 class="text-2xl font-bold text-zinc-100 mb-2">Album Not Found</h1>
+        <p class="text-zinc-400 mb-6">This album doesn't exist or has been removed.</p>
+        <UButton color="violet" to="/">
+          Back to Home
+        </UButton>
       </div>
     </div>
-  </div>
 
-  <!-- Not Found -->
-  <div v-else class="min-h-screen flex items-center justify-center">
-    <div class="text-center">
-      <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-zinc-800 flex items-center justify-center">
-        <UIcon name="i-heroicons-musical-note" class="w-10 h-10 text-zinc-500" />
-      </div>
-      <h1 class="text-2xl font-bold text-zinc-100 mb-2">Album Not Found</h1>
-      <p class="text-zinc-400 mb-6">This album doesn't exist or has been removed.</p>
-      <UButton color="violet" to="/">
-        Back to Home
-      </UButton>
-    </div>
+    <!-- Mobile Track Actions Sheet -->
+    <TrackActionsSheet
+      v-if="selectedTrack"
+      v-model="showActionsSheet"
+      :track="selectedTrack"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Album, Track, TrackCredit } from '~/composables/useAlbum'
+import type { PlayerTrack } from '~/composables/usePlayer'
 
 const route = useRoute()
-const { getAlbumBySlug, getBandAlbums, getCachedCoverUrl, getCreditsForTracks } = useAlbum()
+const { getAlbumBySlug, getBandAlbums, getCachedCoverUrl, getCreditsForTracks, getStreamUrl } = useAlbum()
 const { getBandBySlug } = useBand()
 const { playAlbum, playTrack: playerPlayTrack, currentTrack, isPlaying, isLoading: playerLoading } = usePlayer()
 const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
@@ -309,6 +329,8 @@ const loadingPlay = ref(false)
 const loadingTrackId = ref<string | null>(null)
 const trackCredits = ref<Record<string, TrackCredit[]>>({})
 const expandedTrack = ref<string | null>(null)
+const showActionsSheet = ref(false)
+const selectedTrack = ref<PlayerTrack | null>(null)
 
 const releaseTypeLabel = computed(() => {
   const types: Record<string, string> = {
@@ -389,6 +411,37 @@ const handleLikeTrack = async (trackId: string) => {
   await toggleTrackLike(trackId)
 }
 
+// Convert track to PlayerTrack format for menus
+const getPlayerTrack = (track: Track): PlayerTrack => {
+  return {
+    id: track.id,
+    title: track.title,
+    artist: band.value?.name || 'Unknown Artist',
+    artistSlug: band.value?.slug || '',
+    albumTitle: album.value?.title || '',
+    albumSlug: album.value?.slug || '',
+    coverUrl: coverUrl.value,
+    audioUrl: '', // Will be fetched lazily when needed
+    audioKey: track.audio_key || undefined,
+    duration: track.duration_seconds,
+  }
+}
+
+// Open mobile actions sheet
+const openActionsSheet = async (track: Track) => {
+  // Build PlayerTrack with audio URL
+  const playerTrack = getPlayerTrack(track)
+  if (track.audio_key) {
+    try {
+      playerTrack.audioUrl = await getStreamUrl(track.audio_key)
+    } catch (e) {
+      console.error('Failed to get stream URL:', e)
+    }
+  }
+  selectedTrack.value = playerTrack
+  showActionsSheet.value = true
+}
+
 // Credits helpers
 const hasCredits = (trackId: string): boolean => {
   const track = album.value?.tracks?.find(t => t.id === trackId)
@@ -420,7 +473,8 @@ useHead(() => ({
   ],
 }))
 
-onMounted(async () => {
+const loadAlbumData = async () => {
+  loading.value = true
   try {
     const artistSlug = route.params.artist as string
     const albumSlug = route.params.album as string
@@ -471,5 +525,17 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+// Watch for route param changes (e.g., navigating from track actions menu)
+watch(
+  () => [route.params.artist, route.params.album],
+  async ([newArtist, newAlbum], [oldArtist, oldAlbum]) => {
+    if ((newArtist !== oldArtist || newAlbum !== oldAlbum) && newArtist && newAlbum) {
+      await loadAlbumData()
+    }
+  }
+)
+
+onMounted(loadAlbumData)
 </script>

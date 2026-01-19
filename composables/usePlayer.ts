@@ -12,6 +12,7 @@ export interface PlayerTrack {
   albumSlug: string
   coverUrl: string | null
   audioUrl: string
+  audioKey?: string // Storage key for lazy URL fetching
   duration: number
 }
 
@@ -474,19 +475,34 @@ export const usePlayer = () => {
   const playFromQueue = async (index: number) => {
     if (!audio || index < 0 || index >= state.queue.length) return
 
-    const trackId = state.queue[index]?.id
+    const track = state.queue[index]
+    if (!track) return
+
     // Reset stream tracking for the new track (async to check subscription status)
-    await resetStreamTracking(trackId)
+    await resetStreamTracking(track.id)
 
     state.queueIndex = index
-    state.currentTrack = state.queue[index]
+    state.currentTrack = track
     state.isLoading = true
 
     // Update lock screen metadata
     updateMediaSessionMetadata(state.currentTrack)
 
     try {
-      audio.src = state.currentTrack.audioUrl
+      // Lazily fetch audio URL if missing but audioKey is present
+      let audioUrl = track.audioUrl
+      if (!audioUrl && track.audioKey) {
+        audioUrl = await getStreamUrl(track.audioKey)
+        // Update the track in queue with the fetched URL
+        track.audioUrl = audioUrl
+        state.currentTrack = { ...track, audioUrl }
+      }
+
+      if (!audioUrl) {
+        throw new Error('No audio URL available')
+      }
+
+      audio.src = audioUrl
       await audio.play()
     } catch (e) {
       console.error('Failed to play from queue:', e)
@@ -730,6 +746,51 @@ export const usePlayer = () => {
     }
   }
 
+  // Add track(s) to play next - inserts after current track
+  const addNextInQueue = async (track: PlayerTrack | PlayerTrack[]) => {
+    const tracks = Array.isArray(track) ? track : [track]
+
+    if (state.queue.length === 0) {
+      // No queue - start playing
+      state.queue = tracks
+      state.queueIndex = 0
+      await playFromQueue(0)
+    } else {
+      // Insert after current track
+      const insertIndex = state.queueIndex + 1
+      state.queue.splice(insertIndex, 0, ...tracks)
+      // Also update originalQueue if shuffle is on
+      if (state.shuffleEnabled && state.originalQueue.length > 0) {
+        state.originalQueue.splice(insertIndex, 0, ...tracks)
+      }
+    }
+  }
+
+  // Add track(s) to end of queue
+  const addToQueue = async (track: PlayerTrack | PlayerTrack[]) => {
+    const tracks = Array.isArray(track) ? track : [track]
+
+    if (state.queue.length === 0) {
+      // No queue - start playing
+      state.queue = tracks
+      state.queueIndex = 0
+      await playFromQueue(0)
+    } else {
+      // Append to end of queue
+      state.queue.push(...tracks)
+      // Also update originalQueue if shuffle is on
+      if (state.shuffleEnabled && state.originalQueue.length > 0) {
+        state.originalQueue.push(...tracks)
+      }
+    }
+  }
+
+  // Check if track is in queue (upcoming, not including currently playing)
+  const isInQueue = (trackId: string) => {
+    // Check if track is in the upcoming portion of the queue
+    return state.queue.slice(state.queueIndex + 1).some(t => t.id === trackId)
+  }
+
   // Format time helper
   const formatTime = (seconds: number): string => {
     if (!seconds || isNaN(seconds)) return '0:00'
@@ -791,6 +852,9 @@ export const usePlayer = () => {
     playFromQueue,
     playTrackFromLibrary,
     playPlaylist,
+    addNextInQueue,
+    addToQueue,
+    isInQueue,
     togglePlay,
     playNext,
     playPrevious,

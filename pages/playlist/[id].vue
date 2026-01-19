@@ -206,16 +206,43 @@
             {{ formatDuration(item.track.duration_seconds) }}
           </span>
 
-          <!-- Remove -->
-          <UButton
-            v-if="playlist.canEdit"
-            color="gray"
-            variant="ghost"
-            size="xs"
-            icon="i-heroicons-x-mark"
-            class="opacity-0 group-hover:opacity-100"
-            @click.stop="handleRemoveTrack(item.track.id)"
-          />
+          <!-- Actions -->
+          <div class="flex items-center gap-1">
+            <!-- Heart button (always visible when liked) -->
+            <UButton
+              :color="isTrackLiked(item.track.id) ? 'red' : 'gray'"
+              variant="ghost"
+              size="xs"
+              :icon="isTrackLiked(item.track.id) ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+              :class="isTrackLiked(item.track.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'"
+              @click.stop="toggleTrackLike(item.track.id)"
+            />
+            <!-- Desktop: Dropdown menu -->
+            <TrackActionsMenu
+              :track="getPlayerTrack(item)"
+              :show-on-hover="true"
+              class="hidden md:block"
+            />
+            <!-- Mobile: Opens bottom sheet -->
+            <UButton
+              color="gray"
+              variant="ghost"
+              size="xs"
+              icon="i-heroicons-ellipsis-vertical"
+              class="md:hidden"
+              @click.stop="openActionsSheet(item)"
+            />
+            <!-- Remove (for playlist editors) -->
+            <UButton
+              v-if="playlist.canEdit"
+              color="gray"
+              variant="ghost"
+              size="xs"
+              icon="i-heroicons-x-mark"
+              class="opacity-0 group-hover:opacity-100"
+              @click.stop="handleRemoveTrack(item.track.id)"
+            />
+          </div>
         </div>
       </div>
     </template>
@@ -387,11 +414,19 @@
         </div>
       </UCard>
     </UModal>
+
+    <!-- Mobile Track Actions Sheet -->
+    <TrackActionsSheet
+      v-if="selectedTrack"
+      v-model="showActionsSheet"
+      :track="selectedTrack"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { PlaylistWithTracks, Collaborator } from '~/composables/usePlaylist'
+import type { PlayerTrack } from '~/composables/usePlayer'
 
 const route = useRoute()
 const router = useRouter()
@@ -409,6 +444,7 @@ const {
   generateShareLink,
 } = usePlaylist()
 const { playPlaylist, isLoading: playerLoading } = usePlayer()
+const { isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
 
 const playlistId = route.params.id as string
 
@@ -440,6 +476,10 @@ const draggedIndex = ref<number | null>(null)
 // Loading states for play
 const loadingPlay = ref(false)
 const loadingTrackIndex = ref<number | null>(null)
+
+// Track actions sheet
+const showActionsSheet = ref(false)
+const selectedTrack = ref<PlayerTrack | null>(null)
 
 const totalDuration = computed(() => {
   if (!playlist.value?.playlist_tracks) return 0
@@ -507,6 +547,12 @@ const loadPlaylist = async () => {
 
       collaborators.value = await getCollaborators(playlistId)
       await loadTrackCovers()
+
+      // Fetch liked status for all tracks
+      if (playlist.value.playlist_tracks?.length) {
+        const trackIds = playlist.value.playlist_tracks.map(item => item.track.id)
+        await fetchLikedTrackIds(trackIds)
+      }
     }
   } catch (e) {
     console.error('Failed to load playlist:', e)
@@ -529,6 +575,36 @@ const loadTrackCovers = async () => {
       trackCovers.value[item.track.id] = item.track.album.cover_url
     }
   }
+}
+
+// Convert playlist track item to PlayerTrack format for menus
+const getPlayerTrack = (item: { track: { id: string; title: string; duration_seconds: number; audio_key: string | null; album: { title: string; slug: string; band: { name: string; slug: string } } } }): PlayerTrack => {
+  return {
+    id: item.track.id,
+    title: item.track.title,
+    artist: item.track.album.band.name,
+    artistSlug: item.track.album.band.slug,
+    albumTitle: item.track.album.title,
+    albumSlug: item.track.album.slug,
+    coverUrl: trackCovers.value[item.track.id] || null,
+    audioUrl: '', // Will be fetched lazily when needed
+    audioKey: item.track.audio_key || undefined,
+    duration: item.track.duration_seconds,
+  }
+}
+
+// Open mobile actions sheet
+const openActionsSheet = async (item: { track: { id: string; title: string; duration_seconds: number; audio_key: string | null; album: { title: string; slug: string; band: { name: string; slug: string } } } }) => {
+  const playerTrack = getPlayerTrack(item)
+  if (item.track.audio_key) {
+    try {
+      playerTrack.audioUrl = await getStreamUrl(item.track.audio_key)
+    } catch (e) {
+      console.error('Failed to get stream URL:', e)
+    }
+  }
+  selectedTrack.value = playerTrack
+  showActionsSheet.value = true
 }
 
 const playAll = async () => {

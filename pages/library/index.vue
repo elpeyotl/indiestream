@@ -272,23 +272,33 @@
                 {{ formatDuration(item.track.duration_seconds) }}
               </span>
 
-              <!-- Add to playlist -->
-              <AddToPlaylistMenu
-                :track-id="item.track.id"
-                :track-title="item.track.title"
-                class="opacity-0 group-hover:opacity-60"
-                @click.stop
-              />
-
-              <!-- Heart (always filled since it's in liked tracks) -->
-              <UButton
-                color="red"
-                variant="ghost"
-                size="xs"
-                icon="i-heroicons-heart-solid"
-                class="opacity-60 hover:opacity-100"
-                @click.stop="handleUnlike(item.track.id)"
-              />
+              <!-- Actions -->
+              <div class="flex items-center gap-1">
+                <!-- Heart (always filled since it's in liked tracks) -->
+                <UButton
+                  color="red"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-heroicons-heart-solid"
+                  class="opacity-60 hover:opacity-100"
+                  @click.stop="handleUnlike(item.track.id)"
+                />
+                <!-- Desktop: Dropdown menu -->
+                <TrackActionsMenu
+                  :track="getPlayerTrack(item)"
+                  :show-on-hover="true"
+                  class="hidden md:block"
+                />
+                <!-- Mobile: Opens bottom sheet -->
+                <UButton
+                  color="gray"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-heroicons-ellipsis-vertical"
+                  class="md:hidden"
+                  @click.stop="openActionsSheet(item)"
+                />
+              </div>
             </div>
           </div>
       </template>
@@ -349,12 +359,20 @@
         </template>
       </UCard>
     </UModal>
+
+    <!-- Mobile Track Actions Sheet -->
+    <TrackActionsSheet
+      v-if="selectedTrack"
+      v-model="showActionsSheet"
+      :track="selectedTrack"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SavedAlbum, LikedTrack, FollowedArtist } from '~/composables/useLibrary'
 import type { Playlist } from '~/composables/usePlaylist'
+import type { PlayerTrack } from '~/composables/usePlayer'
 
 definePageMeta({
   middleware: 'auth',
@@ -382,6 +400,10 @@ const showCreatePlaylist = ref(false)
 const newPlaylistTitle = ref('')
 const newPlaylistDescription = ref('')
 const creatingPlaylist = ref(false)
+
+// Track actions sheet
+const showActionsSheet = ref(false)
+const selectedTrack = ref<PlayerTrack | null>(null)
 
 const handleCreatePlaylist = async () => {
   if (!newPlaylistTitle.value.trim()) return
@@ -425,6 +447,36 @@ const playTrack = async (item: LikedTrack) => {
   } finally {
     loadingPlayId.value = null
   }
+}
+
+// Convert liked track to PlayerTrack format for menus
+const getPlayerTrack = (item: LikedTrack): PlayerTrack => {
+  return {
+    id: item.track.id,
+    title: item.track.title,
+    artist: item.track.album.band.name,
+    artistSlug: item.track.album.band.slug,
+    albumTitle: item.track.album.title,
+    albumSlug: item.track.album.slug,
+    coverUrl: trackCovers.value[item.track.id] || null,
+    audioUrl: '', // Will be fetched lazily when needed
+    audioKey: item.track.audio_key || undefined,
+    duration: item.track.duration_seconds,
+  }
+}
+
+// Open mobile actions sheet
+const openActionsSheet = async (item: LikedTrack) => {
+  const playerTrack = getPlayerTrack(item)
+  if (item.track.audio_key) {
+    try {
+      playerTrack.audioUrl = await getStreamUrl(item.track.audio_key)
+    } catch (e) {
+      console.error('Failed to get stream URL:', e)
+    }
+  }
+  selectedTrack.value = playerTrack
+  showActionsSheet.value = true
 }
 
 // Play all liked songs as a playlist
