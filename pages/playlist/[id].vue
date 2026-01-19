@@ -319,32 +319,98 @@
         </template>
 
         <div class="space-y-4">
-          <!-- Invite -->
-          <div class="flex gap-2">
-            <UInput
-              v-model="inviteEmail"
-              placeholder="Email address"
-              class="flex-1"
-            />
-            <USelectMenu
-              v-model="inviteRole"
-              :options="[{ value: 'editor', label: 'Editor' }, { value: 'viewer', label: 'Viewer' }]"
-              value-attribute="value"
-              option-attribute="label"
-              class="w-28"
-            />
-            <UButton
-              color="violet"
-              :loading="inviting"
-              :disabled="!inviteEmail"
-              @click="handleInvite"
-            >
-              Invite
-            </UButton>
+          <!-- User Search -->
+          <div>
+            <div class="flex gap-2 mb-2">
+              <div class="relative flex-1">
+                <UInput
+                  v-model="userSearchQuery"
+                  placeholder="Search users by name..."
+                  @input="searchUsers"
+                  @keydown.escape="userSearchResults = []"
+                >
+                  <template #leading>
+                    <UIcon name="i-heroicons-magnifying-glass" class="w-4 h-4 text-zinc-400" />
+                  </template>
+                </UInput>
+                <!-- Search results dropdown -->
+                <div
+                  v-if="userSearchResults.length > 0"
+                  class="absolute z-50 top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                >
+                  <button
+                    v-for="user in userSearchResults"
+                    :key="user.id"
+                    type="button"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-zinc-800 first:rounded-t-lg last:rounded-b-lg"
+                    @click="selectUserToInvite(user)"
+                  >
+                    <div class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+                      <img
+                        v-if="user.avatar_url"
+                        :src="user.avatar_url"
+                        :alt="user.display_name"
+                        class="w-full h-full object-cover"
+                      />
+                      <span v-else class="text-xs font-medium text-zinc-300">
+                        {{ user.display_name?.charAt(0)?.toUpperCase() || '?' }}
+                      </span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-zinc-100 truncate">{{ user.display_name }}</p>
+                      <p v-if="user.email_hint" class="text-xs text-zinc-500 truncate">{{ user.email_hint }}</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+              <USelectMenu
+                v-model="inviteRole"
+                :options="[{ value: 'editor', label: 'Editor' }, { value: 'viewer', label: 'Viewer' }]"
+                value-attribute="value"
+                option-attribute="label"
+                class="w-28"
+              />
+            </div>
+            <!-- Selected user to invite -->
+            <div v-if="selectedUser" class="flex items-center gap-2 p-2 bg-zinc-800/50 rounded-lg">
+              <div class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+                <img
+                  v-if="selectedUser.avatar_url"
+                  :src="selectedUser.avatar_url"
+                  :alt="selectedUser.display_name"
+                  class="w-full h-full object-cover"
+                />
+                <span v-else class="text-xs font-medium text-zinc-300">
+                  {{ selectedUser.display_name?.charAt(0)?.toUpperCase() || '?' }}
+                </span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-zinc-100 truncate">{{ selectedUser.display_name }}</p>
+              </div>
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="xs"
+                icon="i-heroicons-x-mark"
+                @click="selectedUser = null"
+              />
+              <UButton
+                color="violet"
+                size="sm"
+                :loading="inviting"
+                @click="handleInvite"
+              >
+                Add
+              </UButton>
+            </div>
+            <p v-else class="text-xs text-zinc-500 mt-1">
+              Search for a user to add as a collaborator. They'll be notified and see this playlist in their library.
+            </p>
           </div>
 
           <!-- Current Collaborators -->
           <div class="space-y-2">
+            <p class="text-sm font-medium text-zinc-400">Current Collaborators</p>
             <div
               v-for="collab in collaborators"
               :key="collab.user_id"
@@ -362,7 +428,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-zinc-100 truncate">{{ collab.display_name }}</p>
-                <p class="text-xs text-zinc-500">{{ collab.role }}</p>
+                <p class="text-xs text-zinc-500 capitalize">{{ collab.role }}</p>
               </div>
               <UButton
                 v-if="!collab.is_owner"
@@ -462,9 +528,20 @@ const saving = ref(false)
 
 // Collaborators modal
 const showCollaboratorsModal = ref(false)
-const inviteEmail = ref('')
 const inviteRole = ref('editor')
 const inviting = ref(false)
+
+// User search for collaborators
+interface SearchUser {
+  id: string
+  display_name: string
+  avatar_url: string | null
+  email_hint: string | null
+}
+const userSearchQuery = ref('')
+const userSearchResults = ref<SearchUser[]>([])
+const selectedUser = ref<SearchUser | null>(null)
+let searchTimeout: NodeJS.Timeout | null = null
 
 // Share modal
 const showShareModal = ref(false)
@@ -696,15 +773,51 @@ const copyShareUrl = async () => {
   }
 }
 
+// Search for users to invite
+const searchUsers = async () => {
+  const query = userSearchQuery.value.trim()
+  if (query.length < 2) {
+    userSearchResults.value = []
+    return
+  }
+
+  // Debounce search
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(async () => {
+    try {
+      const results = await $fetch<SearchUser[]>('/api/users/search', {
+        query: { q: query },
+      })
+      // Filter out users who are already collaborators
+      const existingIds = new Set(collaborators.value.map(c => c.user_id))
+      userSearchResults.value = results.filter(u => !existingIds.has(u.id))
+    } catch (e) {
+      console.error('Failed to search users:', e)
+      userSearchResults.value = []
+    }
+  }, 300)
+}
+
+const selectUserToInvite = (user: SearchUser) => {
+  selectedUser.value = user
+  userSearchQuery.value = ''
+  userSearchResults.value = []
+}
+
 const handleInvite = async () => {
-  if (!inviteEmail.value) return
+  if (!selectedUser.value) return
 
   inviting.value = true
-  const success = await inviteCollaborator(playlistId, inviteEmail.value, inviteRole.value as 'editor' | 'viewer')
+  const success = await inviteCollaborator(
+    playlistId,
+    selectedUser.value.id,
+    inviteRole.value as 'editor' | 'viewer',
+    selectedUser.value.display_name
+  )
   inviting.value = false
 
   if (success) {
-    inviteEmail.value = ''
+    selectedUser.value = null
     collaborators.value = await getCollaborators(playlistId)
   }
 }

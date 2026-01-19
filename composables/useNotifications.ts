@@ -135,6 +135,10 @@ export const useNotifications = () => {
         return 'i-heroicons-exclamation-triangle'
       case 'new_follower':
         return 'i-heroicons-user-plus'
+      case 'playlist_collaboration':
+        return 'i-heroicons-queue-list'
+      case 'new_release':
+        return 'i-heroicons-musical-note'
       default:
         return 'i-heroicons-bell'
     }
@@ -153,6 +157,10 @@ export const useNotifications = () => {
         return 'text-orange-400'
       case 'new_follower':
         return 'text-fuchsia-400'
+      case 'playlist_collaboration':
+        return 'text-cyan-400'
+      case 'new_release':
+        return 'text-violet-400'
       default:
         return 'text-violet-400'
     }

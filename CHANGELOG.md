@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.18.3] - 2026-01-19
+
+### Added
+- **Playlist Collaborator User Search**: Replace email input with searchable user picker
+  - Search users by display name with autocomplete dropdown
+  - Privacy-focused: only shows partial email hints (e.g., `chr...@gmail.com`)
+  - New `/api/users/search` endpoint for authenticated user search
+- **Collaborator Notifications**: Users receive in-app notifications when added to a playlist
+  - Notification includes playlist name, inviter name, and role (editor/viewer)
+  - Links directly to the collaborative playlist
+- **Searchable Genre Picker**: Artist settings page now has genre autocomplete (matching admin panel)
+  - Case-insensitive matching to prevent duplicate genres
+  - Shows existing genres as suggestions while typing
+
+### Changed
+- **Admin Tab Lazy Loading**: Tabs now load on-demand instead of all at once
+  - Uses `v-if` with `KeepAlive` for lazy mounting
+  - Only the active tab fetches data; cached when switching back
+  - Significantly reduces initial page load API calls
+
 ## [0.18.2] - 2026-01-19
 
 ### Added

@@ -34,9 +34,12 @@
     <!-- Tab Content -->
     <div class="mt-6">
       <template v-for="(tab, index) in tabs" :key="tab.slot || tab.key || index">
-        <div v-show="modelValue === index">
-          <slot :name="tab.slot || tab.key || `tab-${index}`" :item="tab" :index="index" />
-        </div>
+        <!-- Use v-if with KeepAlive for lazy loading: only mount when first visited, then cache -->
+        <KeepAlive>
+          <div v-if="visitedTabs.has(index) && modelValue === index">
+            <slot :name="tab.slot || tab.key || `tab-${index}`" :item="tab" :index="index" />
+          </div>
+        </KeepAlive>
       </template>
     </div>
   </div>
@@ -66,6 +69,14 @@ const emit = defineEmits<{
 }>()
 
 const haptics = useHaptics()
+
+// Track visited tabs for lazy loading - only mount a tab when first visited
+const visitedTabs = ref(new Set<number>([props.modelValue]))
+
+// Mark current tab as visited when it changes
+watch(() => props.modelValue, (newVal) => {
+  visitedTabs.value.add(newVal)
+}, { immediate: true })
 
 const containerClass = computed(() => {
   if (props.sticky) {

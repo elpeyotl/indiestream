@@ -255,21 +255,40 @@
 
       <!-- Genres -->
       <UFormGroup label="Genres">
-        <div class="flex gap-2 mb-2">
-          <UInput
-            v-model="genreInput"
-            placeholder="Add a genre..."
-            size="lg"
-            :disabled="saving || editForm.genres.length >= 5"
-            @keydown.enter.prevent="addGenre"
-          />
-          <UButton
-            color="gray"
-            :disabled="!genreInput.trim() || editForm.genres.length >= 5"
-            @click="addGenre"
+        <div class="relative">
+          <div class="flex gap-2 mb-2">
+            <UInput
+              v-model="genreInput"
+              placeholder="Search or add a genre..."
+              size="lg"
+              :disabled="saving || editForm.genres.length >= 5"
+              @input="searchGenres"
+              @keydown.enter.prevent="selectFirstSuggestion"
+              @keydown.escape="genreSuggestions = []"
+            />
+            <UButton
+              color="gray"
+              :disabled="!genreInput.trim() || editForm.genres.length >= 5"
+              @click="addGenre"
+            >
+              Add
+            </UButton>
+          </div>
+          <!-- Genre suggestions dropdown -->
+          <div
+            v-if="genreSuggestions.length > 0"
+            class="absolute z-50 top-full left-0 right-16 mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-lg max-h-48 overflow-y-auto"
           >
-            Add
-          </UButton>
+            <button
+              v-for="suggestion in genreSuggestions"
+              :key="suggestion"
+              type="button"
+              class="w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-800 first:rounded-t-lg last:rounded-b-lg"
+              @click="selectGenre(suggestion)"
+            >
+              {{ suggestion }}
+            </button>
+          </div>
         </div>
         <div v-if="editForm.genres.length" class="flex flex-wrap gap-2">
           <UBadge
@@ -284,6 +303,7 @@
             <UIcon name="i-heroicons-x-mark" class="w-3 h-3 ml-1" />
           </UBadge>
         </div>
+        <p class="text-xs text-zinc-500 mt-2">Up to 5 genres. Select existing genres when possible to help fans find your music.</p>
       </UFormGroup>
 
       <!-- Theme Color -->
@@ -341,6 +361,8 @@ const { getStreamUrl } = useAlbum()
 // State
 const saving = ref(false)
 const genreInput = ref('')
+const allGenres = ref<string[]>([])
+const genreSuggestions = ref<string[]>([])
 
 // Avatar upload
 const avatarInput = ref<HTMLInputElement | null>(null)
@@ -390,11 +412,60 @@ watch(() => props.band, (newBand) => {
   }
 }, { immediate: true })
 
+// Load genres on mount for autocomplete
+onMounted(() => {
+  loadAllGenres()
+})
+
+// Load all genres for autocomplete
+const loadAllGenres = async () => {
+  try {
+    const data = await $fetch<{ genres: Array<{ name: string }> }>('/api/genres')
+    allGenres.value = data.genres.map(g => g.name)
+  } catch (e) {
+    console.error('Failed to load genres:', e)
+  }
+}
+
+const searchGenres = () => {
+  const query = genreInput.value.toLowerCase().trim()
+  if (!query) {
+    genreSuggestions.value = []
+    return
+  }
+  // Filter genres that match query and aren't already selected (case-insensitive)
+  genreSuggestions.value = allGenres.value
+    .filter(g =>
+      g.toLowerCase().includes(query) &&
+      !editForm.genres.some(selected => selected.toLowerCase() === g.toLowerCase())
+    )
+    .slice(0, 5)
+}
+
+const selectGenre = (genre: string) => {
+  if (editForm.genres.length < 5 && !editForm.genres.some(g => g.toLowerCase() === genre.toLowerCase())) {
+    editForm.genres.push(genre)
+  }
+  genreInput.value = ''
+  genreSuggestions.value = []
+}
+
+const selectFirstSuggestion = () => {
+  if (genreSuggestions.value.length > 0) {
+    selectGenre(genreSuggestions.value[0])
+  } else {
+    addGenre()
+  }
+}
+
 const addGenre = () => {
   const genre = genreInput.value.trim()
-  if (genre && editForm.genres.length < 5 && !editForm.genres.includes(genre)) {
-    editForm.genres.push(genre)
+  if (genre && editForm.genres.length < 5 && !editForm.genres.some(g => g.toLowerCase() === genre.toLowerCase())) {
+    // Use existing genre casing if it exists, otherwise use input as-is
+    const existing = allGenres.value.find(g => g.toLowerCase() === genre.toLowerCase())
+    editForm.genres.push(existing || genre)
     genreInput.value = ''
+    genreSuggestions.value = []
   }
 }
 

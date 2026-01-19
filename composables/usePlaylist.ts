@@ -275,27 +275,32 @@ export const usePlaylist = () => {
     }
   }
 
-  // Invite collaborator
+  // Invite collaborator (accepts either userId or email for backwards compatibility)
   const inviteCollaborator = async (
     playlistId: string,
-    email: string,
-    role: 'editor' | 'viewer' = 'viewer'
+    userIdOrEmail: string,
+    role: 'editor' | 'viewer' = 'viewer',
+    displayName?: string
   ): Promise<boolean> => {
     try {
+      // Determine if it's a UUID (userId) or email
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userIdOrEmail)
+      const body = isUuid ? { userId: userIdOrEmail, role } : { email: userIdOrEmail, role }
+
       await $fetch(`/api/playlists/${playlistId}/collaborators`, {
         method: 'POST',
-        body: { email, role },
+        body,
       })
       toast.add({
-        title: 'Collaborator invited',
-        description: `${email} added as ${role}`,
+        title: 'Collaborator added',
+        description: `${displayName || userIdOrEmail} added as ${role}`,
         color: 'green',
       })
       return true
     } catch (e: any) {
-      console.error('Failed to invite collaborator:', e)
+      console.error('Failed to add collaborator:', e)
       toast.add({
-        title: 'Failed to invite collaborator',
+        title: 'Failed to add collaborator',
         description: e.data?.message || 'User not found',
         color: 'red',
       })
