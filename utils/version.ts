@@ -12,15 +12,131 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: '0.15.0',
+    date: '2026-01-19',
+    changes: [
+      { type: 'added', description: 'Content Protection System: Track reporting for copyright, AI-generated content, and inappropriate content' },
+      { type: 'added', description: 'Admin Content Reports tab with clickable stat cards for filtering' },
+      { type: 'added', description: 'Track removal with R2 storage deletion and email notification to artists' },
+      { type: 'added', description: 'DMCA compliance page with takedown request form and counter-notification process' },
+      { type: 'added', description: 'Upload safeguards: AI declaration checkbox and copyright warning' },
+      { type: 'changed', description: 'Admin UI: Clickable stat cards on Track Moderation, Artist Approvals, and Content Reports tabs' },
+      { type: 'changed', description: 'Terms of Service updated with AI-Generated Content Policy' },
+      { type: 'fixed', description: 'Report submission now correctly sends reason value' },
+      { type: 'fixed', description: 'Toast notifications work after adding UNotifications to layout' },
+    ],
+  },
+  {
+    version: '0.14.3',
+    date: '2026-01-16',
+    changes: [
+      { type: 'added', description: 'Selective artist payouts: Choose which artists to pay instead of paying all at once' },
+      { type: 'added', description: 'Payout history view showing all completed, pending, and failed payouts' },
+      { type: 'added', description: 'My Profile link in user menu (avatar dropdown)' },
+      { type: 'added', description: 'Payment History button on dashboard subscription card' },
+      { type: 'changed', description: 'Subscription card UI simplified - removed redundant navigation buttons' },
+      { type: 'fixed', description: 'Impact stats not showing on public profile' },
+      { type: 'fixed', description: 'Stripe payout currency changed from USD to CHF' },
+    ],
+  },
+  {
+    version: '0.14.2',
+    date: '2026-01-16',
+    changes: [
+      { type: 'added', description: 'Bug Report Page at /bugs with embedded Tally form' },
+      { type: 'added', description: 'Admin Album Management: Full CRUD for albums in admin panel' },
+      { type: 'added', description: 'Shared AlbumEditModal component for DRY code reuse' },
+      { type: 'changed', description: 'Contact page now includes "Report a Bug" card linking to /bugs' },
+    ],
+  },
+  {
+    version: '0.14.1',
+    date: '2026-01-16',
+    changes: [
+      { type: 'added', description: 'Media Session API: Lock screen playback controls for mobile devices' },
+      { type: 'changed', description: 'Play/pause button icons now properly centered in both mini and expanded player' },
+      { type: 'changed', description: 'Expanded player cover art adapts to viewport height for better fit' },
+      { type: 'changed', description: 'User menu now uses slideover panel instead of dropdown' },
+      { type: 'fixed', description: 'Mobile player no longer overlaps bottom navigation' },
+      { type: 'fixed', description: 'Album page layout shift on mobile - now uses skeleton loading' },
+    ],
+  },
+  {
+    version: '0.14.0',
+    date: '2026-01-16',
+    changes: [
+      { type: 'added', description: 'Admin Artist/Band Management with searchable, filterable list' },
+      { type: 'added', description: 'Full edit capabilities: Admins can edit all artist fields' },
+      { type: 'added', description: 'Feature/unfeature artists: Control which artists appear on homepage' },
+      { type: 'added', description: 'Verify artists: Mark artists as verified with blue checkmark badge' },
+      { type: 'added', description: 'Status management: Set artist status to active, suspended, or removed' },
+    ],
+  },
+  {
+    version: '0.13.1',
     date: '2026-01-15',
     changes: [
-      { type: 'added', description: 'Data caching for discover, artist, and album pages - instant back navigation' },
-      { type: 'added', description: 'User profile caching with 10-minute TTL' },
-      { type: 'fixed', description: 'Avatar flickering on artist page when navigating between artists' },
-      { type: 'fixed', description: 'Hydration mismatch errors by migrating composables to useState' },
-      { type: 'fixed', description: 'Landing page flash for logged-in users on mobile' },
-      { type: 'changed', description: 'Composables now use SSR-safe useState for shared reactive state' },
-      { type: 'removed', description: 'Pinia dependency (replaced with simpler composable pattern)' },
+      { type: 'changed', description: 'Enhanced Impact Share Page with colorful gradients and artist avatars' },
+      { type: 'added', description: 'Icon badges and rank badges for top artists on share page' },
+    ],
+  },
+  {
+    version: '0.13.0',
+    date: '2026-01-15',
+    changes: [
+      { type: 'added', description: '"This Month" tab on My Impact page showing real-time impact stats' },
+      { type: 'added', description: 'Social Impact Sharing: Generate shareable links with customizable stats' },
+      { type: 'added', description: 'User Profile Impact Stats: Optional public display on user profiles' },
+      { type: 'added', description: 'ShareImpactModal component for managing share settings' },
+      { type: 'changed', description: 'Dashboard hero card now defaults to showing "This Month" data' },
+    ],
+  },
+  {
+    version: '0.12.0',
+    date: '2026-01-15',
+    changes: [
+      { type: 'added', description: 'My Impact button in mobile bottom nav for subscribers' },
+      { type: 'added', description: 'Dashboard Hero Card showing total earnings sent to artists' },
+      { type: 'changed', description: 'Navigation reordering: Discover → Library → Listening → Impact' },
+    ],
+  },
+  {
+    version: '0.11.0',
+    date: '2026-01-14',
+    changes: [
+      { type: 'added', description: 'Playlists: Create, edit, and delete custom playlists' },
+      { type: 'added', description: 'Collaborative playlists with owner/editor/viewer roles' },
+      { type: 'added', description: 'Drag-and-drop track reordering within playlists' },
+      { type: 'added', description: '"Liked Songs" as a special system playlist' },
+      { type: 'added', description: 'Playlist tab in Library page alongside Artists and Albums' },
+    ],
+  },
+  {
+    version: '0.10.0',
+    date: '2026-01-14',
+    changes: [
+      { type: 'added', description: 'User Profiles: Public profile pages at /user/[id]' },
+      { type: 'added', description: 'Settings Page: Profile management with avatar upload' },
+      { type: 'added', description: '"Followers" tab on artist pages showing all fans' },
+      { type: 'added', description: 'UserAvatar component with automatic initials fallback' },
+    ],
+  },
+  {
+    version: '0.9.0',
+    date: '2026-01-14',
+    changes: [
+      { type: 'added', description: 'Listening Stats/Wrapped dashboard with overview metrics' },
+      { type: 'added', description: 'Listening patterns: most active day/hour, 24-hour chart, streaks' },
+      { type: 'added', description: 'Top 10 artists, tracks, albums, and top 5 genres' },
+      { type: 'added', description: '"My Impact" page showing revenue split visualization' },
+    ],
+  },
+  {
+    version: '0.8.0',
+    date: '2026-01-14',
+    changes: [
+      { type: 'added', description: 'Heart/favorite button to like currently playing track' },
+      { type: 'added', description: 'Shuffle mode: Randomizes queue playback order' },
+      { type: 'added', description: 'Repeat modes: Cycle through off → repeat all → repeat one' },
     ],
   },
   {
@@ -52,24 +168,12 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: '0.5.1',
-    date: '2026-01-12',
-    changes: [
-      { type: 'fixed', description: 'Stream recording race condition causing multiple counts per play' },
-      { type: 'fixed', description: 'Listening stats now correctly filtered by user (no cross-user leakage)' },
-      { type: 'added', description: 'Upgrade prompts in dashboard and listening page for free tier users' },
-      { type: 'changed', description: 'Free plays excluded from dashboard stats and listening history' },
-    ],
-  },
-  {
     version: '0.5.0',
     date: '2026-01-14',
     changes: [
       { type: 'added', description: 'Artist payout system with Stripe Connect Express' },
       { type: 'added', description: 'Revenue dashboard for artists (balance, earnings, payout history)' },
       { type: 'added', description: 'Admin payout processing' },
-      { type: 'added', description: 'Free tier with 5 full-track plays per month for registered users' },
-      { type: 'added', description: 'Free plays tracking in dashboard with monthly reset' },
     ],
   },
   {
@@ -77,18 +181,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: '2026-01-13',
     changes: [
       { type: 'added', description: 'Stripe subscription integration with checkout flow' },
-      { type: 'added', description: 'Subscription management in dashboard with portal access' },
-      { type: 'added', description: '7-day free trial for new Listener subscriptions' },
-      { type: 'added', description: 'Google OAuth login and signup' },
-    ],
-  },
-  {
-    version: '0.3.1',
-    date: '2026-01-12',
-    changes: [
-      { type: 'added', description: 'Contact form backend with Resend email integration' },
-      { type: 'fixed', description: 'Homepage album covers now fall back to cover_url when cover_key is missing' },
-      { type: 'changed', description: 'Removed public email addresses from contact page to prevent spam' },
+      { type: 'added', description: 'Free tier with 5 full-track plays per month' },
+      { type: 'added', description: 'Subscription management via Stripe portal' },
     ],
   },
   {
@@ -99,26 +193,6 @@ export const CHANGELOG: ChangelogEntry[] = [
       { type: 'added', description: 'Library page (Artists, Albums, Liked Songs)' },
       { type: 'added', description: 'Listening history tracking' },
       { type: 'added', description: 'Country tracking for streams' },
-    ],
-  },
-  {
-    version: '0.2.2',
-    date: '2026-01-12',
-    changes: [
-      { type: 'added', description: 'Follow button on artist pages to track favorite artists' },
-      { type: 'added', description: 'Follower count displayed on artist profiles' },
-      { type: 'added', description: 'Toast notifications for follow/unfollow actions' },
-    ],
-  },
-  {
-    version: '0.2.1',
-    date: '2026-01-12',
-    changes: [
-      { type: 'added', description: 'Listener location tracking for PRO reporting and analytics' },
-      { type: 'added', description: 'Country analytics in artist dashboard with flags and stream counts' },
-      { type: 'added', description: 'Play All button on artist pages' },
-      { type: 'added', description: 'Spotify-style queue panel in audio player' },
-      { type: 'fixed', description: 'Bokeh background disabled on mobile devices for performance' },
     ],
   },
   {
