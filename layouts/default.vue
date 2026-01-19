@@ -60,6 +60,13 @@
                 Genres
               </NuxtLink>
               <NuxtLink
+                to="/artists"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
+                Artists
+              </NuxtLink>
+              <NuxtLink
                 to="/library"
                 class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
@@ -90,6 +97,13 @@
               >
                 <UIcon name="i-heroicons-tag" class="w-4 h-4" />
                 Genres
+              </NuxtLink>
+              <NuxtLink
+                to="/artists"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
+                Artists
               </NuxtLink>
               <NuxtLink
                 to="/pricing"

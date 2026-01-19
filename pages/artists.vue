@@ -126,8 +126,8 @@ const loading = ref(true)
 const loadingMore = ref(false)
 const artists = ref<Band[]>([])
 const searchQuery = ref('')
-const selectedGenre = ref<string | null>(null)
-const sortBy = ref('newest')
+const selectedGenre = ref<{ label: string; value: string } | null>(null)
+const sortBy = ref<{ label: string; value: string }>({ label: 'Newest', value: 'newest' })
 const hasMore = ref(false)
 const page = ref(0)
 const pageSize = 24
@@ -179,14 +179,14 @@ const loadArtists = async (reset = false) => {
     }
 
     // Genre filter
-    if (selectedGenre.value) {
-      query = query.contains('genres', [selectedGenre.value])
+    if (selectedGenre.value?.value) {
+      query = query.contains('genres', [selectedGenre.value.value])
     }
 
     // Sorting
-    if (sortBy.value === 'newest') {
+    if (sortBy.value.value === 'newest') {
       query = query.order('created_at', { ascending: false })
-    } else if (sortBy.value === 'name') {
+    } else if (sortBy.value.value === 'name') {
       query = query.order('name', { ascending: true })
     }
 

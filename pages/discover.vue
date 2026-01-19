@@ -116,30 +116,24 @@
             <UIcon name="i-heroicons-star" class="w-5 h-5 text-violet-400" />
             Featured Playlists
           </h2>
-          <NuxtLink to="/playlists" class="text-sm text-violet-400 hover:text-violet-300">
-            View All
-          </NuxtLink>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
           <NuxtLink
             v-for="playlist in featuredPlaylists"
             :key="playlist.id"
-            :to="`/playlists/${playlist.id}`"
+            :to="`/playlist/${playlist.id}`"
             class="group card-interactive"
           >
-            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
-              <div class="absolute inset-0">
-                <img
-                  v-if="playlistCovers[playlist.id]"
-                  v-fade-image
-                  :src="playlistCovers[playlist.id]"
-                  :alt="playlist.title"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20">
-                  <UIcon name="i-heroicons-queue-list" class="w-12 h-12 text-violet-400" />
-                </div>
+            <div class="relative mb-3 group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300 rounded-lg overflow-hidden">
+              <PlaylistCover
+                :covers="playlistCovers[playlist.id] || []"
+                icon="i-heroicons-queue-list"
+              />
+              <div v-if="playlist.is_curated" class="absolute top-2 left-2">
+                <UBadge color="violet" variant="solid" size="xs" class="shadow-md">
+                  <UIcon name="i-heroicons-star" class="w-3 h-3 mr-1" />
+                  Staff Pick
+                </UBadge>
               </div>
             </div>
             <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ playlist.title }}</p>
@@ -155,6 +149,9 @@
       <section v-if="allArtists.length > 0" class="mb-12">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-xl font-semibold text-zinc-100">All Artists</h2>
+          <NuxtLink to="/artists" class="text-sm text-violet-400 hover:text-violet-300">
+            View All
+          </NuxtLink>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           <NuxtLink
@@ -218,10 +215,15 @@ interface FeaturedPlaylist {
   description: string | null
   track_count: number
   cover_key: string | null
+  is_curated: boolean
   owner: {
     id: string
     display_name: string | null
   } | null
+  previewTracks: Array<{
+    id: string
+    album: { cover_key: string | null }
+  }>
 }
 
 const {
@@ -241,7 +243,7 @@ const newReleases = ref<Album[]>([])
 const allArtists = ref<Band[]>([])
 const albumCovers = ref<Record<string, string>>({})
 const featuredPlaylists = ref<FeaturedPlaylist[]>([])
-const playlistCovers = ref<Record<string, string>>({})
+const playlistCovers = ref<Record<string, string[]>>({})
 const hasMoreArtists = ref(false)
 const artistPage = ref(0)
 
@@ -250,15 +252,26 @@ const loadFeaturedPlaylists = async () => {
     const data = await $fetch<{ playlists: FeaturedPlaylist[] }>('/api/playlists/featured')
     featuredPlaylists.value = data.playlists
 
-    // Load cover images
+    // Load cover images from preview tracks (for mosaic)
     for (const playlist of data.playlists) {
-      if (playlist.cover_key && !playlistCovers.value[playlist.id]) {
-        try {
-          playlistCovers.value[playlist.id] = await getStreamUrl(playlist.cover_key)
-        } catch (e) {
-          console.error('Failed to load playlist cover:', e)
+      const covers: string[] = []
+      const seen = new Set<string>()
+
+      // Get unique cover URLs from preview tracks
+      for (const track of playlist.previewTracks || []) {
+        if (track.album?.cover_key && !seen.has(track.album.cover_key)) {
+          seen.add(track.album.cover_key)
+          try {
+            const url = await getStreamUrl(track.album.cover_key)
+            covers.push(url)
+            if (covers.length >= 4) break
+          } catch (e) {
+            console.error('Failed to load track cover:', e)
+          }
         }
       }
+
+      playlistCovers.value[playlist.id] = covers
     }
   } catch (e) {
     console.error('Failed to load featured playlists:', e)
