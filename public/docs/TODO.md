@@ -1,5 +1,13 @@
 # Indiestream - TODO
 
+> **Documentation Structure:**
+> - **TODO.md** (this file) - Feature checklist and roadmap. High-level tracking of what's done vs pending.
+> - **CHANGELOG.md** - Versioned release notes with detailed descriptions of each feature/fix per version.
+>
+> When a feature is completed, check it off here and add detailed notes to the changelog.
+
+---
+
 ## Completed Features
 
 ### Core Functionality
@@ -21,6 +29,10 @@
 - [x] Artist public profile pages
 - [x] Album detail pages with track listing
 - [x] Recently played tracks (discover preview + library history tab)
+- [x] Charts page (top tracks, albums, artists with period filters)
+- [x] Genre pages (browse all genres, genre detail with artist filtering)
+- [x] Featured playlists on discover page
+- [x] Play buttons on discover page (albums, playlists, artists)
 
 ### Preview System
 - [x] 30-second preview for non-logged-in users
@@ -58,6 +70,7 @@
 
 #### Contact Form
 - [x] Backend for contact form (Resend)
+- [x] Bug report page (/bugs with Tally form)
 - [ ] Email notifications (new releases, etc.)
 
 ### Medium Priority
@@ -104,6 +117,10 @@
 - [x] Artist verification system (admin can verify artists with badge)
 - [x] Revenue dashboard (subscriptions, payouts, charts)
 - [x] Growth metrics over time (subscriber growth, artist growth charts)
+- [x] Album management (list, edit, delete albums with track moderation)
+- [x] Playlist management (feature/curate playlists for discover page)
+- [x] Content reports system (user reports, DMCA requests)
+- [x] DMCA compliance page and form
 
 #### Platform
 - [ ] Mobile responsive improvements
@@ -128,7 +145,7 @@
 
 #### Discovery
 - [x] Genre pages (browse by genre, genre detail pages with artist filtering)
-- [ ] Curated playlists
+- [x] Curated/featured playlists (admin can feature playlists on discover)
 - [ ] "Similar artists" recommendations
 - [x] Charts/trending (top tracks, albums, artists by period)
 
@@ -185,6 +202,8 @@ All migrations should be run in Supabase SQL Editor in order:
 32. `20260125000000_moderation_queue_unique_track.sql` - Unique track constraint on moderation queue
 33. `20260125000001_pending_update_status.sql` - Add pending_update status for re-review
 34. `20260125000002_pending_update_rls.sql` - RLS for pending_update status
+35. `20260126000000_content_reports.sql` - Content reports and DMCA requests tables
+36. `20260127000000_featured_playlists.sql` - Featured playlists columns (is_featured, is_curated, cover_key)
 
 ---
 
