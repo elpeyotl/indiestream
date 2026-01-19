@@ -1,5 +1,8 @@
 <template>
   <div class="min-h-screen bg-zinc-950 text-zinc-50">
+    <!-- Toast Notifications -->
+    <UNotifications />
+
     <!-- Global Pull to Refresh Indicator -->
     <PullToRefreshIndicator
       :pull-distance="pullDistance"
@@ -401,6 +404,13 @@
                   to="/contact"
                   class="hover:text-violet-400 transition-colors"
                   >Contact</NuxtLink
+                >
+              </li>
+              <li>
+                <NuxtLink
+                  to="/dmca"
+                  class="hover:text-violet-400 transition-colors"
+                  >DMCA</NuxtLink
                 >
               </li>
             </ul>

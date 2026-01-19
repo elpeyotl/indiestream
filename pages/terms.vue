@@ -67,6 +67,36 @@
             <li>Contains hate speech or promotes violence</li>
             <li>Is illegal or promotes illegal activities</li>
             <li>Contains malware or harmful code</li>
+            <li>Is generated entirely by artificial intelligence (see Section 6a)</li>
+          </ul>
+        </section>
+
+        <section class="mb-8">
+          <h2 class="text-xl font-semibold text-zinc-100 mb-4">6a. AI-Generated Content Policy</h2>
+          <p class="text-zinc-400 mb-4">
+            Fairstream is a platform for human artists. We have a strict policy regarding AI-generated content:
+          </p>
+          <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4">
+            <li><strong class="text-zinc-300">AI-generated music is NOT permitted.</strong> Content where the core composition, melody, or performance was created by AI systems (such as Suno, Udio, or similar) is prohibited.</li>
+            <li><strong class="text-zinc-300">AI as a tool is acceptable.</strong> Artists may use AI-assisted tools for mastering, mixing, noise reduction, or other production assistance, as long as the fundamental creative work (composition, lyrics, performance) is human-created.</li>
+            <li><strong class="text-zinc-300">Declaration required.</strong> All artists must confirm their uploads are not AI-generated during the upload process.</li>
+            <li><strong class="text-zinc-300">Enforcement.</strong> Violations will result in immediate content removal and may lead to account suspension or termination.</li>
+          </ul>
+          <p class="text-zinc-400 mt-4">
+            We believe in supporting human creativity and ensuring that revenue generated on our platform goes to real artists. This policy helps maintain the integrity of our artist community and the trust of our listeners.
+          </p>
+        </section>
+
+        <section class="mb-8">
+          <h2 class="text-xl font-semibold text-zinc-100 mb-4">6b. Copyright and DMCA</h2>
+          <p class="text-zinc-400 mb-4">
+            Fairstream respects the intellectual property rights of others. We comply with the Digital Millennium Copyright Act (DMCA) and respond to valid takedown notices.
+          </p>
+          <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4">
+            <li>If you believe content on Fairstream infringes your copyright, please submit a DMCA takedown request through our <NuxtLink to="/dmca" class="text-violet-400 hover:text-violet-300">DMCA page</NuxtLink>.</li>
+            <li>We will promptly investigate and remove infringing content.</li>
+            <li>Repeat infringers will have their accounts terminated.</li>
+            <li>Counter-notices may be filed if you believe content was wrongly removed.</li>
           </ul>
         </section>
 

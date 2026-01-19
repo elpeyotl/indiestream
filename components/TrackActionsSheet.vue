@@ -84,6 +84,15 @@
             <UIcon name="i-heroicons-square-3-stack-3d" class="w-5 h-5" />
             <span>Go to Album</span>
           </button>
+
+          <!-- Divider -->
+          <div class="border-t border-zinc-800 my-2" />
+
+          <!-- Report -->
+          <button class="action-item text-red-400" @click="showReportModal = true">
+            <UIcon name="i-heroicons-flag" class="w-5 h-5" />
+            <span>Report</span>
+          </button>
         </div>
 
         <!-- Cancel Button -->
@@ -102,6 +111,14 @@
     :track-id="track.id"
     :track-title="track.title"
     @added="handlePlaylistAdded"
+  />
+
+  <!-- Report Modal -->
+  <ReportTrackModal
+    v-model="showReportModal"
+    :track-id="track.id"
+    :track-title="track.title"
+    @reported="handleReported"
   />
 </template>
 
@@ -122,6 +139,7 @@ const { isTrackLiked, toggleTrackLike } = useLibrary()
 const toast = useToast()
 
 const showPlaylistPicker = ref(false)
+const showReportModal = ref(false)
 
 const isLiked = computed(() => isTrackLiked(props.track.id))
 
@@ -156,6 +174,18 @@ const handleToggleLike = async () => {
 
 const handlePlaylistAdded = () => {
   showPlaylistPicker.value = false
+  close()
+}
+
+const handleReported = () => {
+  showReportModal.value = false
+  toast.add({
+    title: 'Report Submitted',
+    description: 'Report submitted successfully. Our team will review it.',
+    color: 'green',
+    icon: 'i-heroicons-check-circle',
+    timeout: 5000,
+  })
   close()
 }
 

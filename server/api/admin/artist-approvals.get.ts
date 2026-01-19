@@ -85,16 +85,29 @@ export default defineEventHandler(async (event) => {
     })
   )
 
-  // Get pending count for badge
-  const { count: pendingCount } = await client
-    .from('bands')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'pending')
+  // Get stats for all statuses
+  const [
+    { count: pendingCount },
+    { count: activeCount },
+    { count: rejectedCount },
+  ] = await Promise.all([
+    client.from('bands').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    client.from('bands').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    client.from('bands').select('*', { count: 'exact', head: true }).eq('status', 'removed'),
+  ])
+
+  const stats = {
+    total: (pendingCount || 0) + (activeCount || 0) + (rejectedCount || 0),
+    pending: pendingCount || 0,
+    active: activeCount || 0,
+    rejected: rejectedCount || 0,
+  }
 
   return {
     bands: bandsWithUrls,
     total: count || 0,
     pendingCount: pendingCount || 0,
+    stats,
     page,
     limit,
   }

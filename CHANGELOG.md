@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.15.0] - 2026-01-19
+
+### Added
+- **Content Protection System**:
+  - Track reporting: Users can report tracks for copyright violation, AI-generated content, inappropriate content
+  - `ReportTrackModal` component with reason selection and optional details/evidence URL
+  - Admin Content Reports tab with clickable stat cards for filtering (pending, investigating, resolved, dismissed)
+  - Report detail modal showing full reporter info, evidence, and track details
+  - Actions: Start Investigation, Mark Resolved, Dismiss, Remove Track
+- **Track Removal with Notifications**:
+  - Admin can remove reported tracks directly from report modal
+  - Deletes audio file from R2 storage
+  - Sends email notification to artist explaining removal reason
+  - `TrackRemovedEmail` template with appeal instructions
+- **DMCA Compliance**:
+  - `/dmca` page with DMCA agent info and takedown request form
+  - DMCA request API endpoint storing claims in database
+  - Counter-notification process documented
+- **Upload Safeguards**:
+  - AI declaration checkbox: "This music was created by me/my collaborators (not AI-generated)"
+  - Copyright warning checkbox with false information consequences
+  - ISRC duplicate validation endpoint
+- **Database Migration**: New `content_reports` and `dmca_requests` tables, content flags on tracks/albums
+- **Content Protection Documentation**: `/docs/content-protection-policy.md` with full DMCA Safe Harbor compliance details
+
+### Changed
+- **Admin UI Improvements**:
+  - Clickable stat cards on Track Moderation, Artist Approvals, and Content Reports tabs
+  - Cards act as filters with colored ring highlight on selection
+  - Dropdown filters always visible alongside stat cards
+  - Mobile: simplified stats with dropdown filter
+- Terms of Service updated with AI-Generated Content Policy section
+- Artist Approvals API now returns stats for all statuses (pending, active, rejected)
+
+### Fixed
+- Report submission now correctly sends reason value instead of full option object
+- Toast notifications work after adding `<UNotifications />` to layout
+- Admin reports API uses correct role check (`profile.role === 'admin'`)
+- Supabase relationship disambiguation for reporter/resolver foreign keys
+
 ## [0.14.3] - 2026-01-16
 
 ### Added

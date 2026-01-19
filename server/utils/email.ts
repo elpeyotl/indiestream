@@ -107,6 +107,16 @@ export interface PayoutFailedEmailData {
   errorMessage: string
 }
 
+export interface TrackRemovedEmailData {
+  to: string
+  artistName: string
+  trackTitle: string
+  albumTitle: string
+  bandName: string
+  reason: 'copyright' | 'ai_generated' | 'inappropriate' | 'other'
+  details?: string
+}
+
 // Helper to render MJML templates to HTML
 export const renderEmailTemplate = (mjmlTemplate: string): string => {
   const { html, errors } = mjml2html(mjmlTemplate)
@@ -190,6 +200,17 @@ export const sendPayoutFailedEmail = async (data: PayoutFailedEmailData) => {
   return sendEmail({
     to: data.to,
     subject: 'Payout failed - Action may be required',
+    html,
+  })
+}
+
+export const sendTrackRemovedEmail = async (data: TrackRemovedEmailData) => {
+  const { getTrackRemovedEmailTemplate } = await import('../emails/TrackRemovedEmail')
+  const html = renderEmailTemplate(getTrackRemovedEmailTemplate(data))
+
+  return sendEmail({
+    to: data.to,
+    subject: `Track Removed: ${data.trackTitle}`,
     html,
   })
 }

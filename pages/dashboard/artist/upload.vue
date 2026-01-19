@@ -487,8 +487,28 @@
               label="I confirm that I own or control all rights to distribute this music"
             />
             <UCheckbox
+              v-model="aiDeclaration"
+            >
+              <template #label>
+                <span class="text-zinc-300">
+                  This music was <strong class="text-zinc-100">created by me/my collaborators</strong> and is <strong class="text-zinc-100">not AI-generated</strong>
+                  <span class="text-zinc-500">(AI tools for mixing/mastering are permitted)</span>
+                </span>
+              </template>
+            </UCheckbox>
+            <UCheckbox
+              v-model="originalContentConfirmed"
+            >
+              <template #label>
+                <span class="text-zinc-300">
+                  This is <strong class="text-zinc-100">original content</strong> — not a cover, remix, or sample of copyrighted work
+                  <span class="text-zinc-500">(unless properly licensed and declared above)</span>
+                </span>
+              </template>
+            </UCheckbox>
+            <UCheckbox
               v-model="falseInfoUnderstood"
-              label="I understand that providing false information may result in account termination"
+              label="I understand that providing false information may result in account termination and legal action"
             />
           </div>
         </div>
@@ -987,6 +1007,8 @@ const searchMusicBrainz = async (trackIndex: number) => {
 // Rights confirmation state
 const rightsConfirmed = ref(false)
 const falseInfoUnderstood = ref(false)
+const aiDeclaration = ref(false)
+const originalContentConfirmed = ref(false)
 
 // Validation: all tracks must have ISRC
 const allTracksHaveIsrc = computed(() => {
@@ -1003,7 +1025,13 @@ const allTracksHaveComposer = computed(() => {
 })
 
 const canPublish = computed(() => {
-  return tracks.value.length > 0 && allTracksHaveIsrc.value && allTracksHaveComposer.value && rightsConfirmed.value && falseInfoUnderstood.value
+  return tracks.value.length > 0 &&
+    allTracksHaveIsrc.value &&
+    allTracksHaveComposer.value &&
+    rightsConfirmed.value &&
+    falseInfoUnderstood.value &&
+    aiDeclaration.value &&
+    originalContentConfirmed.value
 })
 
 // Copy/paste credits functionality
@@ -1078,6 +1106,7 @@ const startUpload = async () => {
           is_cover: track.is_cover,
           spotify_track_id: track.spotify_track_id || undefined,
           musicbrainz_work_id: track.musicbrainz_work_id || undefined,
+          ai_declaration: aiDeclaration.value,
         })
 
         // Create track credits if any
@@ -1127,6 +1156,8 @@ const startUpload = async () => {
         rights_confirmed: true,
         rights_confirmed_at: new Date().toISOString(),
         rights_confirmed_by: user.value?.id,
+        // Content protection declarations
+        original_content_confirmed: originalContentConfirmed.value,
         // Generate P-line and C-line
         p_line: `℗ ${new Date().getFullYear()} ${albumForm.label_name || selectedBand.value?.name}`,
         c_line: `© ${new Date().getFullYear()} ${albumForm.label_name || selectedBand.value?.name}`,
@@ -1241,5 +1272,7 @@ const resetForm = () => {
   createdAlbum.value = null
   rightsConfirmed.value = false
   falseInfoUnderstood.value = false
+  aiDeclaration.value = false
+  originalContentConfirmed.value = false
 }
 </script>

@@ -23,6 +23,14 @@
       :track-title="track.title"
       @added="showPlaylistPicker = false"
     />
+
+    <!-- Report Modal -->
+    <ReportTrackModal
+      v-model="showReportModal"
+      :track-id="track.id"
+      :track-title="track.title"
+      @reported="handleReported"
+    />
   </div>
 </template>
 
@@ -44,6 +52,7 @@ const { isTrackLiked, toggleTrackLike } = useLibrary()
 const toast = useToast()
 
 const showPlaylistPicker = ref(false)
+const showReportModal = ref(false)
 
 const isLiked = computed(() => isTrackLiked(props.track.id))
 
@@ -75,6 +84,17 @@ const goToArtist = () => {
 
 const goToAlbum = () => {
   navigateTo(`/${props.track.artistSlug}/${props.track.albumSlug}`)
+}
+
+const handleReported = () => {
+  showReportModal.value = false
+  toast.add({
+    title: 'Report Submitted',
+    description: 'Report submitted successfully. Our team will review it.',
+    color: 'green',
+    icon: 'i-heroicons-check-circle',
+    timeout: 5000,
+  })
 }
 
 const menuItems = computed(() => [
@@ -116,6 +136,15 @@ const menuItems = computed(() => [
       icon: 'i-heroicons-square-3-stack-3d',
       click: goToAlbum,
       disabled: !props.track.artistSlug || !props.track.albumSlug,
+    },
+  ],
+  [
+    {
+      label: 'Report',
+      icon: 'i-heroicons-flag',
+      click: () => {
+        showReportModal.value = true
+      },
     },
   ],
 ])
