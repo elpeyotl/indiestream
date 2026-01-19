@@ -1,5 +1,5 @@
 <template>
-  <UPopover :popper="{ placement: 'bottom-start' }" :ui="{ container: 'z-[100]' }">
+  <UPopover mode="click" :popper="{ placement: 'bottom-start' }" :ui="{ container: 'z-[100]' }">
     <UButton
       color="gray"
       variant="ghost"
