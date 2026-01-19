@@ -12,47 +12,11 @@
 
     <!-- Select Artist -->
     <div v-if="!selectedBand" class="mb-8">
-      <UCard class="bg-zinc-900/50 border-zinc-800">
-        <template #header>
-          <h2 class="text-lg font-semibold text-zinc-100">Select Artist Profile</h2>
-        </template>
-
-        <div v-if="bandsLoading" class="flex justify-center py-8">
-          <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 text-zinc-400 animate-spin" />
-        </div>
-
-        <div v-else-if="bands.length === 0" class="text-center py-8">
-          <p class="text-zinc-400 mb-4">You need an approved artist profile to upload music.</p>
-          <p class="text-sm text-zinc-500 mb-4">If your profile is pending approval, please wait for an admin to review it.</p>
-          <UButton color="violet" to="/dashboard/artist/new">
-            Create Artist Profile
-          </UButton>
-        </div>
-
-        <div v-else class="space-y-3">
-          <button
-            v-for="band in bands"
-            :key="band.id"
-            class="w-full flex items-center gap-4 p-4 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 transition-colors text-left"
-            @click="selectedBand = band"
-          >
-            <div
-              class="w-12 h-12 rounded-lg overflow-hidden shrink-0"
-              :style="{ background: `linear-gradient(135deg, ${band.theme_color} 0%, #c026d3 100%)` }"
-            >
-              <img v-if="band.avatar_url" :src="band.avatar_url" :alt="band.name" class="w-full h-full object-cover" />
-              <div v-else class="w-full h-full flex items-center justify-center">
-                <span class="text-lg font-bold text-white">{{ band.name.charAt(0).toUpperCase() }}</span>
-              </div>
-            </div>
-            <div class="flex-1">
-              <h3 class="font-semibold text-zinc-100">{{ band.name }}</h3>
-              <p class="text-sm text-zinc-400">{{ band.slug }}</p>
-            </div>
-            <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 text-zinc-500" />
-          </button>
-        </div>
-      </UCard>
+      <UploadArtistSelector
+        :bands="bands"
+        :loading="bandsLoading"
+        @select="selectedBand = $event"
+      />
     </div>
 
     <!-- Upload Form -->
@@ -78,545 +42,50 @@
       </div>
 
       <!-- Step 1: Album Info -->
-      <UCard v-if="step === 1" class="bg-zinc-900/50 border-zinc-800 mb-6">
-        <template #header>
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-sm font-bold">1</div>
-            <h2 class="text-lg font-semibold text-zinc-100">Release Details</h2>
-          </div>
-        </template>
-
-        <form @submit.prevent="goToStep2" class="space-y-6">
-          <!-- Release Type -->
-          <UFormGroup label="Release Type" required>
-            <div class="flex gap-3">
-              <UButton
-                v-for="type in releaseTypes"
-                :key="type.value"
-                :color="albumForm.release_type === type.value ? 'violet' : 'gray'"
-                :variant="albumForm.release_type === type.value ? 'solid' : 'outline'"
-                @click="albumForm.release_type = type.value"
-              >
-                {{ type.label }}
-              </UButton>
-            </div>
-          </UFormGroup>
-
-          <!-- Title -->
-          <UFormGroup label="Title" required>
-            <UInput
-              v-model="albumForm.title"
-              placeholder="e.g. Midnight Dreams"
-              size="lg"
-            />
-          </UFormGroup>
-
-          <!-- Description -->
-          <UFormGroup label="Description" hint="Optional">
-            <UTextarea
-              v-model="albumForm.description"
-              placeholder="Tell the story behind this release..."
-              :rows="3"
-              size="lg"
-            />
-          </UFormGroup>
-
-          <!-- Release Date -->
-          <UFormGroup label="Release Date" hint="Optional - leave blank for immediate release">
-            <UInput
-              v-model="albumForm.release_date"
-              type="date"
-              size="lg"
-            />
-          </UFormGroup>
-
-          <!-- Label Name -->
-          <UFormGroup label="Label Name" hint="Optional - defaults to your artist name for independents">
-            <UInput
-              v-model="albumForm.label_name"
-              :placeholder="selectedBand?.name || 'Self-released'"
-              size="lg"
-            />
-          </UFormGroup>
-
-          <!-- Cover Art -->
-          <UFormGroup label="Cover Art" required>
-            <div
-              class="border-2 border-dashed border-zinc-700 rounded-xl p-8 text-center hover:border-violet-500 transition-colors cursor-pointer"
-              :class="{ 'border-violet-500 bg-violet-500/10': coverPreview }"
-              @click="coverInput?.click()"
-              @dragover.prevent="onDragOver"
-              @dragleave.prevent="onDragLeave"
-              @drop.prevent="onCoverDrop"
-            >
-              <input
-                ref="coverInput"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                class="hidden"
-                @change="onCoverSelect"
-              />
-
-              <div v-if="coverPreview" class="space-y-4">
-                <img :src="coverPreview" alt="Cover preview" class="w-40 h-40 mx-auto rounded-lg object-cover" />
-                <p class="text-sm text-zinc-400">{{ coverFile?.name }}</p>
-                <UButton color="gray" variant="ghost" size="sm" @click.stop="clearCover">
-                  Remove
-                </UButton>
-              </div>
-
-              <div v-else class="space-y-3">
-                <UIcon name="i-heroicons-photo" class="w-12 h-12 mx-auto text-zinc-500" />
-                <p class="text-zinc-300">Drop your cover art here or click to browse</p>
-                <p class="text-sm text-zinc-500">JPEG, PNG or WebP. Recommended: 3000x3000px</p>
-              </div>
-            </div>
-          </UFormGroup>
-
-          <div class="flex justify-end pt-4">
-            <UButton
-              type="submit"
-              color="violet"
-              size="lg"
-              :disabled="!albumForm.title || !coverFile"
-            >
-              Continue to Tracks
-              <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 ml-1" />
-            </UButton>
-          </div>
-        </form>
-      </UCard>
+      <UploadAlbumDetailsStep
+        v-if="step === 1"
+        ref="albumDetailsRef"
+        :form="albumForm"
+        :band-name="selectedBand.name"
+        @update:form="Object.assign(albumForm, $event)"
+        @continue="handleAlbumDetailsContinue"
+      />
 
       <!-- Step 2: Upload Tracks -->
-      <UCard v-if="step === 2" class="bg-zinc-900/50 border-zinc-800 mb-6">
-        <template #header>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-sm font-bold">2</div>
-              <h2 class="text-lg font-semibold text-zinc-100">Upload Tracks</h2>
-            </div>
-            <UButton color="gray" variant="ghost" size="sm" @click="step = 1">
-              <UIcon name="i-heroicons-arrow-left" class="w-4 h-4 mr-1" />
-              Back
-            </UButton>
-          </div>
-        </template>
-
-        <!-- Drop Zone -->
-        <div
-          class="border-2 border-dashed border-zinc-700 rounded-xl p-8 text-center hover:border-violet-500 transition-colors cursor-pointer mb-6"
-          :class="{ 'border-violet-500 bg-violet-500/10': isDragging }"
-          @click="audioInput?.click()"
-          @dragover.prevent="onDragOver"
-          @dragleave.prevent="onDragLeave"
-          @drop.prevent="onAudioDrop"
-        >
-          <input
-            ref="audioInput"
-            type="file"
-            accept="audio/mpeg,audio/mp3,audio/wav,audio/flac,audio/aac,audio/ogg"
-            multiple
-            class="hidden"
-            @change="onAudioSelect"
-          />
-
-          <UIcon name="i-heroicons-musical-note" class="w-12 h-12 mx-auto text-zinc-500 mb-3" />
-          <p class="text-zinc-300">Drop audio files here or click to browse</p>
-          <p class="text-sm text-zinc-500 mt-1">MP3, WAV, FLAC, AAC, or OGG</p>
-        </div>
-
-        <!-- Track List -->
-        <div v-if="tracks.length > 0" class="space-y-4">
-          <div
-            v-for="(track, index) in tracks"
-            :key="track.file.name + index"
-            class="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700"
-            :class="{ 'border-violet-500 bg-violet-500/10': dragOverIndex === index }"
-            draggable="true"
-            @dragstart="onTrackDragStart($event, index)"
-            @dragend="onTrackDragEnd"
-            @dragover.prevent="onTrackDragOver(index)"
-            @dragleave="onTrackDragLeave"
-            @drop.prevent="onTrackDrop(index)"
-          >
-            <!-- Track Header -->
-            <div class="flex items-center gap-4 mb-4">
-              <!-- Drag Handle -->
-              <div class="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300">
-                <UIcon name="i-heroicons-bars-3" class="w-5 h-5" />
-              </div>
-
-              <!-- Track Number -->
-              <div class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-semibold shrink-0">
-                {{ index + 1 }}
-              </div>
-
-              <!-- Track Title -->
-              <div class="flex-1 min-w-0">
-                <div class="group/title relative">
-                  <UInput
-                    v-model="track.title"
-                    placeholder="Track title"
-                    size="lg"
-                    class="font-semibold text-zinc-100 bg-transparent hover:bg-zinc-700/50 focus:bg-zinc-700/50 rounded-lg transition-colors"
-                  >
-                    <template #trailing>
-                      <UIcon name="i-heroicons-pencil" class="w-4 h-4 text-zinc-500 group-hover/title:text-zinc-300 transition-colors" />
-                    </template>
-                  </UInput>
-                </div>
-                <p class="text-sm text-zinc-400 mt-1 pl-3">
-                  <UIcon name="i-heroicons-document" class="w-3 h-3 inline mr-1" />
-                  {{ track.file.name }} · {{ formatFileSize(track.file.size) }}
-                </p>
-              </div>
-
-              <!-- Upload Progress -->
-              <div v-if="track.uploading" class="w-24">
-                <UProgress :value="track.progress" color="violet" size="sm" />
-              </div>
-
-              <!-- Status -->
-              <div v-else-if="track.uploaded" class="text-green-500">
-                <UIcon name="i-heroicons-check-circle" class="w-6 h-6" />
-              </div>
-
-              <div v-else-if="track.error" class="text-red-500">
-                <UIcon name="i-heroicons-exclamation-circle" class="w-6 h-6" />
-              </div>
-
-              <!-- Remove -->
-              <UButton
-                v-if="!track.uploading && !track.uploaded"
-                color="gray"
-                variant="ghost"
-                size="sm"
-                @click="removeTrack(index)"
-              >
-                <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
-              </UButton>
-            </div>
-
-            <!-- Track Metadata (collapsed by default during upload) -->
-            <div v-if="!track.uploading && !track.uploaded" class="space-y-4 pt-4 border-t border-zinc-700">
-              <!-- ISRC Row -->
-              <div class="flex items-start gap-4">
-                <div class="flex-1">
-                  <label class="block text-sm font-medium text-zinc-300 mb-1">
-                    ISRC Code <span class="text-red-400">*</span>
-                  </label>
-                  <div class="flex gap-2">
-                    <UInput
-                      v-model="track.isrc"
-                      placeholder="e.g. USRC12345678"
-                      size="sm"
-                      class="flex-1"
-                      maxlength="12"
-                      :color="!track.isrc ? 'red' : undefined"
-                    />
-                    <UButton
-                      color="gray"
-                      variant="outline"
-                      size="sm"
-                      :loading="track.fetchingIsrc"
-                      @click="openDeezerModal(index)"
-                    >
-                      <UIcon name="i-heroicons-magnifying-glass" class="w-4 h-4 mr-1" />
-                      Deezer
-                    </UButton>
-                  </div>
-                  <p class="text-xs text-zinc-500 mt-1">
-                    Don't have an ISRC? Get one from your distributor (DistroKid, TuneCore, CD Baby) or
-                    <a href="https://usisrc.org" target="_blank" class="text-violet-400 hover:underline">usisrc.org</a>
-                  </p>
-                </div>
-
-                <!-- Is Cover Checkbox -->
-                <div class="pt-6">
-                  <UCheckbox v-model="track.is_cover" label="Cover song" />
-                </div>
-              </div>
-
-              <!-- ISWC Row (Optional) -->
-              <div>
-                <label class="block text-sm font-medium text-zinc-300 mb-1">ISWC Code <span class="text-zinc-500">(optional)</span></label>
-                <div class="flex gap-2">
-                  <UInput
-                    v-model="track.iswc"
-                    placeholder="e.g. T-123.456.789-0"
-                    size="sm"
-                    class="flex-1"
-                  />
-                  <UButton
-                    color="gray"
-                    variant="outline"
-                    size="sm"
-                    :loading="track.fetchingIswc"
-                    @click="searchMusicBrainz(index)"
-                  >
-                    <UIcon name="i-heroicons-magnifying-glass" class="w-4 h-4 mr-1" />
-                    MusicBrainz
-                  </UButton>
-                </div>
-                <p class="text-xs text-zinc-500 mt-1">
-                  Look up your ISWC at <a href="https://iswcnet.cisac.org" target="_blank" class="text-violet-400 hover:underline">iswcnet.cisac.org</a>
-                </p>
-              </div>
-
-              <!-- Credits -->
-              <div>
-                <div class="flex items-center justify-between mb-2">
-                  <label class="text-sm font-medium text-zinc-300">
-                    Credits
-                    <span class="text-red-400">*</span>
-                  </label>
-                  <UButton
-                    color="gray"
-                    variant="ghost"
-                    size="xs"
-                    @click="track.showCredits = !track.showCredits"
-                  >
-                    {{ track.showCredits ? 'Hide' : 'Show' }}
-                    <UIcon :name="track.showCredits ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="w-4 h-4 ml-1" />
-                  </UButton>
-                </div>
-
-                <div v-if="track.showCredits" class="space-y-2">
-                  <!-- Existing Credits -->
-                  <div
-                    v-for="(credit, creditIndex) in track.credits"
-                    :key="creditIndex"
-                    class="flex items-center gap-2 p-2 bg-zinc-900/50 rounded"
-                  >
-                    <USelect
-                      v-model="credit.role"
-                      :options="creditRoles"
-                      size="xs"
-                      class="w-36"
-                    />
-                    <UInput
-                      v-model="credit.name"
-                      placeholder="Name"
-                      size="xs"
-                      class="flex-1"
-                    />
-                    <UInput
-                      v-model="credit.ipi_number"
-                      placeholder="IPI #"
-                      size="xs"
-                      class="w-28"
-                    />
-                    <UButton
-                      color="gray"
-                      variant="ghost"
-                      size="xs"
-                      @click="track.credits.splice(creditIndex, 1)"
-                    >
-                      <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
-                    </UButton>
-                  </div>
-
-                  <!-- Action Buttons -->
-                  <div class="flex gap-2">
-                    <UButton
-                      color="gray"
-                      variant="dashed"
-                      size="sm"
-                      class="flex-1"
-                      @click="addCredit(index)"
-                    >
-                      <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
-                      Add Credit
-                    </UButton>
-                    <UButton
-                      v-if="canCopyCredits(index)"
-                      color="gray"
-                      variant="outline"
-                      size="sm"
-                      @click="copyCredits(index)"
-                    >
-                      <UIcon name="i-heroicons-clipboard-document" class="w-4 h-4 mr-1" />
-                      Copy
-                    </UButton>
-                    <UButton
-                      v-if="copiedCredits && copiedCredits.length > 0"
-                      color="violet"
-                      variant="outline"
-                      size="sm"
-                      @click="pasteCredits(index)"
-                    >
-                      <UIcon name="i-heroicons-clipboard-document-check" class="w-4 h-4 mr-1" />
-                      Paste
-                    </UButton>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Empty State -->
-        <div v-else class="text-center py-8 text-zinc-400">
-          <p>No tracks added yet. Drop some audio files above!</p>
-        </div>
-
-        <!-- Rights Confirmation -->
-        <div v-if="tracks.length > 0" class="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-700">
-          <h3 class="text-sm font-semibold text-zinc-100 mb-3">Rights Confirmation</h3>
-
-          <!-- ISRC Warning -->
-          <div v-if="!allTracksHaveIsrc" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-            <p class="text-sm text-red-400">
-              <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
-              All tracks require an ISRC code before publishing.
-            </p>
-          </div>
-
-          <!-- Composer Warning -->
-          <div v-if="!allTracksHaveComposer" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-            <p class="text-sm text-red-400">
-              <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
-              All tracks require at least one Composer or Composer & Author credit.
-            </p>
-          </div>
-
-          <div class="space-y-3">
-            <UCheckbox
-              v-model="rightsConfirmed"
-              label="I confirm that I own or control all rights to distribute this music"
-            />
-            <UCheckbox
-              v-model="aiDeclaration"
-            >
-              <template #label>
-                <span class="text-zinc-300">
-                  This music was <strong class="text-zinc-100">created by me/my collaborators</strong> and is <strong class="text-zinc-100">not AI-generated</strong>
-                  <span class="text-zinc-500">(AI tools for mixing/mastering are permitted)</span>
-                </span>
-              </template>
-            </UCheckbox>
-            <UCheckbox
-              v-model="originalContentConfirmed"
-            >
-              <template #label>
-                <span class="text-zinc-300">
-                  This is <strong class="text-zinc-100">original content</strong> — not a cover, remix, or sample of copyrighted work
-                  <span class="text-zinc-500">(unless properly licensed and declared above)</span>
-                </span>
-              </template>
-            </UCheckbox>
-            <UCheckbox
-              v-model="falseInfoUnderstood"
-              label="I understand that providing false information may result in account termination and legal action"
-            />
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex justify-between pt-6 border-t border-zinc-800 mt-6">
-          <div class="text-sm text-zinc-400">
-            {{ tracks.length }} track{{ tracks.length !== 1 ? 's' : '' }} · {{ formatFileSize(totalSize) }}
-          </div>
-          <UButton
-            color="violet"
-            size="lg"
-            :loading="uploading"
-            :disabled="!canPublish || uploading"
-            @click="startUpload"
-          >
-            <UIcon name="i-heroicons-cloud-arrow-up" class="w-5 h-5 mr-1" />
-            Upload & Publish
-          </UButton>
-        </div>
-      </UCard>
+      <UploadTracksStep
+        v-if="step === 2"
+        ref="tracksStepRef"
+        :tracks="tracks"
+        :uploading="uploading"
+        @back="step = 1"
+        @upload="startUpload"
+        @open-deezer="openDeezerModal"
+        @search-musicbrainz="searchMusicBrainz"
+      />
 
       <!-- Step 3: Success -->
-      <UCard v-if="step === 3" class="bg-zinc-900/50 border-zinc-800">
-        <div class="text-center py-8">
-          <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
-            <UIcon name="i-heroicons-check" class="w-10 h-10 text-green-500" />
-          </div>
-          <h2 class="text-2xl font-bold text-zinc-100 mb-2">Upload Complete!</h2>
-          <p class="text-zinc-400 mb-8">Your release "{{ albumForm.title }}" is now live.</p>
-
-          <div class="flex justify-center gap-4">
-            <UButton color="violet" :to="`/${selectedBand?.slug}/${createdAlbum?.slug}`">
-              View Release
-            </UButton>
-            <UButton color="gray" variant="outline" @click="resetForm">
-              Upload Another
-            </UButton>
-          </div>
-        </div>
-      </UCard>
+      <UploadSuccessStep
+        v-if="step === 3"
+        :album-title="albumForm.title"
+        :view-url="`/${selectedBand?.slug}/${createdAlbum?.slug}`"
+        @reset="resetForm"
+      />
     </div>
 
     <!-- Deezer Lookup Modal -->
-    <UModal v-model="deezerModalOpen">
-      <UCard class="bg-zinc-900 border-zinc-800">
-        <template #header>
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-              <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-orange-400" />
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-zinc-100">Fetch ISRC from Deezer</h3>
-              <p class="text-sm text-zinc-400">Paste a Deezer track link or search by title</p>
-            </div>
-          </div>
-        </template>
-
-        <div class="space-y-4">
-          <UFormGroup label="Deezer Track URL or Search">
-            <UInput
-              v-model="deezerInput"
-              placeholder="https://www.deezer.com/track/... or search term"
-              size="lg"
-              @keyup.enter="fetchFromDeezer"
-            />
-          </UFormGroup>
-
-          <!-- Search Results -->
-          <div v-if="deezerResults.length > 0" class="space-y-2">
-            <p class="text-sm text-zinc-400">Select a track:</p>
-            <button
-              v-for="result in deezerResults"
-              :key="result.deezerTrackId"
-              class="w-full text-left p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
-              @click="selectDeezerResult(result)"
-            >
-              <p class="font-medium text-zinc-100">{{ result.name }}</p>
-              <p class="text-sm text-zinc-400">{{ result.artist }} · ISRC: {{ result.isrc || 'N/A' }}</p>
-            </button>
-          </div>
-
-          <p v-if="deezerError" class="text-sm text-red-400">{{ deezerError }}</p>
-        </div>
-
-        <template #footer>
-          <div class="flex justify-end gap-3">
-            <UButton color="gray" variant="ghost" @click="deezerModalOpen = false">
-              Cancel
-            </UButton>
-            <UButton
-              color="violet"
-              :loading="deezerLoading"
-              :disabled="!deezerInput"
-              @click="fetchFromDeezer"
-            >
-              {{ deezerInput.includes('deezer.com') ? 'Fetch ISRC' : 'Search' }}
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-    </UModal>
+    <UploadDeezerLookupModal
+      v-model="deezerModalOpen"
+      :initial-query="deezerInitialQuery"
+      :artist-name="selectedBand?.name || ''"
+      @isrc-found="handleIsrcFound"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
+import type { TrackUpload, AlbumForm } from '~/composables/useUploadWizard'
 
 definePageMeta({
   middleware: 'auth',
@@ -624,7 +93,7 @@ definePageMeta({
 
 const { getUserBands } = useBand()
 const { createAlbum, createTrack, updateTrack, updateAlbum, getUploadUrl, setTrackCredits, getStreamUrl } = useAlbum()
-const toast = useToast()
+const { toast, uploadFileWithProgress, uploadProcessedCover, getAudioDuration } = useUploadWizard()
 const user = useSupabaseUser()
 
 // State
@@ -633,61 +102,31 @@ const bandsLoading = ref(true)
 const selectedBand = ref<Band | null>(null)
 const step = ref(1)
 const uploading = ref(false)
-const isDragging = ref(false)
 const createdAlbum = ref<Album | null>(null)
 
-// Refs
-const coverInput = ref<HTMLInputElement>()
-const audioInput = ref<HTMLInputElement>()
+// Refs to child components
+const albumDetailsRef = ref<{ reset: () => void } | null>(null)
+const tracksStepRef = ref<{ rightsConfirmed: boolean; aiDeclaration: boolean; originalContentConfirmed: boolean; reset: () => void } | null>(null)
 
 // Album form
-const albumForm = reactive({
+const albumForm = reactive<AlbumForm>({
   title: '',
   description: '',
-  release_type: 'album' as 'album' | 'ep' | 'single',
+  release_type: 'album',
   release_date: '',
   label_name: '',
 })
 
-const releaseTypes = [
-  { value: 'album', label: 'Album' },
-  { value: 'ep', label: 'EP' },
-  { value: 'single', label: 'Single' },
-]
-
-// Cover
+// Cover file (set when continuing from step 1)
 const coverFile = ref<File | null>(null)
-const coverPreview = ref<string | null>(null)
 
 // Tracks
-interface TrackCredit {
-  role: 'composer' | 'author' | 'composer_author' | 'arranger' | 'interpreter' | 'producer' | 'mixing' | 'mastering' | 'publisher' | 'label' | 'cover_artist'
-  name: string
-  ipi_number: string
-}
-
-interface TrackUpload {
-  file: File
-  title: string
-  uploading: boolean
-  uploaded: boolean
-  progress: number
-  error: string | null
-  // Rights metadata
-  isrc: string
-  iswc: string
-  is_cover: boolean
-  spotify_track_id: string
-  musicbrainz_work_id: string
-  credits: TrackCredit[]
-  // UI state
-  showCredits: boolean
-  fetchingIsrc: boolean
-  fetchingIswc: boolean
-}
 const tracks = ref<TrackUpload[]>([])
 
-const totalSize = computed(() => tracks.value.reduce((sum, t) => sum + t.file.size, 0))
+// Deezer modal
+const deezerModalOpen = ref(false)
+const deezerModalTrackIndex = ref<number | null>(null)
+const deezerInitialQuery = ref('')
 
 // Load bands
 onMounted(async () => {
@@ -712,251 +151,29 @@ onMounted(async () => {
   }
 })
 
-// Drag handlers
-const onDragOver = () => { isDragging.value = true }
-const onDragLeave = () => { isDragging.value = false }
-
-// Cover handlers
-const onCoverSelect = (e: Event) => {
-  const target = e.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (file) setCoverFile(file)
-}
-
-const onCoverDrop = (e: DragEvent) => {
-  isDragging.value = false
-  const file = e.dataTransfer?.files[0]
-  if (file && file.type.startsWith('image/')) {
-    setCoverFile(file)
-  }
-}
-
-const setCoverFile = (file: File) => {
+// Step navigation
+const handleAlbumDetailsContinue = (file: File) => {
   coverFile.value = file
-  coverPreview.value = URL.createObjectURL(file)
+  step.value = 2
 }
 
-const clearCover = () => {
-  coverFile.value = null
-  coverPreview.value = null
-  if (coverInput.value) coverInput.value.value = ''
-}
-
-// Audio handlers
-const onAudioSelect = (e: Event) => {
-  const target = e.target as HTMLInputElement
-  const files = target.files
-  if (files) addAudioFiles(Array.from(files))
-}
-
-const onAudioDrop = (e: DragEvent) => {
-  isDragging.value = false
-  const files = e.dataTransfer?.files
-  if (files) {
-    const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/'))
-    addAudioFiles(audioFiles)
-  }
-}
-
-const addAudioFiles = (files: File[]) => {
-  for (const file of files) {
-    // Generate title from filename
-    const title = file.name
-      .replace(/\.[^/.]+$/, '') // Remove extension
-      .replace(/^\d+[\s._-]*/, '') // Remove leading track numbers
-      .replace(/[_-]/g, ' ') // Replace underscores/dashes with spaces
-      .trim()
-
-    tracks.value.push({
-      file,
-      title: title || 'Untitled Track',
-      uploading: false,
-      uploaded: false,
-      progress: 0,
-      error: null,
-      // Rights metadata
-      isrc: '',
-      iswc: '',
-      is_cover: false,
-      spotify_track_id: '',
-      musicbrainz_work_id: '',
-      credits: [],
-      // UI state
-      showCredits: false,
-      fetchingIsrc: false,
-      fetchingIswc: false,
-    })
-  }
-}
-
-const removeTrack = (index: number) => {
-  tracks.value.splice(index, 1)
-}
-
-// Track drag-and-drop reordering
-const draggedTrackIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
-
-const onTrackDragStart = (e: DragEvent, index: number) => {
-  draggedTrackIndex.value = index
-  if (e.dataTransfer) {
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', String(index))
-  }
-}
-
-const onTrackDragEnd = () => {
-  draggedTrackIndex.value = null
-  dragOverIndex.value = null
-}
-
-const onTrackDragOver = (index: number) => {
-  if (draggedTrackIndex.value !== null && draggedTrackIndex.value !== index) {
-    dragOverIndex.value = index
-  }
-}
-
-const onTrackDragLeave = () => {
-  dragOverIndex.value = null
-}
-
-const onTrackDrop = (targetIndex: number) => {
-  if (draggedTrackIndex.value === null || draggedTrackIndex.value === targetIndex) {
-    dragOverIndex.value = null
-    return
-  }
-
-  const draggedTrack = tracks.value[draggedTrackIndex.value]
-  tracks.value.splice(draggedTrackIndex.value, 1)
-  tracks.value.splice(targetIndex, 0, draggedTrack)
-
-  draggedTrackIndex.value = null
-  dragOverIndex.value = null
-}
-
-// Credit roles for dropdown
-const creditRoles = [
-  { value: 'composer', label: 'Composer' },
-  { value: 'author', label: 'Author' },
-  { value: 'composer_author', label: 'Composer & Author' },
-  { value: 'arranger', label: 'Arranger' },
-  { value: 'interpreter', label: 'Interpreter' },
-  { value: 'producer', label: 'Producer' },
-  { value: 'mixing', label: 'Mixing' },
-  { value: 'mastering', label: 'Mastering' },
-  { value: 'publisher', label: 'Publisher' },
-  { value: 'label', label: 'Label' },
-  { value: 'cover_artist', label: 'Cover Artists' },
-]
-
-// Add a credit to a track
-const addCredit = (trackIndex: number) => {
-  tracks.value[trackIndex].credits.push({
-    role: 'composer',
-    name: '',
-    ipi_number: '',
-  })
-  tracks.value[trackIndex].showCredits = true
-}
-
-// Deezer modal state
-const deezerModalOpen = ref(false)
-const deezerModalTrackIndex = ref<number | null>(null)
-const deezerInput = ref('')
-const deezerLoading = ref(false)
-const deezerError = ref('')
-const deezerResults = ref<Array<{
-  deezerTrackId: string
-  name: string
-  artist: string
-  isrc: string | null
-}>>([])
-
+// Deezer modal
 const openDeezerModal = (trackIndex: number) => {
   deezerModalTrackIndex.value = trackIndex
-  deezerInput.value = tracks.value[trackIndex].title || ''
-  deezerError.value = ''
-  deezerResults.value = []
+  deezerInitialQuery.value = tracks.value[trackIndex]?.title || ''
   deezerModalOpen.value = true
 }
 
-const fetchFromDeezer = async () => {
-  if (!deezerInput.value || deezerModalTrackIndex.value === null) return
-
-  deezerLoading.value = true
-  deezerError.value = ''
-  deezerResults.value = []
-
-  try {
-    // Check if it's a URL or a search query
-    const isUrl = deezerInput.value.includes('deezer.com') || /^\d+$/.test(deezerInput.value.trim())
-
-    if (isUrl) {
-      // Direct URL fetch
-      const result = await $fetch<{
-        isrc: string | null
-        name: string
-        deezerTrackId: string
-      }>('/api/deezer/fetch-track', {
-        method: 'POST',
-        body: { deezerUrl: deezerInput.value },
-      })
-
-      const track = tracks.value[deezerModalTrackIndex.value]
-      if (result.isrc) {
-        track.isrc = result.isrc
-        toast.add({ title: 'ISRC found', description: `ISRC: ${result.isrc}`, color: 'green' })
-        deezerModalOpen.value = false
-      } else {
-        deezerError.value = 'This track does not have an ISRC in Deezer'
-      }
-    } else {
-      // Search by title
-      const result = await $fetch<{
-        results: Array<{
-          deezerTrackId: string
-          name: string
-          artist: string
-          isrc: string | null
-        }>
-      }>('/api/deezer/fetch-track', {
-        method: 'POST',
-        body: {
-          searchQuery: deezerInput.value,
-          artistName: selectedBand.value?.name,
-        },
-      })
-
-      if (result.results && result.results.length > 0) {
-        deezerResults.value = result.results
-      } else {
-        deezerError.value = 'No tracks found. Try a different search term.'
-      }
-    }
-  } catch (e: any) {
-    deezerError.value = e.data?.message || 'Failed to fetch from Deezer'
-  } finally {
-    deezerLoading.value = false
-  }
-}
-
-const selectDeezerResult = (result: { deezerTrackId: string; name: string; isrc: string | null }) => {
-  if (deezerModalTrackIndex.value === null) return
-
-  const track = tracks.value[deezerModalTrackIndex.value]
-  if (result.isrc) {
-    track.isrc = result.isrc
-    toast.add({ title: 'ISRC found', description: `ISRC: ${result.isrc}`, color: 'green' })
-    deezerModalOpen.value = false
-  } else {
-    deezerError.value = 'This track does not have an ISRC'
+const handleIsrcFound = (isrc: string) => {
+  if (deezerModalTrackIndex.value !== null && tracks.value[deezerModalTrackIndex.value]) {
+    tracks.value[deezerModalTrackIndex.value].isrc = isrc
   }
 }
 
 // MusicBrainz search
 const searchMusicBrainz = async (trackIndex: number) => {
   const track = tracks.value[trackIndex]
-  if (!track.title) return
+  if (!track?.title) return
 
   track.fetchingIswc = true
 
@@ -985,7 +202,7 @@ const searchMusicBrainz = async (trackIndex: number) => {
       if (work.composers.length > 0 && track.credits.length === 0) {
         for (const composer of work.composers) {
           track.credits.push({
-            role: composer.role === 'lyricist' ? 'lyricist' : 'composer',
+            role: composer.role === 'lyricist' ? 'author' : 'composer',
             name: composer.name,
             ipi_number: '',
           })
@@ -1004,66 +221,6 @@ const searchMusicBrainz = async (trackIndex: number) => {
   }
 }
 
-// Rights confirmation state
-const rightsConfirmed = ref(false)
-const falseInfoUnderstood = ref(false)
-const aiDeclaration = ref(false)
-const originalContentConfirmed = ref(false)
-
-// Validation: all tracks must have ISRC
-const allTracksHaveIsrc = computed(() => {
-  return tracks.value.length > 0 && tracks.value.every(t => t.isrc && t.isrc.length > 0)
-})
-
-// Validation: all tracks must have at least one composer credit
-const allTracksHaveComposer = computed(() => {
-  return tracks.value.length > 0 && tracks.value.every(t =>
-    t.credits.some(c =>
-      (c.role === 'composer' || c.role === 'composer_author') && c.name.trim()
-    )
-  )
-})
-
-const canPublish = computed(() => {
-  return tracks.value.length > 0 &&
-    allTracksHaveIsrc.value &&
-    allTracksHaveComposer.value &&
-    rightsConfirmed.value &&
-    falseInfoUnderstood.value &&
-    aiDeclaration.value &&
-    originalContentConfirmed.value
-})
-
-// Copy/paste credits functionality
-const copiedCredits = ref<TrackCredit[] | null>(null)
-
-const canCopyCredits = (trackIndex: number) => {
-  const track = tracks.value[trackIndex]
-  return track.credits.length > 0 && track.credits.every(c => c.name.trim() && c.role)
-}
-
-const copyCredits = (trackIndex: number) => {
-  const track = tracks.value[trackIndex]
-  copiedCredits.value = JSON.parse(JSON.stringify(track.credits))
-}
-
-const pasteCredits = (trackIndex: number) => {
-  if (!copiedCredits.value) return
-  const track = tracks.value[trackIndex]
-  // Append copied credits to existing ones
-  for (const credit of copiedCredits.value) {
-    track.credits.push({ ...credit })
-  }
-  track.showCredits = true
-}
-
-// Step navigation
-const goToStep2 = () => {
-  if (albumForm.title && coverFile.value) {
-    step.value = 2
-  }
-}
-
 // Upload
 const startUpload = async () => {
   // Prevent double-click / double submission
@@ -1071,6 +228,10 @@ const startUpload = async () => {
   if (!selectedBand.value || !coverFile.value || tracks.value.length === 0) return
 
   uploading.value = true
+
+  // Get rights confirmation state from child
+  const aiDeclaration = tracksStepRef.value?.aiDeclaration ?? false
+  const originalContentConfirmed = tracksStepRef.value?.originalContentConfirmed ?? false
 
   try {
     // 1. Create the album in database
@@ -1106,7 +267,7 @@ const startUpload = async () => {
           is_cover: track.is_cover,
           spotify_track_id: track.spotify_track_id || undefined,
           musicbrainz_work_id: track.musicbrainz_work_id || undefined,
-          ai_declaration: aiDeclaration.value,
+          ai_declaration: aiDeclaration,
         })
 
         // Create track credits if any
@@ -1157,7 +318,7 @@ const startUpload = async () => {
         rights_confirmed_at: new Date().toISOString(),
         rights_confirmed_by: user.value?.id,
         // Content protection declarations
-        original_content_confirmed: originalContentConfirmed.value,
+        original_content_confirmed: originalContentConfirmed,
         // Generate P-line and C-line
         p_line: `℗ ${new Date().getFullYear()} ${albumForm.label_name || selectedBand.value?.name}`,
         c_line: `© ${new Date().getFullYear()} ${albumForm.label_name || selectedBand.value?.name}`,
@@ -1190,85 +351,6 @@ const startUpload = async () => {
   }
 }
 
-// Upload helpers
-const uploadFile = async (url: string, file: File): Promise<void> => {
-  const response = await fetch(url, {
-    method: 'PUT',
-    body: file,
-    headers: {
-      'Content-Type': file.type,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error('Upload failed')
-  }
-}
-
-// Upload and process cover image (resizes to 600x600)
-const uploadProcessedCover = async (file: File, bandId: string, albumId: string): Promise<string> => {
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('type', 'cover')
-  formData.append('key', `covers/${bandId}/${albumId}/cover.jpg`)
-
-  const { key } = await $fetch<{ key: string }>('/api/upload/process-image', {
-    method: 'POST',
-    body: formData,
-  })
-
-  return key
-}
-
-const uploadFileWithProgress = (url: string, file: File, onProgress: (progress: number) => void): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable) {
-        onProgress(Math.round((e.loaded / e.total) * 100))
-      }
-    })
-
-    xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve()
-      } else {
-        reject(new Error('Upload failed'))
-      }
-    })
-
-    xhr.addEventListener('error', () => reject(new Error('Upload failed')))
-    xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')))
-
-    xhr.open('PUT', url)
-    xhr.setRequestHeader('Content-Type', file.type)
-    xhr.send(file)
-  })
-}
-
-const getAudioDuration = (file: File): Promise<number> => {
-  return new Promise((resolve) => {
-    const audio = new Audio()
-    audio.addEventListener('loadedmetadata', () => {
-      resolve(audio.duration)
-    })
-    audio.addEventListener('error', () => {
-      resolve(0)
-    })
-    audio.src = URL.createObjectURL(file)
-  })
-}
-
-// Utilities
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
-}
-
 // Reset
 const resetForm = () => {
   step.value = 1
@@ -1278,12 +360,9 @@ const resetForm = () => {
   albumForm.release_date = ''
   albumForm.label_name = ''
   coverFile.value = null
-  coverPreview.value = null
   tracks.value = []
   createdAlbum.value = null
-  rightsConfirmed.value = false
-  falseInfoUnderstood.value = false
-  aiDeclaration.value = false
-  originalContentConfirmed.value = false
+  albumDetailsRef.value?.reset()
+  tracksStepRef.value?.reset()
 }
 </script>
