@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.1] - 2026-01-19
+
+### Fixed
+- **Mobile Dashboard**: Artist streams and earnings now visible on small screens (previously hidden)
+- **Audio Player Touch Targets**: Increased button sizes from 32px to 40px for better mobile usability
+- **DMCA Form**: Fixed submission error caused by RLS policy referencing auth.users table
+
 ## [0.15.0] - 2026-01-19
 
 ### Added

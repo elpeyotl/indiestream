@@ -181,12 +181,18 @@
                 class="w-5 h-5 text-violet-400 shrink-0"
               />
             </div>
-            <p class="text-sm text-zinc-400 truncate">
+            <p class="text-sm text-zinc-400 truncate hidden sm:block">
               fairstream.fm/{{ band.slug }}
             </p>
+            <!-- Mobile stats (shown below name on small screens) -->
+            <div class="flex items-center gap-3 text-xs text-zinc-400 sm:hidden mt-0.5">
+              <span>{{ formatNumber(band.total_streams) }} streams</span>
+              <span>&middot;</span>
+              <span>${{ (band.total_earnings_cents / 100).toFixed(2) }}</span>
+            </div>
           </div>
 
-          <!-- Stats -->
+          <!-- Stats (desktop) -->
           <div class="hidden sm:flex items-center gap-6 text-sm">
             <div class="text-center">
               <p class="text-zinc-100 font-semibold">{{ formatNumber(band.total_streams) }}</p>

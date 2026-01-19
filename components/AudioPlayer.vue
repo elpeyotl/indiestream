@@ -351,11 +351,11 @@
                 color="gray"
                 variant="ghost"
                 size="xs"
-                class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9"
+                class="hidden sm:flex w-10 h-10 sm:w-10 sm:h-10"
                 :class="{ '!text-violet-400': shuffleEnabled }"
                 @click.stop="toggleShuffle"
               >
-                <UIcon name="i-lucide-shuffle" class="w-4 h-4 sm:w-5 sm:h-5" :class="{ '!text-violet-400': shuffleEnabled }" />
+                <UIcon name="i-lucide-shuffle" class="w-5 h-5" :class="{ '!text-violet-400': shuffleEnabled }" />
               </UButton>
 
               <!-- Previous -->
@@ -363,23 +363,23 @@
                 color="gray"
                 variant="ghost"
                 size="xs"
-                class="w-8 h-8 sm:w-9 sm:h-9"
+                class="w-10 h-10 sm:w-10 sm:h-10"
                 :disabled="queueIndex <= 0"
                 @click.stop="handlePreviousClick"
               >
-                <UIcon name="i-heroicons-backward" class="w-4 h-4 sm:w-5 sm:h-5" />
+                <UIcon name="i-heroicons-backward" class="w-5 h-5" />
               </UButton>
 
               <!-- Play/Pause -->
               <UButton
                 color="violet"
-                class="rounded-full w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12"
+                class="rounded-full w-11 h-11 sm:w-12 sm:h-12"
                 :loading="isLoading"
                 @click.stop="togglePlay"
               >
                 <UIcon
                   :name="isPlaying ? 'i-heroicons-pause' : 'i-heroicons-play'"
-                  class="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
+                  class="w-5 h-5 sm:w-6 sm:h-6"
                   :class="isPlaying ? 'ml-0.5' : 'ml-1'"
                 />
               </UButton>
@@ -389,11 +389,11 @@
                 color="gray"
                 variant="ghost"
                 size="xs"
-                class="w-8 h-8 sm:w-9 sm:h-9"
+                class="w-10 h-10 sm:w-10 sm:h-10"
                 :disabled="queueIndex >= queue.length - 1 && repeatMode === 'off'"
                 @click.stop="handleNextClick"
               >
-                <UIcon name="i-heroicons-forward" class="w-4 h-4 sm:w-5 sm:h-5" />
+                <UIcon name="i-heroicons-forward" class="w-5 h-5" />
               </UButton>
 
               <!-- Repeat (hidden on mobile) -->
@@ -401,11 +401,11 @@
                 color="gray"
                 variant="ghost"
                 size="xs"
-                class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 relative"
+                class="hidden sm:flex w-10 h-10 sm:w-10 sm:h-10 relative"
                 :class="{ '!text-violet-400': repeatMode !== 'off' }"
                 @click.stop="cycleRepeatMode"
               >
-                <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 sm:w-5 sm:h-5" :class="{ '!text-violet-400': repeatMode !== 'off' }" />
+                <UIcon name="i-heroicons-arrow-path" class="w-5 h-5" :class="{ '!text-violet-400': repeatMode !== 'off' }" />
                 <span
                   v-if="repeatMode === 'one'"
                   class="absolute -top-0.5 -right-0.5 text-[10px] font-bold text-violet-400"
@@ -420,13 +420,13 @@
                 color="gray"
                 variant="ghost"
                 size="xs"
-                class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9"
+                class="hidden sm:flex w-10 h-10 sm:w-10 sm:h-10"
                 :class="{ 'text-red-500': isCurrentTrackLiked }"
                 @click.stop="handleHeartClick"
               >
                 <UIcon
                   :name="isCurrentTrackLiked ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
-                  class="w-4 h-4 sm:w-5 sm:h-5"
+                  class="w-5 h-5"
                 />
               </UButton>
             </div>
@@ -478,11 +478,11 @@
               color="gray"
               variant="ghost"
               size="xs"
-              class="md:hidden w-8 h-8 sm:w-9 sm:h-9"
+              class="md:hidden w-10 h-10"
               :class="{ 'text-violet-400': showQueue }"
               @click.stop="showQueue = !showQueue"
             >
-              <UIcon name="i-heroicons-queue-list" class="w-4 h-4 sm:w-5 sm:h-5" />
+              <UIcon name="i-heroicons-queue-list" class="w-5 h-5" />
             </UButton>
           </div>
         </div>

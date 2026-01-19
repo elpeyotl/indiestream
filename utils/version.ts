@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.17.0'
+export const APP_VERSION = '0.17.1'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.17.1',
+    date: '2026-01-19',
+    changes: [
+      { type: 'fixed', description: 'Mobile: Dashboard now shows artist streams and earnings on small screens' },
+      { type: 'fixed', description: 'Mobile: Audio player buttons increased to 40px for better touch targets' },
+      { type: 'fixed', description: 'DMCA form submission error due to RLS policy referencing auth.users table' },
+    ],
+  },
   {
     version: '0.17.0',
     date: '2026-01-19',

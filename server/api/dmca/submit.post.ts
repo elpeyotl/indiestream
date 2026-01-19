@@ -1,4 +1,4 @@
-import { serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -57,7 +57,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = await serverSupabaseClient(event)
+  // Use service role to bypass RLS - the RLS policy references auth.users which isn't accessible
+  const supabase = await serverSupabaseServiceRole(event)
 
   // Create the DMCA request
   const { data: dmcaRequest, error } = await supabase
