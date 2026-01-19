@@ -63,54 +63,15 @@
             </NuxtLink>
 
             <!-- Regular Playlists -->
-            <NuxtLink
+            <PlaylistCard
               v-for="playlist in userPlaylists"
               :key="playlist.id"
-              :to="`/playlist/${playlist.id}`"
-              class="group"
-            >
-              <div class="relative mb-3 group-hover:scale-[1.02] transition-all">
-                <PlaylistCover :covers="playlistCovers[playlist.id] || []" />
-                <!-- Overlay with info and play button -->
-                <div class="absolute inset-0 rounded-lg bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4">
-                  <!-- Top badges -->
-                  <div class="flex items-center gap-2">
-                    <UIcon
-                      v-if="playlist.is_public"
-                      name="i-heroicons-globe-alt"
-                      class="w-4 h-4 text-white/70"
-                    />
-                    <UBadge
-                      v-if="playlist.role !== 'owner'"
-                      :color="playlist.role === 'editor' ? 'yellow' : 'gray'"
-                      variant="soft"
-                      size="xs"
-                    >
-                      {{ playlist.role }}
-                    </UBadge>
-                  </div>
-                  <!-- Bottom info and play button -->
-                  <div class="flex items-end justify-between">
-                    <div class="min-w-0 flex-1 mr-2">
-                      <h3 class="font-semibold text-white text-lg truncate">{{ playlist.title }}</h3>
-                      <p class="text-white/70 text-sm">{{ playlist.track_count }} {{ playlist.track_count === 1 ? 'track' : 'tracks' }}</p>
-                    </div>
-                    <UButton
-                      v-if="playlist.track_count > 0"
-                      color="violet"
-                      size="lg"
-                      :ui="{ rounded: 'rounded-full' }"
-                      :loading="loadingPlayId === playlist.id"
-                      :class="loadingPlayId === playlist.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
-                      class="transition-opacity shadow-lg shrink-0"
-                      @click.prevent.stop="playPlaylistById(playlist.id)"
-                    >
-                      <UIcon v-if="loadingPlayId !== playlist.id" name="i-heroicons-play-solid" class="w-6 h-6" />
-                    </UButton>
-                  </div>
-                </div>
-              </div>
-            </NuxtLink>
+              :playlist="playlist"
+              :covers="playlistCovers[playlist.id] || []"
+              :loading="loadingPlayId === playlist.id"
+              overlay
+              @play="(p) => playPlaylistById(p.id)"
+            />
           </div>
       </template>
 
@@ -456,7 +417,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { getStreamUrl } = useAlbum()
+const { getStreamUrl, getCachedCoverUrl } = useAlbum()
 const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = useLibrary()
 const { playTrackFromLibrary, playPlaylist, isLoading: playerLoading, setQueue } = usePlayer()
 const { playlists: userPlaylists, fetchPlaylists, createPlaylist, getPlaylist } = usePlaylist()
@@ -534,10 +495,16 @@ const formatRelativeTime = (dateString: string): string => {
 // Play a track from history
 const playHistoryTrack = async (track: RecentlyPlayedTrack, index: number) => {
   if (loadingPlayId.value) return
+  if (!track.audioKey) return // Can't play without audio
+
   loadingPlayId.value = `history-${track.id}`
 
   try {
-    const queue = recentlyPlayed.value.map(t => ({
+    // Filter to only tracks with audioKey
+    const playableTracks = recentlyPlayed.value.filter(t => t.audioKey)
+    if (playableTracks.length === 0) return
+
+    const queue = playableTracks.map(t => ({
       id: t.id,
       title: t.title,
       artist: t.artistName,
@@ -545,11 +512,13 @@ const playHistoryTrack = async (track: RecentlyPlayedTrack, index: number) => {
       albumTitle: t.albumTitle,
       albumSlug: t.albumSlug,
       coverUrl: t.coverUrl || null,
-      duration: 0,
-      audioKey: '',
+      duration: t.duration,
+      audioKey: t.audioKey!,
     }))
 
-    setQueue(queue, index)
+    // Find the index in the filtered queue
+    const queueIndex = queue.findIndex(t => t.id === track.id)
+    await setQueue(queue, queueIndex >= 0 ? queueIndex : 0)
   } finally {
     loadingPlayId.value = null
   }
@@ -624,16 +593,12 @@ const playPlaylistById = async (playlistId: string) => {
     const playlist = await getPlaylist(playlistId)
     if (!playlist?.playlist_tracks?.length) return
 
-    // Load cover URLs for tracks
+    // Load cover URLs for tracks (using cache)
     const playableTracks = await Promise.all(
       playlist.playlist_tracks.map(async (item) => {
         let coverUrl: string | null = null
         if (item.track.album.cover_key) {
-          try {
-            coverUrl = await getStreamUrl(item.track.album.cover_key)
-          } catch (e) {
-            console.error('Failed to load cover:', e)
-          }
+          coverUrl = await getCachedCoverUrl(item.track.album.cover_key)
         } else if (item.track.album.cover_url) {
           coverUrl = item.track.album.cover_url
         }
@@ -685,11 +650,8 @@ const loadLibrary = async () => {
 const loadArtistAvatars = async () => {
   for (const item of artists.value) {
     if (item.band.avatar_key) {
-      try {
-        artistAvatars.value[item.band.id] = await getStreamUrl(item.band.avatar_key)
-      } catch (e) {
-        console.error('Failed to load avatar:', e)
-      }
+      const url = await getCachedCoverUrl(item.band.avatar_key)
+      if (url) artistAvatars.value[item.band.id] = url
     } else if (item.band.avatar_url) {
       artistAvatars.value[item.band.id] = item.band.avatar_url
     }
@@ -699,11 +661,8 @@ const loadArtistAvatars = async () => {
 const loadAlbumCovers = async () => {
   for (const item of albums.value) {
     if (item.album.cover_key) {
-      try {
-        albumCovers.value[item.album.id] = await getStreamUrl(item.album.cover_key)
-      } catch (e) {
-        console.error('Failed to load cover:', e)
-      }
+      const url = await getCachedCoverUrl(item.album.cover_key)
+      if (url) albumCovers.value[item.album.id] = url
     } else if (item.album.cover_url) {
       albumCovers.value[item.album.id] = item.album.cover_url
     }
@@ -713,11 +672,8 @@ const loadAlbumCovers = async () => {
 const loadTrackCovers = async () => {
   for (const item of tracks.value) {
     if (item.track.album.cover_key) {
-      try {
-        trackCovers.value[item.track.id] = await getStreamUrl(item.track.album.cover_key)
-      } catch (e) {
-        console.error('Failed to load cover:', e)
-      }
+      const url = await getCachedCoverUrl(item.track.album.cover_key)
+      if (url) trackCovers.value[item.track.id] = url
     } else if (item.track.album.cover_url) {
       trackCovers.value[item.track.id] = item.track.album.cover_url
     }
@@ -733,15 +689,12 @@ const loadPlaylistCovers = async () => {
           `/api/playlists/${playlist.id}/covers`
         )
 
-        // Convert cover keys to URLs
+        // Convert cover keys to URLs (using cache)
         const coverUrls: string[] = []
         for (const cover of response.covers) {
           if (cover.key) {
-            try {
-              coverUrls.push(await getStreamUrl(cover.key))
-            } catch (e) {
-              console.error('Failed to get stream URL for cover:', e)
-            }
+            const url = await getCachedCoverUrl(cover.key)
+            if (url) coverUrls.push(url)
           } else if (cover.url) {
             coverUrls.push(cover.url)
           }

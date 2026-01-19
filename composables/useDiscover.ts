@@ -22,7 +22,7 @@ const isCacheValid = <T>(entry: CacheEntry<T> | null): entry is CacheEntry<T> =>
 
 export const useDiscover = () => {
   const client = useSupabaseClient()
-  const { getStreamUrl } = useAlbum()
+  const { getCachedCoverUrl } = useAlbum()
   const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 
   const pageSize = 12
@@ -42,15 +42,12 @@ export const useDiscover = () => {
 
     if (error) throw error
 
-    // Load avatar URLs from keys
+    // Load avatar URLs from keys (using cache)
     const artists = (data || []) as any[]
     for (const artist of artists) {
       if (artist.avatar_key) {
-        try {
-          artist.avatar_url = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar:', e)
-        }
+        const url = await getCachedCoverUrl(artist.avatar_key)
+        if (url) artist.avatar_url = url
       }
     }
 
@@ -110,14 +107,11 @@ export const useDiscover = () => {
     const releasesResult = albums.slice(0, 10) as Album[]
     const covers: Record<string, string> = {}
 
-    // Load cover URLs
+    // Load cover URLs (using cache)
     for (const album of releasesResult) {
       if (album.cover_key) {
-        try {
-          covers[album.id] = await getStreamUrl(album.cover_key)
-        } catch (e) {
-          console.error('Failed to load cover:', e)
-        }
+        const url = await getCachedCoverUrl(album.cover_key)
+        if (url) covers[album.id] = url
       } else if (album.cover_url) {
         covers[album.id] = album.cover_url
       }
@@ -142,15 +136,12 @@ export const useDiscover = () => {
 
     if (error) throw error
 
-    // Load avatar URLs from keys
+    // Load avatar URLs from keys (using cache)
     const artists = (data || []) as any[]
     for (const artist of artists) {
       if (artist.avatar_key) {
-        try {
-          artist.avatar_url = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar:', e)
-        }
+        const url = await getCachedCoverUrl(artist.avatar_key)
+        if (url) artist.avatar_url = url
       }
     }
 
@@ -172,15 +163,12 @@ export const useDiscover = () => {
 
     if (error) throw error
 
-    // Load avatar URLs from keys
+    // Load avatar URLs from keys (using cache)
     const artists = (data || []) as any[]
     for (const artist of artists) {
       if (artist.avatar_key) {
-        try {
-          artist.avatar_url = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar:', e)
-        }
+        const url = await getCachedCoverUrl(artist.avatar_key)
+        if (url) artist.avatar_url = url
       }
     }
 

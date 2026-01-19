@@ -9,6 +9,8 @@ export interface RecentlyPlayedTrack {
   albumSlug: string
   coverKey: string | null
   coverUrl: string | null
+  audioKey: string | null
+  duration: number
   playedAt: string
 }
 
@@ -22,7 +24,7 @@ const MAX_RECENT_SEARCHES = 5
 
 export const useRecentActivity = () => {
   const user = useSupabaseUser()
-  const { getStreamUrl } = useAlbum()
+  const { getCachedCoverUrl } = useAlbum()
 
   // ===== RECENTLY PLAYED =====
 
@@ -41,14 +43,11 @@ export const useRecentActivity = () => {
         query: { limit },
       })
 
-      // Load cover URLs
+      // Load cover URLs (using cache)
       for (const track of data) {
         if (track.coverKey && !track.coverUrl) {
-          try {
-            track.coverUrl = await getStreamUrl(track.coverKey)
-          } catch (e) {
-            // Skip failed covers
-          }
+          const url = await getCachedCoverUrl(track.coverKey)
+          if (url) track.coverUrl = url
         }
       }
 

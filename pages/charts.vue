@@ -231,7 +231,7 @@
 </template>
 
 <script setup lang="ts">
-const { getStreamUrl, getCachedCoverUrl } = useAlbum()
+const { getCachedCoverUrl } = useAlbum()
 const { setQueue } = usePlayer()
 
 // Client-side cache for chart data (persists across navigation)
@@ -330,15 +330,12 @@ const loadImages = async () => {
     })
   )
 
-  // Load avatars for artists (parallel)
+  // Load avatars for artists (parallel, using cache)
   await Promise.all(
     charts.value.artists.map(async (artist) => {
       if (artist.avatar_key && !artistAvatars.value[artist.id]) {
-        try {
-          artistAvatars.value[artist.id] = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          // Ignore avatar load errors
-        }
+        const url = await getCachedCoverUrl(artist.avatar_key)
+        if (url) artistAvatars.value[artist.id] = url
       }
     })
   )

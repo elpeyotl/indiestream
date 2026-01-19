@@ -746,6 +746,54 @@ export const usePlayer = () => {
     }
   }
 
+  // Set queue from external source (e.g., recently played, charts)
+  // Tracks should have audioKey for lazy URL fetching
+  const setQueue = async (
+    tracks: Array<{
+      id: string
+      title: string
+      artist: string
+      artistSlug: string
+      albumTitle: string
+      albumSlug: string
+      coverUrl: string | null
+      duration: number
+      audioKey: string
+    }>,
+    startIndex = 0
+  ) => {
+    initAudio()
+    if (!audio || !tracks.length) return
+
+    // Initialize audio analyser on first play
+    initAudioAnalyser()
+
+    // Filter tracks with audio keys
+    const playableTracks = tracks.filter(t => t.audioKey)
+    if (playableTracks.length === 0) return
+
+    // Build queue with audioKey for lazy loading
+    state.queue = playableTracks.map(t => ({
+      id: t.id,
+      title: t.title,
+      artist: t.artist,
+      artistSlug: t.artistSlug,
+      albumTitle: t.albumTitle,
+      albumSlug: t.albumSlug,
+      coverUrl: t.coverUrl,
+      audioUrl: '', // Will be lazily loaded
+      audioKey: t.audioKey,
+      duration: t.duration,
+    }))
+
+    state.queueIndex = Math.min(startIndex, state.queue.length - 1)
+
+    // Play the starting track
+    if (state.queue.length > 0) {
+      await playFromQueue(state.queueIndex)
+    }
+  }
+
   // Add track(s) to play next - inserts after current track
   const addNextInQueue = async (track: PlayerTrack | PlayerTrack[]) => {
     const tracks = Array.isArray(track) ? track : [track]
@@ -852,6 +900,7 @@ export const usePlayer = () => {
     playFromQueue,
     playTrackFromLibrary,
     playPlaylist,
+    setQueue,
     addNextInQueue,
     addToQueue,
     isInQueue,

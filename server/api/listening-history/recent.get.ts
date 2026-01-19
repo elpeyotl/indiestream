@@ -10,6 +10,8 @@ interface RecentlyPlayedTrack {
   albumSlug: string
   coverKey: string | null
   coverUrl: string | null
+  audioKey: string | null
+  duration: number
   playedAt: string
 }
 
@@ -34,6 +36,8 @@ export default defineEventHandler(async (event): Promise<RecentlyPlayedTrack[]> 
       tracks!inner (
         id,
         title,
+        audio_key,
+        duration_seconds,
         albums!inner (
           id,
           title,
@@ -83,6 +87,8 @@ export default defineEventHandler(async (event): Promise<RecentlyPlayedTrack[]> 
       albumSlug: album?.slug || '',
       coverKey: album?.cover_key || null,
       coverUrl: album?.cover_url || null,
+      audioKey: track?.audio_key || null,
+      duration: track?.duration_seconds || 0,
       playedAt: item.listened_at,
     })
 

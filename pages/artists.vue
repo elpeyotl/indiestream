@@ -40,54 +40,16 @@
     <template v-else>
       <!-- Artists Grid -->
       <div v-if="artists.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-        <NuxtLink
+        <ArtistCard
           v-for="artist in artists"
           :key="artist.id"
-          :to="`/${artist.slug}`"
-          class="group"
-        >
-          <div class="relative w-full pb-[100%] rounded-xl overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-all group-hover:ring-2 group-hover:ring-violet-500/50">
-            <div class="absolute inset-0">
-              <img
-                v-if="artist.avatar_url"
-                v-fade-image
-                :src="artist.avatar_url"
-                :alt="artist.name"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-              />
-              <div
-                v-else
-                class="w-full h-full flex items-center justify-center"
-                :style="{ background: `linear-gradient(135deg, ${artist.theme_color || '#8B5CF6'} 0%, #c026d3 100%)` }"
-              >
-                <span class="text-5xl font-bold text-white">{{ artist.name.charAt(0) }}</span>
-              </div>
-            </div>
-          </div>
-          <h3 class="font-semibold text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
-            {{ artist.name }}
-          </h3>
-          <div class="flex items-center gap-2 text-sm text-zinc-500">
-            <span>Artist</span>
-            <UIcon
-              v-if="artist.is_verified"
-              name="i-heroicons-check-badge"
-              class="w-4 h-4 text-violet-400"
-            />
-          </div>
-          <div v-if="artist.genres?.length" class="flex flex-wrap gap-1 mt-2">
-            <UBadge
-              v-for="genre in artist.genres.slice(0, 2)"
-              :key="genre"
-              color="gray"
-              variant="soft"
-              size="xs"
-            >
-              {{ genre }}
-            </UBadge>
-          </div>
-        </NuxtLink>
+          :artist="artist"
+          :loading="loadingPlayId === artist.id"
+          large
+          rounded
+          show-genres
+          @play="playArtist"
+        />
       </div>
 
       <!-- Empty State -->
@@ -120,10 +82,12 @@
 import type { Band } from '~/composables/useBand'
 
 const client = useSupabaseClient()
-const { getStreamUrl } = useAlbum()
+const { getCachedCoverUrl } = useAlbum()
+const { setQueue } = usePlayer()
 
 const loading = ref(true)
 const loadingMore = ref(false)
+const loadingPlayId = ref<string | null>(null)
 const artists = ref<Band[]>([])
 const searchQuery = ref('')
 const selectedGenre = ref<{ label: string; value: string } | null>(null)
@@ -159,6 +123,52 @@ const debouncedSearch = () => {
 const clearSearch = () => {
   searchQuery.value = ''
   loadArtists(true)
+}
+
+// Play random tracks from an artist
+const playArtist = async (artist: Band) => {
+  if (loadingPlayId.value) return
+  loadingPlayId.value = artist.id
+
+  try {
+    // Fetch random tracks from this artist
+    const tracks = await $fetch<Array<{
+      id: string
+      title: string
+      audioKey: string
+      duration: number
+      albumTitle: string
+      albumSlug: string
+      coverKey: string | null
+    }>>(`/api/artists/${artist.id}/tracks`, {
+      query: { shuffle: 'true', limit: 20 },
+    })
+
+    if (!tracks?.length) return
+
+    // Build queue with cover URLs (using cache)
+    const queue = await Promise.all(
+      tracks.map(async (t) => ({
+        id: t.id,
+        title: t.title,
+        artist: artist.name,
+        artistSlug: artist.slug,
+        albumTitle: t.albumTitle,
+        albumSlug: t.albumSlug,
+        coverUrl: await getCachedCoverUrl(t.coverKey),
+        duration: t.duration,
+        audioKey: t.audioKey,
+      }))
+    )
+
+    if (queue.length > 0) {
+      await setQueue(queue, 0)
+    }
+  } catch (e) {
+    console.error('Failed to play artist:', e)
+  } finally {
+    loadingPlayId.value = null
+  }
 }
 
 const loadArtists = async (reset = false) => {
@@ -197,15 +207,12 @@ const loadArtists = async (reset = false) => {
 
     if (error) throw error
 
-    // Load avatar URLs from keys (or use direct URL if no key)
+    // Load avatar URLs from keys (using cache)
     const newArtists = (data || []) as any[]
     for (const artist of newArtists) {
       if (artist.avatar_key) {
-        try {
-          artist.avatar_url = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar:', e)
-        }
+        const url = await getCachedCoverUrl(artist.avatar_key)
+        if (url) artist.avatar_url = url
       }
       // avatar_url from DB is used as fallback if no avatar_key
     }

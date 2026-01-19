@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.18.2] - 2026-01-19
+
+### Added
+- **Play Buttons on Discover Page**: Albums, playlists, and artists now have play button overlays
+  - Clicking play on an album/playlist queues all tracks and starts playback
+  - Clicking play on an artist plays their top tracks shuffled
+  - Play buttons appear on hover (desktop) or always visible (mobile)
+- **Reusable Card Components**:
+  - `ArtistCard.vue`: Artist display with avatar, name, and play button overlay
+  - `PlaylistCard.vue`: Playlist display with two styles (overlay for library, simple for discover)
+- **Artist Tracks API**: New endpoint `/api/artists/[id]/tracks` to fetch all tracks for an artist
+
+### Changed
+- **Discover Page Section Order**: Reordered to prioritize discovery over personalization
+  - New order: New Releases → Featured Playlists → Featured Artists → Recently Played → All Artists
+  - Recently Played moved lower to emphasize new content discovery
+- **Cover URL Caching Optimization**: All pages now use `getCachedCoverUrl` for image loading
+  - Reduces redundant R2 presigned URL API calls
+  - 10-minute client-side cache for cover URLs
+  - Applied to: Discover, Artists, Charts, Library pages
+  - Applied to composables: `useDiscover`, `useRecentActivity`
+
+### Fixed
+- **Admin Artist Verification**: Fixed error when verifying artists (`verified_at` column doesn't exist)
+  - Removed references to non-existent `verified_at` and `verified_by` columns from PATCH endpoint
+
 ## [0.18.1] - 2026-01-19
 
 ### Added

@@ -44,11 +44,6 @@ export default defineEventHandler(async (event) => {
   // Verification status
   if (body.is_verified !== undefined) {
     updates.is_verified = body.is_verified
-    if (body.is_verified) {
-      // Record who verified and when
-      updates.verified_at = new Date().toISOString()
-      updates.verified_by = user.id
-    }
   }
 
   // Featured status
