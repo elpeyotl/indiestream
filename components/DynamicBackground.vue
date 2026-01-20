@@ -2,6 +2,7 @@
   <component
     :is="backgroundComponent"
     v-if="backgroundComponent"
+    :key="currentEffect"
     :audio-data="audioData"
   />
 </template>

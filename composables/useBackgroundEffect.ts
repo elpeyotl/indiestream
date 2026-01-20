@@ -60,7 +60,7 @@ export const useBackgroundEffect = () => {
   })
 
   return {
-    currentEffect: computed(() => currentEffect.value),
+    currentEffect,
     setEffect,
     backgroundOptions,
   }
