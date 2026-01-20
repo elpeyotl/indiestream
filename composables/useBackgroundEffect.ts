@@ -1,4 +1,6 @@
 // Background effect preference composable
+import { ref } from 'vue'
+
 export type BackgroundEffect =
   | 'none'
   | 'particles'
@@ -32,18 +34,23 @@ export const backgroundOptions: BackgroundOption[] = [
 
 const STORAGE_KEY = 'fairstream-background-effect'
 
-export const useBackgroundEffect = () => {
-  // Use Nuxt's useState for proper SSR-safe shared state
-  const currentEffect = useState<BackgroundEffect>('background-effect', () => 'particles')
+// Module-level ref for truly global state that works across Teleports
+// This is client-side only state (localStorage preference), so useState is not needed
+const currentEffect = ref<BackgroundEffect>('particles')
+let initialized = false
 
-  // Load from localStorage on first use (client-side only)
+export const useBackgroundEffect = () => {
+
+  // Load from localStorage on first use (client-side only, once)
   const loadPreference = () => {
     if (import.meta.server) return
+    if (initialized) return
 
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved && backgroundOptions.some(o => o.value === saved)) {
       currentEffect.value = saved as BackgroundEffect
     }
+    initialized = true
   }
 
   // Save preference
@@ -54,7 +61,7 @@ export const useBackgroundEffect = () => {
     }
   }
 
-  // Initialize on mount
+  // Initialize on first mount only
   onMounted(() => {
     loadPreference()
   })
