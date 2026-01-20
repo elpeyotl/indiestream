@@ -40,6 +40,37 @@ export default defineEventHandler(async (event) => {
 
   const ownerMap = new Map((owners || []).map(o => [o.id, o]))
 
+  // Get collaborators for all playlists
+  const playlistIds = (playlists || []).map(p => p.id)
+  const { data: allCollaborators } = playlistIds.length > 0
+    ? await client
+        .from('playlist_collaborators')
+        .select('playlist_id, user_id')
+        .in('playlist_id', playlistIds)
+    : { data: [] }
+
+  // Get profiles for all collaborators
+  const collaboratorUserIds = [...new Set((allCollaborators || []).map(c => c.user_id).filter(Boolean))]
+  const { data: collaboratorProfiles } = collaboratorUserIds.length > 0
+    ? await client
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', collaboratorUserIds)
+    : { data: [] }
+
+  const collaboratorProfileMap = new Map((collaboratorProfiles || []).map(p => [p.id, p]))
+
+  // Group collaborators by playlist
+  const playlistCollaboratorsMap = new Map<string, Array<{ id: string; display_name: string | null }>>()
+  for (const collab of allCollaborators || []) {
+    const profile = collaboratorProfileMap.get(collab.user_id)
+    if (profile) {
+      const existing = playlistCollaboratorsMap.get(collab.playlist_id) || []
+      existing.push({ id: profile.id, display_name: profile.display_name })
+      playlistCollaboratorsMap.set(collab.playlist_id, existing)
+    }
+  }
+
   // Get first 4 tracks for each playlist (for cover mosaic if no cover image)
   const playlistsWithData = await Promise.all(
     (playlists || []).map(async (playlist) => {
@@ -61,6 +92,7 @@ export default defineEventHandler(async (event) => {
       return {
         ...playlist,
         owner: ownerMap.get(playlist.owner_id) || null,
+        collaborators: playlistCollaboratorsMap.get(playlist.id) || [],
         previewTracks: tracks?.map(t => t.track) || [],
       }
     })

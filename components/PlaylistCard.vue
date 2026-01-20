@@ -83,8 +83,8 @@
     <template v-if="!overlay">
       <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ title }}</p>
       <p class="text-sm text-zinc-400 truncate">{{ trackCount }} tracks</p>
-      <p v-if="ownerName" class="text-xs text-zinc-500 truncate">
-        By {{ ownerName }}
+      <p v-if="byLine" class="text-xs text-zinc-500 truncate">
+        {{ byLine }}
       </p>
     </template>
   </NuxtLink>
@@ -101,6 +101,10 @@ interface PlaylistData {
   owner?: {
     display_name?: string | null
   } | null
+  collaborators?: Array<{
+    id: string
+    display_name?: string | null
+  }>
 }
 
 const props = defineProps<{
@@ -122,4 +126,17 @@ const isPublic = computed(() => props.playlist.is_public ?? false)
 const isCurated = computed(() => props.playlist.is_curated ?? false)
 const role = computed(() => props.playlist.role)
 const ownerName = computed(() => props.playlist.owner?.display_name)
+const collaboratorNames = computed(() => {
+  const collabs = props.playlist.collaborators || []
+  return collabs.map(c => c.display_name).filter(Boolean)
+})
+const byLine = computed(() => {
+  const names: string[] = []
+  if (ownerName.value) names.push(ownerName.value)
+  names.push(...collaboratorNames.value)
+  if (names.length === 0) return null
+  if (names.length === 1) return `By ${names[0]}`
+  if (names.length === 2) return `By ${names[0]} & ${names[1]}`
+  return `By ${names[0]} & ${names.length - 1} others`
+})
 </script>

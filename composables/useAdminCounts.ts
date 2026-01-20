@@ -13,6 +13,7 @@ const adminCounts = ref<AdminCounts | null>(null)
 const isLoading = ref(false)
 const isAdmin = ref(false)
 let realtimeChannel: RealtimeChannel | null = null
+let fetchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
 export const useAdminCounts = () => {
   const client = useSupabaseClient()
@@ -22,6 +23,16 @@ export const useAdminCounts = () => {
     if (!adminCounts.value) return 0
     return adminCounts.value.moderation + adminCounts.value.artists + adminCounts.value.reports + adminCounts.value.dmca
   })
+
+  // Debounced fetch to avoid too many API calls during rapid changes
+  const debouncedFetchCounts = () => {
+    if (fetchDebounceTimer) {
+      clearTimeout(fetchDebounceTimer)
+    }
+    fetchDebounceTimer = setTimeout(() => {
+      fetchCounts()
+    }, 500)
+  }
 
   // Fetch counts from API
   const fetchCounts = async () => {
@@ -71,48 +82,77 @@ export const useAdminCounts = () => {
     if (realtimeChannel) return // Already subscribed
 
     realtimeChannel = client
-      .channel('admin-counts')
-      // Track moderation changes
+      .channel('admin-counts-realtime')
+      // Track moderation changes - listen to all track events
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'tracks', filter: 'moderation_status=eq.pending' },
-        () => fetchCounts()
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'tracks' },
+        { event: '*', schema: 'public', table: 'tracks' },
         (payload) => {
-          // Refetch when moderation_status changes
-          if (payload.old?.moderation_status !== payload.new?.moderation_status) {
-            fetchCounts()
+          // Refetch on INSERT (new track) or when moderation_status changes
+          if (payload.eventType === 'INSERT' ||
+              payload.eventType === 'DELETE' ||
+              payload.old?.moderation_status !== payload.new?.moderation_status) {
+            debouncedFetchCounts()
           }
         }
       )
-      // Artist approval changes
+      // Artist approval changes - also refetch all counts on DELETE
+      // because cascaded track deletes won't trigger track events
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bands' },
         (payload) => {
-          // Only care about status changes
+          // Always refetch on DELETE (tracks get cascaded)
+          // Also refetch on INSERT or status changes
           if (payload.eventType === 'INSERT' ||
+              payload.eventType === 'DELETE' ||
               payload.old?.status !== payload.new?.status) {
-            fetchCounts()
+            debouncedFetchCounts()
           }
         }
+      )
+      // Also listen to albums table - deleting album cascades to tracks
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'albums' },
+        () => debouncedFetchCounts()
       )
       // Content report changes
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'content_reports' },
-        () => fetchCounts()
+        (payload) => {
+          if (payload.eventType === 'INSERT' ||
+              payload.eventType === 'DELETE' ||
+              payload.old?.status !== payload.new?.status) {
+            debouncedFetchCounts()
+          }
+        }
       )
       // DMCA request changes
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'dmca_requests' },
-        () => fetchCounts()
+        (payload) => {
+          if (payload.eventType === 'INSERT' ||
+              payload.eventType === 'DELETE' ||
+              payload.old?.status !== payload.new?.status) {
+            debouncedFetchCounts()
+          }
+        }
       )
-      .subscribe()
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[Admin Realtime] Connected to admin counts channel')
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('[Admin Realtime] Subscription error:', err)
+          // Try to reconnect after a delay
+          setTimeout(() => {
+            unsubscribeRealtime()
+            subscribeToRealtime()
+          }, 5000)
+        }
+      })
   }
 
   // Unsubscribe from realtime

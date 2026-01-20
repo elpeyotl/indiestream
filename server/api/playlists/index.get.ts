@@ -80,10 +80,60 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Convert to array and sort by updated_at
-  const playlists = Array.from(playlistMap.values()).sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  )
+  // Get all unique owner IDs to fetch their profiles
+  const ownerIds = [...new Set(Array.from(playlistMap.values()).map(p => p.owner_id).filter(Boolean))]
+
+  // Fetch owner profiles
+  const { data: owners } = ownerIds.length > 0
+    ? await client
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', ownerIds)
+    : { data: [] }
+
+  const ownerMap = new Map((owners || []).map(o => [o.id, o]))
+
+  // Fetch collaborators for all playlists
+  const playlistIds = Array.from(playlistMap.keys())
+  const { data: allCollaborators } = playlistIds.length > 0
+    ? await client
+        .from('playlist_collaborators')
+        .select('playlist_id, user_id')
+        .in('playlist_id', playlistIds)
+    : { data: [] }
+
+  // Get profiles for all collaborators
+  const collaboratorUserIds = [...new Set((allCollaborators || []).map(c => c.user_id).filter(Boolean))]
+  const { data: collaboratorProfiles } = collaboratorUserIds.length > 0
+    ? await client
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', collaboratorUserIds)
+    : { data: [] }
+
+  const collaboratorProfileMap = new Map((collaboratorProfiles || []).map(p => [p.id, p]))
+
+  // Group collaborators by playlist
+  const playlistCollaboratorsMap = new Map<string, Array<{ id: string; display_name: string | null }>>()
+  for (const collab of allCollaborators || []) {
+    const profile = collaboratorProfileMap.get(collab.user_id)
+    if (profile) {
+      const existing = playlistCollaboratorsMap.get(collab.playlist_id) || []
+      existing.push({ id: profile.id, display_name: profile.display_name })
+      playlistCollaboratorsMap.set(collab.playlist_id, existing)
+    }
+  }
+
+  // Convert to array, add owner info, and sort by updated_at
+  const playlists = Array.from(playlistMap.values())
+    .map(playlist => ({
+      ...playlist,
+      owner: ownerMap.get(playlist.owner_id) || null,
+      collaborators: playlistCollaboratorsMap.get(playlist.id) || [],
+    }))
+    .sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    )
 
   return playlists
 })
