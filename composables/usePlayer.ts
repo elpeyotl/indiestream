@@ -134,6 +134,7 @@ const preloadNextTrack = async (getStreamUrl: (key: string) => Promise<string>) 
   if (import.meta.server) return
   if (!preloadAudio) {
     preloadAudio = new Audio()
+    preloadAudio.crossOrigin = 'anonymous' // Required for CORS
     preloadAudio.preload = 'auto'
     preloadAudio.volume = 0 // Silent - just for preloading
   }
@@ -237,6 +238,9 @@ export const usePlayer = () => {
     return 'preview'
   }
 
+  // Track if we've already triggered the 75% preload for current track
+  let preloadTriggeredAt75 = false
+
   // Reset stream tracking for new track
   const resetStreamTracking = async (trackId?: string) => {
     state.streamRecorded = false
@@ -288,9 +292,6 @@ export const usePlayer = () => {
       state.isPlaying = false
     }
   }
-
-  // Track if we've already triggered the 75% preload for current track
-  let preloadTriggeredAt75 = false
 
   // Check if we should preload next track (at 75% of current track)
   const checkPreloadTrigger = () => {
