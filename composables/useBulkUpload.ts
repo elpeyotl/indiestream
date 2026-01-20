@@ -138,7 +138,7 @@ export const useBulkUpload = () => {
       })
 
       // Find the CSV file (handles nested folders)
-      let csvFile: import('jszip').JSZipObject | null = null
+      let csvFile: any = null
       let csvFileName = ''
       let rootPrefix = '' // Track if files are in a nested folder
 
