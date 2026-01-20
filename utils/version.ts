@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.18.0'
+export const APP_VERSION = '0.18.5'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,54 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.18.5',
+    date: '2026-01-20',
+    changes: [
+      { type: 'fixed', description: 'Notification bell no longer conflicts with Nuxt UI toast system' },
+      { type: 'fixed', description: 'Bell icon now always visible for logged-in users' },
+      { type: 'fixed', description: 'Force-fetch notifications on bell click for fresh data' },
+      { type: 'fixed', description: 'Duplicate prevention for realtime notifications' },
+    ],
+  },
+  {
+    version: '0.18.4',
+    date: '2026-01-19',
+    changes: [
+      { type: 'added', description: 'Deployment Strategy Documentation with go-live plan and invite-only beta system' },
+      { type: 'added', description: 'Complete Documentation Index: All 12 docs accessible from /docs page' },
+    ],
+  },
+  {
+    version: '0.18.3',
+    date: '2026-01-19',
+    changes: [
+      { type: 'added', description: 'Playlist Collaborator User Search with autocomplete dropdown' },
+      { type: 'added', description: 'Collaborator Notifications when added to playlists' },
+      { type: 'added', description: 'Searchable Genre Picker on artist settings page' },
+      { type: 'changed', description: 'Admin Tab Lazy Loading for faster initial page loads' },
+    ],
+  },
+  {
+    version: '0.18.2',
+    date: '2026-01-19',
+    changes: [
+      { type: 'added', description: 'Play Buttons on Discover Page for albums, playlists, and artists' },
+      { type: 'added', description: 'ArtistCard and PlaylistCard reusable components' },
+      { type: 'added', description: 'Artist Tracks API endpoint' },
+      { type: 'changed', description: 'Discover Page section order prioritizes discovery over personalization' },
+      { type: 'changed', description: 'Cover URL caching optimization reduces redundant API calls' },
+      { type: 'fixed', description: 'Admin Artist Verification error with verified_at column' },
+    ],
+  },
+  {
+    version: '0.18.1',
+    date: '2026-01-19',
+    changes: [
+      { type: 'added', description: 'Featured Playlists System with admin management' },
+      { type: 'added', description: 'Featured playlists displayed on Discover page' },
+    ],
+  },
   {
     version: '0.18.0',
     date: '2026-01-19',
