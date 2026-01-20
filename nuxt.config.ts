@@ -172,4 +172,11 @@ export default defineNuxtConfig({
       appUrl: process.env.APP_URL || 'https://fairstream.fm',
     },
   },
+
+  // Vite config for jszip dynamic import
+  vite: {
+    optimizeDeps: {
+      include: ['jszip'],
+    },
+  },
 })
