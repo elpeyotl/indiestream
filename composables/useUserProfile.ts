@@ -2,7 +2,7 @@
 // Uses useState for SSR compatibility
 
 // Cache configuration
-const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
 interface CacheEntry<T> {
   data: T

@@ -3,7 +3,7 @@ import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
 
 // Cache configuration
-const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
 interface CacheEntry<T> {
   data: T
@@ -42,14 +42,16 @@ export const useDiscover = () => {
 
     if (error) throw error
 
-    // Load avatar URLs from keys (using cache)
+    // Load avatar URLs from keys (using cache) - parallel fetch
     const artists = (data || []) as any[]
-    for (const artist of artists) {
-      if (artist.avatar_key) {
-        const url = await getCachedCoverUrl(artist.avatar_key)
-        if (url) artist.avatar_url = url
-      }
-    }
+    await Promise.all(
+      artists.map(async (artist) => {
+        if (artist.avatar_key) {
+          const url = await getCachedCoverUrl(artist.avatar_key)
+          if (url) artist.avatar_url = url
+        }
+      })
+    )
 
     const result = artists as Band[]
     featuredArtistsCache = { data: result, timestamp: Date.now() }
@@ -107,15 +109,17 @@ export const useDiscover = () => {
     const releasesResult = albums.slice(0, 10) as Album[]
     const covers: Record<string, string> = {}
 
-    // Load cover URLs (using cache)
-    for (const album of releasesResult) {
-      if (album.cover_key) {
-        const url = await getCachedCoverUrl(album.cover_key)
-        if (url) covers[album.id] = url
-      } else if (album.cover_url) {
-        covers[album.id] = album.cover_url
-      }
-    }
+    // Load cover URLs (using cache) - parallel fetch
+    await Promise.all(
+      releasesResult.map(async (album) => {
+        if (album.cover_key) {
+          const url = await getCachedCoverUrl(album.cover_key)
+          if (url) covers[album.id] = url
+        } else if (album.cover_url) {
+          covers[album.id] = album.cover_url
+        }
+      })
+    )
 
     const result = { albums: releasesResult, covers }
     newReleasesCache = { data: result, timestamp: Date.now() }
@@ -136,14 +140,16 @@ export const useDiscover = () => {
 
     if (error) throw error
 
-    // Load avatar URLs from keys (using cache)
+    // Load avatar URLs from keys (using cache) - parallel fetch
     const artists = (data || []) as any[]
-    for (const artist of artists) {
-      if (artist.avatar_key) {
-        const url = await getCachedCoverUrl(artist.avatar_key)
-        if (url) artist.avatar_url = url
-      }
-    }
+    await Promise.all(
+      artists.map(async (artist) => {
+        if (artist.avatar_key) {
+          const url = await getCachedCoverUrl(artist.avatar_key)
+          if (url) artist.avatar_url = url
+        }
+      })
+    )
 
     const result = {
       artists: artists as Band[],
@@ -163,14 +169,16 @@ export const useDiscover = () => {
 
     if (error) throw error
 
-    // Load avatar URLs from keys (using cache)
+    // Load avatar URLs from keys (using cache) - parallel fetch
     const artists = (data || []) as any[]
-    for (const artist of artists) {
-      if (artist.avatar_key) {
-        const url = await getCachedCoverUrl(artist.avatar_key)
-        if (url) artist.avatar_url = url
-      }
-    }
+    await Promise.all(
+      artists.map(async (artist) => {
+        if (artist.avatar_key) {
+          const url = await getCachedCoverUrl(artist.avatar_key)
+          if (url) artist.avatar_url = url
+        }
+      })
+    )
 
     return {
       artists: artists as Band[],

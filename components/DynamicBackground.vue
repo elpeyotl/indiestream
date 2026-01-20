@@ -7,16 +7,18 @@
 </template>
 
 <script setup lang="ts">
-import type { Component } from 'vue'
-import ParticleBackground from '~/components/ParticleBackground.vue'
-import GradientOrbsBackground from '~/components/backgrounds/GradientOrbsBackground.vue'
-import NoiseBackground from '~/components/backgrounds/NoiseBackground.vue'
-import BokehBackground from '~/components/backgrounds/BokehBackground.vue'
-import ConstellationBackground from '~/components/backgrounds/ConstellationBackground.vue'
-import VinylGroovesBackground from '~/components/backgrounds/VinylGroovesBackground.vue'
-import EqualizerBackground from '~/components/backgrounds/EqualizerBackground.vue'
-import TripBackground from '~/components/backgrounds/TripBackground.vue'
-import TunnelBackground from '~/components/backgrounds/TunnelBackground.vue'
+import { defineAsyncComponent, type Component } from 'vue'
+
+// Lazy-load all background components to reduce initial bundle size
+const ParticleBackground = defineAsyncComponent(() => import('~/components/ParticleBackground.vue'))
+const GradientOrbsBackground = defineAsyncComponent(() => import('~/components/backgrounds/GradientOrbsBackground.vue'))
+const NoiseBackground = defineAsyncComponent(() => import('~/components/backgrounds/NoiseBackground.vue'))
+const BokehBackground = defineAsyncComponent(() => import('~/components/backgrounds/BokehBackground.vue'))
+const ConstellationBackground = defineAsyncComponent(() => import('~/components/backgrounds/ConstellationBackground.vue'))
+const VinylGroovesBackground = defineAsyncComponent(() => import('~/components/backgrounds/VinylGroovesBackground.vue'))
+const EqualizerBackground = defineAsyncComponent(() => import('~/components/backgrounds/EqualizerBackground.vue'))
+const TripBackground = defineAsyncComponent(() => import('~/components/backgrounds/TripBackground.vue'))
+const TunnelBackground = defineAsyncComponent(() => import('~/components/backgrounds/TunnelBackground.vue'))
 
 const props = defineProps<{
   audioData?: Uint8Array | null
