@@ -1,4 +1,8 @@
 // Band management composable for Fairstream
+import type { Database, Band as DBBand, BandInsert, BandUpdate } from '~/types/database'
+
+// Re-export Band type from database types for backwards compatibility
+export type Band = DBBand
 
 // Cache configuration
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
@@ -19,83 +23,15 @@ const isCacheValid = <T>(entry: CacheEntry<T> | undefined): entry is CacheEntry<
   return Date.now() - entry.timestamp < CACHE_TTL_MS
 }
 
-export interface Band {
-  id: string
-  owner_id: string
-  name: string
-  slug: string
-  tagline: string | null
-  bio: string | null
-  location: string | null
-  website: string | null
-  avatar_url: string | null
-  avatar_key: string | null
-  banner_url: string | null
-  banner_key: string | null
-  theme_color: string
-  genres: string[]
-  is_verified: boolean
-  status: 'pending' | 'active' | 'suspended' | 'removed'
-  total_streams: number
-  total_earnings_cents: number
-  follower_count: number
-  created_at: string
-  updated_at: string
-  // Social links
-  instagram: string | null
-  twitter: string | null
-  facebook: string | null
-  youtube: string | null
-  spotify: string | null
-  soundcloud: string | null
-  bandcamp: string | null
-  tiktok: string | null
+// Use generated types for insert/update, keeping backwards-compatible aliases
+export type CreateBandInput = Omit<BandInsert, 'owner_id'> & {
+  // owner_id is set automatically from current user
 }
 
-export interface CreateBandInput {
-  name: string
-  slug: string
-  tagline?: string
-  bio?: string
-  location?: string
-  genres?: string[]
-  // Social links
-  website?: string
-  instagram?: string
-  twitter?: string
-  facebook?: string
-  youtube?: string
-  spotify?: string
-  soundcloud?: string
-  bandcamp?: string
-  tiktok?: string
-}
-
-export interface UpdateBandInput {
-  name?: string
-  tagline?: string
-  bio?: string
-  location?: string
-  website?: string
-  avatar_url?: string
-  avatar_key?: string
-  banner_url?: string
-  banner_key?: string
-  theme_color?: string
-  genres?: string[]
-  // Social links
-  instagram?: string
-  twitter?: string
-  facebook?: string
-  youtube?: string
-  spotify?: string
-  soundcloud?: string
-  bandcamp?: string
-  tiktok?: string
-}
+export type UpdateBandInput = BandUpdate
 
 export const useBand = () => {
-  const supabase = useSupabaseClient()
+  const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()
 
   // Get all bands owned by the current user
