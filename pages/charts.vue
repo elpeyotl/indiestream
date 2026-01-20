@@ -357,8 +357,8 @@ const playTrack = async (track: any) => {
   loadingPlayId.value = track.id
 
   try {
-    // Filter tracks that have audio keys (prefer streaming_audio_key, fallback to audio_key)
-    const playableTracks = charts.value.tracks.filter(t => t.streaming_audio_key || t.audio_key)
+    // Filter tracks that have streaming audio keys
+    const playableTracks = charts.value.tracks.filter(t => t.streaming_audio_key)
 
     if (playableTracks.length === 0) return
 
@@ -372,7 +372,7 @@ const playTrack = async (track: any) => {
       albumSlug: t.album?.slug || '',
       coverUrl: trackCovers.value[t.id] || null,
       duration: t.duration || 0,
-      audioKey: t.streaming_audio_key || t.audio_key,
+      audioKey: t.streaming_audio_key,
     }))
 
     const trackIndex = playableTracks.findIndex(t => t.id === track.id)

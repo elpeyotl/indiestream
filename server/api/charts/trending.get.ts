@@ -87,7 +87,6 @@ export default defineEventHandler(async (event) => {
         title,
         duration_seconds,
         track_number,
-        audio_key,
         streaming_audio_key,
         album:albums!album_id (
           id,
@@ -206,7 +205,6 @@ async function getAllTimeCharts(client: any, limit: number) {
       duration_seconds,
       track_number,
       stream_count,
-      audio_key,
       streaming_audio_key,
       album:albums!album_id (
         id,
