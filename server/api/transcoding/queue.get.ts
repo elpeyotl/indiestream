@@ -63,8 +63,23 @@ export default defineEventHandler(async (event) => {
       .in('id', trackIds)
   }
 
+  // Filter out jobs with missing required fields
+  const validJobs = jobs?.filter((job) => {
+    const track = job.tracks
+    if (!track.original_audio_key || !track.original_format || !track.band_id || !track.album_id) {
+      console.warn(`Skipping job ${job.id} - missing required track data:`, {
+        original_audio_key: !!track.original_audio_key,
+        original_format: !!track.original_format,
+        band_id: !!track.band_id,
+        album_id: !!track.album_id,
+      })
+      return false
+    }
+    return true
+  }) || []
+
   return {
-    jobs: jobs?.map((job) => ({
+    jobs: validJobs.map((job) => ({
       jobId: job.id,
       trackId: job.track_id,
       trackTitle: job.tracks.title,
@@ -73,6 +88,6 @@ export default defineEventHandler(async (event) => {
       bandId: job.tracks.band_id,
       albumId: job.tracks.album_id,
       attempts: job.attempts,
-    })) || [],
+    })),
   }
 })

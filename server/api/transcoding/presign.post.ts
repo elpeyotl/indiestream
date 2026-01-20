@@ -23,11 +23,18 @@ export default defineEventHandler(async (event) => {
   const { trackId, originalAudioKey, bandId, albumId } = body
 
   if (!trackId || !originalAudioKey || !bandId || !albumId) {
+    console.error('Missing required fields for presign:', { trackId, originalAudioKey: !!originalAudioKey, bandId, albumId })
     throw createError({ statusCode: 400, statusMessage: 'Missing required fields' })
   }
 
   // Generate download URL for original file (2 hour expiry for large files)
-  const downloadUrl = await getDownloadUrl(originalAudioKey, 7200)
+  let downloadUrl: string
+  try {
+    downloadUrl = await getDownloadUrl(originalAudioKey, 7200)
+  } catch (e: any) {
+    console.error('Failed to generate download URL for key:', originalAudioKey, e)
+    throw createError({ statusCode: 500, statusMessage: `Failed to generate download URL: ${e.message}` })
+  }
 
   // Generate upload URLs for dual-format transcoding:
   // 1. AAC 256kbps for standard streaming (streaming/ bucket)
