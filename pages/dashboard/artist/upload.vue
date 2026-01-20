@@ -61,6 +61,8 @@
         @upload="startUpload"
         @open-deezer="openDeezerModal"
         @search-musicbrainz="searchMusicBrainz"
+        @generate-isrc="generateIsrc"
+        @release-isrc="releaseIsrc"
       />
 
       <!-- Step 3: Success -->
@@ -261,6 +263,78 @@ const searchMusicBrainz = async (trackIndex: number) => {
   }
 }
 
+// Generate platform ISRC for a track
+const generateIsrc = async (trackIndex: number) => {
+  const track = state.value.tracks[trackIndex]
+  if (!track || !state.value.selectedBand) return
+
+  track.generatingIsrc = true
+
+  try {
+    const result = await $fetch<{ isrc: string; platformAssigned: boolean }>('/api/tracks/generate-isrc', {
+      method: 'POST',
+      body: {
+        bandId: state.value.selectedBand.id,
+        // If track already has an ID (edit mode), pass it
+        trackId: track.id || undefined,
+      },
+    })
+
+    track.isrc = result.isrc
+    track.isrc_platform_assigned = result.platformAssigned
+
+    toast.add({
+      title: 'ISRC generated',
+      description: `Assigned: ${result.isrc}`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+    })
+  } catch (e: any) {
+    toast.add({
+      title: 'Failed to generate ISRC',
+      description: e.data?.message || e.message || 'Please try again',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-triangle',
+    })
+  } finally {
+    track.generatingIsrc = false
+  }
+}
+
+// Release a platform-assigned ISRC so user can enter their own
+const releaseIsrc = async (trackIndex: number) => {
+  const track = state.value.tracks[trackIndex]
+  if (!track || !track.isrc_platform_assigned) return
+
+  // If track has an ID (saved to DB), call API to release
+  if (track.id) {
+    try {
+      await $fetch('/api/tracks/release-isrc', {
+        method: 'POST',
+        body: { trackId: track.id },
+      })
+    } catch (e: any) {
+      toast.add({
+        title: 'Failed to release ISRC',
+        description: e.data?.message || e.message || 'Please try again',
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle',
+      })
+      return
+    }
+  }
+
+  // Clear local state
+  track.isrc = ''
+  track.isrc_platform_assigned = false
+
+  toast.add({
+    title: 'ISRC released',
+    description: 'You can now enter your own ISRC code',
+    color: 'green',
+  })
+}
+
 // Upload (handles both create and edit modes)
 const startUpload = async () => {
   // Prevent double-click / double submission
@@ -348,6 +422,7 @@ const startUpload = async () => {
               is_cover: track.is_cover,
               spotify_track_id: track.spotify_track_id || undefined,
               musicbrainz_work_id: track.musicbrainz_work_id || undefined,
+              isrc_platform_assigned: track.isrc_platform_assigned || undefined,
             })
 
             // Create track credits
@@ -389,7 +464,42 @@ const startUpload = async () => {
         }
       }
 
-      toast.add({ title: 'Changes saved!', description: `"${state.value.albumForm.title}" has been updated`, color: 'green', icon: 'i-heroicons-check-circle' })
+      // Check if this was a draft that needs to be published
+      const wasUnpublished = !state.value.createdAlbum?.is_published
+      const allTracksUploaded = state.value.tracks.every(t => t.uploaded || t.id)
+
+      if (wasUnpublished && allTracksUploaded) {
+        // Publish the album (triggers moderation)
+        await updateAlbum(album.id, {
+          is_published: true,
+          rights_confirmed: true,
+          rights_confirmed_at: new Date().toISOString(),
+          rights_confirmed_by: user.value?.id,
+          original_content_confirmed: originalContentConfirmed,
+          p_line: state.value.albumForm.p_line || `℗ ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
+          c_line: state.value.albumForm.c_line || `© ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
+        })
+
+        // Notify followers of new release
+        $fetch(`/api/albums/${album.id}/notify-followers`, { method: 'POST' })
+          .then((result: any) => {
+            if (result.notified > 0) {
+              console.log(`[New Release] Notified ${result.notified} followers`)
+            }
+          })
+          .catch((err) => {
+            console.error('Failed to notify followers:', err)
+          })
+
+        if (moderationEnabled.value) {
+          toast.add({ title: 'Upload complete!', description: `"${state.value.albumForm.title}" is pending review`, color: 'green', icon: 'i-heroicons-check-circle' })
+        } else {
+          toast.add({ title: 'Release published!', description: `"${state.value.albumForm.title}" is now live`, color: 'green', icon: 'i-heroicons-check-circle' })
+        }
+      } else {
+        toast.add({ title: 'Changes saved!', description: `"${state.value.albumForm.title}" has been updated`, color: 'green', icon: 'i-heroicons-check-circle' })
+      }
+
       state.value.step = 3
 
     } else {
@@ -425,6 +535,7 @@ const startUpload = async () => {
             is_cover: track.is_cover,
             spotify_track_id: track.spotify_track_id || undefined,
             musicbrainz_work_id: track.musicbrainz_work_id || undefined,
+            isrc_platform_assigned: track.isrc_platform_assigned || undefined,
           })
 
           // Create track credits

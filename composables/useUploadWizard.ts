@@ -25,6 +25,9 @@ export interface TrackUpload {
   spotify_track_id: string
   musicbrainz_work_id: string
   credits: TrackCredit[]
+  // Platform ISRC
+  isrc_platform_assigned: boolean
+  generatingIsrc: boolean
   // UI state
   showCredits: boolean
   fetchingIsrc: boolean
@@ -208,6 +211,8 @@ export const useUploadWizard = () => {
       spotify_track_id: '',
       musicbrainz_work_id: '',
       credits: [],
+      isrc_platform_assigned: false,
+      generatingIsrc: false,
       showCredits: false,
       fetchingIsrc: false,
       fetchingIswc: false,
@@ -301,6 +306,8 @@ export const useUploadWizard = () => {
           name: c.name,
           ipi_number: c.ipi_number || '',
         })),
+        isrc_platform_assigned: track.isrc_platform_assigned || false,
+        generatingIsrc: false,
         showCredits: credits.length > 0,
         fetchingIsrc: false,
         fetchingIswc: false,

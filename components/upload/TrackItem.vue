@@ -100,6 +100,9 @@
             ISRC Code <span class="text-red-400">*</span>
             <span v-if="showErrors && !track.isrc" class="text-red-400 font-normal ml-2">— Required</span>
             <span v-else-if="showErrors && !isrcFormatValid" class="text-red-400 font-normal ml-2">— Invalid format</span>
+            <UBadge v-if="track.isrc_platform_assigned" color="violet" variant="subtle" size="xs" class="ml-2">
+              Platform ISRC
+            </UBadge>
           </label>
           <div class="flex gap-2">
             <UInput
@@ -109,8 +112,32 @@
               class="flex-1 uppercase"
               maxlength="12"
               :color="showErrors && (!track.isrc || !isrcFormatValid) ? 'red' : undefined"
+              :disabled="track.isrc_platform_assigned"
               @update:model-value="handleIsrcInput"
             />
+            <!-- Release platform ISRC button -->
+            <UButton
+              v-if="track.isrc_platform_assigned"
+              color="gray"
+              variant="ghost"
+              size="sm"
+              title="Release platform ISRC to enter your own"
+              @click="$emit('release-isrc')"
+            >
+              <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+            </UButton>
+            <!-- Generate ISRC button -->
+            <UButton
+              v-if="!track.isrc && !track.isrc_platform_assigned"
+              color="violet"
+              variant="outline"
+              size="sm"
+              :loading="track.generatingIsrc"
+              @click="$emit('generate-isrc')"
+            >
+              <UIcon name="i-heroicons-sparkles" class="w-4 h-4 mr-1" />
+              Generate
+            </UButton>
             <UButton
               color="gray"
               variant="outline"
@@ -125,9 +152,11 @@
           <p v-if="track.isrc && !isrcFormatValid" class="text-xs text-red-400 mt-1">
             ISRC must be exactly 12 characters: 2 letters + 3 alphanumeric + 7 digits (e.g., USRC12345678)
           </p>
+          <p v-else-if="track.isrc_platform_assigned" class="text-xs text-zinc-500 mt-1">
+            This is a platform-assigned ISRC. Click <UIcon name="i-heroicons-x-mark" class="w-3 h-3 inline" /> to release and enter your own.
+          </p>
           <p v-else class="text-xs text-zinc-500 mt-1">
-            Don't have an ISRC? Get one from your distributor (DistroKid, TuneCore, CD Baby) or
-            <a href="https://usisrc.org" target="_blank" class="text-violet-400 hover:underline">usisrc.org</a>
+            Don't have an ISRC? Click <span class="text-violet-400">Generate</span> for a free platform-assigned code, or search on Deezer.
           </p>
         </div>
 
@@ -303,6 +332,8 @@ const emit = defineEmits<{
   'paste-credits': []
   'open-deezer': []
   'search-musicbrainz': []
+  'generate-isrc': []
+  'release-isrc': []
 }>()
 
 const { formatFileSize, creditRoles } = useUploadWizard()

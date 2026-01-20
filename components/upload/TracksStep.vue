@@ -73,6 +73,8 @@
         @paste-credits="pasteCredits(index)"
         @open-deezer="$emit('open-deezer', index)"
         @search-musicbrainz="$emit('search-musicbrainz', index)"
+        @generate-isrc="$emit('generate-isrc', index)"
+        @release-isrc="$emit('release-isrc', index)"
       />
     </div>
 
@@ -188,6 +190,8 @@ const emit = defineEmits<{
   'upload': []
   'open-deezer': [trackIndex: number]
   'search-musicbrainz': [trackIndex: number]
+  'generate-isrc': [trackIndex: number]
+  'release-isrc': [trackIndex: number]
 }>()
 
 const {

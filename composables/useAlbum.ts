@@ -19,6 +19,7 @@ export interface Track {
   is_cover: boolean
   spotify_track_id: string | null
   musicbrainz_work_id: string | null
+  isrc_platform_assigned: boolean
   // Moderation
   moderation_status?: string
   moderation_notes?: string | null
@@ -133,6 +134,7 @@ export interface CreateTrackInput {
   is_cover?: boolean
   spotify_track_id?: string
   musicbrainz_work_id?: string
+  isrc_platform_assigned?: boolean
 }
 
 export interface UpdateTrackInput {
