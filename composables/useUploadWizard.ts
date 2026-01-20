@@ -97,6 +97,11 @@ const defaultState = (): UploadWizardState => ({
   editAlbumId: null,
 })
 
+// Audio format validation constants
+const LOSSLESS_MIME_TYPES = ['audio/wav', 'audio/flac', 'audio/aiff', 'audio/x-aiff']
+const LOSSLESS_EXTENSIONS = ['wav', 'flac', 'aif', 'aiff']
+const MAX_AUDIO_FILE_SIZE = 300 * 1024 * 1024 // 300MB
+
 export const useUploadWizard = () => {
   const toast = useToast()
 
@@ -231,10 +236,44 @@ export const useUploadWizard = () => {
     state.value.coverPreview = null
   }
 
+  // Validate audio file format and size
+  const isValidAudioFile = (file: File): { valid: boolean; error?: string } => {
+    // Check MIME type or extension
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    const isLosslessMime = LOSSLESS_MIME_TYPES.includes(file.type)
+    const isLosslessExt = LOSSLESS_EXTENSIONS.includes(ext || '')
+
+    if (!isLosslessMime && !isLosslessExt) {
+      return { valid: false, error: `"${file.name}" is not a lossless format. Please use WAV, FLAC, or AIFF.` }
+    }
+
+    if (file.size > MAX_AUDIO_FILE_SIZE) {
+      return { valid: false, error: `"${file.name}" exceeds 300MB limit.` }
+    }
+
+    return { valid: true }
+  }
+
   // Add audio files as tracks
   const addAudioFiles = (files: File[]) => {
+    const errors: string[] = []
+
     for (const file of files) {
-      state.value.tracks.push(createTrackUpload(file))
+      const validation = isValidAudioFile(file)
+      if (validation.valid) {
+        state.value.tracks.push(createTrackUpload(file))
+      } else {
+        errors.push(validation.error!)
+      }
+    }
+
+    if (errors.length > 0) {
+      toast.add({
+        title: 'Invalid files',
+        description: errors.join('\n'),
+        color: 'red',
+        timeout: 8000,
+      })
     }
   }
 

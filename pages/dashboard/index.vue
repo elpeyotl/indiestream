@@ -117,16 +117,27 @@
       <template #header>
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold text-zinc-100">Your Artist Profiles</h2>
-          <UButton
-            v-if="bands.length > 0"
-            color="violet"
-            variant="soft"
-            size="sm"
-            to="/dashboard/artist/new"
-          >
-            <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
-            New Artist
-          </UButton>
+          <div class="flex items-center gap-2">
+            <UButton
+              color="gray"
+              variant="ghost"
+              size="sm"
+              to="/dashboard/bulk-upload"
+            >
+              <UIcon name="i-heroicons-arrow-up-tray" class="w-4 h-4 mr-1" />
+              Bulk Upload
+            </UButton>
+            <UButton
+              v-if="bands.length > 0"
+              color="violet"
+              variant="soft"
+              size="sm"
+              to="/dashboard/artist/new"
+            >
+              <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
+              New Artist
+            </UButton>
+          </div>
         </div>
       </template>
 
