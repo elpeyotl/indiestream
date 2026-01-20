@@ -49,8 +49,8 @@ interface BulkUploadResults {
   albumsCreated: number
   tracksCreated: number
   errors: string[]
-  createdArtists: { id: string; name: string; slug: string }[]
-  createdAlbums: { id: string; title: string; artistName: string }[]
+  createdArtists: { id: string; name: string; slug: string; avatarKey?: string | null }[]
+  createdAlbums: { id: string; title: string; artistName: string; coverKey?: string | null; artistSlug: string; albumSlug: string }[]
 }
 
 export default defineEventHandler(async (event) => {
@@ -239,14 +239,16 @@ export default defineEventHandler(async (event) => {
     }
 
     let bandId: string
+    let artistSlug: string = artist.slug
 
     try {
       if (artist.action === 'use_existing' && artist.existingId) {
         // Use existing artist
         bandId = artist.existingId
+        // artistSlug stays as artist.slug from CSV
       } else {
         // Create new artist
-        const slug = artist.action === 'create' && artist.existingId
+        artistSlug = artist.action === 'create' && artist.existingId
           ? await generateUniqueSlug(artist.slug)
           : artist.slug
 
@@ -255,7 +257,7 @@ export default defineEventHandler(async (event) => {
         if (artist.avatarPath) {
           const avatarData = await getZipFile(artist.avatarPath)
           if (avatarData) {
-            avatarKey = `avatars/${slug}/avatar.jpg`
+            avatarKey = `avatars/${artistSlug}/avatar.jpg`
             await uploadToR2(avatarKey, avatarData, getContentType(artist.avatarPath))
           }
         }
@@ -265,7 +267,7 @@ export default defineEventHandler(async (event) => {
           .from('bands')
           .insert({
             name: artist.name,
-            slug,
+            slug: artistSlug,
             bio: artist.bio || null,
             location: artist.location || null,
             genres: artist.genres,
@@ -283,7 +285,7 @@ export default defineEventHandler(async (event) => {
 
         bandId = band.id
         results.artistsCreated++
-        results.createdArtists.push({ id: band.id, name: artist.name, slug })
+        results.createdArtists.push({ id: band.id, name: artist.name, slug: artistSlug, avatarKey })
       }
 
       // Process albums for this artist
@@ -335,7 +337,14 @@ export default defineEventHandler(async (event) => {
           }
 
           results.albumsCreated++
-          results.createdAlbums.push({ id: albumRecord.id, title: album.title, artistName: artist.name })
+          results.createdAlbums.push({
+            id: albumRecord.id,
+            title: album.title,
+            artistName: artist.name,
+            coverKey,
+            artistSlug,
+            albumSlug,
+          })
 
           // Process tracks for this album
           for (const track of album.tracks) {

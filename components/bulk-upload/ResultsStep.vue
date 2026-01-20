@@ -62,7 +62,13 @@
             :to="`/dashboard/artist/${artist.id}`"
             class="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
           >
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
+            <img
+              v-if="artist.avatarKey"
+              :src="getImageUrl(artist.avatarKey)"
+              :alt="artist.name"
+              class="w-10 h-10 rounded-lg object-cover"
+            >
+            <div v-else class="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
               <span class="text-white font-bold">{{ artist.name.charAt(0).toUpperCase() }}</span>
             </div>
             <div class="flex-1">
@@ -78,12 +84,19 @@
       <div v-if="state.results?.createdAlbums.length">
         <h3 class="font-medium text-zinc-100 mb-3">Created Albums</h3>
         <div class="space-y-2 max-h-64 overflow-y-auto">
-          <div
+          <NuxtLink
             v-for="album in state.results.createdAlbums"
             :key="album.id"
-            class="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg"
+            :to="`/${album.artistSlug}/${album.albumSlug}`"
+            class="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
           >
-            <div class="w-10 h-10 rounded-lg bg-zinc-700 flex items-center justify-center">
+            <img
+              v-if="album.coverKey"
+              :src="getImageUrl(album.coverKey)"
+              :alt="album.title"
+              class="w-10 h-10 rounded-lg object-cover"
+            >
+            <div v-else class="w-10 h-10 rounded-lg bg-zinc-700 flex items-center justify-center">
               <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-zinc-400" />
             </div>
             <div class="flex-1">
@@ -93,7 +106,7 @@
             <UBadge color="yellow" variant="soft" size="xs">
               Pending Review
             </UBadge>
-          </div>
+          </NuxtLink>
         </div>
         <p class="text-sm text-zinc-500 mt-3">
           <UIcon name="i-heroicons-information-circle" class="w-4 h-4 inline mr-1" />
@@ -129,8 +142,16 @@
 
 <script setup lang="ts">
 const { state, resetBulkUpload } = useBulkUpload()
+const config = useRuntimeConfig()
 
 const startNewImport = () => {
   resetBulkUpload()
+}
+
+// Get public URL for R2 images
+const getImageUrl = (key: string | null | undefined): string => {
+  if (!key) return ''
+  const cdnUrl = config.public.r2CdnUrl || config.public.r2PublicUrl
+  return `${cdnUrl}/${key}`
 }
 </script>
