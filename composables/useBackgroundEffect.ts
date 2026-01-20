@@ -32,11 +32,11 @@ export const backgroundOptions: BackgroundOption[] = [
 
 const STORAGE_KEY = 'fairstream-background-effect'
 
-// Shared state
-const currentEffect = ref<BackgroundEffect>('particles')
-
 export const useBackgroundEffect = () => {
-  // Load from localStorage on first use
+  // Use Nuxt's useState for proper SSR-safe shared state
+  const currentEffect = useState<BackgroundEffect>('background-effect', () => 'particles')
+
+  // Load from localStorage on first use (client-side only)
   const loadPreference = () => {
     if (import.meta.server) return
 

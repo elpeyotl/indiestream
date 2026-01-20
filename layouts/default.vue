@@ -131,94 +131,110 @@
             <!-- Logged In -->
             <template v-else>
               <!-- Notifications Bell -->
-              <UPopover :popper="{ placement: 'bottom-end' }">
-                <UButton
-                  color="gray"
-                  variant="ghost"
-                  class="relative"
-                  @click="handleBellClick"
-                >
-                  <UIcon name="i-heroicons-bell" class="w-5 h-5" />
-                  <span
-                    v-if="unreadCount > 0"
-                    class="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-xs font-bold bg-violet-500 text-white rounded-full px-1"
+              <ResponsivePopover
+                v-model:open="notificationsOpen"
+                title="Notifications"
+                placement="bottom-end"
+                width="w-80"
+              >
+                <template #trigger>
+                  <UButton
+                    color="gray"
+                    variant="ghost"
+                    class="relative"
+                    @click="handleBellClick"
                   >
-                    {{ unreadCount > 9 ? '9+' : unreadCount }}
-                  </span>
-                </UButton>
+                    <UIcon name="i-heroicons-bell" class="w-5 h-5" />
+                    <span
+                      v-if="unreadCount > 0"
+                      class="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-xs font-bold bg-violet-500 text-white rounded-full px-1"
+                    >
+                      {{ unreadCount > 9 ? '9+' : unreadCount }}
+                    </span>
+                  </UButton>
+                </template>
 
-                <template #panel>
-                  <div class="w-80 max-h-96 overflow-hidden bg-zinc-900 rounded-lg border border-zinc-800">
-                    <!-- Header -->
-                    <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
-                      <h3 class="font-semibold text-zinc-100">Notifications</h3>
-                      <UButton
-                        v-if="unreadCount > 0"
-                        color="gray"
-                        variant="ghost"
-                        size="xs"
-                        @click="markAllAsRead"
+                <!-- Desktop: show header inside popover panel -->
+                <div class="hidden md:flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+                  <span class="font-semibold text-zinc-100">Notifications</span>
+                  <UButton
+                    v-if="unreadCount > 0"
+                    color="gray"
+                    variant="ghost"
+                    size="xs"
+                    @click="markAllAsRead"
+                  >
+                    Mark all read
+                  </UButton>
+                </div>
+
+                <!-- Mobile: Mark all read button in content area -->
+                <div v-if="unreadCount > 0" class="md:hidden flex justify-end px-4 pt-2">
+                  <UButton
+                    color="gray"
+                    variant="ghost"
+                    size="xs"
+                    @click="markAllAsRead"
+                  >
+                    Mark all read
+                  </UButton>
+                </div>
+
+                <!-- Notifications List -->
+                <div class="overflow-y-auto max-h-72 md:max-h-72">
+                  <div v-if="notificationsLoading" class="p-4 text-center">
+                    <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin text-zinc-500" />
+                  </div>
+
+                  <div v-else-if="notifications.length === 0" class="p-6 text-center text-zinc-500">
+                    <UIcon name="i-heroicons-bell-slash" class="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>No notifications yet</p>
+                  </div>
+
+                  <div v-else>
+                    <div
+                      v-for="notification in notifications"
+                      :key="notification.id"
+                      class="group relative px-4 py-3 hover:bg-zinc-800/50 active:bg-zinc-800/50 transition-colors border-b border-zinc-800/50 last:border-b-0 cursor-pointer"
+                      :class="{ 'bg-zinc-800/30': !notification.read }"
+                      @click="handleNotificationClick(notification)"
+                    >
+                      <NuxtLink
+                        :to="notification.link || '#'"
+                        class="flex gap-3"
+                        @click="notificationsOpen = false"
                       >
-                        Mark all read
-                      </UButton>
-                    </div>
-
-                    <!-- Notifications List -->
-                    <div class="overflow-y-auto max-h-72">
-                      <div v-if="notificationsLoading" class="p-4 text-center">
-                        <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin text-zinc-500" />
-                      </div>
-
-                      <div v-else-if="notifications.length === 0" class="p-6 text-center text-zinc-500">
-                        <UIcon name="i-heroicons-bell-slash" class="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p>No notifications yet</p>
-                      </div>
-
-                      <div v-else>
-                        <div
-                          v-for="notification in notifications"
-                          :key="notification.id"
-                          class="group relative px-4 py-3 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/50 last:border-b-0 cursor-pointer"
-                          :class="{ 'bg-zinc-800/30': !notification.read }"
-                          @click="handleNotificationClick(notification)"
-                        >
-                          <NuxtLink
-                            :to="notification.link || '#'"
-                            class="flex gap-3"
-                          >
-                            <UIcon
-                              :name="getNotificationIcon(notification.type)"
-                              :class="['w-5 h-5 mt-0.5 flex-shrink-0', getNotificationColor(notification.type)]"
-                            />
-                            <div class="flex-1 min-w-0 pr-6">
-                              <p class="font-medium text-sm text-zinc-100">
-                                {{ notification.title }}
-                              </p>
-                              <p v-if="notification.message" class="text-xs text-zinc-400 mt-0.5 line-clamp-2">
-                                {{ notification.message }}
-                              </p>
-                              <p class="text-xs text-zinc-500 mt-1">
-                                {{ formatTime(notification.created_at) }}
-                              </p>
-                            </div>
-                            <span
-                              v-if="!notification.read"
-                              class="w-2 h-2 bg-violet-500 rounded-full flex-shrink-0 mt-2"
-                            />
-                          </NuxtLink>
-                          <!-- Delete button -->
-                          <button
-                            class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-zinc-700 transition-all text-zinc-400 hover:text-zinc-200"
-                            @click.stop.prevent="deleteNotification(notification.id)"
-                          >
-                            <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
-                          </button>
+                        <UIcon
+                          :name="getNotificationIcon(notification.type)"
+                          :class="['w-5 h-5 mt-0.5 flex-shrink-0', getNotificationColor(notification.type)]"
+                        />
+                        <div class="flex-1 min-w-0 pr-6">
+                          <p class="font-medium text-sm text-zinc-100">
+                            {{ notification.title }}
+                          </p>
+                          <p v-if="notification.message" class="text-xs text-zinc-400 mt-0.5 line-clamp-2">
+                            {{ notification.message }}
+                          </p>
+                          <p class="text-xs text-zinc-500 mt-1">
+                            {{ formatTime(notification.created_at) }}
+                          </p>
                         </div>
-                      </div>
+                        <span
+                          v-if="!notification.read"
+                          class="w-2 h-2 bg-violet-500 rounded-full flex-shrink-0 mt-2"
+                        />
+                      </NuxtLink>
+                      <!-- Delete button -->
+                      <button
+                        class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-zinc-700 transition-all text-zinc-400 hover:text-zinc-200"
+                        @click.stop.prevent="deleteNotification(notification.id)"
+                      >
+                        <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                </template>
-              </UPopover>
+                </div>
+              </ResponsivePopover>
 
               <!-- User Menu Button -->
               <UButton
@@ -527,6 +543,9 @@ const isMobile = breakpoints.smaller("md");
 // User menu state
 const userMenuOpen = ref(false);
 
+// Notifications popover state
+const notificationsOpen = ref(false);
+
 const user = useSupabaseUser();
 const client = useSupabaseClient();
 const { signOut } = useAuth();
@@ -568,8 +587,9 @@ onUnmounted(() => {
   unsubscribeFromRealtime();
 });
 
-// Handle bell click - force fetch notifications to ensure fresh data
+// Handle bell click - open popover and fetch notifications
 const handleBellClick = () => {
+  notificationsOpen.value = true;
   fetchNotifications(true);
 };
 
