@@ -182,6 +182,7 @@ const loadArtists = async (reset = false) => {
     let query = client
       .from('bands')
       .select('id, name, slug, theme_color, avatar_key, avatar_url, total_streams, is_verified, genres')
+      .eq('status', 'active') // Only show approved artists
 
     // Search filter
     if (searchQuery.value.trim()) {
@@ -234,10 +235,11 @@ const loadMore = async () => {
 
 const loadGenres = async () => {
   try {
-    // Get unique genres from all bands
+    // Get unique genres from all active bands
     const { data, error } = await client
       .from('bands')
       .select('genres')
+      .eq('status', 'active')
 
     if (error) throw error
 

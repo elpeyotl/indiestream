@@ -1,6 +1,43 @@
 <template>
   <div>
     <div v-if="band">
+    <!-- Pending Approval Banner (only visible to owner) -->
+    <div
+      v-if="band.status === 'pending' && isOwner"
+      class="bg-amber-500/10 border-b border-amber-500/30 px-4 py-3"
+    >
+      <div class="container mx-auto flex items-center gap-3">
+        <UIcon name="i-heroicons-clock" class="w-5 h-5 text-amber-400 shrink-0" />
+        <div class="flex-1">
+          <p class="text-amber-200 font-medium">Pending Approval</p>
+          <p class="text-amber-300/70 text-sm">
+            Your artist profile is being reviewed. It will be visible to others once approved.
+          </p>
+        </div>
+        <NuxtLink to="/dashboard" class="shrink-0">
+          <UButton color="amber" variant="soft" size="sm">
+            Go to Dashboard
+          </UButton>
+        </NuxtLink>
+      </div>
+    </div>
+
+    <!-- Suspended Banner (only visible to owner) -->
+    <div
+      v-if="band.status === 'suspended' && isOwner"
+      class="bg-red-500/10 border-b border-red-500/30 px-4 py-3"
+    >
+      <div class="container mx-auto flex items-center gap-3">
+        <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-400 shrink-0" />
+        <div class="flex-1">
+          <p class="text-red-200 font-medium">Account Suspended</p>
+          <p class="text-red-300/70 text-sm">
+            This artist profile has been suspended. Please contact support for more information.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Hero Banner -->
     <div class="relative h-72 md:h-96 lg:h-[28rem] overflow-hidden">
       <!-- Banner Image -->
@@ -492,6 +529,11 @@ const avatarImgRef = ref<HTMLImageElement | null>(null)
 const loadingPlayAll = ref(false)
 const isFollowing = ref(false)
 const loadingFollow = ref(false)
+
+// Check if current user is the owner of this artist profile
+const isOwner = computed(() => {
+  return !!user.value && !!band.value && user.value.id === band.value.owner_id
+})
 
 const tabs = [
   { slot: 'releases', label: 'Releases', icon: 'i-heroicons-musical-note' },

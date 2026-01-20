@@ -334,6 +334,7 @@ export const useBand = () => {
     const { data, error } = await supabase
       .from('bands')
       .select('*')
+      .eq('status', 'active') // Only show approved artists
       .order('total_streams', { ascending: false })
       .limit(limit)
 

@@ -275,10 +275,11 @@ const performSearch = async () => {
   searching.value = true
 
   try {
-    // Search artists
+    // Search artists (only active/approved)
     const { data: artists } = await client
       .from('bands')
       .select('id, name, slug, theme_color, avatar_url')
+      .eq('status', 'active')
       .ilike('name', `%${query.value}%`)
       .limit(5)
 

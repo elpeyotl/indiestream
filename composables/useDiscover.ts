@@ -36,6 +36,7 @@ export const useDiscover = () => {
     const { data, error } = await client
       .from('bands')
       .select('id, name, slug, theme_color, total_streams, is_verified, avatar_key, avatar_url')
+      .eq('status', 'active') // Only show approved artists
       .eq('is_verified', true)
       .order('total_streams', { ascending: false })
       .limit(6)
@@ -135,6 +136,7 @@ export const useDiscover = () => {
     const { data, error } = await client
       .from('bands')
       .select('id, name, slug, theme_color, total_streams, avatar_key, avatar_url')
+      .eq('status', 'active') // Only show approved artists
       .order('total_streams', { ascending: false })
       .range(0, pageSize - 1)
 
@@ -164,6 +166,7 @@ export const useDiscover = () => {
     const { data, error } = await client
       .from('bands')
       .select('id, name, slug, theme_color, total_streams, avatar_key, avatar_url')
+      .eq('status', 'active') // Only show approved artists
       .order('total_streams', { ascending: false })
       .range(page * pageSize, (page + 1) * pageSize - 1)
 

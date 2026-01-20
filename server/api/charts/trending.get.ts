@@ -169,6 +169,7 @@ export default defineEventHandler(async (event) => {
     const { data: artists } = await client
       .from('bands')
       .select('id, name, slug, avatar_key, theme_color, is_verified, genres')
+      .eq('status', 'active') // Only show approved artists
       .in('id', topArtistIds)
 
     topArtists = (artists || [])
