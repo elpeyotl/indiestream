@@ -183,8 +183,10 @@
 import type { AdminPlaylist } from '~/types/admin'
 import { playlistFilterOptions } from '~/types/admin'
 import { useAdminUtils } from '~/composables/useAdminUtils'
+import { useAdminRealtime } from '~/composables/useAdminRealtime'
 
 const { toast } = useAdminUtils()
+const { subscribe } = useAdminRealtime()
 
 // State
 const playlists = ref<AdminPlaylist[]>([])
@@ -302,5 +304,11 @@ watch(playlistFilter, () => {
 
 onMounted(() => {
   loadPlaylists()
+
+  // Subscribe to realtime updates for playlists table
+  subscribe({
+    table: 'playlists',
+    onUpdate: () => loadPlaylists(playlistsPage.value),
+  })
 })
 </script>

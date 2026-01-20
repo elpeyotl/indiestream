@@ -193,6 +193,7 @@
 
 <script setup lang="ts">
 import { useArtistDashboard } from '~/composables/useArtistDashboard'
+import { useArtistRealtime } from '~/composables/useArtistRealtime'
 
 interface AnalyticsData {
   totalStreams: number
@@ -217,6 +218,7 @@ const props = defineProps<{
 
 const client = useSupabaseClient()
 const { formatNumber, formatListeningTime, getCountryFlag, getCountryName } = useArtistDashboard()
+const { subscribe } = useArtistRealtime()
 
 // State
 const analyticsLoading = ref(false)
@@ -464,5 +466,17 @@ watch(selectedPeriod, () => {
 onMounted(() => {
   loadAnalytics()
   loadCountryAnalytics()
+
+  // Subscribe to realtime stream updates
+  // When new streams come in, refresh analytics data
+  subscribe({
+    table: 'listening_history',
+    bandId: props.bandId,
+    onUpdate: () => {
+      loadAnalytics()
+      loadCountryAnalytics()
+    },
+    debounce: 3000, // Debounce 3s since streams can be frequent
+  })
 })
 </script>

@@ -454,12 +454,14 @@
 import type { PendingArtist } from '~/types/admin'
 import { artistApprovalsStatusOptions } from '~/types/admin'
 import { useAdminUtils } from '~/composables/useAdminUtils'
+import { useAdminRealtime } from '~/composables/useAdminRealtime'
 
 const emit = defineEmits<{
   updatePendingCount: [count: number]
 }>()
 
 const { toast, formatDate, hasAnySocialLink, formatSocialUrl } = useAdminUtils()
+const { subscribe } = useAdminRealtime()
 
 // State
 const pendingArtists = ref<PendingArtist[]>([])
@@ -591,5 +593,13 @@ const rejectArtist = async () => {
 
 onMounted(() => {
   loadArtistApprovals()
+
+  // Subscribe to realtime updates for bands table
+  // This keeps data in sync when multiple admins work simultaneously
+  subscribe({
+    table: 'bands',
+    onUpdate: loadArtistApprovals,
+    watchFields: ['status'], // Only refresh when status changes
+  })
 })
 </script>

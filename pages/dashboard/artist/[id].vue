@@ -228,6 +228,7 @@
 import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
 import { useArtistDashboard } from '~/composables/useArtistDashboard'
+import { useArtistRealtime } from '~/composables/useArtistRealtime'
 
 definePageMeta({
   middleware: 'auth',
@@ -238,6 +239,7 @@ const router = useRouter()
 const { toast, formatNumber } = useArtistDashboard()
 const { getBandById, deleteBand } = useBand()
 const { getBandAlbums, getStreamUrl, deleteAlbum } = useAlbum()
+const { subscribeToAll, subscribeToAlbumTracks } = useArtistRealtime()
 
 // Core state
 const band = ref<Band | null>(null)
@@ -308,6 +310,44 @@ const handleDelete = async () => {
     showDeleteModal.value = false
   } finally {
     deleting.value = false
+  }
+}
+
+// Reload band stats (for realtime updates)
+const reloadBandStats = async () => {
+  if (!band.value) return
+  try {
+    const updatedBand = await getBandById(band.value.id)
+    if (updatedBand) {
+      // Preserve avatar/banner URLs we already loaded
+      const avatarUrl = band.value.avatar_url
+      const bannerUrl = band.value.banner_url
+      band.value = updatedBand
+      band.value.avatar_url = avatarUrl
+      band.value.banner_url = bannerUrl
+    }
+  } catch (e) {
+    console.error('Failed to reload band stats:', e)
+  }
+}
+
+// Reload albums (for realtime updates on moderation status)
+const reloadAlbums = async () => {
+  if (!band.value) return
+  try {
+    albums.value = await getBandAlbums(band.value.id, true, false)
+    // Reload cover URLs for any new albums
+    for (const album of albums.value) {
+      if (album.cover_key && !albumCovers.value[album.id]) {
+        try {
+          albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
+        } catch (e) {
+          console.error('Failed to load cover:', e)
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to reload albums:', e)
   }
 }
 
@@ -386,6 +426,21 @@ onMounted(async () => {
             console.error('Failed to load cover:', e)
           }
         }
+      }
+
+      // Subscribe to realtime updates
+      // - Stream updates: refresh band stats (total_streams, total_earnings_cents)
+      // - Band updates: refresh if admin changes status or other fields
+      // - Album updates: refresh album list if moderation status changes
+      subscribeToAll(band.value.id, {
+        onStreamUpdate: reloadBandStats,
+        onBandUpdate: reloadBandStats,
+        onAlbumUpdate: reloadAlbums,
+      })
+
+      // Subscribe to track changes for each album (for moderation status updates)
+      for (const album of albums.value) {
+        subscribeToAlbumTracks(album.id, reloadAlbums)
       }
     }
   } catch (e) {

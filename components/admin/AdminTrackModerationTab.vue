@@ -511,12 +511,14 @@
 import type { ModerationQueueItem } from '~/types/admin'
 import { moderationStatusOptions, moderationPriorityOptions } from '~/types/admin'
 import { useAdminUtils } from '~/composables/useAdminUtils'
+import { useAdminRealtime } from '~/composables/useAdminRealtime'
 
 const emit = defineEmits<{
   updatePendingCount: [count: number]
 }>()
 
 const { toast, formatDate, getStatusColor } = useAdminUtils()
+const { subscribe } = useAdminRealtime()
 
 // State
 const moderationQueue = ref<ModerationQueueItem[]>([])
@@ -924,5 +926,12 @@ watch([moderationStatusFilter, moderationPriorityFilter], () => {
 
 onMounted(() => {
   loadModerationQueue()
+
+  // Subscribe to realtime updates for tracks table (moderation status changes)
+  subscribe({
+    table: 'tracks',
+    onUpdate: () => loadModerationQueue(moderationPagination.value.page),
+    watchFields: ['moderation_status'],
+  })
 })
 </script>

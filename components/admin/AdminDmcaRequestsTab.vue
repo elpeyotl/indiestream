@@ -320,12 +320,14 @@
 import type { DmcaRequest } from '~/types/admin'
 import { dmcaStatusOptions } from '~/types/admin'
 import { useAdminUtils } from '~/composables/useAdminUtils'
+import { useAdminRealtime } from '~/composables/useAdminRealtime'
 
 const emit = defineEmits<{
   updatePendingCount: [count: number]
 }>()
 
 const { toast, formatDate, getStatusColor } = useAdminUtils()
+const { subscribe } = useAdminRealtime()
 
 // State
 const dmcaRequests = ref<DmcaRequest[]>([])
@@ -434,5 +436,11 @@ watch(dmcaStatusFilter, () => {
 
 onMounted(() => {
   loadDmcaRequests()
+
+  // Subscribe to realtime updates for dmca_requests table
+  subscribe({
+    table: 'dmca_requests',
+    onUpdate: loadDmcaRequests,
+  })
 })
 </script>

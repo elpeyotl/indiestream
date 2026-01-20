@@ -137,6 +137,7 @@
 
 <script setup lang="ts">
 import { useArtistDashboard } from '~/composables/useArtistDashboard'
+import { useArtistRealtime } from '~/composables/useArtistRealtime'
 
 interface EarningsData {
   bandId: string
@@ -165,6 +166,7 @@ const props = defineProps<{
 }>()
 
 const { formatNumber, formatCurrency, formatDate } = useArtistDashboard()
+const { subscribe } = useArtistRealtime()
 
 // State
 const earningsLoading = ref(false)
@@ -186,5 +188,22 @@ const loadEarnings = async () => {
 
 onMounted(() => {
   loadEarnings()
+
+  // Subscribe to realtime updates for earnings
+  // Streams affect this month's earnings/streams counts
+  subscribe({
+    table: 'listening_history',
+    bandId: props.bandId,
+    onUpdate: loadEarnings,
+    debounce: 5000, // Debounce 5s since earnings calculations are heavier
+  })
+
+  // Payout status changes (processed, failed, etc.)
+  subscribe({
+    table: 'payouts',
+    bandId: props.bandId,
+    onUpdate: loadEarnings,
+    debounce: 1000,
+  })
 })
 </script>

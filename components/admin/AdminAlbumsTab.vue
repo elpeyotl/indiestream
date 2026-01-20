@@ -213,12 +213,14 @@ import type { AdminAlbum, AdminAlbumTrack } from '~/types/admin'
 import type { EditableTrack, AlbumEditForm } from '~/components/AlbumEditModal.vue'
 import { albumPublishedFilterOptions } from '~/types/admin'
 import { useAdminUtils } from '~/composables/useAdminUtils'
+import { useAdminRealtime } from '~/composables/useAdminRealtime'
 
 const emit = defineEmits<{
   statsUpdated: []
 }>()
 
 const { toast, formatDate } = useAdminUtils()
+const { subscribe } = useAdminRealtime()
 
 // State
 const albums = ref<AdminAlbum[]>([])
@@ -443,5 +445,11 @@ const handleDeleteAlbum = async () => {
 
 onMounted(() => {
   loadAlbums()
+
+  // Subscribe to realtime updates for albums table
+  subscribe({
+    table: 'albums',
+    onUpdate: () => loadAlbums(albumsPagination.value.page),
+  })
 })
 </script>

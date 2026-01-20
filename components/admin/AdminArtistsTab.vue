@@ -396,12 +396,14 @@
 import type { AdminBand } from '~/types/admin'
 import { statusFilterOptions, featuredFilterOptions, verifiedFilterOptions, statusOptions } from '~/types/admin'
 import { useAdminUtils } from '~/composables/useAdminUtils'
+import { useAdminRealtime } from '~/composables/useAdminRealtime'
 
 const emit = defineEmits<{
   statsUpdated: []
 }>()
 
 const { toast, formatNumber, formatCents } = useAdminUtils()
+const { subscribe } = useAdminRealtime()
 
 // State
 const bands = ref<AdminBand[]>([])
@@ -644,5 +646,11 @@ const handleDeleteBand = async () => {
 onMounted(() => {
   loadBands()
   loadAllGenres()
+
+  // Subscribe to realtime updates for bands table
+  subscribe({
+    table: 'bands',
+    onUpdate: () => loadBands(bandsPagination.value.page),
+  })
 })
 </script>

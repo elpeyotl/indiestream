@@ -395,12 +395,14 @@
 import type { ContentReport } from '~/types/admin'
 import { reportsStatusOptions } from '~/types/admin'
 import { useAdminUtils } from '~/composables/useAdminUtils'
+import { useAdminRealtime } from '~/composables/useAdminRealtime'
 
 const emit = defineEmits<{
   updatePendingCount: [count: number]
 }>()
 
 const { toast, formatDate, getReasonColor, getReasonLabel } = useAdminUtils()
+const { subscribe } = useAdminRealtime()
 
 // State
 const contentReports = ref<ContentReport[]>([])
@@ -530,5 +532,11 @@ watch(reportsStatusFilter, () => {
 
 onMounted(() => {
   loadContentReports()
+
+  // Subscribe to realtime updates for content_reports table
+  subscribe({
+    table: 'content_reports',
+    onUpdate: loadContentReports,
+  })
 })
 </script>
