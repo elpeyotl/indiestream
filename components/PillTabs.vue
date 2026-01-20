@@ -2,24 +2,25 @@
   <div>
     <!-- Tab Buttons -->
     <div :class="containerClass">
-      <div class="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
+      <div class="flex flex-wrap gap-1.5 sm:gap-2">
         <button
           v-for="(tab, index) in tabs"
           :key="tab.slot || tab.key || index"
           @click="handleTabChange(index)"
+          :title="tab.label"
           :class="[
-            'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 snap-start active:scale-95',
+            'relative flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-95',
             modelValue === index
               ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/25'
               : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300'
           ]"
         >
           <UIcon v-if="tab.icon" :name="tab.icon" class="w-4 h-4" />
-          <span>{{ tab.label }}</span>
+          <span class="hidden sm:inline">{{ tab.label }}</span>
           <span
             v-if="tab.badge"
             :class="[
-              'ml-1 flex-shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full min-w-[1.25rem]',
+              'flex-shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full min-w-[1.25rem]',
               modelValue === index
                 ? 'bg-white/20 text-white'
                 : 'bg-red-500 text-white'
