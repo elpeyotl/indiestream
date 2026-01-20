@@ -1,6 +1,7 @@
 // Composable for managing bulk upload state
 // Handles ZIP file with CSV + media, validation, and import processing
 
+import JSZip from 'jszip'
 import type {
   CsvValidationError,
   CsvParseResult,
@@ -130,7 +131,7 @@ export const useBulkUpload = () => {
         })
       }
 
-      const JSZip = (await import('jszip')).default
+      // JSZip imported at top of file
       // Load with optimized settings - don't decompress until needed
       const zip = await JSZip.loadAsync(file, {
         // Only load file metadata, not content
