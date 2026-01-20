@@ -40,7 +40,6 @@
 - [x] Supabase database with RLS
 - [x] Cloudflare R2 file storage
 - [x] Presigned URL generation for files
-- [x] Audio transcoding worker on Fly.io (lossless → AAC 256kbps)
 
 ---
 
@@ -81,8 +80,6 @@
 - [x] Composer credits with splits (name, role, IPI number, percentage)
 - [x] Cover song flagging
 - [x] Rights confirmation on publish
-- [x] Bulk upload (CSV + ZIP with multiple albums/tracks)
-- [x] Lossless audio requirement (WAV, FLAC, AIFF only)
 
 #### User Features
 - [x] User profile page (public profiles with followed artists, settings page with avatar upload)
@@ -112,7 +109,6 @@
 - [ ] PWA support (full offline mode)
 - [ ] Offline playback (for subscribers)
 - [x] Social login (Google OAuth)
-- [ ] Apple login
 - [x] Email notifications (new releases from followed artists)
 
 #### Native App UX (Phase 1 - See docs/NATIVE_APP_UX.md)
@@ -187,7 +183,6 @@ All migrations should be run in Supabase SQL Editor in order:
 32. `20260125000000_moderation_queue_unique_track.sql` - Unique track constraint on moderation queue
 33. `20260125000001_pending_update_status.sql` - Add pending_update status for re-review
 34. `20260125000002_pending_update_rls.sql` - RLS for pending_update status
-35. `20260120_add_transcoding_columns.sql` - Audio transcoding infrastructure (original_audio_key, streaming_audio_key, transcoding_queue)
 
 ---
 
