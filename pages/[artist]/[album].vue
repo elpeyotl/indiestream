@@ -473,22 +473,45 @@ useHead(() => ({
   ],
 }))
 
+// Load other albums from artist (lazy, in background)
+const loadOtherAlbums = async (bandId: string, currentAlbumId: string) => {
+  try {
+    const allAlbums = await getBandAlbums(bandId)
+    otherAlbums.value = allAlbums.filter(a => a.id !== currentAlbumId).slice(0, 6)
+  } catch (e) {
+    console.error('Failed to load other albums:', e)
+  }
+}
+
+// Load track credits and liked status (lazy, in background)
+const loadTrackMetadata = async (trackIds: string[]) => {
+  // Run in parallel
+  await Promise.all([
+    fetchLikedTrackIds(trackIds),
+    getCreditsForTracks(trackIds).then(credits => {
+      trackCredits.value = credits
+    }).catch(e => {
+      console.error('Failed to load track credits:', e)
+    })
+  ])
+}
+
 const loadAlbumData = async () => {
   loading.value = true
   try {
     const artistSlug = route.params.artist as string
     const albumSlug = route.params.album as string
 
-    // Load band
-    band.value = await getBandBySlug(artistSlug)
-    if (!band.value) {
-      loading.value = false
-      return
-    }
+    // Load band and album in parallel (essential for showing main content)
+    const [bandResult, albumResult] = await Promise.all([
+      getBandBySlug(artistSlug),
+      getAlbumBySlug(artistSlug, albumSlug)
+    ])
 
-    // Load album
-    album.value = await getAlbumBySlug(artistSlug, albumSlug)
-    if (!album.value) {
+    band.value = bandResult
+    album.value = albumResult
+
+    if (!band.value || !album.value) {
       loading.value = false
       return
     }
@@ -500,29 +523,21 @@ const loadAlbumData = async () => {
       coverUrl.value = album.value.cover_url
     }
 
-    // Load other albums from same artist
-    const allAlbums = await getBandAlbums(band.value.id)
-    otherAlbums.value = allAlbums.filter(a => a.id !== album.value?.id).slice(0, 6)
+    // Show the main content now
+    loading.value = false
 
-    // Check if album is saved
-    await checkAlbumSaved(album.value.id)
+    // Load secondary data in background (don't block rendering)
+    loadOtherAlbums(band.value.id, album.value.id)
+    checkAlbumSaved(album.value.id)
 
     // Fetch liked status and credits for all tracks
     if (album.value.tracks?.length) {
       const trackIds = album.value.tracks.map(t => t.id)
-      await fetchLikedTrackIds(trackIds)
-
-      // Load track credits
-      try {
-        trackCredits.value = await getCreditsForTracks(trackIds)
-      } catch (e) {
-        console.error('Failed to load track credits:', e)
-      }
+      loadTrackMetadata(trackIds)
     }
 
   } catch (e) {
     console.error('Failed to load album:', e)
-  } finally {
     loading.value = false
   }
 }

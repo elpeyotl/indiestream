@@ -205,7 +205,16 @@
     <div class="container mx-auto px-4 py-12">
       <PillTabs v-model="selectedTabIndex" :tabs="tabs">
         <template #releases>
-            <div v-if="albums.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <!-- Loading skeleton for albums -->
+            <div v-if="loadingAlbums" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <div v-for="i in 5" :key="`album-skeleton-${i}`" class="space-y-3">
+                <div class="aspect-square rounded-lg skeleton"></div>
+                <div class="h-5 skeleton w-3/4"></div>
+                <div class="h-4 skeleton w-1/2"></div>
+              </div>
+            </div>
+            <!-- Album grid -->
+            <div v-else-if="albums.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               <NuxtLink
                 v-for="album in albums"
                 :key="album.id"
@@ -234,6 +243,7 @@
                 </p>
               </NuxtLink>
             </div>
+            <!-- Empty state -->
             <div v-else class="text-center py-12 text-zinc-400">
               <UIcon name="i-heroicons-musical-note" class="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No releases yet</p>
@@ -474,6 +484,7 @@ const band = ref<Band | null>(null)
 const albums = ref<Album[]>([])
 const albumCovers = ref<Record<string, string>>({})
 const loading = ref(true)
+const loadingAlbums = ref(true) // Separate loading state for albums
 // Track avatar loaded state per URL to handle navigation between artists
 const avatarLoadedUrl = ref<string | null>(null)
 const avatarLoaded = computed(() => avatarLoadedUrl.value === band.value?.avatar_url)
@@ -690,6 +701,30 @@ useHead(() => ({
   ],
 }))
 
+// Load albums independently (with skeleton while loading)
+const loadAlbums = async (bandId: string) => {
+  loadingAlbums.value = true
+  try {
+    albums.value = await getBandAlbums(bandId)
+
+    // Load cover URLs for albums in parallel (cached)
+    await Promise.all(
+      albums.value.map(async (album) => {
+        if (album.cover_key) {
+          const coverUrl = await getCachedCoverUrl(album.cover_key)
+          if (coverUrl) albumCovers.value[album.id] = coverUrl
+        } else if (album.cover_url) {
+          albumCovers.value[album.id] = album.cover_url
+        }
+      })
+    )
+  } catch (e) {
+    console.error('Failed to load albums:', e)
+  } finally {
+    loadingAlbums.value = false
+  }
+}
+
 const loadArtistData = async () => {
   try {
     const slug = route.params.artist as string
@@ -697,22 +732,9 @@ const loadArtistData = async () => {
 
     if (band.value) {
       // Avatar and banner URLs are now resolved by getBandBySlug
-
-      // Load albums
-      albums.value = await getBandAlbums(band.value.id)
-
-      // Load cover URLs for albums (cached)
-      for (const album of albums.value) {
-        if (album.cover_key) {
-          const coverUrl = await getCachedCoverUrl(album.cover_key)
-          if (coverUrl) albumCovers.value[album.id] = coverUrl
-        } else if (album.cover_url) {
-          albumCovers.value[album.id] = album.cover_url
-        }
-      }
-
-      // Check if user is following this artist
-      await checkFollowStatus()
+      // Show the hero section immediately, load albums and follow status in parallel
+      loadAlbums(band.value.id) // Don't await - load in background
+      checkFollowStatus() // Don't await - load in background
     }
   } catch (e) {
     console.error('Failed to load band:', e)

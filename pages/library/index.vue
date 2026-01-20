@@ -633,51 +633,57 @@ const loadLibrary = async () => {
     albums.value = albumsData
     tracks.value = tracksData
 
-    // Load images
-    await Promise.all([
-      loadArtistAvatars(),
-      loadAlbumCovers(),
-      loadTrackCovers(),
-      loadPlaylistCovers(),
-    ])
+    // Show content immediately
+    loading.value = false
+
+    // Load images in background (don't block)
+    loadArtistAvatars()
+    loadAlbumCovers()
+    loadTrackCovers()
+    loadPlaylistCovers()
   } catch (e) {
     console.error('Failed to load library:', e)
-  } finally {
     loading.value = false
   }
 }
 
 const loadArtistAvatars = async () => {
-  for (const item of artists.value) {
-    if (item.band.avatar_key) {
-      const url = await getCachedCoverUrl(item.band.avatar_key)
-      if (url) artistAvatars.value[item.band.id] = url
-    } else if (item.band.avatar_url) {
-      artistAvatars.value[item.band.id] = item.band.avatar_url
-    }
-  }
+  await Promise.all(
+    artists.value.map(async (item) => {
+      if (item.band.avatar_key) {
+        const url = await getCachedCoverUrl(item.band.avatar_key)
+        if (url) artistAvatars.value[item.band.id] = url
+      } else if (item.band.avatar_url) {
+        artistAvatars.value[item.band.id] = item.band.avatar_url
+      }
+    })
+  )
 }
 
 const loadAlbumCovers = async () => {
-  for (const item of albums.value) {
-    if (item.album.cover_key) {
-      const url = await getCachedCoverUrl(item.album.cover_key)
-      if (url) albumCovers.value[item.album.id] = url
-    } else if (item.album.cover_url) {
-      albumCovers.value[item.album.id] = item.album.cover_url
-    }
-  }
+  await Promise.all(
+    albums.value.map(async (item) => {
+      if (item.album.cover_key) {
+        const url = await getCachedCoverUrl(item.album.cover_key)
+        if (url) albumCovers.value[item.album.id] = url
+      } else if (item.album.cover_url) {
+        albumCovers.value[item.album.id] = item.album.cover_url
+      }
+    })
+  )
 }
 
 const loadTrackCovers = async () => {
-  for (const item of tracks.value) {
-    if (item.track.album.cover_key) {
-      const url = await getCachedCoverUrl(item.track.album.cover_key)
-      if (url) trackCovers.value[item.track.id] = url
-    } else if (item.track.album.cover_url) {
-      trackCovers.value[item.track.id] = item.track.album.cover_url
-    }
-  }
+  await Promise.all(
+    tracks.value.map(async (item) => {
+      if (item.track.album.cover_key) {
+        const url = await getCachedCoverUrl(item.track.album.cover_key)
+        if (url) trackCovers.value[item.track.id] = url
+      } else if (item.track.album.cover_url) {
+        trackCovers.value[item.track.id] = item.track.album.cover_url
+      }
+    })
+  )
 }
 
 const loadPlaylistCovers = async () => {

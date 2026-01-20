@@ -6,186 +6,210 @@
       <p class="text-zinc-400">Find your next favorite artist</p>
     </div>
 
-    <!-- Loading Skeletons -->
-    <div v-if="loading" class="space-y-12">
-      <!-- Featured Artists Skeleton -->
-      <section>
-        <div class="h-7 w-48 skeleton mb-4"></div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <div v-for="i in 6" :key="`featured-${i}`" class="space-y-2">
-            <div class="w-full pb-[100%] relative">
-              <div class="absolute inset-0 rounded-lg skeleton"></div>
-            </div>
-            <div class="h-5 skeleton w-3/4"></div>
-            <div class="h-4 skeleton w-1/2"></div>
+    <!-- New Releases Section (loads independently) -->
+    <section class="mb-12">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100">New Releases</h2>
+      </div>
+      <!-- Loading skeleton -->
+      <div v-if="loadingReleases" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <div v-for="i in 5" :key="`release-${i}`" class="space-y-2">
+          <div class="w-full pb-[100%] relative">
+            <div class="absolute inset-0 rounded-lg skeleton"></div>
           </div>
+          <div class="h-5 skeleton w-full"></div>
+          <div class="h-4 skeleton w-2/3"></div>
         </div>
-      </section>
-
-      <!-- New Releases Skeleton -->
-      <section>
-        <div class="h-7 w-48 skeleton mb-4"></div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          <div v-for="i in 5" :key="`release-${i}`" class="space-y-2">
-            <div class="w-full pb-[100%] relative">
-              <div class="absolute inset-0 rounded-lg skeleton"></div>
+      </div>
+      <!-- Content -->
+      <div v-else-if="newReleases.length > 0" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <NuxtLink
+          v-for="album in newReleases"
+          :key="album.id"
+          :to="`/${album.band?.slug}/${album.slug}`"
+          class="group card-interactive"
+        >
+          <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
+            <div class="absolute inset-0">
+              <img
+                v-if="albumCovers[album.id]"
+                v-fade-image
+                :src="albumCovers[album.id]"
+                :alt="album.title"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center">
+                <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+              </div>
             </div>
-            <div class="h-5 skeleton w-full"></div>
-            <div class="h-4 skeleton w-2/3"></div>
+            <!-- Play button overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="absolute bottom-2 right-2">
+                <UButton
+                  color="violet"
+                  size="lg"
+                  :ui="{ rounded: 'rounded-full' }"
+                  :loading="loadingPlayId === album.id"
+                  class="shadow-lg"
+                  @click.prevent.stop="playAlbum(album)"
+                >
+                  <UIcon v-if="loadingPlayId !== album.id" name="i-heroicons-play-solid" class="w-6 h-6" />
+                </UButton>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
-    </div>
+          <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ album.title }}</p>
+          <p class="text-sm text-zinc-400 truncate">{{ album.band?.name }}</p>
+          <p class="text-xs text-zinc-500">
+            {{ album.release_type === 'ep' ? 'EP' : album.release_type === 'single' ? 'Single' : 'Album' }}
+          </p>
+        </NuxtLink>
+      </div>
+    </section>
 
-    <template v-else>
-      <!-- New Releases -->
-      <section v-if="newReleases.length > 0" class="mb-12">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-zinc-100">New Releases</h2>
+    <!-- Featured Playlists Section (loads independently) -->
+    <section v-if="loadingPlaylists || featuredPlaylists.length > 0" class="mb-12">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
+          <UIcon name="i-heroicons-star" class="w-5 h-5 text-violet-400" />
+          Featured Playlists
+        </h2>
+      </div>
+      <!-- Loading skeleton -->
+      <div v-if="loadingPlaylists" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <div v-for="i in 5" :key="`playlist-${i}`" class="space-y-2">
+          <div class="w-full pb-[100%] relative">
+            <div class="absolute inset-0 rounded-lg skeleton"></div>
+          </div>
+          <div class="h-5 skeleton w-3/4"></div>
+          <div class="h-4 skeleton w-1/2"></div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      </div>
+      <!-- Content -->
+      <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <PlaylistCard
+          v-for="playlist in featuredPlaylists"
+          :key="playlist.id"
+          :playlist="playlist"
+          :covers="playlistCovers[playlist.id] || []"
+          :loading="loadingPlayId === playlist.id"
+          icon="i-heroicons-queue-list"
+          @play="playFeaturedPlaylist"
+        />
+      </div>
+    </section>
+
+    <!-- Featured Artists Section (loads independently) -->
+    <section v-if="loadingFeatured || featuredArtists.length > 0" class="mb-12">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100">Featured Artists</h2>
+      </div>
+      <!-- Loading skeleton -->
+      <div v-if="loadingFeatured" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div v-for="i in 6" :key="`featured-${i}`" class="space-y-2">
+          <div class="w-full pb-[100%] relative">
+            <div class="absolute inset-0 rounded-full skeleton"></div>
+          </div>
+          <div class="h-5 skeleton w-3/4 mx-auto"></div>
+          <div class="h-4 skeleton w-1/2 mx-auto"></div>
+        </div>
+      </div>
+      <!-- Content -->
+      <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <ArtistCard
+          v-for="artist in featuredArtists"
+          :key="artist.id"
+          :artist="artist"
+          :loading="loadingPlayId === artist.id"
+          @play="playArtist"
+        />
+      </div>
+    </section>
+
+    <!-- Recently Played Section (for logged-in users, loads independently) -->
+    <section v-if="user && (loadingRecentlyPlayed || recentlyPlayed.length > 0)" class="mb-12">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
+          <UIcon name="i-heroicons-clock" class="w-5 h-5 text-violet-400" />
+          Recently Played
+        </h2>
+        <NuxtLink to="/library?tab=history" class="text-sm text-violet-400 hover:text-violet-300">
+          View All
+        </NuxtLink>
+      </div>
+      <!-- Loading skeleton -->
+      <div v-if="loadingRecentlyPlayed" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <div v-for="i in 5" :key="`recent-${i}`" class="space-y-2">
+          <div class="w-full pb-[100%] relative">
+            <div class="absolute inset-0 rounded-lg skeleton"></div>
+          </div>
+          <div class="h-5 skeleton w-full"></div>
+          <div class="h-4 skeleton w-2/3"></div>
+        </div>
+      </div>
+      <!-- Content -->
+      <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <div
+          v-for="track in recentlyPlayed.slice(0, 5)"
+          :key="track.id"
+          class="group card-interactive cursor-pointer"
+          @click="playRecentTrack(track)"
+        >
+          <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
+            <div class="absolute inset-0">
+              <img
+                v-if="track.coverUrl"
+                v-fade-image
+                :src="track.coverUrl"
+                :alt="track.title"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center">
+                <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+              </div>
+            </div>
+            <!-- Play overlay -->
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div class="w-12 h-12 rounded-full bg-violet-500 flex items-center justify-center">
+                <UIcon name="i-heroicons-play" class="w-6 h-6 text-white ml-0.5" />
+              </div>
+            </div>
+          </div>
+          <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ track.title }}</p>
           <NuxtLink
-            v-for="album in newReleases"
-            :key="album.id"
-            :to="`/${album.band?.slug}/${album.slug}`"
-            class="group card-interactive"
+            :to="`/${track.artistSlug}`"
+            class="text-sm text-zinc-400 truncate block hover:text-violet-400"
+            @click.stop
           >
-            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
-              <div class="absolute inset-0">
-                <img
-                  v-if="albumCovers[album.id]"
-                  v-fade-image
-                  :src="albumCovers[album.id]"
-                  :alt="album.title"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center">
-                  <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
-                </div>
-              </div>
-              <!-- Play button overlay -->
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                <div class="absolute bottom-2 right-2">
-                  <UButton
-                    color="violet"
-                    size="lg"
-                    :ui="{ rounded: 'rounded-full' }"
-                    :loading="loadingPlayId === album.id"
-                    class="shadow-lg"
-                    @click.prevent.stop="playAlbum(album)"
-                  >
-                    <UIcon v-if="loadingPlayId !== album.id" name="i-heroicons-play-solid" class="w-6 h-6" />
-                  </UButton>
-                </div>
-              </div>
-            </div>
-            <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ album.title }}</p>
-            <p class="text-sm text-zinc-400 truncate">{{ album.band?.name }}</p>
-            <p class="text-xs text-zinc-500">
-              {{ album.release_type === 'ep' ? 'EP' : album.release_type === 'single' ? 'Single' : 'Album' }}
-            </p>
+            {{ track.artistName }}
           </NuxtLink>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Featured Playlists -->
-      <section v-if="featuredPlaylists.length > 0" class="mb-12">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
-            <UIcon name="i-heroicons-star" class="w-5 h-5 text-violet-400" />
-            Featured Playlists
-          </h2>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          <PlaylistCard
-            v-for="playlist in featuredPlaylists"
-            :key="playlist.id"
-            :playlist="playlist"
-            :covers="playlistCovers[playlist.id] || []"
-            :loading="loadingPlayId === playlist.id"
-            icon="i-heroicons-queue-list"
-            @play="playFeaturedPlaylist"
-          />
-        </div>
-      </section>
-
-      <!-- Featured Artists -->
-      <section v-if="featuredArtists.length > 0" class="mb-12">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-zinc-100">Featured Artists</h2>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <ArtistCard
-            v-for="artist in featuredArtists"
-            :key="artist.id"
-            :artist="artist"
-            :loading="loadingPlayId === artist.id"
-            @play="playArtist"
-          />
-        </div>
-      </section>
-
-      <!-- Recently Played (for logged-in users) -->
-      <section v-if="user && recentlyPlayed.length > 0" class="mb-12">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
-            <UIcon name="i-heroicons-clock" class="w-5 h-5 text-violet-400" />
-            Recently Played
-          </h2>
-          <NuxtLink to="/library?tab=history" class="text-sm text-violet-400 hover:text-violet-300">
-            View All
-          </NuxtLink>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          <div
-            v-for="track in recentlyPlayed.slice(0, 5)"
-            :key="track.id"
-            class="group card-interactive cursor-pointer"
-            @click="playRecentTrack(track)"
-          >
-            <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
-              <div class="absolute inset-0">
-                <img
-                  v-if="track.coverUrl"
-                  v-fade-image
-                  :src="track.coverUrl"
-                  :alt="track.title"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center">
-                  <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
-                </div>
-              </div>
-              <!-- Play overlay -->
-              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <div class="w-12 h-12 rounded-full bg-violet-500 flex items-center justify-center">
-                  <UIcon name="i-heroicons-play" class="w-6 h-6 text-white ml-0.5" />
-                </div>
-              </div>
-            </div>
-            <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ track.title }}</p>
-            <NuxtLink
-              :to="`/${track.artistSlug}`"
-              class="text-sm text-zinc-400 truncate block hover:text-violet-400"
-              @click.stop
-            >
-              {{ track.artistName }}
-            </NuxtLink>
+    <!-- All Artists Section (loads independently) -->
+    <section class="mb-12">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100">All Artists</h2>
+        <NuxtLink to="/artists" class="text-sm text-violet-400 hover:text-violet-300">
+          View All
+        </NuxtLink>
+      </div>
+      <!-- Loading skeleton -->
+      <div v-if="loadingAllArtists" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div v-for="i in 6" :key="`artist-${i}`" class="space-y-2">
+          <div class="w-full pb-[100%] relative">
+            <div class="absolute inset-0 rounded-full skeleton"></div>
           </div>
+          <div class="h-5 skeleton w-3/4 mx-auto"></div>
+          <div class="h-4 skeleton w-1/2 mx-auto"></div>
         </div>
-      </section>
-
-      <!-- All Artists -->
-      <section v-if="allArtists.length > 0" class="mb-12">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-zinc-100">All Artists</h2>
-          <NuxtLink to="/artists" class="text-sm text-violet-400 hover:text-violet-300">
-            View All
-          </NuxtLink>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      </div>
+      <!-- Content -->
+      <template v-else>
+        <div v-if="allArtists.length > 0" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           <ArtistCard
             v-for="artist in allArtists"
             :key="artist.id"
@@ -201,20 +225,23 @@
             Load More Artists
           </UButton>
         </div>
-      </section>
+      </template>
+    </section>
 
-      <!-- Empty State -->
-      <div v-if="allArtists.length === 0 && newReleases.length === 0" class="text-center py-20">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center">
-          <UIcon name="i-heroicons-musical-note" class="w-10 h-10 text-violet-400" />
-        </div>
-        <h2 class="text-2xl font-bold text-zinc-100 mb-2">No Music Yet</h2>
-        <p class="text-zinc-400 mb-6">Be the first to upload your music!</p>
-        <UButton color="violet" to="/dashboard/artist/new">
-          Create Artist Profile
-        </UButton>
+    <!-- Empty State (only show when all main sections are loaded and empty) -->
+    <div
+      v-if="!loadingReleases && !loadingAllArtists && allArtists.length === 0 && newReleases.length === 0"
+      class="text-center py-20"
+    >
+      <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center">
+        <UIcon name="i-heroicons-musical-note" class="w-10 h-10 text-violet-400" />
       </div>
-    </template>
+      <h2 class="text-2xl font-bold text-zinc-100 mb-2">No Music Yet</h2>
+      <p class="text-zinc-400 mb-6">Be the first to upload your music!</p>
+      <UButton color="violet" to="/dashboard/artist/new">
+        Create Artist Profile
+      </UButton>
+    </div>
   </div>
 </template>
 
@@ -252,8 +279,12 @@ const { fetchRecentlyPlayed, recentlyPlayed, loadingRecentlyPlayed } = useRecent
 const user = useSupabaseUser()
 const { setQueue, playPlaylist } = usePlayer()
 
-const loading = ref(true)
-const loadingPlayId = ref<string | null>(null) // Track which item is loading for play
+// Independent loading states for each section
+const loadingReleases = ref(true)
+const loadingPlaylists = ref(true)
+const loadingFeatured = ref(true)
+const loadingAllArtists = ref(true)
+const loadingPlayId = ref<string | null>(null)
 const loadingMore = ref(false)
 
 const featuredArtists = ref<Band[]>([])
@@ -265,65 +296,100 @@ const playlistCovers = ref<Record<string, string[]>>({})
 const hasMoreArtists = ref(false)
 const artistPage = ref(0)
 
+// Load new releases independently
+const loadNewReleases = async (forceRefresh = false) => {
+  loadingReleases.value = true
+  try {
+    const releases = await getNewReleases(forceRefresh)
+    newReleases.value = releases.albums
+    albumCovers.value = releases.covers
+  } catch (e) {
+    console.error('Failed to load new releases:', e)
+  } finally {
+    loadingReleases.value = false
+  }
+}
+
+// Load featured playlists independently
 const loadFeaturedPlaylists = async () => {
+  loadingPlaylists.value = true
   try {
     const data = await $fetch<{ playlists: FeaturedPlaylist[] }>('/api/playlists/featured')
     featuredPlaylists.value = data.playlists
 
-    // Load cover images from preview tracks (for mosaic)
-    for (const playlist of data.playlists) {
-      const covers: string[] = []
-      const seen = new Set<string>()
+    // Load cover images from preview tracks (for mosaic) - in parallel
+    await Promise.all(
+      data.playlists.map(async (playlist) => {
+        const covers: string[] = []
+        const seen = new Set<string>()
 
-      // Get unique cover URLs from preview tracks
-      for (const track of playlist.previewTracks || []) {
-        if (track.album?.cover_key && !seen.has(track.album.cover_key)) {
-          seen.add(track.album.cover_key)
-          const url = await getCachedCoverUrl(track.album.cover_key)
-          if (url) {
-            covers.push(url)
-            if (covers.length >= 4) break
+        for (const track of playlist.previewTracks || []) {
+          if (track.album?.cover_key && !seen.has(track.album.cover_key)) {
+            seen.add(track.album.cover_key)
+            const url = await getCachedCoverUrl(track.album.cover_key)
+            if (url) {
+              covers.push(url)
+              if (covers.length >= 4) break
+            }
           }
         }
-      }
 
-      playlistCovers.value[playlist.id] = covers
-    }
+        playlistCovers.value[playlist.id] = covers
+      })
+    )
   } catch (e) {
     console.error('Failed to load featured playlists:', e)
+  } finally {
+    loadingPlaylists.value = false
   }
 }
 
-const loadData = async (forceRefresh = false) => {
+// Load featured artists independently
+const loadFeaturedArtists = async (forceRefresh = false) => {
+  loadingFeatured.value = true
   try {
-    const [featured, releases, artists] = await Promise.all([
-      getFeaturedArtists(forceRefresh),
-      getNewReleases(forceRefresh),
-      getAllArtists(forceRefresh),
-    ])
+    featuredArtists.value = await getFeaturedArtists(forceRefresh)
+  } catch (e) {
+    console.error('Failed to load featured artists:', e)
+  } finally {
+    loadingFeatured.value = false
+  }
+}
 
-    featuredArtists.value = featured
-    newReleases.value = releases.albums
-    albumCovers.value = releases.covers
+// Load all artists independently
+const loadAllArtistsSection = async (forceRefresh = false) => {
+  loadingAllArtists.value = true
+  try {
+    const artists = await getAllArtists(forceRefresh)
     allArtists.value = artists.artists
     hasMoreArtists.value = artists.hasMore
     artistPage.value = 0
-
-    // Also load featured playlists
-    await loadFeaturedPlaylists()
-
-    // Load recently played for logged-in users
-    if (user.value) {
-      await fetchRecentlyPlayed(10)
-    }
   } catch (e) {
-    console.error('Failed to load discover data:', e)
+    console.error('Failed to load all artists:', e)
+  } finally {
+    loadingAllArtists.value = false
   }
+}
+
+// Load recently played for logged-in users
+const loadRecentlyPlayed = async () => {
+  if (user.value) {
+    await fetchRecentlyPlayed(10)
+  }
+}
+
+// Load all data - each section loads independently in parallel
+const loadData = async (forceRefresh = false) => {
+  // Start all loads in parallel - each section will show as soon as it's ready
+  loadNewReleases(forceRefresh)
+  loadFeaturedPlaylists()
+  loadFeaturedArtists(forceRefresh)
+  loadAllArtistsSection(forceRefresh)
+  loadRecentlyPlayed()
 }
 
 // Play a recently played track
 const playRecentTrack = (track: RecentlyPlayedTrack) => {
-  // Filter to only tracks with audioKey
   const playableTracks = recentlyPlayed.value.filter(t => t.audioKey)
   if (playableTracks.length === 0) return
 
@@ -349,17 +415,14 @@ const playAlbum = async (album: Album) => {
   loadingPlayId.value = album.id
 
   try {
-    // Fetch album with tracks using composable
     const fullAlbum = await getAlbumById(album.id)
     if (!fullAlbum?.tracks?.length) return
 
-    // Get cover URL (use cached if available)
     let coverUrl: string | null = albumCovers.value[album.id] || null
     if (!coverUrl && fullAlbum.cover_key) {
       coverUrl = await getCachedCoverUrl(fullAlbum.cover_key)
     }
 
-    // Filter tracks with audio and map to playlist format
     const playableTracks = fullAlbum.tracks
       .filter(t => t.audio_key)
       .map(t => ({
@@ -392,7 +455,6 @@ const playFeaturedPlaylist = async (playlist: FeaturedPlaylist) => {
   loadingPlayId.value = playlist.id
 
   try {
-    // Fetch playlist tracks
     const data = await $fetch<{
       id: string
       title: string
@@ -415,7 +477,6 @@ const playFeaturedPlaylist = async (playlist: FeaturedPlaylist) => {
 
     if (!data?.playlist_tracks?.length) return
 
-    // Map tracks with cover URLs (using cache)
     const playableTracks = await Promise.all(
       data.playlist_tracks
         .filter(item => item.track?.audio_key)
@@ -450,7 +511,6 @@ const playArtist = async (artist: Band) => {
   loadingPlayId.value = artist.id
 
   try {
-    // Fetch random tracks from this artist
     const tracks = await $fetch<Array<{
       id: string
       title: string
@@ -465,7 +525,6 @@ const playArtist = async (artist: Band) => {
 
     if (!tracks?.length) return
 
-    // Build queue with cover URLs (using cache)
     const queue = await Promise.all(
       tracks.map(async (t) => ({
         id: t.id,
@@ -507,9 +566,7 @@ const loadMoreArtists = async () => {
 // Pull to refresh - force refresh to bypass cache
 usePullToRefresh(() => loadData(true))
 
-onMounted(async () => {
-  loading.value = true
-  await loadData()
-  loading.value = false
+onMounted(() => {
+  loadData()
 })
 </script>

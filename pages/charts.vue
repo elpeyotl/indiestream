@@ -291,8 +291,8 @@ const loadCharts = async () => {
   if (cached && Date.now() - cached.timestamp < CHART_CACHE_TTL) {
     charts.value = cached.data
     loading.value = false
-    // Still load images in the background
-    await loadImages()
+    // Still load images in the background (don't await - let them load while user sees data)
+    loadImages()
     return
   }
 
@@ -310,10 +310,11 @@ const loadCharts = async () => {
       timestamp: Date.now(),
     }
 
-    await loadImages()
+    // Show data immediately, load images in background
+    loading.value = false
+    loadImages() // Don't await - load in background
   } catch (e) {
     console.error('Failed to load charts:', e)
-  } finally {
     loading.value = false
   }
 }
