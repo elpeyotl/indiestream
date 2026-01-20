@@ -1,72 +1,25 @@
 // Album and Track management composable for Fairstream
+import type {
+  Database,
+  Album as DBAlbum,
+  Track as DBTrack,
+  TrackCredit as DBTrackCredit,
+  AlbumInsert,
+  AlbumUpdate,
+  TrackInsert,
+  TrackUpdate,
+} from '~/types/database'
 
-export interface Track {
-  id: string
-  album_id: string
-  title: string
-  track_number: number
-  duration_seconds: number
-  audio_key: string | null
-  preview_start_seconds: number
-  is_explicit: boolean
-  lyrics: string | null
-  stream_count: number
-  created_at: string
-  updated_at: string
-  // Rights metadata
-  isrc: string | null
-  iswc: string | null
-  is_cover: boolean
-  spotify_track_id: string | null
-  musicbrainz_work_id: string | null
-  isrc_platform_assigned: boolean
-  // Transcoding (dual-format storage)
-  original_audio_key?: string | null
-  original_format?: string | null
-  streaming_audio_key?: string | null
-  transcoding_status?: 'pending' | 'processing' | 'complete' | 'failed'
-  // Moderation
-  moderation_status?: string
-  moderation_notes?: string | null
-  moderated_at?: string | null
-  moderated_by?: string | null
-  // Joined data
+// Extended types with joined data for runtime use
+export type Track = DBTrack & {
+  // Joined data (not in DB schema)
   credits?: TrackCredit[]
 }
 
-export interface TrackCredit {
-  id: string
-  track_id: string
-  role: 'composer' | 'lyricist' | 'performer' | 'producer' | 'arranger'
-  name: string
-  ipi_number: string | null
-  created_at: string
-}
+export type TrackCredit = DBTrackCredit
 
-export interface Album {
-  id: string
-  band_id: string
-  title: string
-  slug: string
-  description: string | null
-  release_type: 'album' | 'ep' | 'single'
-  release_date: string | null
-  cover_key: string | null
-  cover_url: string | null
-  is_published: boolean
-  total_duration_seconds: number
-  total_streams: number
-  created_at: string
-  updated_at: string
-  // Rights metadata
-  upc: string | null
-  label_name: string | null
-  p_line: string | null
-  c_line: string | null
-  rights_confirmed: boolean
-  rights_confirmed_at: string | null
-  rights_confirmed_by: string | null
-  // Joined data
+export type Album = DBAlbum & {
+  // Joined data (not in DB schema)
   tracks?: Track[]
   band?: {
     id: string
@@ -95,68 +48,16 @@ const isCacheValid = <T>(entry: CacheEntry<T> | undefined): entry is CacheEntry<
   return Date.now() - entry.timestamp < CACHE_TTL_MS
 }
 
-export interface CreateAlbumInput {
-  band_id: string
-  title: string
-  slug?: string
-  description?: string
-  release_type: 'album' | 'ep' | 'single'
-  release_date?: string
-  // Rights metadata
-  upc?: string
-  label_name?: string
+// Input types using generated schema types
+export type CreateAlbumInput = Pick<AlbumInsert, 'band_id' | 'title' | 'description' | 'release_type' | 'release_date' | 'upc' | 'label_name'> & {
+  slug?: string // Optional, will be auto-generated
 }
 
-export interface UpdateAlbumInput {
-  title?: string
-  description?: string
-  release_type?: 'album' | 'ep' | 'single'
-  release_date?: string
-  cover_key?: string
-  cover_url?: string
-  is_published?: boolean
-  // Rights metadata
-  upc?: string
-  label_name?: string
-  p_line?: string
-  c_line?: string
-  rights_confirmed?: boolean
-  rights_confirmed_at?: string
-  rights_confirmed_by?: string
-}
+export type UpdateAlbumInput = AlbumUpdate
 
-export interface CreateTrackInput {
-  album_id: string
-  band_id: string
-  title: string
-  track_number: number
-  duration_seconds?: number
-  is_explicit?: boolean
-  lyrics?: string
-  // Rights metadata
-  isrc?: string
-  iswc?: string
-  is_cover?: boolean
-  spotify_track_id?: string
-  musicbrainz_work_id?: string
-  isrc_platform_assigned?: boolean
-}
+export type CreateTrackInput = Pick<TrackInsert, 'album_id' | 'band_id' | 'title' | 'track_number' | 'duration_seconds' | 'is_explicit' | 'lyrics' | 'isrc' | 'iswc' | 'is_cover' | 'spotify_track_id' | 'musicbrainz_work_id' | 'isrc_platform_assigned'>
 
-export interface UpdateTrackInput {
-  title?: string
-  track_number?: number
-  duration_seconds?: number
-  audio_key?: string
-  preview_start_seconds?: number
-  is_explicit?: boolean
-  lyrics?: string
-  // Rights metadata
-  isrc?: string
-  iswc?: string
-  is_cover?: boolean
-  spotify_track_id?: string
-  musicbrainz_work_id?: string
-}
+export type UpdateTrackInput = TrackUpdate
 
 export interface CreateTrackCreditInput {
   track_id: string
@@ -172,7 +73,7 @@ export interface UpdateTrackCreditInput {
 }
 
 export const useAlbum = () => {
-  const supabase = useSupabaseClient()
+  const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()
 
   // Generate slug from title
