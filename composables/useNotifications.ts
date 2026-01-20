@@ -1,5 +1,6 @@
 // Composable for managing in-app notifications
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { Database } from '~/types/database'
 
 export interface Notification {
   id: string
@@ -17,7 +18,7 @@ let realtimeChannel: RealtimeChannel | null = null
 
 export const useNotifications = () => {
   const user = useSupabaseUser()
-  const client = useSupabaseClient()
+  const client = useSupabaseClient<Database>()
 
   // Use useState for SSR-safe shared state
   // NOTE: Using unique keys to avoid conflict with Nuxt UI's toast system which uses 'notifications'

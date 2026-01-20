@@ -1,6 +1,7 @@
 // Composable for artist dashboard realtime updates
 // Provides subscriptions for streams, earnings, and moderation status changes
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
+import type { Database } from '~/types/database'
 
 type TableName = 'listening_history' | 'bands' | 'albums' | 'tracks' | 'payouts'
 
@@ -13,7 +14,7 @@ interface RealtimeOptions {
 }
 
 export const useArtistRealtime = () => {
-  const client = useSupabaseClient()
+  const client = useSupabaseClient<Database>()
   // Using 'any' for channel type to avoid Supabase typing issues between subscribe() return and RealtimeChannel
   const channels = ref<Map<string, any>>(new Map())
   const debounceTimers = ref<Map<string, ReturnType<typeof setTimeout>>>(new Map())

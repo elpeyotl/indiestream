@@ -1,5 +1,6 @@
 // User profile composable with SSR-safe caching
 // Uses useState for SSR compatibility
+import type { Database } from '~/types/database'
 
 // Cache configuration
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
@@ -170,7 +171,7 @@ export const useUserProfile = () => {
       }
 
       // Step 3: Update profile with new avatar_key
-      const client = useSupabaseClient()
+      const client = useSupabaseClient<Database>()
       const user = useSupabaseUser()
 
       const { error: updateError } = await client

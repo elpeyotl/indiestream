@@ -1,5 +1,6 @@
 // Subscription management composable
 // Using global state so subscription status is shared across all components
+import type { Database } from '~/types/database'
 
 interface SubscriptionData {
   status: string
@@ -19,7 +20,7 @@ interface FreeTierData {
 const SUBSCRIPTION_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
 export const useSubscription = () => {
-  const supabase = useSupabaseClient()
+  const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()
 
   // Use useState for SSR-safe shared state

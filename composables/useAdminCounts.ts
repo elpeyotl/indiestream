@@ -1,5 +1,6 @@
 // Global admin pending counts with realtime updates
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { Database } from '~/types/database'
 
 export interface AdminCounts {
   moderation: number
@@ -16,7 +17,7 @@ let realtimeChannel: RealtimeChannel | null = null
 let fetchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
 export const useAdminCounts = () => {
-  const client = useSupabaseClient()
+  const client = useSupabaseClient<Database>()
   const user = useSupabaseUser()
 
   const totalPendingCount = computed(() => {

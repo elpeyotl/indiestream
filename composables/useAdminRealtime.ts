@@ -1,6 +1,7 @@
 // Composable for admin tab realtime updates
 // Provides easy way to subscribe to table changes and auto-refresh data
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
+import type { Database } from '~/types/database'
 
 type TableName = 'bands' | 'albums' | 'tracks' | 'playlists' | 'content_reports' | 'dmca_requests' | 'moderation_queue'
 
@@ -16,7 +17,7 @@ interface RealtimeOptions {
 }
 
 export const useAdminRealtime = () => {
-  const client = useSupabaseClient()
+  const client = useSupabaseClient<Database>()
   const channels = ref<Map<string, RealtimeChannel>>(new Map())
 
   /**
