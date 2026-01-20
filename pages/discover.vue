@@ -565,6 +565,14 @@ const loadMoreArtists = async () => {
 // Pull to refresh - force refresh to bypass cache
 usePullToRefresh(() => loadData(true))
 
+// SEO
+useHead({
+  title: 'Discover Music | FairStream',
+  meta: [
+    { name: 'description', content: 'Discover independent artists and new music releases on FairStream. Stream music that directly supports artists.' },
+  ],
+})
+
 onMounted(() => {
   loadData()
 })

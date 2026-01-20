@@ -116,6 +116,8 @@ definePageMeta({
 })
 
 const { signIn, signInWithGoogle } = useAuth()
+const route = useRoute()
+const toast = useToast()
 
 const email = ref('')
 const password = ref('')
@@ -123,6 +125,18 @@ const rememberMe = ref(false)
 const loading = ref(false)
 const googleLoading = ref(false)
 const error = ref('')
+
+// Show OAuth error toast if redirected with error param
+onMounted(() => {
+  if (route.query.error) {
+    toast.add({
+      title: 'Login Failed',
+      description: 'Authentication failed. Please try again.',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-circle',
+    })
+  }
+})
 
 const handleLogin = async () => {
   loading.value = true

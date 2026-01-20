@@ -864,6 +864,17 @@ const dragDrop = async (targetIndex: number) => {
   draggedIndex.value = null
 }
 
+// SEO - dynamic based on playlist data
+useHead(() => ({
+  title: playlist.value ? `${playlist.value.title} | FairStream` : 'Playlist | FairStream',
+  meta: [
+    {
+      name: 'description',
+      content: playlist.value?.description || `Listen to this playlist on FairStream`,
+    },
+  ],
+}))
+
 onMounted(() => {
   loadPlaylist()
 })

@@ -35,7 +35,27 @@
       />
     </div>
 
-    <LoadingSpinner v-if="loading" />
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+      <div v-for="i in 12" :key="i" class="text-center">
+        <USkeleton class="w-full aspect-square rounded-full mb-3" />
+        <USkeleton class="h-5 w-3/4 mx-auto mb-1" />
+        <USkeleton class="h-4 w-1/2 mx-auto" />
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="text-center py-20">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+        <UIcon name="i-heroicons-exclamation-circle" class="w-8 h-8 text-red-400" />
+      </div>
+      <h2 class="text-xl font-semibold text-zinc-100 mb-2">Failed to Load Artists</h2>
+      <p class="text-zinc-400 mb-6">Something went wrong. Please try again.</p>
+      <UButton color="violet" @click="loadArtists(true)">
+        <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 mr-2" />
+        Retry
+      </UButton>
+    </div>
 
     <template v-else>
       <!-- Artists Grid -->
@@ -88,6 +108,7 @@ const { setQueue } = usePlayer()
 const loading = ref(true)
 const loadingMore = ref(false)
 const loadingPlayId = ref<string | null>(null)
+const error = ref(false)
 const artists = ref<Band[]>([])
 const searchQuery = ref('')
 const selectedGenre = ref<{ label: string; value: string } | null>(null)
@@ -176,6 +197,7 @@ const loadArtists = async (reset = false) => {
     page.value = 0
     artists.value = []
     loading.value = true
+    error.value = false
   }
 
   try {
@@ -221,6 +243,7 @@ const loadArtists = async (reset = false) => {
     hasMore.value = newArtists.length === pageSize
   } catch (e) {
     console.error('Failed to load artists:', e)
+    error.value = true
   } finally {
     loading.value = false
     loadingMore.value = false
@@ -260,6 +283,14 @@ const loadGenres = async () => {
     console.error('Failed to load genres:', e)
   }
 }
+
+// SEO
+useHead({
+  title: 'Browse Artists | FairStream',
+  meta: [
+    { name: 'description', content: 'Explore independent artists on FairStream. Discover new music and support artists directly with your streams.' },
+  ],
+})
 
 onMounted(async () => {
   await Promise.all([

@@ -16,14 +16,34 @@
       />
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="space-y-12">
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
       <section v-for="i in 3" :key="i">
-        <div class="h-7 w-48 skeleton mb-4" />
-        <div class="space-y-3">
-          <div v-for="j in 5" :key="j" class="h-16 skeleton rounded-lg" />
+        <USkeleton class="h-7 w-40 mb-4" />
+        <div class="space-y-2">
+          <div v-for="j in 5" :key="j" class="flex items-center gap-3 p-2">
+            <USkeleton class="w-6 h-6" />
+            <USkeleton class="w-10 h-10 rounded" />
+            <div class="flex-1">
+              <USkeleton class="h-4 w-32 mb-1" />
+              <USkeleton class="h-3 w-20" />
+            </div>
+          </div>
         </div>
       </section>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="text-center py-20">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+        <UIcon name="i-heroicons-exclamation-circle" class="w-8 h-8 text-red-400" />
+      </div>
+      <h2 class="text-xl font-semibold text-zinc-100 mb-2">Failed to Load Charts</h2>
+      <p class="text-zinc-400 mb-6">Something went wrong. Please try again.</p>
+      <UButton color="violet" @click="loadCharts">
+        <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 mr-2" />
+        Retry
+      </UButton>
     </div>
 
     <template v-else>
@@ -253,6 +273,7 @@ const chartDataCache = useState<Record<string, ChartCache>>('charts-cache', () =
 
 const loading = ref(true)
 const loadingPlayId = ref<string | null>(null)
+const error = ref(false)
 const selectedPeriod = ref('7d')
 
 const periodOptions = [
@@ -291,12 +312,14 @@ const loadCharts = async () => {
   if (cached && Date.now() - cached.timestamp < CHART_CACHE_TTL) {
     charts.value = cached.data
     loading.value = false
+    error.value = false
     // Still load images in the background (don't await - let them load while user sees data)
     loadImages()
     return
   }
 
   loading.value = true
+  error.value = false
   try {
     const data = await $fetch('/api/charts/trending', {
       query: { period: selectedPeriod.value, limit: 20 },
@@ -315,6 +338,7 @@ const loadCharts = async () => {
     loadImages() // Don't await - load in background
   } catch (e) {
     console.error('Failed to load charts:', e)
+    error.value = true
     loading.value = false
   }
 }
@@ -469,6 +493,9 @@ const playArtist = async (artist: any) => {
 onMounted(loadCharts)
 
 useHead({
-  title: 'Charts - Fairstream',
+  title: 'Charts | FairStream',
+  meta: [
+    { name: 'description', content: 'See what\'s trending on FairStream. Discover top tracks, albums, and artists from independent musicians.' },
+  ],
 })
 </script>

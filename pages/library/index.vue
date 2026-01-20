@@ -9,7 +9,14 @@
     <!-- Tab Selector -->
     <PillTabs v-model="activeTab" :tabs="tabs" sticky>
       <template #playlists>
-          <LoadingSpinner v-if="loading" />
+          <!-- Loading Skeleton -->
+          <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div v-for="i in 5" :key="i">
+              <USkeleton class="aspect-square rounded-lg mb-3" />
+              <USkeleton class="h-5 w-3/4 mb-1" />
+              <USkeleton class="h-4 w-1/2" />
+            </div>
+          </div>
 
           <!-- Create Playlist Button -->
           <div v-if="!loading && (userPlaylists.length > 0 || tracks.length > 0)" class="flex justify-start mb-6">
@@ -75,7 +82,14 @@
       </template>
 
       <template #artists>
-          <LoadingSpinner v-if="loading" />
+          <!-- Loading Skeleton -->
+          <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div v-for="i in 5" :key="i" class="text-center">
+              <USkeleton class="w-32 md:w-40 h-32 md:h-40 rounded-full mx-auto mb-3" />
+              <USkeleton class="h-5 w-24 mx-auto mb-1" />
+              <USkeleton class="h-4 w-16 mx-auto" />
+            </div>
+          </div>
 
           <EmptyState
             v-else-if="artists.length === 0"
@@ -117,7 +131,14 @@
       </template>
 
       <template #albums>
-          <LoadingSpinner v-if="loading" />
+          <!-- Loading Skeleton -->
+          <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div v-for="i in 5" :key="i">
+              <USkeleton class="aspect-square rounded-lg mb-3" />
+              <USkeleton class="h-5 w-3/4 mb-1" />
+              <USkeleton class="h-4 w-1/2" />
+            </div>
+          </div>
 
           <EmptyState
             v-else-if="albums.length === 0"
@@ -159,7 +180,19 @@
       </template>
 
       <template #tracks>
-          <LoadingSpinner v-if="loading" />
+          <!-- Loading Skeleton -->
+          <div v-if="loading" class="space-y-1">
+            <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-3">
+              <USkeleton class="w-8 h-4" />
+              <USkeleton class="w-10 h-10 rounded" />
+              <div class="flex-1">
+                <USkeleton class="h-5 w-40 mb-1" />
+                <USkeleton class="h-4 w-24" />
+              </div>
+              <USkeleton class="hidden md:block h-4 w-32" />
+              <USkeleton class="w-12 h-4" />
+            </div>
+          </div>
 
           <EmptyState
             v-else-if="tracks.length === 0"
@@ -264,7 +297,19 @@
       </template>
 
       <template #history>
-          <LoadingSpinner v-if="loadingHistory" />
+          <!-- Loading Skeleton -->
+          <div v-if="loadingHistory" class="space-y-1">
+            <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-3">
+              <USkeleton class="w-8 h-4" />
+              <USkeleton class="w-10 h-10 rounded" />
+              <div class="flex-1">
+                <USkeleton class="h-5 w-40 mb-1" />
+                <USkeleton class="h-4 w-24" />
+              </div>
+              <USkeleton class="hidden md:block h-4 w-32" />
+              <USkeleton class="hidden sm:block h-4 w-20" />
+            </div>
+          </div>
 
           <EmptyState
             v-else-if="recentlyPlayed.length === 0"

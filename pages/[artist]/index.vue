@@ -281,9 +281,12 @@
               </NuxtLink>
             </div>
             <!-- Empty state -->
-            <div v-else class="text-center py-12 text-zinc-400">
-              <UIcon name="i-heroicons-musical-note" class="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No releases yet</p>
+            <div v-else class="text-center py-12">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-800/50 flex items-center justify-center">
+                <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-zinc-500" />
+              </div>
+              <h3 class="text-lg font-medium text-zinc-200 mb-2">No releases yet</h3>
+              <p class="text-zinc-400 text-sm">Check back soon for new music from {{ band?.name }}</p>
             </div>
         </template>
 

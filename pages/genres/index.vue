@@ -6,9 +6,22 @@
       <p class="text-zinc-400">Explore music across different styles and sounds</p>
     </div>
 
-    <!-- Loading -->
+    <!-- Loading Skeleton -->
     <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      <div v-for="i in 15" :key="i" class="h-32 skeleton rounded-xl" />
+      <USkeleton v-for="i in 15" :key="i" class="h-32 rounded-xl" />
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="text-center py-20">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+        <UIcon name="i-heroicons-exclamation-circle" class="w-8 h-8 text-red-400" />
+      </div>
+      <h2 class="text-xl font-semibold text-zinc-100 mb-2">Failed to Load Genres</h2>
+      <p class="text-zinc-400 mb-6">Something went wrong. Please try again.</p>
+      <UButton color="violet" @click="loadGenres">
+        <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 mr-2" />
+        Retry
+      </UButton>
     </div>
 
     <!-- Genre Grid -->
@@ -96,6 +109,7 @@ interface Genre {
 
 const loading = ref(true)
 const loadingPlayId = ref<string | null>(null)
+const error = ref(false)
 const genres = ref<Genre[]>([])
 const genreAvatars = ref<Record<string, string[]>>({})
 
@@ -185,7 +199,17 @@ const loadAvatars = async () => {
   await Promise.all(avatarPromises)
 }
 
-onMounted(async () => {
+// SEO
+useHead({
+  title: 'Browse Genres | FairStream',
+  meta: [
+    { name: 'description', content: 'Explore music by genre on FairStream. Discover independent artists across rock, electronic, hip-hop, jazz, and more.' },
+  ],
+})
+
+const loadGenres = async () => {
+  loading.value = true
+  error.value = false
   try {
     const data = await $fetch('/api/genres')
     genres.value = data.genres
@@ -193,8 +217,11 @@ onMounted(async () => {
     loadAvatars()
   } catch (e) {
     console.error('Failed to load genres:', e)
+    error.value = true
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadGenres)
 </script>
