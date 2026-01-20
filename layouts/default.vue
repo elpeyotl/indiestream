@@ -300,8 +300,54 @@
                         @click="userMenuOpen = false"
                       >
                         <UIcon name="i-heroicons-shield-check" class="w-5 h-5 text-zinc-400" />
-                        <span class="text-zinc-100">Admin</span>
+                        <span class="text-zinc-100 flex-1">Admin</span>
+                        <span
+                          v-if="totalPendingCount > 0"
+                          class="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full"
+                        >
+                          {{ totalPendingCount > 99 ? '99+' : totalPendingCount }}
+                        </span>
                       </NuxtLink>
+
+                      <!-- Admin pending items breakdown -->
+                      <div v-if="isAdmin && adminCounts && totalPendingCount > 0" class="px-4 py-2 space-y-1">
+                        <NuxtLink
+                          v-if="adminCounts.moderation > 0"
+                          to="/admin?tab=moderation"
+                          class="flex items-center justify-between text-sm py-1.5 px-3 rounded hover:bg-zinc-800/50 transition-colors"
+                          @click="userMenuOpen = false"
+                        >
+                          <span class="text-zinc-400">Track Moderation</span>
+                          <span class="text-amber-400 font-medium">{{ adminCounts.moderation }}</span>
+                        </NuxtLink>
+                        <NuxtLink
+                          v-if="adminCounts.artists > 0"
+                          to="/admin?tab=artists"
+                          class="flex items-center justify-between text-sm py-1.5 px-3 rounded hover:bg-zinc-800/50 transition-colors"
+                          @click="userMenuOpen = false"
+                        >
+                          <span class="text-zinc-400">Artist Approvals</span>
+                          <span class="text-amber-400 font-medium">{{ adminCounts.artists }}</span>
+                        </NuxtLink>
+                        <NuxtLink
+                          v-if="adminCounts.reports > 0"
+                          to="/admin?tab=reports"
+                          class="flex items-center justify-between text-sm py-1.5 px-3 rounded hover:bg-zinc-800/50 transition-colors"
+                          @click="userMenuOpen = false"
+                        >
+                          <span class="text-zinc-400">Content Reports</span>
+                          <span class="text-red-400 font-medium">{{ adminCounts.reports }}</span>
+                        </NuxtLink>
+                        <NuxtLink
+                          v-if="adminCounts.dmca > 0"
+                          to="/admin?tab=dmca"
+                          class="flex items-center justify-between text-sm py-1.5 px-3 rounded hover:bg-zinc-800/50 transition-colors"
+                          @click="userMenuOpen = false"
+                        >
+                          <span class="text-zinc-400">DMCA Requests</span>
+                          <span class="text-red-400 font-medium">{{ adminCounts.dmca }}</span>
+                        </NuxtLink>
+                      </div>
 
                       <div class="my-2 border-t border-zinc-800" />
 
@@ -527,21 +573,8 @@ const handleNotificationClick = (notification: Notification) => {
   }
 };
 
-// Check if user is admin
-const isAdmin = ref(false);
-
-watch(user, async (newUser) => {
-  if (newUser) {
-    const { data } = await client
-      .from('profiles')
-      .select('role')
-      .eq('id', newUser.id)
-      .single();
-    isAdmin.value = data?.role === 'admin';
-  } else {
-    isAdmin.value = false;
-  }
-}, { immediate: true });
+// Admin state with realtime updates (global composable)
+const { adminCounts, totalPendingCount, isAdmin } = useAdminCounts();
 
 const displayName = computed(() => {
   if (!user.value) return "";
