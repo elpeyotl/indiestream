@@ -15,7 +15,7 @@
         <UInput
           ref="searchInput"
           v-model="query"
-          placeholder="Search artists, albums, tracks..."
+          placeholder="Search artists, albums, tracks, playlists..."
           size="xl"
           icon="i-heroicons-magnifying-glass"
           :loading="searching"
@@ -112,12 +112,76 @@
                   class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
                   @click="saveAndClose"
                 >
-                  <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
-                    <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-zinc-400" />
+                  <div class="w-10 h-10 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
+                    <img
+                      v-if="track.cover_url"
+                      :src="track.cover_url"
+                      :alt="track.album_title"
+                      class="w-full h-full object-cover"
+                    />
+                    <div v-else class="w-full h-full flex items-center justify-center">
+                      <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-zinc-600" />
+                    </div>
                   </div>
                   <div class="flex-1 min-w-0">
                     <p class="font-medium text-zinc-100 truncate">{{ track.title }}</p>
                     <p class="text-xs text-zinc-500">{{ track.band_name }} · {{ track.album_title }}</p>
+                  </div>
+                </NuxtLink>
+              </div>
+            </div>
+
+            <!-- Playlists -->
+            <div v-if="results.playlists.length > 0">
+              <h3 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Playlists</h3>
+              <div class="space-y-1">
+                <NuxtLink
+                  v-for="playlist in results.playlists"
+                  :key="playlist.id"
+                  :to="`/playlist/${playlist.id}`"
+                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                  @click="saveAndClose"
+                >
+                  <!-- Mini playlist cover mosaic -->
+                  <div class="w-10 h-10 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
+                    <!-- 4 covers: 2x2 grid -->
+                    <div v-if="playlist.covers?.length >= 4" class="grid grid-cols-2 h-full w-full">
+                      <img
+                        v-for="(cover, index) in playlist.covers.slice(0, 4)"
+                        :key="index"
+                        :src="cover"
+                        :alt="`Cover ${index + 1}`"
+                        class="w-full h-full object-cover"
+                      />
+                    </div>
+                    <!-- 2-3 covers: show first 2 side by side -->
+                    <div v-else-if="playlist.covers?.length >= 2" class="grid grid-cols-2 h-full w-full">
+                      <img
+                        v-for="(cover, index) in playlist.covers.slice(0, 2)"
+                        :key="index"
+                        :src="cover"
+                        :alt="`Cover ${index + 1}`"
+                        class="w-full h-full object-cover"
+                      />
+                    </div>
+                    <!-- 1 cover: full image -->
+                    <img
+                      v-else-if="playlist.covers?.length === 1"
+                      :src="playlist.covers[0]"
+                      :alt="playlist.title"
+                      class="w-full h-full object-cover"
+                    />
+                    <!-- No covers: gradient fallback -->
+                    <div
+                      v-else
+                      class="w-full h-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center"
+                    >
+                      <UIcon name="i-heroicons-queue-list" class="w-5 h-5 text-white/80" />
+                    </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-zinc-100 truncate">{{ playlist.title }}</p>
+                    <p class="text-xs text-zinc-500">{{ playlist.track_count }} tracks · {{ playlist.owner_name || 'Unknown' }}</p>
                   </div>
                 </NuxtLink>
               </div>
@@ -205,24 +269,27 @@ interface SearchResults {
   artists: any[]
   albums: any[]
   tracks: any[]
+  playlists: any[]
 }
 
 const results = ref<SearchResults>({
   artists: [],
   albums: [],
   tracks: [],
+  playlists: [],
 })
 
 const hasResults = computed(() => {
   return results.value.artists.length > 0 ||
          results.value.albums.length > 0 ||
-         results.value.tracks.length > 0
+         results.value.tracks.length > 0 ||
+         results.value.playlists.length > 0
 })
 
 const openSearch = () => {
   isOpen.value = true
   query.value = ''
-  results.value = { artists: [], albums: [], tracks: [] }
+  results.value = { artists: [], albums: [], tracks: [], playlists: [] }
 }
 
 const closeSearch = () => {
@@ -268,7 +335,7 @@ const debouncedSearch = () => {
 
 const performSearch = async () => {
   if (!query.value.trim()) {
-    results.value = { artists: [], albums: [], tracks: [] }
+    results.value = { artists: [], albums: [], tracks: [], playlists: [] }
     return
   }
 
@@ -278,7 +345,7 @@ const performSearch = async () => {
     // Search artists (only active/approved)
     const { data: artists } = await client
       .from('bands')
-      .select('id, name, slug, theme_color, avatar_url')
+      .select('id, name, slug, theme_color, avatar_key')
       .eq('status', 'active')
       .ilike('name', `%${query.value}%`)
       .limit(5)
@@ -315,6 +382,7 @@ const performSearch = async () => {
         albums!inner (
           slug,
           title,
+          cover_key,
           is_published,
           bands!inner (
             name,
@@ -332,8 +400,47 @@ const performSearch = async () => {
 
     const { data: tracks } = await tracksQuery.limit(5)
 
-    // Process results
-    results.value.artists = artists || []
+    // Search public playlists
+    const { data: playlists } = await client
+      .from('playlists')
+      .select(`
+        id,
+        title,
+        track_count,
+        cover_key,
+        owner_id
+      `)
+      .eq('is_public', true)
+      .ilike('title', `%${query.value}%`)
+      .limit(5)
+
+    // Get owner info for playlists
+    const ownerIds = [...new Set((playlists || []).map(p => p.owner_id).filter(Boolean))]
+    const { data: owners } = ownerIds.length > 0
+      ? await client
+          .from('profiles')
+          .select('id, display_name')
+          .in('id', ownerIds)
+      : { data: [] }
+    const ownerMap = new Map((owners || []).map((o: any) => [o.id, o.display_name]))
+
+    // Process artists with avatar URLs
+    const processedArtists = []
+    for (const artist of (artists || [])) {
+      const processed: any = {
+        ...artist,
+        avatar_url: null,
+      }
+      if (artist.avatar_key) {
+        try {
+          processed.avatar_url = await getStreamUrl(artist.avatar_key)
+        } catch (e) {
+          // Skip avatar URL
+        }
+      }
+      processedArtists.push(processed)
+    }
+    results.value.artists = processedArtists
 
     // Process albums with cover URLs
     const processedAlbums = []
@@ -354,15 +461,71 @@ const performSearch = async () => {
     }
     results.value.albums = processedAlbums
 
-    // Process tracks
-    results.value.tracks = (tracks || []).map((track: any) => ({
-      id: track.id,
-      title: track.title,
-      album_slug: track.albums?.slug,
-      album_title: track.albums?.title,
-      band_name: track.albums?.bands?.name,
-      band_slug: track.albums?.bands?.slug,
-    }))
+    // Process tracks with cover URLs
+    const processedTracks = []
+    for (const track of (tracks || [])) {
+      const processed: any = {
+        id: track.id,
+        title: track.title,
+        album_slug: track.albums?.slug,
+        album_title: track.albums?.title,
+        band_name: track.albums?.bands?.name,
+        band_slug: track.albums?.bands?.slug,
+        cover_url: null,
+      }
+      if (track.albums?.cover_key) {
+        try {
+          processed.cover_url = await getStreamUrl(track.albums.cover_key)
+        } catch (e) {
+          // Skip cover URL
+        }
+      }
+      processedTracks.push(processed)
+    }
+    results.value.tracks = processedTracks
+
+    // Process playlists with cover URLs from tracks
+    const processedPlaylists = []
+    for (const playlist of (playlists || [])) {
+      // Fetch first 4 track covers for playlist mosaic
+      const { data: playlistTracks } = await client
+        .from('playlist_tracks')
+        .select(`
+          track:tracks!track_id (
+            album:albums!album_id (
+              cover_key
+            )
+          )
+        `)
+        .eq('playlist_id', playlist.id)
+        .order('position', { ascending: true })
+        .limit(4)
+
+      // Get unique cover URLs
+      const covers: string[] = []
+      for (const pt of (playlistTracks || [])) {
+        const coverKey = (pt.track as any)?.album?.cover_key
+        if (coverKey && covers.length < 4) {
+          try {
+            const url = await getStreamUrl(coverKey)
+            if (url && !covers.includes(url)) {
+              covers.push(url)
+            }
+          } catch (e) {
+            // Skip this cover
+          }
+        }
+      }
+
+      processedPlaylists.push({
+        id: playlist.id,
+        title: playlist.title,
+        track_count: playlist.track_count,
+        owner_name: ownerMap.get(playlist.owner_id) || null,
+        covers, // Array of cover URLs for mosaic
+      })
+    }
+    results.value.playlists = processedPlaylists
   } catch (e) {
     console.error('Search failed:', e)
   } finally {
