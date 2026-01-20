@@ -57,7 +57,7 @@
 
 #### Contact Form
 - [x] Backend for contact form (Resend)
-- [ ] Email notifications (new releases, etc.)
+- [x] Email notifications (new releases, etc.)
 
 ### Medium Priority
 
@@ -109,7 +109,6 @@
 - [ ] PWA support (full offline mode)
 - [ ] Offline playback (for subscribers)
 - [x] Social login (Google OAuth)
-- [ ] Apple login
 - [x] Email notifications (new releases from followed artists)
 
 #### Native App UX (Phase 1 - See docs/NATIVE_APP_UX.md)
@@ -127,7 +126,7 @@
 
 #### Discovery
 - [x] Genre pages (browse by genre, genre detail pages with artist filtering)
-- [ ] Curated playlists
+- [x] Curated playlists
 - [ ] "Similar artists" recommendations
 - [x] Charts/trending (top tracks, albums, artists by period)
 

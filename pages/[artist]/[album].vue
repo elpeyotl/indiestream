@@ -267,7 +267,13 @@
           class="group"
         >
           <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-2">
-            <div class="w-full h-full flex items-center justify-center">
+            <img
+              v-if="otherAlbumCovers[otherAlbum.id]"
+              :src="otherAlbumCovers[otherAlbum.id]"
+              :alt="otherAlbum.title"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <div v-else class="w-full h-full flex items-center justify-center">
               <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-zinc-600" />
             </div>
           </div>
@@ -542,11 +548,26 @@ useHead(() => ({
   ],
 }))
 
+// Store cover URLs for other albums
+const otherAlbumCovers = ref<Record<string, string>>({})
+
 // Load other albums from artist (lazy, in background)
 const loadOtherAlbums = async (bandId: string, currentAlbumId: string) => {
   try {
     const allAlbums = await getBandAlbums(bandId)
-    otherAlbums.value = allAlbums.filter(a => a.id !== currentAlbumId).slice(0, 6)
+    const filtered = allAlbums.filter(a => a.id !== currentAlbumId).slice(0, 6)
+    otherAlbums.value = filtered
+
+    // Load cover URLs for each album
+    for (const album of filtered) {
+      if (album.cover_key) {
+        getCachedCoverUrl(album.cover_key).then(url => {
+          if (url) {
+            otherAlbumCovers.value[album.id] = url
+          }
+        })
+      }
+    }
   } catch (e) {
     console.error('Failed to load other albums:', e)
   }
