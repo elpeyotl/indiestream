@@ -1,4 +1,5 @@
 // Discover page data composable with caching
+import type { Database } from '~/types/database'
 import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
 
@@ -21,7 +22,7 @@ const isCacheValid = <T>(entry: CacheEntry<T> | null): entry is CacheEntry<T> =>
 }
 
 export const useDiscover = () => {
-  const client = useSupabaseClient()
+  const client = useSupabaseClient<Database>()
   const { getCachedCoverUrl } = useAlbum()
   const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 
