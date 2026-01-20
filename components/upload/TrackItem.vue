@@ -42,9 +42,13 @@
             </template>
           </UInput>
         </div>
-        <p class="text-sm text-zinc-400 mt-1 pl-3">
+        <p v-if="track.file" class="text-sm text-zinc-400 mt-1 pl-3">
           <UIcon name="i-heroicons-document" class="w-3 h-3 inline mr-1" />
           {{ track.file.name }} · {{ formatFileSize(track.file.size) }}
+        </p>
+        <p v-else-if="track.duration" class="text-sm text-zinc-400 mt-1 pl-3">
+          <UIcon name="i-heroicons-musical-note" class="w-3 h-3 inline mr-1" />
+          {{ formatDuration(track.duration) }}
         </p>
       </div>
 
@@ -53,7 +57,15 @@
         <UProgress :value="track.progress" color="violet" size="sm" />
       </div>
 
-      <!-- Status -->
+      <!-- Status: Existing track indicator (edit mode) -->
+      <div v-else-if="track.uploaded && track.id" class="flex items-center gap-2">
+        <UBadge color="green" variant="subtle" size="xs">
+          <UIcon name="i-heroicons-check" class="w-3 h-3 mr-1" />
+          Saved
+        </UBadge>
+      </div>
+
+      <!-- Status: Just uploaded (new track during upload flow) -->
       <div v-else-if="track.uploaded" class="text-green-500">
         <UIcon name="i-heroicons-check-circle" class="w-6 h-6" />
       </div>
@@ -67,9 +79,9 @@
         <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5" />
       </div>
 
-      <!-- Remove -->
+      <!-- Remove (always show except during active upload) -->
       <UButton
-        v-if="!track.uploading && !track.uploaded"
+        v-if="!track.uploading"
         color="gray"
         variant="ghost"
         size="sm"
@@ -79,24 +91,25 @@
       </UButton>
     </div>
 
-    <!-- Track Metadata (collapsed by default during upload) -->
-    <div v-if="!track.uploading && !track.uploaded" class="space-y-4 pt-4 border-t border-zinc-700">
+    <!-- Track Metadata (show for new tracks and existing tracks in edit mode) -->
+    <div v-if="!track.uploading && (!track.uploaded || track.id)" class="space-y-4 pt-4 border-t border-zinc-700">
       <!-- ISRC Row -->
       <div class="flex items-start gap-4">
         <div class="flex-1">
-          <label class="block text-sm font-medium mb-1" :class="showErrors && !track.isrc ? 'text-red-400' : 'text-zinc-300'">
+          <label class="block text-sm font-medium mb-1" :class="showErrors && (!track.isrc || !isrcFormatValid) ? 'text-red-400' : 'text-zinc-300'">
             ISRC Code <span class="text-red-400">*</span>
             <span v-if="showErrors && !track.isrc" class="text-red-400 font-normal ml-2">— Required</span>
+            <span v-else-if="showErrors && !isrcFormatValid" class="text-red-400 font-normal ml-2">— Invalid format</span>
           </label>
           <div class="flex gap-2">
             <UInput
               :model-value="track.isrc"
               placeholder="e.g. USRC12345678"
               size="sm"
-              class="flex-1"
+              class="flex-1 uppercase"
               maxlength="12"
-              :color="showErrors && !track.isrc ? 'red' : undefined"
-              @update:model-value="$emit('update:isrc', $event)"
+              :color="showErrors && (!track.isrc || !isrcFormatValid) ? 'red' : undefined"
+              @update:model-value="handleIsrcInput"
             />
             <UButton
               color="gray"
@@ -109,7 +122,10 @@
               Deezer
             </UButton>
           </div>
-          <p class="text-xs text-zinc-500 mt-1">
+          <p v-if="track.isrc && !isrcFormatValid" class="text-xs text-red-400 mt-1">
+            ISRC must be exactly 12 characters: 2 letters + 3 alphanumeric + 7 digits (e.g., USRC12345678)
+          </p>
+          <p v-else class="text-xs text-zinc-500 mt-1">
             Don't have an ISRC? Get one from your distributor (DistroKid, TuneCore, CD Baby) or
             <a href="https://usisrc.org" target="_blank" class="text-violet-400 hover:underline">usisrc.org</a>
           </p>
@@ -266,7 +282,7 @@ const props = defineProps<{
   showErrors?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'dragstart': [event: DragEvent]
   'dragend': []
   'dragover': []
@@ -291,6 +307,35 @@ defineEmits<{
 
 const { formatFileSize, creditRoles } = useUploadWizard()
 
+// Format duration in seconds to mm:ss
+const formatDuration = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+// ISRC validation regex: 2 letters + 3 alphanumeric + 2 digits + 5 digits = 12 chars
+const ISRC_REGEX = /^[A-Z]{2}[A-Z0-9]{3}[0-9]{2}[0-9]{5}$/
+
+// Validate ISRC format
+const isValidIsrc = (isrc: string): boolean => {
+  if (!isrc) return false
+  return ISRC_REGEX.test(isrc.toUpperCase())
+}
+
+// Check if ISRC has valid format (for showing specific error)
+const isrcFormatValid = computed(() => {
+  if (!props.track.isrc) return true // Empty is handled separately
+  return isValidIsrc(props.track.isrc)
+})
+
+// Handle ISRC input - auto uppercase and emit
+const handleIsrcInput = (value: string) => {
+  // Remove any spaces/dashes and uppercase
+  const cleaned = value.replace(/[\s-]/g, '').toUpperCase()
+  emit('update:isrc', cleaned)
+}
+
 // Check if track has a composer credit
 const hasComposerCredit = computed(() => {
   return props.track.credits.some(c =>
@@ -300,6 +345,8 @@ const hasComposerCredit = computed(() => {
 
 // Check if track has validation errors
 const hasErrors = computed(() => {
-  return !props.track.isrc || !hasComposerCredit.value
+  const hasIsrc = !!props.track.isrc
+  const isrcValid = isValidIsrc(props.track.isrc || '')
+  return !hasIsrc || !isrcValid || !hasComposerCredit.value
 })
 </script>

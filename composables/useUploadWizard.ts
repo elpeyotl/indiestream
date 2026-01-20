@@ -2,16 +2,17 @@
 // Uses useState to persist data across step navigation
 
 import type { Band } from '~/composables/useBand'
-import type { Album } from '~/composables/useAlbum'
+import type { Album, Track, TrackCredit as DbTrackCredit } from '~/composables/useAlbum'
 
 export interface TrackCredit {
-  role: 'composer' | 'author' | 'composer_author' | 'arranger' | 'interpreter' | 'producer' | 'mixing' | 'mastering' | 'publisher' | 'label' | 'cover_artist'
+  role: 'composer' | 'author' | 'composer_author' | 'arranger' | 'interpreter' | 'producer' | 'mixing' | 'mastering' | 'publisher' | 'label'
   name: string
   ipi_number: string
 }
 
 export interface TrackUpload {
-  file: File
+  id?: string // Existing track ID (for edit mode)
+  file: File | null // Null for existing tracks in edit mode
   title: string
   uploading: boolean
   uploaded: boolean
@@ -28,6 +29,9 @@ export interface TrackUpload {
   showCredits: boolean
   fetchingIsrc: boolean
   fetchingIswc: boolean
+  // Edit mode
+  audioKey?: string // Existing audio key
+  duration?: number // Existing duration
 }
 
 export interface AlbumForm {
@@ -36,6 +40,8 @@ export interface AlbumForm {
   release_type: 'album' | 'ep' | 'single'
   release_date: string
   label_name: string
+  p_line: string
+  c_line: string
 }
 
 // Persistent state for the upload wizard (survives step navigation)
@@ -55,6 +61,9 @@ export interface UploadWizardState {
   falseInfoUnderstood: boolean
   // Copied credits for paste functionality
   copiedCredits: TrackCredit[] | null
+  // Edit mode
+  isEditMode: boolean
+  editAlbumId: string | null
 }
 
 const defaultAlbumForm = (): AlbumForm => ({
@@ -63,6 +72,8 @@ const defaultAlbumForm = (): AlbumForm => ({
   release_type: 'album',
   release_date: '',
   label_name: '',
+  p_line: '',
+  c_line: '',
 })
 
 const defaultState = (): UploadWizardState => ({
@@ -79,6 +90,8 @@ const defaultState = (): UploadWizardState => ({
   originalContentConfirmed: false,
   falseInfoUnderstood: false,
   copiedCredits: null,
+  isEditMode: false,
+  editAlbumId: null,
 })
 
 export const useUploadWizard = () => {
@@ -95,11 +108,10 @@ export const useUploadWizard = () => {
     { value: 'arranger', label: 'Arranger' },
     { value: 'interpreter', label: 'Interpreter' },
     { value: 'producer', label: 'Producer' },
-    { value: 'mixing', label: 'Mixing' },
-    { value: 'mastering', label: 'Mastering' },
+    { value: 'mixing', label: 'Mixing Engineer' },
+    { value: 'mastering', label: 'Mastering Engineer' },
     { value: 'publisher', label: 'Publisher' },
     { value: 'label', label: 'Label' },
-    { value: 'cover_artist', label: 'Cover Artists' },
   ]
 
   const releaseTypes = [
@@ -261,6 +273,70 @@ export const useUploadWizard = () => {
     track.showCredits = true
   }
 
+  // Load an existing album for editing
+  const loadAlbumForEdit = async (
+    album: Album & { tracks?: Track[] },
+    band: Band,
+    coverUrl: string | null,
+    trackCredits: Record<string, TrackCredit[]>
+  ) => {
+    // Map existing tracks to TrackUpload format
+    const trackUploads: TrackUpload[] = (album.tracks || []).map((track) => {
+      const credits = trackCredits[track.id] || []
+      return {
+        id: track.id,
+        file: null, // Existing tracks don't have files
+        title: track.title,
+        uploading: false,
+        uploaded: true, // Already uploaded
+        progress: 100,
+        error: null,
+        isrc: track.isrc || '',
+        iswc: track.iswc || '',
+        is_cover: track.is_cover || false,
+        spotify_track_id: track.spotify_track_id || '',
+        musicbrainz_work_id: track.musicbrainz_work_id || '',
+        credits: credits.map((c) => ({
+          role: c.role as TrackCredit['role'],
+          name: c.name,
+          ipi_number: c.ipi_number || '',
+        })),
+        showCredits: credits.length > 0,
+        fetchingIsrc: false,
+        fetchingIswc: false,
+        audioKey: track.audio_key || undefined,
+        duration: track.duration_seconds || undefined,
+      }
+    })
+
+    // Set the wizard state for edit mode
+    state.value = {
+      step: 1,
+      selectedBand: band,
+      albumForm: {
+        title: album.title,
+        description: album.description || '',
+        release_type: album.release_type,
+        release_date: album.release_date || '',
+        label_name: album.label_name || '',
+        p_line: album.p_line || '',
+        c_line: album.c_line || '',
+      },
+      coverFile: null, // Will use existing cover unless changed
+      coverPreview: coverUrl,
+      tracks: trackUploads,
+      createdAlbum: album,
+      uploading: false,
+      rightsConfirmed: album.rights_confirmed || false,
+      aiDeclaration: false,
+      originalContentConfirmed: false,
+      falseInfoUnderstood: false,
+      copiedCredits: null,
+      isEditMode: true,
+      editAlbumId: album.id,
+    }
+  }
+
   // Reset all wizard state
   const resetWizard = () => {
     state.value = defaultState()
@@ -289,6 +365,7 @@ export const useUploadWizard = () => {
     removeCredit,
     copyCredits,
     pasteCredits,
+    loadAlbumForEdit,
     resetWizard,
   }
 }

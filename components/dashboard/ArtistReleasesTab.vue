@@ -63,7 +63,7 @@
 
         <!-- Album Actions -->
         <div class="mt-2 flex gap-2">
-          <UButton color="gray" variant="ghost" size="xs" @click="$emit('editAlbum', album)">
+          <UButton color="gray" variant="ghost" size="xs" :to="`/dashboard/artist/upload?edit=${album.id}`">
             <UIcon name="i-heroicons-pencil" class="w-4 h-4" />
             Edit
           </UButton>
@@ -88,7 +88,6 @@ defineProps<{
 }>()
 
 defineEmits<{
-  editAlbum: [album: Album]
   deleteAlbum: [album: Album]
 }>()
 

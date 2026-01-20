@@ -16,7 +16,7 @@
             :key="type.value"
             :color="state.albumForm.release_type === type.value ? 'violet' : 'gray'"
             :variant="state.albumForm.release_type === type.value ? 'solid' : 'outline'"
-            @click="state.albumForm.release_type = type.value"
+            @click="state.albumForm.release_type = type.value as 'album' | 'ep' | 'single'"
           >
             {{ type.label }}
           </UButton>
@@ -63,7 +63,7 @@
       </UFormGroup>
 
       <!-- Cover Art -->
-      <UFormGroup label="Cover Art" required :error="errors.cover">
+      <UFormGroup label="Cover Art" :required="!state.isEditMode" :error="errors.cover">
         <div
           class="border-2 border-dashed rounded-xl p-8 text-center hover:border-violet-500 transition-colors cursor-pointer"
           :class="{
@@ -86,8 +86,9 @@
 
           <div v-if="state.coverPreview" class="space-y-4">
             <img :src="state.coverPreview" alt="Cover preview" class="w-40 h-40 mx-auto rounded-lg object-cover" />
-            <p class="text-sm text-zinc-400">{{ state.coverFile?.name }}</p>
-            <UButton color="gray" variant="ghost" size="sm" @click.stop="clearCover">
+            <p v-if="state.coverFile" class="text-sm text-zinc-400">{{ state.coverFile.name }}</p>
+            <p v-else-if="state.isEditMode" class="text-sm text-zinc-400">Current cover (click to change)</p>
+            <UButton v-if="state.coverFile" color="gray" variant="ghost" size="sm" @click.stop="clearCover">
               Remove
             </UButton>
           </div>
@@ -171,8 +172,8 @@ const validate = (): boolean => {
     isValid = false
   }
 
-  // Validate cover
-  if (!state.value.coverFile) {
+  // Validate cover (required for new uploads, optional for edits if existing cover)
+  if (!state.value.coverFile && !state.value.coverPreview) {
     errors.cover = 'Cover art is required'
     isValid = false
   }

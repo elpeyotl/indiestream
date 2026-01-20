@@ -6,12 +6,18 @@
         <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
         Back to Dashboard
       </NuxtLink>
-      <h1 class="text-3xl font-bold text-zinc-100">Upload Music</h1>
-      <p class="text-zinc-400 mt-2">Create a new release and upload your tracks</p>
+      <h1 class="text-3xl font-bold text-zinc-100">{{ state.isEditMode ? 'Edit Release' : 'Upload Music' }}</h1>
+      <p class="text-zinc-400 mt-2">{{ state.isEditMode ? 'Update your release details and tracks' : 'Create a new release and upload your tracks' }}</p>
     </div>
 
-    <!-- Select Artist -->
-    <div v-if="!state.selectedBand" class="mb-8">
+    <!-- Loading state for edit mode -->
+    <div v-if="editLoading" class="flex items-center justify-center py-12">
+      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-violet-400 animate-spin" />
+      <span class="ml-3 text-zinc-400">Loading album data...</span>
+    </div>
+
+    <!-- Select Artist (not shown in edit mode or while loading) -->
+    <div v-if="!editLoading && !state.selectedBand" class="mb-8">
       <UploadArtistSelector
         :bands="bands"
         :loading="bandsLoading"
@@ -20,7 +26,7 @@
     </div>
 
     <!-- Upload Form -->
-    <div v-else>
+    <div v-else-if="!editLoading">
       <!-- Selected Artist Header -->
       <div class="flex items-center gap-4 mb-6 p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
         <div
@@ -63,6 +69,7 @@
         :album-title="state.albumForm.title"
         :view-url="`/${state.selectedBand?.slug}/${state.createdAlbum?.slug}`"
         :moderation-enabled="moderationEnabled"
+        :is-edit-mode="state.isEditMode"
         @reset="resetWizard"
       />
     </div>
@@ -84,25 +91,90 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { getUserBands } = useBand()
-const { createAlbum, createTrack, updateTrack, updateAlbum, getUploadUrl, setTrackCredits, getStreamUrl } = useAlbum()
-const { state, toast, uploadFileWithProgress, uploadProcessedCover, getAudioDuration, resetWizard } = useUploadWizard()
+const route = useRoute()
+const { getUserBands, getBandById } = useBand()
+const { createAlbum, createTrack, updateTrack, updateAlbum, deleteTrack, getUploadUrl, setTrackCredits, getStreamUrl, getAlbumById, getCreditsForTracks } = useAlbum()
+const { state, toast, uploadFileWithProgress, uploadProcessedCover, getAudioDuration, resetWizard, loadAlbumForEdit } = useUploadWizard()
 const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 const user = useSupabaseUser()
 
 // Local state (not persisted)
 const bands = ref<Band[]>([])
 const bandsLoading = ref(true)
+const editLoading = ref(false)
 
 // Deezer modal
 const deezerModalOpen = ref(false)
 const deezerModalTrackIndex = ref<number | null>(null)
 const deezerInitialQuery = ref('')
 
+// Check for edit mode query param
+const editAlbumId = computed(() => route.query.edit as string | undefined)
+
+// Load album for editing if edit param is present
+const loadEditAlbum = async (albumId: string) => {
+  editLoading.value = true
+  try {
+    // Fetch album with tracks (no moderation filter for owner)
+    const album = await getAlbumById(albumId, false, true)
+    if (!album) {
+      toast.add({ title: 'Album not found', color: 'red' })
+      navigateTo('/dashboard')
+      return
+    }
+
+    // Get band data
+    const band = await getBandById(album.band_id)
+    if (!band) {
+      toast.add({ title: 'Artist not found', color: 'red' })
+      navigateTo('/dashboard')
+      return
+    }
+
+    // Load band avatar
+    if (band.avatar_key) {
+      try {
+        band.avatar_url = await getStreamUrl(band.avatar_key)
+      } catch (e) {
+        console.error('Failed to load avatar:', e)
+      }
+    }
+
+    // Load cover URL
+    let coverUrl: string | null = null
+    if (album.cover_key) {
+      try {
+        coverUrl = await getStreamUrl(album.cover_key)
+      } catch (e) {
+        console.error('Failed to load cover:', e)
+      }
+    }
+
+    // Load track credits
+    const trackIds = (album.tracks || []).map(t => t.id)
+    const credits = trackIds.length > 0 ? await getCreditsForTracks(trackIds) : {}
+
+    // Load into wizard state
+    await loadAlbumForEdit(album, band, coverUrl, credits)
+  } catch (e: any) {
+    console.error('Failed to load album for editing:', e)
+    toast.add({ title: 'Failed to load album', description: e.message, color: 'red' })
+    navigateTo('/dashboard')
+  } finally {
+    editLoading.value = false
+  }
+}
+
 // Load bands and moderation setting
 onMounted(async () => {
   // Load moderation setting in parallel
   loadModerationSetting()
+
+  // If edit mode, load the album
+  if (editAlbumId.value) {
+    await loadEditAlbum(editAlbumId.value)
+    return
+  }
 
   try {
     const loadedBands = await getUserBands()
@@ -189,11 +261,14 @@ const searchMusicBrainz = async (trackIndex: number) => {
   }
 }
 
-// Upload
+// Upload (handles both create and edit modes)
 const startUpload = async () => {
   // Prevent double-click / double submission
   if (state.value.uploading) return
-  if (!state.value.selectedBand || !state.value.coverFile || state.value.tracks.length === 0) return
+  if (!state.value.selectedBand || state.value.tracks.length === 0) return
+
+  // For new uploads, cover is required. For edits, it's optional (keep existing)
+  if (!state.value.isEditMode && !state.value.coverFile) return
 
   state.value.uploading = true
 
@@ -202,117 +277,227 @@ const startUpload = async () => {
   const originalContentConfirmed = state.value.originalContentConfirmed
 
   try {
-    // 1. Create the album in database
-    const album = await createAlbum({
-      band_id: state.value.selectedBand.id,
-      title: state.value.albumForm.title,
-      description: state.value.albumForm.description || undefined,
-      release_type: state.value.albumForm.release_type,
-      release_date: state.value.albumForm.release_date || undefined,
-      label_name: state.value.albumForm.label_name || undefined,
-    })
+    let album: any
 
-    // 2. Upload and process cover art (resizes to 600x600 square)
-    const coverKey = await uploadProcessedCover(state.value.coverFile, state.value.selectedBand.id, album.id)
+    if (state.value.isEditMode && state.value.editAlbumId) {
+      // EDIT MODE: Update existing album
+      album = { id: state.value.editAlbumId }
 
-    // Update album with cover key
-    await updateAlbum(album.id, { cover_key: coverKey })
+      // Update album metadata
+      await updateAlbum(album.id, {
+        title: state.value.albumForm.title,
+        description: state.value.albumForm.description || undefined,
+        release_type: state.value.albumForm.release_type,
+        release_date: state.value.albumForm.release_date || undefined,
+        label_name: state.value.albumForm.label_name || undefined,
+      })
 
-    // 3. Create tracks and upload audio files
-    for (let i = 0; i < state.value.tracks.length; i++) {
-      const track = state.value.tracks[i]
-      track.uploading = true
+      // Upload new cover if provided
+      if (state.value.coverFile) {
+        const coverKey = await uploadProcessedCover(state.value.coverFile, state.value.selectedBand.id, album.id)
+        await updateAlbum(album.id, { cover_key: coverKey })
+      }
 
-      try {
-        // Create track in database with rights metadata
-        const dbTrack = await createTrack({
-          album_id: album.id,
-          band_id: state.value.selectedBand!.id,
-          title: track.title,
-          track_number: i + 1,
-          isrc: track.isrc || undefined,
-          iswc: track.iswc || undefined,
-          is_cover: track.is_cover,
-          spotify_track_id: track.spotify_track_id || undefined,
-          musicbrainz_work_id: track.musicbrainz_work_id || undefined,
-          ai_declaration: aiDeclaration,
-        })
+      // Get existing track IDs to detect deletions
+      const existingTrackIds = new Set(
+        state.value.tracks.filter(t => t.id).map(t => t.id!)
+      )
 
-        // Create track credits if any
-        if (track.credits.length > 0) {
-          const validCredits = track.credits.filter(c => c.name.trim())
-          if (validCredits.length > 0) {
-            await setTrackCredits(dbTrack.id, validCredits)
+      // Delete tracks that were removed (tracks that were in createdAlbum but not in current tracks)
+      if (state.value.createdAlbum?.tracks) {
+        for (const oldTrack of state.value.createdAlbum.tracks) {
+          if (!existingTrackIds.has(oldTrack.id)) {
+            await deleteTrack(oldTrack.id)
           }
         }
-
-        // Get presigned URL and upload
-        const { uploadUrl, key } = await getUploadUrl(
-          'audio',
-          state.value.selectedBand!.id,
-          album.id,
-          track.file.name,
-          track.file.type,
-          dbTrack.id
-        )
-
-        await uploadFileWithProgress(uploadUrl, track.file, (progress) => {
-          track.progress = progress
-        })
-
-        // Update track with audio key and duration
-        const duration = await getAudioDuration(track.file)
-        await updateTrack(dbTrack.id, {
-          audio_key: key,
-          duration_seconds: Math.round(duration),
-        })
-
-        track.uploaded = true
-      } catch (e: any) {
-        track.error = e.message || 'Upload failed'
-        console.error('Track upload failed:', e)
-      } finally {
-        track.uploading = false
-      }
-    }
-
-    // 4. Only publish if ALL tracks uploaded successfully
-    const allTracksUploaded = state.value.tracks.every(t => t.uploaded)
-    if (allTracksUploaded) {
-      // Mark rights as confirmed and publish
-      await updateAlbum(album.id, {
-        is_published: true,
-        rights_confirmed: true,
-        rights_confirmed_at: new Date().toISOString(),
-        rights_confirmed_by: user.value?.id,
-        // Content protection declarations
-        original_content_confirmed: originalContentConfirmed,
-        // Generate P-line and C-line
-        p_line: `℗ ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
-        c_line: `© ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
-      })
-      state.value.createdAlbum = album
-      if (moderationEnabled.value) {
-        toast.add({ title: 'Upload complete!', description: `"${state.value.albumForm.title}" is pending review`, color: 'green', icon: 'i-heroicons-check-circle' })
-      } else {
-        toast.add({ title: 'Release published!', description: `"${state.value.albumForm.title}" is now live`, color: 'green', icon: 'i-heroicons-check-circle' })
       }
 
-      // Notify followers of the new release (async, don't block)
-      $fetch(`/api/albums/${album.id}/notify-followers`, { method: 'POST' })
-        .then((result: any) => {
-          if (result.notified > 0) {
-            console.log(`[New Release] Notified ${result.notified} followers`)
+      // Process tracks (update existing, create new)
+      for (let i = 0; i < state.value.tracks.length; i++) {
+        const track = state.value.tracks[i]
+
+        if (track.id) {
+          // Update existing track
+          await updateTrack(track.id, {
+            title: track.title,
+            track_number: i + 1,
+            isrc: track.isrc || undefined,
+            iswc: track.iswc || undefined,
+            is_cover: track.is_cover,
+            spotify_track_id: track.spotify_track_id || undefined,
+            musicbrainz_work_id: track.musicbrainz_work_id || undefined,
+          })
+
+          // Update credits
+          if (track.credits.length > 0) {
+            const validCredits = track.credits.filter(c => c.name.trim())
+            await setTrackCredits(track.id, validCredits)
           }
-        })
-        .catch((err) => {
-          console.error('Failed to notify followers:', err)
-        })
+        } else if (track.file) {
+          // New track - create and upload
+          track.uploading = true
+
+          try {
+            const dbTrack = await createTrack({
+              album_id: album.id,
+              band_id: state.value.selectedBand!.id,
+              title: track.title,
+              track_number: i + 1,
+              isrc: track.isrc || undefined,
+              iswc: track.iswc || undefined,
+              is_cover: track.is_cover,
+              spotify_track_id: track.spotify_track_id || undefined,
+              musicbrainz_work_id: track.musicbrainz_work_id || undefined,
+            })
+
+            // Create track credits
+            if (track.credits.length > 0) {
+              const validCredits = track.credits.filter(c => c.name.trim())
+              if (validCredits.length > 0) {
+                await setTrackCredits(dbTrack.id, validCredits)
+              }
+            }
+
+            // Upload audio
+            const { uploadUrl, key } = await getUploadUrl(
+              'audio',
+              state.value.selectedBand!.id,
+              album.id,
+              track.file.name,
+              track.file.type,
+              dbTrack.id
+            )
+
+            await uploadFileWithProgress(uploadUrl, track.file, (progress) => {
+              track.progress = progress
+            })
+
+            const duration = await getAudioDuration(track.file)
+            await updateTrack(dbTrack.id, {
+              audio_key: key,
+              duration_seconds: Math.round(duration),
+            })
+
+            track.id = dbTrack.id
+            track.uploaded = true
+          } catch (e: any) {
+            track.error = e.message || 'Upload failed'
+            console.error('Track upload failed:', e)
+          } finally {
+            track.uploading = false
+          }
+        }
+      }
+
+      toast.add({ title: 'Changes saved!', description: `"${state.value.albumForm.title}" has been updated`, color: 'green', icon: 'i-heroicons-check-circle' })
       state.value.step = 3
+
     } else {
-      // Some tracks failed - keep as draft
-      state.value.createdAlbum = album
-      toast.add({ title: 'Partial upload', description: 'Some tracks failed. Album saved as draft.', color: 'amber', icon: 'i-heroicons-exclamation-triangle' })
+      // CREATE MODE: Create new album
+      album = await createAlbum({
+        band_id: state.value.selectedBand.id,
+        title: state.value.albumForm.title,
+        description: state.value.albumForm.description || undefined,
+        release_type: state.value.albumForm.release_type,
+        release_date: state.value.albumForm.release_date || undefined,
+        label_name: state.value.albumForm.label_name || undefined,
+      })
+
+      // Upload and process cover art
+      const coverKey = await uploadProcessedCover(state.value.coverFile!, state.value.selectedBand.id, album.id)
+      await updateAlbum(album.id, { cover_key: coverKey })
+
+      // Create tracks and upload audio files
+      for (let i = 0; i < state.value.tracks.length; i++) {
+        const track = state.value.tracks[i]
+        if (!track.file) continue
+
+        track.uploading = true
+
+        try {
+          const dbTrack = await createTrack({
+            album_id: album.id,
+            band_id: state.value.selectedBand!.id,
+            title: track.title,
+            track_number: i + 1,
+            isrc: track.isrc || undefined,
+            iswc: track.iswc || undefined,
+            is_cover: track.is_cover,
+            spotify_track_id: track.spotify_track_id || undefined,
+            musicbrainz_work_id: track.musicbrainz_work_id || undefined,
+          })
+
+          // Create track credits
+          if (track.credits.length > 0) {
+            const validCredits = track.credits.filter(c => c.name.trim())
+            if (validCredits.length > 0) {
+              await setTrackCredits(dbTrack.id, validCredits)
+            }
+          }
+
+          // Upload audio
+          const { uploadUrl, key } = await getUploadUrl(
+            'audio',
+            state.value.selectedBand!.id,
+            album.id,
+            track.file.name,
+            track.file.type,
+            dbTrack.id
+          )
+
+          await uploadFileWithProgress(uploadUrl, track.file, (progress) => {
+            track.progress = progress
+          })
+
+          const duration = await getAudioDuration(track.file)
+          await updateTrack(dbTrack.id, {
+            audio_key: key,
+            duration_seconds: Math.round(duration),
+          })
+
+          track.uploaded = true
+        } catch (e: any) {
+          track.error = e.message || 'Upload failed'
+          console.error('Track upload failed:', e)
+        } finally {
+          track.uploading = false
+        }
+      }
+
+      // Only publish if ALL tracks uploaded successfully
+      const allTracksUploaded = state.value.tracks.every(t => t.uploaded)
+      if (allTracksUploaded) {
+        await updateAlbum(album.id, {
+          is_published: true,
+          rights_confirmed: true,
+          rights_confirmed_at: new Date().toISOString(),
+          rights_confirmed_by: user.value?.id,
+          original_content_confirmed: originalContentConfirmed,
+          p_line: `℗ ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
+          c_line: `© ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
+        })
+        state.value.createdAlbum = album
+        if (moderationEnabled.value) {
+          toast.add({ title: 'Upload complete!', description: `"${state.value.albumForm.title}" is pending review`, color: 'green', icon: 'i-heroicons-check-circle' })
+        } else {
+          toast.add({ title: 'Release published!', description: `"${state.value.albumForm.title}" is now live`, color: 'green', icon: 'i-heroicons-check-circle' })
+        }
+
+        // Notify followers
+        $fetch(`/api/albums/${album.id}/notify-followers`, { method: 'POST' })
+          .then((result: any) => {
+            if (result.notified > 0) {
+              console.log(`[New Release] Notified ${result.notified} followers`)
+            }
+          })
+          .catch((err) => {
+            console.error('Failed to notify followers:', err)
+          })
+        state.value.step = 3
+      } else {
+        state.value.createdAlbum = album
+        toast.add({ title: 'Partial upload', description: 'Some tracks failed. Album saved as draft.', color: 'amber', icon: 'i-heroicons-exclamation-triangle' })
+      }
     }
 
   } catch (e: any) {

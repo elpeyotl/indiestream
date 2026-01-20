@@ -46,7 +46,7 @@
     <div v-if="state.tracks.length > 0" class="space-y-4">
       <UploadTrackItem
         v-for="(track, index) in state.tracks"
-        :key="track.file.name + index"
+        :key="track.id || (track.file?.name ?? '') + index"
         :track="track"
         :track-number="index + 1"
         :is-drag-over="dragOverIndex === index"
@@ -163,7 +163,8 @@
     <!-- Actions -->
     <div class="flex justify-between pt-6 border-t border-zinc-800 mt-6">
       <div class="text-sm text-zinc-400">
-        {{ state.tracks.length }} track{{ state.tracks.length !== 1 ? 's' : '' }} · {{ formatFileSize(totalSize) }}
+        {{ state.tracks.length }} track{{ state.tracks.length !== 1 ? 's' : '' }}
+        <span v-if="totalSize > 0"> · {{ formatFileSize(totalSize) }}</span>
       </div>
       <UButton
         color="violet"
@@ -173,7 +174,7 @@
         @click="handleUpload"
       >
         <UIcon v-if="!state.uploading" name="i-heroicons-cloud-arrow-up" class="w-5 h-5 mr-1" />
-        {{ state.uploading ? 'Uploading...' : 'Upload & Publish' }}
+        {{ state.uploading ? (state.isEditMode ? 'Saving...' : 'Uploading...') : (state.isEditMode ? 'Save Changes' : 'Upload & Publish') }}
       </UButton>
     </div>
   </UCard>
@@ -208,12 +209,23 @@ const draggedTrackIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
 const showValidationErrors = ref(false)
 
-// Computed
-const totalSize = computed(() => state.value.tracks.reduce((sum, t) => sum + t.file.size, 0))
+// ISRC validation regex: 2 letters + 3 alphanumeric + 2 digits + 5 digits = 12 chars
+const ISRC_REGEX = /^[A-Z]{2}[A-Z0-9]{3}[0-9]{2}[0-9]{5}$/
 
-const allTracksHaveIsrc = computed(() => {
-  return state.value.tracks.length > 0 && state.value.tracks.every(t => t.isrc && t.isrc.length > 0)
+const isValidIsrc = (isrc: string): boolean => {
+  if (!isrc) return false
+  return ISRC_REGEX.test(isrc.toUpperCase())
+}
+
+// Computed
+const totalSize = computed(() => state.value.tracks.reduce((sum, t) => sum + (t.file?.size ?? 0), 0))
+
+const allTracksHaveValidIsrc = computed(() => {
+  return state.value.tracks.length > 0 && state.value.tracks.every(t => isValidIsrc(t.isrc || ''))
 })
+
+// Keep for backwards compat but use the new one
+const allTracksHaveIsrc = allTracksHaveValidIsrc
 
 const allTracksHaveComposer = computed(() => {
   return state.value.tracks.length > 0 && state.value.tracks.every(t =>
@@ -245,9 +257,16 @@ const validationErrors = computed(() => {
     errors.push('Add at least one track')
   }
 
-  if (state.value.tracks.length > 0 && !allTracksHaveIsrc.value) {
-    const count = state.value.tracks.filter(t => !t.isrc).length
-    errors.push(`${count} track${count > 1 ? 's' : ''} missing ISRC code`)
+  if (state.value.tracks.length > 0 && !allTracksHaveValidIsrc.value) {
+    const missingCount = state.value.tracks.filter(t => !t.isrc).length
+    const invalidCount = state.value.tracks.filter(t => t.isrc && !isValidIsrc(t.isrc)).length
+
+    if (missingCount > 0) {
+      errors.push(`${missingCount} track${missingCount > 1 ? 's' : ''} missing ISRC code`)
+    }
+    if (invalidCount > 0) {
+      errors.push(`${invalidCount} track${invalidCount > 1 ? 's have' : ' has'} invalid ISRC format`)
+    }
   }
 
   if (state.value.tracks.length > 0 && !allTracksHaveComposer.value) {
