@@ -70,6 +70,7 @@ const state = reactive<PlayerState>({
 })
 
 let audio: HTMLAudioElement | null = null
+let preloadAudio: HTMLAudioElement | null = null // For preloading next track
 
 // Media Session API for lock screen controls
 let mediaSessionInitialized = false
@@ -127,6 +128,40 @@ let analyserAnimationId: number | null = null
 
 // Track total listening time across tracks
 let listeningStartTime = 0
+
+// Preload the next track in queue for gapless playback
+const preloadNextTrack = async (getStreamUrl: (key: string) => Promise<string>) => {
+  if (import.meta.server) return
+  if (!preloadAudio) {
+    preloadAudio = new Audio()
+    preloadAudio.preload = 'auto'
+    preloadAudio.volume = 0 // Silent - just for preloading
+  }
+
+  const nextIndex = state.queueIndex + 1
+  if (nextIndex >= state.queue.length) return
+
+  const nextTrack = state.queue[nextIndex]
+  if (!nextTrack) return
+
+  try {
+    // Get the audio URL if not already loaded
+    let audioUrl = nextTrack.audioUrl
+    if (!audioUrl && nextTrack.audioKey) {
+      audioUrl = await getStreamUrl(nextTrack.audioKey)
+      // Update the track in queue with the fetched URL
+      nextTrack.audioUrl = audioUrl
+    }
+
+    if (audioUrl && preloadAudio.src !== audioUrl) {
+      preloadAudio.src = audioUrl
+      preloadAudio.load()
+    }
+  } catch (e) {
+    // Preload failed - not critical, playback will fetch when needed
+    console.debug('Preload failed for next track:', e)
+  }
+}
 
 export const usePlayer = () => {
   const { getStreamUrl } = useAlbum()
@@ -208,6 +243,7 @@ export const usePlayer = () => {
     state.trackStartTime = Date.now()
     state.previewEnded = false
     state.showUpgradePrompt = false
+    preloadTriggeredAt75 = false // Reset preload flag for new track
 
     // Check what type of play this will be
     const playType = await checkPlayAllowance(trackId)
@@ -250,6 +286,18 @@ export const usePlayer = () => {
       }
       state.previewEnded = true
       state.isPlaying = false
+    }
+  }
+
+  // Track if we've already triggered the 75% preload for current track
+  let preloadTriggeredAt75 = false
+
+  // Check if we should preload next track (at 75% of current track)
+  const checkPreloadTrigger = () => {
+    if (preloadTriggeredAt75) return
+    if (state.duration > 0 && state.currentTime / state.duration >= 0.75) {
+      preloadTriggeredAt75 = true
+      preloadNextTrack(getStreamUrl)
     }
   }
 
@@ -298,6 +346,8 @@ export const usePlayer = () => {
       checkAndRecordStream()
       // Check preview limit for non-logged-in users
       checkPreviewLimit()
+      // Check if we should preload next track (at 75%)
+      checkPreloadTrigger()
       // Update lock screen position (throttled by browser)
       updateMediaSessionPositionState(audio!.currentTime, audio!.duration)
     })
@@ -314,6 +364,8 @@ export const usePlayer = () => {
       state.isPlaying = true
       listeningStartTime = Date.now()
       updateMediaSessionPlaybackState(true)
+      // Start preloading next track when current one starts
+      preloadNextTrack(getStreamUrl)
     })
 
     audio.addEventListener('pause', () => {
