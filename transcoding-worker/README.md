@@ -2,6 +2,8 @@
 
 Background worker that transcodes lossless audio (WAV, FLAC, AIFF) to AAC 256kbps for streaming.
 
+For complete documentation on the audio upload and transcoding flow, see [/docs/AUDIO_TRANSCODING.md](/docs/AUDIO_TRANSCODING.md).
+
 ## Deployment to Fly.io
 
 ### 1. Install Fly CLI
@@ -72,10 +74,10 @@ fly ssh console
 ## Cost Optimization
 
 The worker uses minimal resources:
-- 512MB RAM
+- **1GB RAM** (required - 512MB causes OOM on large WAV files)
 - Shared CPU
 
-Estimated cost: ~$2-5/month depending on usage.
+Estimated cost: ~$5-6/month depending on usage.
 
 To reduce costs further, you can scale to zero when not needed:
 ```bash
