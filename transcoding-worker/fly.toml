@@ -1,0 +1,29 @@
+# Fly.io configuration for IndieStream transcoding worker
+# Deploy with: fly launch --no-deploy && fly secrets set ... && fly deploy
+
+app = "indiestream-transcoder"
+primary_region = "fra"  # Frankfurt - change to your preferred region
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  # API_BASE_URL and TRANSCODING_SECRET set via fly secrets
+
+# Minimal machine for cost efficiency
+# Worker is CPU-bound during transcoding, memory usage is moderate
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+# No HTTP service needed - this is a background worker
+# Remove the [http_service] section entirely
+
+# Auto-stop when idle to save costs (worker will restart on next deploy or schedule)
+[processes]
+  worker = "npx tsx worker.ts"
+
+# Health check via process monitoring (not HTTP)
+# Fly will restart if the process exits
