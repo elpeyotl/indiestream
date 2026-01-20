@@ -170,17 +170,20 @@
               :key="track.id"
               class="p-3 bg-zinc-800/50 rounded-lg space-y-3 border border-zinc-700"
               :class="{ 'border-violet-500 bg-violet-500/10': dragOverIndex === index }"
-              :draggable="!isAdmin"
-              @dragstart="onDragStart($event, index)"
-              @dragend="onDragEnd"
               @dragover.prevent="onDragOver(index)"
               @dragleave="onDragLeave"
               @drop.prevent="onDrop(index)"
             >
               <!-- Track Header Row -->
               <div class="flex items-center gap-3">
-                <!-- Drag Handle (only for non-admin) -->
-                <div v-if="!isAdmin" class="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300">
+                <!-- Drag Handle (only for non-admin, only this is draggable) -->
+                <div
+                  v-if="!isAdmin"
+                  class="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300 select-none"
+                  draggable="true"
+                  @dragstart="onDragStart($event, index)"
+                  @dragend="onDragEnd"
+                >
                   <UIcon name="i-heroicons-bars-3" class="w-5 h-5" />
                 </div>
 

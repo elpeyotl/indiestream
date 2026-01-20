@@ -1,4 +1,8 @@
 // Shared state and utilities for the upload wizard
+// Uses useState to persist data across step navigation
+
+import type { Band } from '~/composables/useBand'
+import type { Album } from '~/composables/useAlbum'
 
 export interface TrackCredit {
   role: 'composer' | 'author' | 'composer_author' | 'arranger' | 'interpreter' | 'producer' | 'mixing' | 'mastering' | 'publisher' | 'label' | 'cover_artist'
@@ -34,8 +38,54 @@ export interface AlbumForm {
   label_name: string
 }
 
+// Persistent state for the upload wizard (survives step navigation)
+export interface UploadWizardState {
+  step: number
+  selectedBand: Band | null
+  albumForm: AlbumForm
+  coverFile: File | null
+  coverPreview: string | null
+  tracks: TrackUpload[]
+  createdAlbum: Album | null
+  uploading: boolean
+  // Rights confirmations from TracksStep
+  rightsConfirmed: boolean
+  aiDeclaration: boolean
+  originalContentConfirmed: boolean
+  falseInfoUnderstood: boolean
+  // Copied credits for paste functionality
+  copiedCredits: TrackCredit[] | null
+}
+
+const defaultAlbumForm = (): AlbumForm => ({
+  title: '',
+  description: '',
+  release_type: 'album',
+  release_date: '',
+  label_name: '',
+})
+
+const defaultState = (): UploadWizardState => ({
+  step: 1,
+  selectedBand: null,
+  albumForm: defaultAlbumForm(),
+  coverFile: null,
+  coverPreview: null,
+  tracks: [],
+  createdAlbum: null,
+  uploading: false,
+  rightsConfirmed: false,
+  aiDeclaration: false,
+  originalContentConfirmed: false,
+  falseInfoUnderstood: false,
+  copiedCredits: null,
+})
+
 export const useUploadWizard = () => {
   const toast = useToast()
+
+  // Persistent state using useState (survives component unmount/remount)
+  const state = useState<UploadWizardState>('upload-wizard-state', defaultState)
 
   // Credit roles for dropdown
   const creditRoles = [
@@ -152,14 +202,93 @@ export const useUploadWizard = () => {
     }
   }
 
+  // Set cover file and generate preview
+  const setCoverFile = (file: File) => {
+    state.value.coverFile = file
+    state.value.coverPreview = URL.createObjectURL(file)
+  }
+
+  // Clear cover file
+  const clearCoverFile = () => {
+    state.value.coverFile = null
+    state.value.coverPreview = null
+  }
+
+  // Add audio files as tracks
+  const addAudioFiles = (files: File[]) => {
+    for (const file of files) {
+      state.value.tracks.push(createTrackUpload(file))
+    }
+  }
+
+  // Remove a track
+  const removeTrack = (index: number) => {
+    state.value.tracks.splice(index, 1)
+  }
+
+  // Reorder tracks
+  const reorderTracks = (fromIndex: number, toIndex: number) => {
+    const track = state.value.tracks[fromIndex]
+    state.value.tracks.splice(fromIndex, 1)
+    state.value.tracks.splice(toIndex, 0, track)
+  }
+
+  // Credit management
+  const addCredit = (trackIndex: number) => {
+    state.value.tracks[trackIndex].credits.push({
+      role: 'composer',
+      name: '',
+      ipi_number: '',
+    })
+    state.value.tracks[trackIndex].showCredits = true
+  }
+
+  const removeCredit = (trackIndex: number, creditIndex: number) => {
+    state.value.tracks[trackIndex].credits.splice(creditIndex, 1)
+  }
+
+  const copyCredits = (trackIndex: number) => {
+    const track = state.value.tracks[trackIndex]
+    state.value.copiedCredits = JSON.parse(JSON.stringify(track.credits))
+  }
+
+  const pasteCredits = (trackIndex: number) => {
+    if (!state.value.copiedCredits) return
+    const track = state.value.tracks[trackIndex]
+    for (const credit of state.value.copiedCredits) {
+      track.credits.push({ ...credit })
+    }
+    track.showCredits = true
+  }
+
+  // Reset all wizard state
+  const resetWizard = () => {
+    state.value = defaultState()
+  }
+
   return {
+    // State
+    state,
+    // Constants
     toast,
     creditRoles,
     releaseTypes,
+    // Utilities
     formatFileSize,
     getAudioDuration,
     uploadFileWithProgress,
     uploadProcessedCover,
     createTrackUpload,
+    // State management
+    setCoverFile,
+    clearCoverFile,
+    addAudioFiles,
+    removeTrack,
+    reorderTracks,
+    addCredit,
+    removeCredit,
+    copyCredits,
+    pasteCredits,
+    resetWizard,
   }
 }

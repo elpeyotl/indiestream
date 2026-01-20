@@ -1,23 +1,29 @@
 <template>
   <div
-    class="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700"
-    :class="{ 'border-violet-500 bg-violet-500/10': isDragOver }"
-    draggable="true"
-    @dragstart="$emit('dragstart', $event)"
-    @dragend="$emit('dragend')"
+    class="p-4 bg-zinc-800/50 rounded-lg border"
+    :class="{
+      'border-violet-500 bg-violet-500/10': isDragOver,
+      'border-red-500/50': showErrors && hasErrors,
+      'border-zinc-700': !isDragOver && !(showErrors && hasErrors)
+    }"
     @dragover.prevent="$emit('dragover')"
     @dragleave="$emit('dragleave')"
     @drop.prevent="$emit('drop')"
   >
     <!-- Track Header -->
     <div class="flex items-center gap-4 mb-4">
-      <!-- Drag Handle -->
-      <div class="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300">
+      <!-- Drag Handle (only this element is draggable) -->
+      <div
+        class="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300 select-none"
+        draggable="true"
+        @dragstart="$emit('dragstart', $event)"
+        @dragend="$emit('dragend')"
+      >
         <UIcon name="i-heroicons-bars-3" class="w-5 h-5" />
       </div>
 
       <!-- Track Number -->
-      <div class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-sm font-semibold shrink-0">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0" :class="showErrors && hasErrors ? 'bg-red-500/20 text-red-400' : 'bg-zinc-700'">
         {{ trackNumber }}
       </div>
 
@@ -56,6 +62,11 @@
         <UIcon name="i-heroicons-exclamation-circle" class="w-6 h-6" />
       </div>
 
+      <!-- Error indicator when validation fails -->
+      <div v-else-if="showErrors && hasErrors" class="text-red-400">
+        <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5" />
+      </div>
+
       <!-- Remove -->
       <UButton
         v-if="!track.uploading && !track.uploaded"
@@ -73,8 +84,9 @@
       <!-- ISRC Row -->
       <div class="flex items-start gap-4">
         <div class="flex-1">
-          <label class="block text-sm font-medium text-zinc-300 mb-1">
+          <label class="block text-sm font-medium mb-1" :class="showErrors && !track.isrc ? 'text-red-400' : 'text-zinc-300'">
             ISRC Code <span class="text-red-400">*</span>
+            <span v-if="showErrors && !track.isrc" class="text-red-400 font-normal ml-2">— Required</span>
           </label>
           <div class="flex gap-2">
             <UInput
@@ -83,7 +95,7 @@
               size="sm"
               class="flex-1"
               maxlength="12"
-              :color="!track.isrc ? 'red' : undefined"
+              :color="showErrors && !track.isrc ? 'red' : undefined"
               @update:model-value="$emit('update:isrc', $event)"
             />
             <UButton
@@ -143,9 +155,10 @@
       <!-- Credits -->
       <div>
         <div class="flex items-center justify-between mb-2">
-          <label class="text-sm font-medium text-zinc-300">
+          <label class="text-sm font-medium" :class="showErrors && !hasComposerCredit ? 'text-red-400' : 'text-zinc-300'">
             Credits
             <span class="text-red-400">*</span>
+            <span v-if="showErrors && !hasComposerCredit" class="text-red-400 font-normal ml-2">— Composer required</span>
           </label>
           <UButton
             color="gray"
@@ -156,6 +169,12 @@
             {{ track.showCredits ? 'Hide' : 'Show' }}
             <UIcon :name="track.showCredits ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'" class="w-4 h-4 ml-1" />
           </UButton>
+        </div>
+
+        <!-- Error hint when credits are hidden but missing -->
+        <div v-if="showErrors && !hasComposerCredit && !track.showCredits" class="mb-2 p-2 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-400">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
+          Click "Show" to add a Composer credit
         </div>
 
         <div v-if="track.showCredits" class="space-y-2">
@@ -170,21 +189,21 @@
               :options="creditRoles"
               size="xs"
               class="w-36"
-              @update:model-value="$emit('update:credit-role', creditIndex, $event)"
+              @update:model-value="$emit('update:credit-role', [creditIndex, $event])"
             />
             <UInput
               :model-value="credit.name"
               placeholder="Name"
               size="xs"
               class="flex-1"
-              @update:model-value="$emit('update:credit-name', creditIndex, $event)"
+              @update:model-value="$emit('update:credit-name', [creditIndex, $event])"
             />
             <UInput
               :model-value="credit.ipi_number"
               placeholder="IPI #"
               size="xs"
               class="w-28"
-              @update:model-value="$emit('update:credit-ipi', creditIndex, $event)"
+              @update:model-value="$emit('update:credit-ipi', [creditIndex, $event])"
             />
             <UButton
               color="gray"
@@ -244,6 +263,7 @@ const props = defineProps<{
   isDragOver: boolean
   canCopyCredits: boolean
   hasCopiedCredits: boolean
+  showErrors?: boolean
 }>()
 
 defineEmits<{
@@ -260,9 +280,9 @@ defineEmits<{
   'toggle-credits': []
   'add-credit': []
   'remove-credit': [index: number]
-  'update:credit-role': [index: number, value: string]
-  'update:credit-name': [index: number, value: string]
-  'update:credit-ipi': [index: number, value: string]
+  'update:credit-role': [payload: [index: number, value: string]]
+  'update:credit-name': [payload: [index: number, value: string]]
+  'update:credit-ipi': [payload: [index: number, value: string]]
   'copy-credits': []
   'paste-credits': []
   'open-deezer': []
@@ -270,4 +290,16 @@ defineEmits<{
 }>()
 
 const { formatFileSize, creditRoles } = useUploadWizard()
+
+// Check if track has a composer credit
+const hasComposerCredit = computed(() => {
+  return props.track.credits.some(c =>
+    (c.role === 'composer' || c.role === 'composer_author') && c.name.trim()
+  )
+})
+
+// Check if track has validation errors
+const hasErrors = computed(() => {
+  return !props.track.isrc || !hasComposerCredit.value
+})
 </script>

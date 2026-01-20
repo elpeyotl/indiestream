@@ -6,7 +6,7 @@
           <div class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-sm font-bold">2</div>
           <h2 class="text-lg font-semibold text-zinc-100">Upload Tracks</h2>
         </div>
-        <UButton color="gray" variant="ghost" size="sm" @click="$emit('back')">
+        <UButton color="gray" variant="ghost" size="sm" @click="goBack">
           <UIcon name="i-heroicons-arrow-left" class="w-4 h-4 mr-1" />
           Back
         </UButton>
@@ -15,8 +15,12 @@
 
     <!-- Drop Zone -->
     <div
-      class="border-2 border-dashed border-zinc-700 rounded-xl p-8 text-center hover:border-violet-500 transition-colors cursor-pointer mb-6"
-      :class="{ 'border-violet-500 bg-violet-500/10': isDragging }"
+      class="border-2 border-dashed rounded-xl p-8 text-center hover:border-violet-500 transition-colors cursor-pointer mb-6"
+      :class="{
+        'border-violet-500 bg-violet-500/10': isDragging,
+        'border-red-500 bg-red-500/10': showValidationErrors && state.tracks.length === 0,
+        'border-zinc-700': !isDragging && !(showValidationErrors && state.tracks.length === 0)
+      }"
       @click="audioInput?.click()"
       @dragover.prevent="isDragging = true"
       @dragleave.prevent="isDragging = false"
@@ -31,21 +35,24 @@
         @change="onAudioSelect"
       />
 
-      <UIcon name="i-heroicons-musical-note" class="w-12 h-12 mx-auto text-zinc-500 mb-3" />
-      <p class="text-zinc-300">Drop audio files here or click to browse</p>
+      <UIcon name="i-heroicons-musical-note" class="w-12 h-12 mx-auto mb-3" :class="showValidationErrors && state.tracks.length === 0 ? 'text-red-500' : 'text-zinc-500'" />
+      <p :class="showValidationErrors && state.tracks.length === 0 ? 'text-red-400' : 'text-zinc-300'">
+        {{ showValidationErrors && state.tracks.length === 0 ? 'Please add at least one track' : 'Drop audio files here or click to browse' }}
+      </p>
       <p class="text-sm text-zinc-500 mt-1">MP3, WAV, FLAC, AAC, or OGG</p>
     </div>
 
     <!-- Track List -->
-    <div v-if="tracks.length > 0" class="space-y-4">
+    <div v-if="state.tracks.length > 0" class="space-y-4">
       <UploadTrackItem
-        v-for="(track, index) in tracks"
+        v-for="(track, index) in state.tracks"
         :key="track.file.name + index"
         :track="track"
         :track-number="index + 1"
         :is-drag-over="dragOverIndex === index"
         :can-copy-credits="canCopyCredits(index)"
-        :has-copied-credits="!!copiedCredits && copiedCredits.length > 0"
+        :has-copied-credits="!!state.copiedCredits && state.copiedCredits.length > 0"
+        :show-errors="showValidationErrors"
         @dragstart="onTrackDragStart($event, index)"
         @dragend="onTrackDragEnd"
         @dragover="onTrackDragOver(index)"
@@ -75,7 +82,7 @@
     </div>
 
     <!-- Rights Confirmation -->
-    <div v-if="tracks.length > 0" class="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-700">
+    <div v-if="state.tracks.length > 0" class="mt-6 p-4 bg-zinc-900 rounded-lg border" :class="showValidationErrors && !allCheckboxesChecked ? 'border-red-500/50' : 'border-zinc-700'">
       <h3 class="text-sm font-semibold text-zinc-100 mb-3">Rights Confirmation</h3>
 
       <!-- ISRC Warning -->
@@ -96,58 +103,84 @@
 
       <div class="space-y-3">
         <UCheckbox
-          v-model="rightsConfirmed"
-          label="I confirm that I own or control all rights to distribute this music"
-        />
-        <UCheckbox v-model="aiDeclaration">
+          v-model="state.rightsConfirmed"
+          :color="showValidationErrors && !state.rightsConfirmed ? 'red' : undefined"
+        >
           <template #label>
-            <span class="text-zinc-300">
+            <span :class="showValidationErrors && !state.rightsConfirmed ? 'text-red-400' : 'text-zinc-300'">
+              I confirm that I own or control all rights to distribute this music
+            </span>
+          </template>
+        </UCheckbox>
+        <UCheckbox
+          v-model="state.aiDeclaration"
+          :color="showValidationErrors && !state.aiDeclaration ? 'red' : undefined"
+        >
+          <template #label>
+            <span :class="showValidationErrors && !state.aiDeclaration ? 'text-red-400' : 'text-zinc-300'">
               This music was <strong class="text-zinc-100">created by me/my collaborators</strong> and is <strong class="text-zinc-100">not AI-generated</strong>
               <span class="text-zinc-500">(AI tools for mixing/mastering are permitted)</span>
             </span>
           </template>
         </UCheckbox>
-        <UCheckbox v-model="originalContentConfirmed">
+        <UCheckbox
+          v-model="state.originalContentConfirmed"
+          :color="showValidationErrors && !state.originalContentConfirmed ? 'red' : undefined"
+        >
           <template #label>
-            <span class="text-zinc-300">
+            <span :class="showValidationErrors && !state.originalContentConfirmed ? 'text-red-400' : 'text-zinc-300'">
               This is <strong class="text-zinc-100">original content</strong> — not a cover, remix, or sample of copyrighted work
               <span class="text-zinc-500">(unless properly licensed and declared above)</span>
             </span>
           </template>
         </UCheckbox>
         <UCheckbox
-          v-model="falseInfoUnderstood"
-          label="I understand that providing false information may result in account termination and legal action"
-        />
+          v-model="state.falseInfoUnderstood"
+          :color="showValidationErrors && !state.falseInfoUnderstood ? 'red' : undefined"
+        >
+          <template #label>
+            <span :class="showValidationErrors && !state.falseInfoUnderstood ? 'text-red-400' : 'text-zinc-300'">
+              I understand that providing false information may result in account termination and legal action
+            </span>
+          </template>
+        </UCheckbox>
+      </div>
+    </div>
+
+    <!-- Validation Summary -->
+    <div v-if="showValidationErrors && validationErrors.length > 0" class="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+      <div class="flex items-start gap-3">
+        <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+        <div>
+          <p class="text-sm font-medium text-red-400">Please fix the following errors before uploading:</p>
+          <ul class="mt-2 text-sm text-red-300 list-disc list-inside space-y-1">
+            <li v-for="error in validationErrors" :key="error">{{ error }}</li>
+          </ul>
+        </div>
       </div>
     </div>
 
     <!-- Actions -->
     <div class="flex justify-between pt-6 border-t border-zinc-800 mt-6">
       <div class="text-sm text-zinc-400">
-        {{ tracks.length }} track{{ tracks.length !== 1 ? 's' : '' }} · {{ formatFileSize(totalSize) }}
+        {{ state.tracks.length }} track{{ state.tracks.length !== 1 ? 's' : '' }} · {{ formatFileSize(totalSize) }}
       </div>
       <UButton
         color="violet"
         size="lg"
-        :loading="uploading"
-        :disabled="!canPublish || uploading"
-        @click="$emit('upload')"
+        :loading="state.uploading"
+        :disabled="state.uploading"
+        @click="handleUpload"
       >
-        <UIcon name="i-heroicons-cloud-arrow-up" class="w-5 h-5 mr-1" />
-        Upload & Publish
+        <UIcon v-if="!state.uploading" name="i-heroicons-cloud-arrow-up" class="w-5 h-5 mr-1" />
+        {{ state.uploading ? 'Uploading...' : 'Upload & Publish' }}
       </UButton>
     </div>
   </UCard>
 </template>
 
 <script setup lang="ts">
-import type { TrackUpload, TrackCredit } from '~/composables/useUploadWizard'
-
-const props = defineProps<{
-  tracks: TrackUpload[]
-  uploading: boolean
-}>()
+import type { TrackCredit } from '~/composables/useUploadWizard'
 
 const emit = defineEmits<{
   'back': []
@@ -156,51 +189,129 @@ const emit = defineEmits<{
   'search-musicbrainz': [trackIndex: number]
 }>()
 
-const { formatFileSize, createTrackUpload } = useUploadWizard()
+const {
+  state,
+  formatFileSize,
+  addAudioFiles,
+  removeTrack,
+  reorderTracks,
+  addCredit,
+  removeCredit,
+  copyCredits,
+  pasteCredits,
+} = useUploadWizard()
 
-// Local state
+// Local state (not persisted - just UI state for drag/drop)
 const audioInput = ref<HTMLInputElement>()
 const isDragging = ref(false)
 const draggedTrackIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
-const copiedCredits = ref<TrackCredit[] | null>(null)
-
-// Rights confirmation state
-const rightsConfirmed = ref(false)
-const falseInfoUnderstood = ref(false)
-const aiDeclaration = ref(false)
-const originalContentConfirmed = ref(false)
+const showValidationErrors = ref(false)
 
 // Computed
-const totalSize = computed(() => props.tracks.reduce((sum, t) => sum + t.file.size, 0))
+const totalSize = computed(() => state.value.tracks.reduce((sum, t) => sum + t.file.size, 0))
 
 const allTracksHaveIsrc = computed(() => {
-  return props.tracks.length > 0 && props.tracks.every(t => t.isrc && t.isrc.length > 0)
+  return state.value.tracks.length > 0 && state.value.tracks.every(t => t.isrc && t.isrc.length > 0)
 })
 
 const allTracksHaveComposer = computed(() => {
-  return props.tracks.length > 0 && props.tracks.every(t =>
+  return state.value.tracks.length > 0 && state.value.tracks.every(t =>
     t.credits.some(c =>
       (c.role === 'composer' || c.role === 'composer_author') && c.name.trim()
     )
   )
 })
 
+const allCheckboxesChecked = computed(() => {
+  return state.value.rightsConfirmed &&
+    state.value.falseInfoUnderstood &&
+    state.value.aiDeclaration &&
+    state.value.originalContentConfirmed
+})
+
 const canPublish = computed(() => {
-  return props.tracks.length > 0 &&
+  return state.value.tracks.length > 0 &&
     allTracksHaveIsrc.value &&
     allTracksHaveComposer.value &&
-    rightsConfirmed.value &&
-    falseInfoUnderstood.value &&
-    aiDeclaration.value &&
-    originalContentConfirmed.value
+    allCheckboxesChecked.value
 })
+
+// Validation errors list
+const validationErrors = computed(() => {
+  const errors: string[] = []
+
+  if (state.value.tracks.length === 0) {
+    errors.push('Add at least one track')
+  }
+
+  if (state.value.tracks.length > 0 && !allTracksHaveIsrc.value) {
+    const count = state.value.tracks.filter(t => !t.isrc).length
+    errors.push(`${count} track${count > 1 ? 's' : ''} missing ISRC code`)
+  }
+
+  if (state.value.tracks.length > 0 && !allTracksHaveComposer.value) {
+    const count = state.value.tracks.filter(t => !t.credits.some(c => (c.role === 'composer' || c.role === 'composer_author') && c.name.trim())).length
+    errors.push(`${count} track${count > 1 ? 's' : ''} missing Composer credit`)
+  }
+
+  if (!state.value.rightsConfirmed) {
+    errors.push('Confirm you own the rights to distribute this music')
+  }
+
+  if (!state.value.aiDeclaration) {
+    errors.push('Confirm the music is not AI-generated')
+  }
+
+  if (!state.value.originalContentConfirmed) {
+    errors.push('Confirm this is original content')
+  }
+
+  if (!state.value.falseInfoUnderstood) {
+    errors.push('Acknowledge the consequences of false information')
+  }
+
+  return errors
+})
+
+// Auto-clear validation errors when all issues are fixed
+watch(canPublish, (canNowPublish) => {
+  if (canNowPublish && showValidationErrors.value) {
+    showValidationErrors.value = false
+  }
+})
+
+// Handle upload with validation
+const handleUpload = () => {
+  if (!canPublish.value) {
+    showValidationErrors.value = true
+    // Scroll to validation summary
+    nextTick(() => {
+      const summary = document.querySelector('.bg-red-500\\/10')
+      summary?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+    return
+  }
+
+  showValidationErrors.value = false
+  emit('upload')
+}
+
+// Go back to step 1
+const goBack = () => {
+  showValidationErrors.value = false
+  state.value.step = 1
+  emit('back')
+}
 
 // Audio file handlers
 const onAudioSelect = (e: Event) => {
   const target = e.target as HTMLInputElement
   const files = target.files
-  if (files) addAudioFiles(Array.from(files))
+  if (files) {
+    addAudioFiles(Array.from(files))
+    showValidationErrors.value = false
+  }
 }
 
 const onAudioDrop = (e: DragEvent) => {
@@ -208,18 +319,11 @@ const onAudioDrop = (e: DragEvent) => {
   const files = e.dataTransfer?.files
   if (files) {
     const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/'))
-    addAudioFiles(audioFiles)
+    if (audioFiles.length > 0) {
+      addAudioFiles(audioFiles)
+      showValidationErrors.value = false
+    }
   }
-}
-
-const addAudioFiles = (files: File[]) => {
-  for (const file of files) {
-    props.tracks.push(createTrackUpload(file))
-  }
-}
-
-const removeTrack = (index: number) => {
-  props.tracks.splice(index, 1)
 }
 
 // Track drag-and-drop reordering
@@ -252,70 +356,27 @@ const onTrackDrop = (targetIndex: number) => {
     return
   }
 
-  const draggedTrack = props.tracks[draggedTrackIndex.value]
-  props.tracks.splice(draggedTrackIndex.value, 1)
-  props.tracks.splice(targetIndex, 0, draggedTrack)
+  reorderTracks(draggedTrackIndex.value, targetIndex)
 
   draggedTrackIndex.value = null
   dragOverIndex.value = null
 }
 
-// Credit management
-const addCredit = (trackIndex: number) => {
-  props.tracks[trackIndex].credits.push({
-    role: 'composer',
-    name: '',
-    ipi_number: '',
-  })
-  props.tracks[trackIndex].showCredits = true
-}
-
-const removeCredit = (trackIndex: number, creditIndex: number) => {
-  props.tracks[trackIndex].credits.splice(creditIndex, 1)
-}
-
-const updateCreditRole = (trackIndex: number, [creditIndex, value]: [number, string]) => {
-  props.tracks[trackIndex].credits[creditIndex].role = value as TrackCredit['role']
-}
-
-const updateCreditName = (trackIndex: number, [creditIndex, value]: [number, string]) => {
-  props.tracks[trackIndex].credits[creditIndex].name = value
-}
-
-const updateCreditIpi = (trackIndex: number, [creditIndex, value]: [number, string]) => {
-  props.tracks[trackIndex].credits[creditIndex].ipi_number = value
-}
-
+// Credit helpers
 const canCopyCredits = (trackIndex: number) => {
-  const track = props.tracks[trackIndex]
+  const track = state.value.tracks[trackIndex]
   return track.credits.length > 0 && track.credits.every(c => c.name.trim() && c.role)
 }
 
-const copyCredits = (trackIndex: number) => {
-  const track = props.tracks[trackIndex]
-  copiedCredits.value = JSON.parse(JSON.stringify(track.credits))
+const updateCreditRole = (trackIndex: number, [creditIndex, value]: [number, string]) => {
+  state.value.tracks[trackIndex].credits[creditIndex].role = value as TrackCredit['role']
 }
 
-const pasteCredits = (trackIndex: number) => {
-  if (!copiedCredits.value) return
-  const track = props.tracks[trackIndex]
-  for (const credit of copiedCredits.value) {
-    track.credits.push({ ...credit })
-  }
-  track.showCredits = true
+const updateCreditName = (trackIndex: number, [creditIndex, value]: [number, string]) => {
+  state.value.tracks[trackIndex].credits[creditIndex].name = value
 }
 
-// Expose state for parent
-defineExpose({
-  rightsConfirmed,
-  aiDeclaration,
-  originalContentConfirmed,
-  reset: () => {
-    rightsConfirmed.value = false
-    falseInfoUnderstood.value = false
-    aiDeclaration.value = false
-    originalContentConfirmed.value = false
-    copiedCredits.value = null
-  },
-})
+const updateCreditIpi = (trackIndex: number, [creditIndex, value]: [number, string]) => {
+  state.value.tracks[trackIndex].credits[creditIndex].ipi_number = value
+}
 </script>

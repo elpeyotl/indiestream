@@ -1,6 +1,53 @@
 <template>
   <div>
     <div v-if="album && band">
+    <!-- Owner/Admin Status Banner -->
+    <div v-if="isOwnerOrAdmin && albumStatus !== 'live'" class="container mx-auto px-4 pt-6">
+      <!-- Not Published (Draft) -->
+      <div v-if="!album.is_published" class="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+        <div class="flex items-start gap-3">
+          <UIcon name="i-heroicons-pencil" class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p class="text-sm font-medium text-amber-400">Draft Release</p>
+            <p class="text-sm text-zinc-400 mt-1">
+              This release is not published yet. Complete the upload to make it available for review.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Moderation -->
+      <div v-else-if="pendingTracksCount > 0" class="p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
+        <div class="flex items-start gap-3">
+          <UIcon name="i-heroicons-clock" class="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
+          <div>
+            <p class="text-sm font-medium text-orange-400">Pending Review</p>
+            <p class="text-sm text-zinc-400 mt-1">
+              {{ pendingTracksCount === album.tracks?.length
+                ? 'All tracks are pending review by our moderation team.'
+                : `${pendingTracksCount} of ${album.tracks?.length} tracks are pending review.`
+              }}
+              This usually takes 24-48 hours. You'll be notified once approved.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Some tracks rejected -->
+      <div v-else-if="rejectedTracksCount > 0" class="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+        <div class="flex items-start gap-3">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          <div>
+            <p class="text-sm font-medium text-red-400">Some Tracks Rejected</p>
+            <p class="text-sm text-zinc-400 mt-1">
+              {{ rejectedTracksCount }} track{{ rejectedTracksCount > 1 ? 's were' : ' was' }} rejected by our moderation team.
+              Please review and re-upload or remove the affected tracks.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Album Header -->
     <div class="container mx-auto px-4 py-12">
       <!-- Back Button (Desktop only - mobile shows in header) -->
@@ -313,10 +360,12 @@ import type { Album, Track, TrackCredit } from '~/composables/useAlbum'
 import type { PlayerTrack } from '~/composables/usePlayer'
 
 const route = useRoute()
-const { getAlbumBySlug, getBandAlbums, getCachedCoverUrl, getCreditsForTracks, getStreamUrl } = useAlbum()
+const { getAlbumBySlug, getAlbumBySlugForOwner, getBandAlbums, getCachedCoverUrl, getCreditsForTracks, getStreamUrl } = useAlbum()
 const { getBandBySlug } = useBand()
 const { playAlbum, playTrack: playerPlayTrack, currentTrack, isPlaying, isLoading: playerLoading } = usePlayer()
 const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
+const { isAdmin } = useUserProfile()
+const user = useSupabaseUser()
 
 const album = ref<Album | null>(null)
 const band = ref<any>(null)
@@ -331,6 +380,7 @@ const trackCredits = ref<Record<string, TrackCredit[]>>({})
 const expandedTrack = ref<string | null>(null)
 const showActionsSheet = ref(false)
 const selectedTrack = ref<PlayerTrack | null>(null)
+const isOwnerOrAdmin = ref(false)
 
 const releaseTypeLabel = computed(() => {
   const types: Record<string, string> = {
@@ -339,6 +389,25 @@ const releaseTypeLabel = computed(() => {
     single: 'Single',
   }
   return types[album.value?.release_type || 'album'] || 'Album'
+})
+
+// Moderation status for owner view
+const pendingTracksCount = computed(() => {
+  if (!album.value?.tracks) return 0
+  return album.value.tracks.filter(t => t.moderation_status === 'pending').length
+})
+
+const rejectedTracksCount = computed(() => {
+  if (!album.value?.tracks) return 0
+  return album.value.tracks.filter(t => t.moderation_status === 'rejected').length
+})
+
+const albumStatus = computed(() => {
+  if (!album.value) return 'unknown'
+  if (!album.value.is_published) return 'draft'
+  if (pendingTracksCount.value > 0) return 'pending'
+  if (rejectedTracksCount.value > 0) return 'rejected'
+  return 'live'
 })
 
 // Format helpers
@@ -498,20 +567,36 @@ const loadTrackMetadata = async (trackIds: string[]) => {
 
 const loadAlbumData = async () => {
   loading.value = true
+  isOwnerOrAdmin.value = false
+
   try {
     const artistSlug = route.params.artist as string
     const albumSlug = route.params.album as string
 
-    // Load band and album in parallel (essential for showing main content)
-    const [bandResult, albumResult] = await Promise.all([
-      getBandBySlug(artistSlug),
-      getAlbumBySlug(artistSlug, albumSlug)
-    ])
-
+    // First load the band to check ownership
+    const bandResult = await getBandBySlug(artistSlug)
     band.value = bandResult
+
+    if (!band.value) {
+      loading.value = false
+      return
+    }
+
+    // Check if current user is owner or admin
+    const isOwner = user.value && band.value.owner_id === user.value.id
+    isOwnerOrAdmin.value = isOwner || isAdmin.value
+
+    // Load album - use owner view if user is owner/admin to see unpublished albums
+    let albumResult: Album | null = null
+    if (isOwnerOrAdmin.value) {
+      albumResult = await getAlbumBySlugForOwner(artistSlug, albumSlug)
+    } else {
+      albumResult = await getAlbumBySlug(artistSlug, albumSlug)
+    }
+
     album.value = albumResult
 
-    if (!band.value || !album.value) {
+    if (!album.value) {
       loading.value = false
       return
     }

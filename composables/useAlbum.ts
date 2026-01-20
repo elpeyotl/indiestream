@@ -322,6 +322,38 @@ export const useAlbum = () => {
     return data
   }
 
+  // Get album by slug for owner view (includes unpublished albums, all tracks)
+  const getAlbumBySlugForOwner = async (bandSlug: string, albumSlug: string): Promise<Album | null> => {
+    // First get the band
+    const { data: band } = await supabase
+      .from('bands')
+      .select('id')
+      .eq('slug', bandSlug)
+      .single()
+
+    if (!band) return null
+
+    // Fetch album without published filter (owner can see drafts)
+    const { data, error } = await supabase
+      .from('albums')
+      .select('*, tracks(*), band:bands(id, name, slug)')
+      .eq('band_id', band.id)
+      .eq('slug', albumSlug)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      throw error
+    }
+
+    if (data?.tracks) {
+      // Sort by track number but don't filter by moderation
+      data.tracks.sort((a: Track, b: Track) => a.track_number - b.track_number)
+    }
+
+    return data
+  }
+
   // Invalidate album cache (useful after mutations)
   const invalidateAlbumCache = (bandId?: string) => {
     if (bandId) {
@@ -689,6 +721,7 @@ export const useAlbum = () => {
     getBandAlbums,
     getAlbumById,
     getAlbumBySlug,
+    getAlbumBySlugForOwner,
     createAlbum,
     updateAlbum,
     deleteAlbum,

@@ -11,11 +11,11 @@
     </div>
 
     <!-- Select Artist -->
-    <div v-if="!selectedBand" class="mb-8">
+    <div v-if="!state.selectedBand" class="mb-8">
       <UploadArtistSelector
         :bands="bands"
         :loading="bandsLoading"
-        @select="selectedBand = $event"
+        @select="state.selectedBand = $event"
       />
     </div>
 
@@ -25,39 +25,33 @@
       <div class="flex items-center gap-4 mb-6 p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
         <div
           class="w-12 h-12 rounded-lg overflow-hidden shrink-0"
-          :style="{ background: `linear-gradient(135deg, ${selectedBand.theme_color} 0%, #c026d3 100%)` }"
+          :style="{ background: `linear-gradient(135deg, ${state.selectedBand.theme_color} 0%, #c026d3 100%)` }"
         >
-          <img v-if="selectedBand.avatar_url" :src="selectedBand.avatar_url" :alt="selectedBand.name" class="w-full h-full object-cover" />
+          <img v-if="state.selectedBand.avatar_url" :src="state.selectedBand.avatar_url" :alt="state.selectedBand.name" class="w-full h-full object-cover" />
           <div v-else class="w-full h-full flex items-center justify-center">
-            <span class="text-lg font-bold text-white">{{ selectedBand.name.charAt(0).toUpperCase() }}</span>
+            <span class="text-lg font-bold text-white">{{ state.selectedBand.name.charAt(0).toUpperCase() }}</span>
           </div>
         </div>
         <div class="flex-1">
           <p class="text-sm text-zinc-400">Uploading as</p>
-          <h3 class="font-semibold text-zinc-100">{{ selectedBand.name }}</h3>
+          <h3 class="font-semibold text-zinc-100">{{ state.selectedBand.name }}</h3>
         </div>
-        <UButton color="gray" variant="ghost" size="sm" @click="selectedBand = null">
+        <UButton color="gray" variant="ghost" size="sm" @click="state.selectedBand = null">
           Change
         </UButton>
       </div>
 
       <!-- Step 1: Album Info -->
       <UploadAlbumDetailsStep
-        v-if="step === 1"
-        ref="albumDetailsRef"
-        :form="albumForm"
-        :band-name="selectedBand.name"
-        @update:form="Object.assign(albumForm, $event)"
-        @continue="handleAlbumDetailsContinue"
+        v-if="state.step === 1"
+        :band-name="state.selectedBand.name"
+        @continue="state.step = 2"
       />
 
       <!-- Step 2: Upload Tracks -->
       <UploadTracksStep
-        v-if="step === 2"
-        ref="tracksStepRef"
-        :tracks="tracks"
-        :uploading="uploading"
-        @back="step = 1"
+        v-if="state.step === 2"
+        @back="state.step = 1"
         @upload="startUpload"
         @open-deezer="openDeezerModal"
         @search-musicbrainz="searchMusicBrainz"
@@ -65,10 +59,11 @@
 
       <!-- Step 3: Success -->
       <UploadSuccessStep
-        v-if="step === 3"
-        :album-title="albumForm.title"
-        :view-url="`/${selectedBand?.slug}/${createdAlbum?.slug}`"
-        @reset="resetForm"
+        v-if="state.step === 3"
+        :album-title="state.albumForm.title"
+        :view-url="`/${state.selectedBand?.slug}/${state.createdAlbum?.slug}`"
+        :moderation-enabled="moderationEnabled"
+        @reset="resetWizard"
       />
     </div>
 
@@ -76,7 +71,7 @@
     <UploadDeezerLookupModal
       v-model="deezerModalOpen"
       :initial-query="deezerInitialQuery"
-      :artist-name="selectedBand?.name || ''"
+      :artist-name="state.selectedBand?.name || ''"
       @isrc-found="handleIsrcFound"
     />
   </div>
@@ -84,8 +79,6 @@
 
 <script setup lang="ts">
 import type { Band } from '~/composables/useBand'
-import type { Album } from '~/composables/useAlbum'
-import type { TrackUpload, AlbumForm } from '~/composables/useUploadWizard'
 
 definePageMeta({
   middleware: 'auth',
@@ -93,43 +86,24 @@ definePageMeta({
 
 const { getUserBands } = useBand()
 const { createAlbum, createTrack, updateTrack, updateAlbum, getUploadUrl, setTrackCredits, getStreamUrl } = useAlbum()
-const { toast, uploadFileWithProgress, uploadProcessedCover, getAudioDuration } = useUploadWizard()
+const { state, toast, uploadFileWithProgress, uploadProcessedCover, getAudioDuration, resetWizard } = useUploadWizard()
+const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 const user = useSupabaseUser()
 
-// State
+// Local state (not persisted)
 const bands = ref<Band[]>([])
 const bandsLoading = ref(true)
-const selectedBand = ref<Band | null>(null)
-const step = ref(1)
-const uploading = ref(false)
-const createdAlbum = ref<Album | null>(null)
-
-// Refs to child components
-const albumDetailsRef = ref<{ reset: () => void } | null>(null)
-const tracksStepRef = ref<{ rightsConfirmed: boolean; aiDeclaration: boolean; originalContentConfirmed: boolean; reset: () => void } | null>(null)
-
-// Album form
-const albumForm = reactive<AlbumForm>({
-  title: '',
-  description: '',
-  release_type: 'album',
-  release_date: '',
-  label_name: '',
-})
-
-// Cover file (set when continuing from step 1)
-const coverFile = ref<File | null>(null)
-
-// Tracks
-const tracks = ref<TrackUpload[]>([])
 
 // Deezer modal
 const deezerModalOpen = ref(false)
 const deezerModalTrackIndex = ref<number | null>(null)
 const deezerInitialQuery = ref('')
 
-// Load bands
+// Load bands and moderation setting
 onMounted(async () => {
+  // Load moderation setting in parallel
+  loadModerationSetting()
+
   try {
     const loadedBands = await getUserBands()
     // Load avatar URLs from keys
@@ -151,28 +125,22 @@ onMounted(async () => {
   }
 })
 
-// Step navigation
-const handleAlbumDetailsContinue = (file: File) => {
-  coverFile.value = file
-  step.value = 2
-}
-
 // Deezer modal
 const openDeezerModal = (trackIndex: number) => {
   deezerModalTrackIndex.value = trackIndex
-  deezerInitialQuery.value = tracks.value[trackIndex]?.title || ''
+  deezerInitialQuery.value = state.value.tracks[trackIndex]?.title || ''
   deezerModalOpen.value = true
 }
 
 const handleIsrcFound = (isrc: string) => {
-  if (deezerModalTrackIndex.value !== null && tracks.value[deezerModalTrackIndex.value]) {
-    tracks.value[deezerModalTrackIndex.value].isrc = isrc
+  if (deezerModalTrackIndex.value !== null && state.value.tracks[deezerModalTrackIndex.value]) {
+    state.value.tracks[deezerModalTrackIndex.value].isrc = isrc
   }
 }
 
 // MusicBrainz search
 const searchMusicBrainz = async (trackIndex: number) => {
-  const track = tracks.value[trackIndex]
+  const track = state.value.tracks[trackIndex]
   if (!track?.title) return
 
   track.fetchingIswc = true
@@ -189,7 +157,7 @@ const searchMusicBrainz = async (trackIndex: number) => {
     }>('/api/musicbrainz/search-work', {
       params: {
         title: track.title,
-        artist: selectedBand.value?.name,
+        artist: state.value.selectedBand?.name,
       },
     })
 
@@ -224,42 +192,42 @@ const searchMusicBrainz = async (trackIndex: number) => {
 // Upload
 const startUpload = async () => {
   // Prevent double-click / double submission
-  if (uploading.value) return
-  if (!selectedBand.value || !coverFile.value || tracks.value.length === 0) return
+  if (state.value.uploading) return
+  if (!state.value.selectedBand || !state.value.coverFile || state.value.tracks.length === 0) return
 
-  uploading.value = true
+  state.value.uploading = true
 
-  // Get rights confirmation state from child
-  const aiDeclaration = tracksStepRef.value?.aiDeclaration ?? false
-  const originalContentConfirmed = tracksStepRef.value?.originalContentConfirmed ?? false
+  // Get rights confirmation state from shared state
+  const aiDeclaration = state.value.aiDeclaration
+  const originalContentConfirmed = state.value.originalContentConfirmed
 
   try {
     // 1. Create the album in database
     const album = await createAlbum({
-      band_id: selectedBand.value.id,
-      title: albumForm.title,
-      description: albumForm.description || undefined,
-      release_type: albumForm.release_type,
-      release_date: albumForm.release_date || undefined,
-      label_name: albumForm.label_name || undefined,
+      band_id: state.value.selectedBand.id,
+      title: state.value.albumForm.title,
+      description: state.value.albumForm.description || undefined,
+      release_type: state.value.albumForm.release_type,
+      release_date: state.value.albumForm.release_date || undefined,
+      label_name: state.value.albumForm.label_name || undefined,
     })
 
     // 2. Upload and process cover art (resizes to 600x600 square)
-    const coverKey = await uploadProcessedCover(coverFile.value, selectedBand.value.id, album.id)
+    const coverKey = await uploadProcessedCover(state.value.coverFile, state.value.selectedBand.id, album.id)
 
     // Update album with cover key
     await updateAlbum(album.id, { cover_key: coverKey })
 
     // 3. Create tracks and upload audio files
-    for (let i = 0; i < tracks.value.length; i++) {
-      const track = tracks.value[i]
+    for (let i = 0; i < state.value.tracks.length; i++) {
+      const track = state.value.tracks[i]
       track.uploading = true
 
       try {
         // Create track in database with rights metadata
         const dbTrack = await createTrack({
           album_id: album.id,
-          band_id: selectedBand.value!.id,
+          band_id: state.value.selectedBand!.id,
           title: track.title,
           track_number: i + 1,
           isrc: track.isrc || undefined,
@@ -281,7 +249,7 @@ const startUpload = async () => {
         // Get presigned URL and upload
         const { uploadUrl, key } = await getUploadUrl(
           'audio',
-          selectedBand.value!.id,
+          state.value.selectedBand!.id,
           album.id,
           track.file.name,
           track.file.type,
@@ -309,7 +277,7 @@ const startUpload = async () => {
     }
 
     // 4. Only publish if ALL tracks uploaded successfully
-    const allTracksUploaded = tracks.value.every(t => t.uploaded)
+    const allTracksUploaded = state.value.tracks.every(t => t.uploaded)
     if (allTracksUploaded) {
       // Mark rights as confirmed and publish
       await updateAlbum(album.id, {
@@ -320,11 +288,15 @@ const startUpload = async () => {
         // Content protection declarations
         original_content_confirmed: originalContentConfirmed,
         // Generate P-line and C-line
-        p_line: `℗ ${new Date().getFullYear()} ${albumForm.label_name || selectedBand.value?.name}`,
-        c_line: `© ${new Date().getFullYear()} ${albumForm.label_name || selectedBand.value?.name}`,
+        p_line: `℗ ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
+        c_line: `© ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
       })
-      createdAlbum.value = album
-      toast.add({ title: 'Release published!', description: `"${albumForm.title}" is now live`, color: 'green', icon: 'i-heroicons-check-circle' })
+      state.value.createdAlbum = album
+      if (moderationEnabled.value) {
+        toast.add({ title: 'Upload complete!', description: `"${state.value.albumForm.title}" is pending review`, color: 'green', icon: 'i-heroicons-check-circle' })
+      } else {
+        toast.add({ title: 'Release published!', description: `"${state.value.albumForm.title}" is now live`, color: 'green', icon: 'i-heroicons-check-circle' })
+      }
 
       // Notify followers of the new release (async, don't block)
       $fetch(`/api/albums/${album.id}/notify-followers`, { method: 'POST' })
@@ -336,10 +308,10 @@ const startUpload = async () => {
         .catch((err) => {
           console.error('Failed to notify followers:', err)
         })
-      step.value = 3
+      state.value.step = 3
     } else {
       // Some tracks failed - keep as draft
-      createdAlbum.value = album
+      state.value.createdAlbum = album
       toast.add({ title: 'Partial upload', description: 'Some tracks failed. Album saved as draft.', color: 'amber', icon: 'i-heroicons-exclamation-triangle' })
     }
 
@@ -347,22 +319,7 @@ const startUpload = async () => {
     toast.add({ title: 'Upload failed', description: e.message || 'Failed to upload release', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
     console.error('Upload failed:', e)
   } finally {
-    uploading.value = false
+    state.value.uploading = false
   }
-}
-
-// Reset
-const resetForm = () => {
-  step.value = 1
-  albumForm.title = ''
-  albumForm.description = ''
-  albumForm.release_type = 'album'
-  albumForm.release_date = ''
-  albumForm.label_name = ''
-  coverFile.value = null
-  tracks.value = []
-  createdAlbum.value = null
-  albumDetailsRef.value?.reset()
-  tracksStepRef.value?.reset()
 }
 </script>

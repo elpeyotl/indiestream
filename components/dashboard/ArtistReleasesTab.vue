@@ -23,37 +23,41 @@
         :key="album.id"
         class="group relative"
       >
-        <!-- Draft Badge -->
-        <div v-if="!album.is_published" class="absolute top-2 left-2 z-10">
-          <UBadge color="amber" variant="solid" size="xs">
+        <!-- Status Badge -->
+        <div class="absolute top-2 left-2 z-10">
+          <!-- Draft (not published) -->
+          <UBadge v-if="!album.is_published" color="amber" variant="solid" size="xs">
             <UIcon name="i-heroicons-pencil" class="w-3 h-3 mr-1" />
             Draft
           </UBadge>
+          <!-- Pending moderation (published but tracks pending) -->
+          <UBadge v-else-if="hasPendingTracks(album)" color="orange" variant="solid" size="xs">
+            <UIcon name="i-heroicons-clock" class="w-3 h-3 mr-1" />
+            Pending Review
+          </UBadge>
         </div>
 
-        <!-- Album Link -->
-        <NuxtLink
-          :to="album.is_published ? `/${bandSlug}/${album.slug}` : undefined"
-          :class="{ 'cursor-default': !album.is_published }"
-        >
+        <!-- Album Link (owners can always preview their albums) -->
+        <NuxtLink :to="`/${bandSlug}/${album.slug}`">
           <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
             <img
               v-if="albumCovers[album.id]"
               :src="albumCovers[album.id]"
               :alt="album.title"
               class="w-full h-full object-cover"
-              :class="{ 'opacity-60': !album.is_published }"
+              :class="{ 'opacity-60': !album.is_published || hasPendingTracks(album) }"
             />
             <div v-else class="w-full h-full flex items-center justify-center">
               <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
             </div>
           </div>
-          <h3 class="font-medium text-zinc-100 truncate" :class="{ 'group-hover:text-violet-400': album.is_published }">
+          <h3 class="font-medium text-zinc-100 truncate group-hover:text-violet-400">
             {{ album.title }}
           </h3>
           <p class="text-sm text-zinc-400">
             {{ album.release_type === 'ep' ? 'EP' : album.release_type === 'single' ? 'Single' : 'Album' }}
             · {{ album.tracks?.length || 0 }} tracks
+            <span v-if="hasPendingTracks(album)" class="text-orange-400">· {{ getPendingCount(album) }} pending</span>
           </p>
         </NuxtLink>
 
@@ -87,4 +91,16 @@ defineEmits<{
   editAlbum: [album: Album]
   deleteAlbum: [album: Album]
 }>()
+
+// Check if album has any tracks pending moderation
+const hasPendingTracks = (album: Album): boolean => {
+  if (!album.tracks || album.tracks.length === 0) return false
+  return album.tracks.some(t => t.moderation_status === 'pending')
+}
+
+// Get count of pending tracks
+const getPendingCount = (album: Album): number => {
+  if (!album.tracks) return 0
+  return album.tracks.filter(t => t.moderation_status === 'pending').length
+}
 </script>
