@@ -183,7 +183,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TrackCredit } from '~/composables/useUploadWizard'
+import type { TrackCreditForm } from '~/composables/useUploadWizard'
 
 const emit = defineEmits<{
   'back': []
@@ -398,7 +398,7 @@ const canCopyCredits = (trackIndex: number) => {
 }
 
 const updateCreditRole = (trackIndex: number, [creditIndex, value]: [number, string]) => {
-  state.value.tracks[trackIndex].credits[creditIndex].role = value as TrackCredit['role']
+  state.value.tracks[trackIndex].credits[creditIndex].role = value as TrackCreditForm['role']
 }
 
 const updateCreditName = (trackIndex: number, [creditIndex, value]: [number, string]) => {

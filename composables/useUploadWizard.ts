@@ -2,9 +2,10 @@
 // Uses useState to persist data across step navigation
 
 import type { Band } from '~/composables/useBand'
-import type { Album, Track, TrackCredit as DbTrackCredit } from '~/composables/useAlbum'
+import type { Album, Track } from '~/composables/useAlbum'
 
-export interface TrackCredit {
+// Form interface for track credits in the upload wizard (different from DB TrackCredit)
+export interface TrackCreditForm {
   role: 'composer' | 'author' | 'composer_author' | 'arranger' | 'interpreter' | 'producer' | 'mixing' | 'mastering' | 'publisher' | 'label'
   name: string
   ipi_number: string
@@ -24,7 +25,7 @@ export interface TrackUpload {
   is_cover: boolean
   spotify_track_id: string
   musicbrainz_work_id: string
-  credits: TrackCredit[]
+  credits: TrackCreditForm[]
   // Platform ISRC
   isrc_platform_assigned: boolean
   generatingIsrc: boolean
@@ -63,7 +64,7 @@ export interface UploadWizardState {
   originalContentConfirmed: boolean
   falseInfoUnderstood: boolean
   // Copied credits for paste functionality
-  copiedCredits: TrackCredit[] | null
+  copiedCredits: TrackCreditForm[] | null
   // Edit mode
   isEditMode: boolean
   editAlbumId: string | null
@@ -322,7 +323,7 @@ export const useUploadWizard = () => {
     album: Album & { tracks?: Track[] },
     band: Band,
     coverUrl: string | null,
-    trackCredits: Record<string, TrackCredit[]>
+    trackCredits: Record<string, TrackCreditForm[]>
   ) => {
     // Map existing tracks to TrackUpload format
     const trackUploads: TrackUpload[] = (album.tracks || []).map((track) => {
@@ -341,7 +342,7 @@ export const useUploadWizard = () => {
         spotify_track_id: track.spotify_track_id || '',
         musicbrainz_work_id: track.musicbrainz_work_id || '',
         credits: credits.map((c) => ({
-          role: c.role as TrackCredit['role'],
+          role: c.role as TrackCreditForm['role'],
           name: c.name,
           ipi_number: c.ipi_number || '',
         })),
