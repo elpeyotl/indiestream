@@ -29,7 +29,7 @@
       <input
         ref="audioInput"
         type="file"
-        accept="audio/mpeg,audio/mp3,audio/wav,audio/flac,audio/aac,audio/ogg"
+        accept="audio/wav,audio/flac,audio/aiff,audio/x-aiff,.wav,.flac,.aiff,.aif"
         multiple
         class="hidden"
         @change="onAudioSelect"
@@ -39,7 +39,7 @@
       <p :class="showValidationErrors && state.tracks.length === 0 ? 'text-red-400' : 'text-zinc-300'">
         {{ showValidationErrors && state.tracks.length === 0 ? 'Please add at least one track' : 'Drop audio files here or click to browse' }}
       </p>
-      <p class="text-sm text-zinc-500 mt-1">MP3, WAV, FLAC, AAC, or OGG</p>
+      <p class="text-sm text-zinc-500 mt-1">WAV, FLAC, or AIFF — lossless formats only (max 300MB)</p>
     </div>
 
     <!-- Track List -->
@@ -341,7 +341,13 @@ const onAudioDrop = (e: DragEvent) => {
   isDragging.value = false
   const files = e.dataTransfer?.files
   if (files) {
-    const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/'))
+    // Filter to lossless audio formats
+    const losslessMimeTypes = ['audio/wav', 'audio/flac', 'audio/aiff', 'audio/x-aiff']
+    const losslessExtensions = ['wav', 'flac', 'aif', 'aiff']
+    const audioFiles = Array.from(files).filter((f) => {
+      const ext = f.name.split('.').pop()?.toLowerCase()
+      return losslessMimeTypes.includes(f.type) || losslessExtensions.includes(ext || '')
+    })
     if (audioFiles.length > 0) {
       addAudioFiles(audioFiles)
       showValidationErrors.value = false

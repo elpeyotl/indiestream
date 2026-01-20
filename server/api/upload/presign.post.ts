@@ -9,7 +9,11 @@ interface PresignRequest {
   trackId?: string
   filename: string
   contentType: string
+  fileSize?: number
 }
+
+// 300MB max for audio files (supports ~12 min hi-res FLAC)
+const MAX_AUDIO_FILE_SIZE = 300 * 1024 * 1024
 
 export default defineEventHandler(async (event) => {
   // Verify user is authenticated
@@ -39,15 +43,24 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Validate content types
-  const allowedAudioTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/flac', 'audio/aac', 'audio/ogg']
+  // Validate content types - lossless formats only for audio
+  const allowedAudioTypes = ['audio/wav', 'audio/flac', 'audio/aiff', 'audio/x-aiff']
   const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 
-  if (body.type === 'audio' && !allowedAudioTypes.includes(body.contentType)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid audio file type. Allowed: MP3, WAV, FLAC, AAC, OGG',
-    })
+  if (body.type === 'audio') {
+    if (!allowedAudioTypes.includes(body.contentType)) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Invalid audio file type. Lossless formats required: WAV, FLAC, or AIFF',
+      })
+    }
+
+    if (body.fileSize && body.fileSize > MAX_AUDIO_FILE_SIZE) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Audio file too large. Maximum size is 300MB.',
+      })
+    }
   }
 
   if ((body.type === 'cover' || body.type === 'avatar' || body.type === 'banner') && !allowedImageTypes.includes(body.contentType)) {
