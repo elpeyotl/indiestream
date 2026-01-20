@@ -1,5 +1,5 @@
 // POST /api/transcoding/presign - Get presigned URLs for transcoding worker
-// Returns download URL for original + upload URL for transcoded file
+// Returns download URL for original + upload URLs for transcoded files (AAC + FLAC)
 import { serverSupabaseServiceRole } from '#supabase/server'
 import { getDownloadUrl, getUploadUrl } from '~/server/utils/r2'
 
@@ -29,14 +29,45 @@ export default defineEventHandler(async (event) => {
   // Generate download URL for original file (2 hour expiry for large files)
   const downloadUrl = await getDownloadUrl(originalAudioKey, 7200)
 
-  // Generate upload URL for transcoded file
-  // Store in same structure but with .m4a extension
+  // Generate upload URLs for dual-format transcoding:
+  // 1. AAC 256kbps for standard streaming (streaming/ bucket)
+  // 2. FLAC 16-bit/44.1kHz for hi-fi streaming (hifi/ bucket)
   const streamingKey = `streaming/${bandId}/${albumId}/${trackId}.m4a`
-  const uploadUrl = await getUploadUrl(streamingKey, 'audio/mp4', 7200)
+  const hifiKey = `hifi/${bandId}/${albumId}/${trackId}.flac`
+  const archiveKey = `archive/${bandId}/${albumId}/${trackId}${getExtension(originalAudioKey)}`
+
+  const [streamingUploadUrl, hifiUploadUrl, archiveUploadUrl] = await Promise.all([
+    getUploadUrl(streamingKey, 'audio/mp4', 7200),
+    getUploadUrl(hifiKey, 'audio/flac', 7200),
+    getUploadUrl(archiveKey, getContentType(originalAudioKey), 7200),
+  ])
 
   return {
     downloadUrl,
-    uploadUrl,
+    // Standard streaming (AAC)
+    streamingUploadUrl,
     streamingKey,
+    // Hi-fi streaming (FLAC)
+    hifiUploadUrl,
+    hifiKey,
+    // Archive (move original)
+    archiveUploadUrl,
+    archiveKey,
   }
 })
+
+function getExtension(key: string): string {
+  const match = key.match(/\.[^.]+$/)
+  return match ? match[0] : '.wav'
+}
+
+function getContentType(key: string): string {
+  const ext = key.split('.').pop()?.toLowerCase()
+  switch (ext) {
+    case 'wav': return 'audio/wav'
+    case 'flac': return 'audio/flac'
+    case 'aif':
+    case 'aiff': return 'audio/aiff'
+    default: return 'application/octet-stream'
+  }
+}

@@ -1,6 +1,10 @@
 # IndieStream Transcoding Worker
 
-Background worker that transcodes lossless audio (WAV, FLAC, AIFF) to AAC 256kbps for streaming.
+Background worker that transcodes lossless audio (WAV, FLAC, AIFF) to dual formats:
+- **AAC 256kbps** - Standard quality streaming
+- **FLAC 16-bit/44.1kHz** - Hi-fi quality streaming
+
+After transcoding, the original file is moved to an archive path and the upload copy is deleted.
 
 For complete documentation on the audio upload and transcoding flow, see [/docs/AUDIO_TRANSCODING.md](/docs/AUDIO_TRANSCODING.md).
 

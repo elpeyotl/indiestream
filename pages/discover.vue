@@ -49,13 +49,12 @@
                 <UButton
                   color="violet"
                   size="lg"
-                  :ui="{ rounded: 'rounded-full' }"
+                  :icon="loadingPlayId === album.id ? undefined : 'i-heroicons-play-solid'"
                   :loading="loadingPlayId === album.id"
+                  :ui="{ rounded: 'rounded-full', padding: { lg: 'p-3' } }"
                   class="shadow-lg"
                   @click.prevent.stop="playAlbum(album)"
-                >
-                  <UIcon v-if="loadingPlayId !== album.id" name="i-heroicons-play-solid" class="w-6 h-6" />
-                </UButton>
+                />
               </div>
             </div>
           </div>

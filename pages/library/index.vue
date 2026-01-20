@@ -49,14 +49,13 @@
                     <UButton
                       color="violet"
                       size="lg"
-                      :ui="{ rounded: 'rounded-full' }"
+                      :icon="loadingPlayId === 'liked' ? undefined : 'i-heroicons-play-solid'"
                       :loading="loadingPlayId === 'liked'"
+                      :ui="{ rounded: 'rounded-full', padding: { lg: 'p-3' } }"
                       :class="loadingPlayId === 'liked' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
                       class="transition-opacity shadow-lg shrink-0"
                       @click.prevent.stop="playLikedSongs"
-                    >
-                      <UIcon v-if="loadingPlayId !== 'liked'" name="i-heroicons-play-solid" class="w-6 h-6" />
-                    </UButton>
+                    />
                   </div>
                 </div>
               </div>

@@ -72,7 +72,33 @@ definePageMeta({
   middleware: 'admin',
 })
 
+const route = useRoute()
+const router = useRouter()
 const currentTab = ref(0)
+
+// Map tab query param to tab index
+const tabSlotToIndex: Record<string, number> = {
+  'overview': 0,
+  'moderation': 1,
+  'artist-approvals': 2,
+  'reports': 3,
+  'dmca': 4,
+  'users': 5,
+  'artists': 6,
+  'albums': 7,
+  'playlists': 8,
+  'revenue': 9,
+  'payouts': 10,
+  'pro-export': 11,
+}
+
+// Initialize tab from URL query param
+const initTabFromUrl = () => {
+  const tabParam = route.query.tab as string
+  if (tabParam && tabSlotToIndex[tabParam] !== undefined) {
+    currentTab.value = tabSlotToIndex[tabParam]
+  }
+}
 
 // Badge counts for tabs
 const pendingModerationCount = ref(0)
@@ -99,8 +125,11 @@ const fetchPendingCounts = async () => {
   }
 }
 
-// Fetch counts immediately on mount
-onMounted(fetchPendingCounts)
+// Fetch counts and init tab on mount
+onMounted(() => {
+  initTabFromUrl()
+  fetchPendingCounts()
+})
 
 const tabs = computed(() => [
   { label: 'Overview', slot: 'overview', icon: 'i-heroicons-chart-bar' },

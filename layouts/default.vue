@@ -224,7 +224,7 @@
               <UButton
                 color="gray"
                 variant="ghost"
-                class="flex items-center gap-2"
+                class="flex items-center gap-2 relative"
                 @click="userMenuOpen = true"
               >
                 <UAvatar
@@ -237,6 +237,13 @@
                   name="i-heroicons-chevron-down-20-solid"
                   class="w-4 h-4"
                 />
+                <!-- Admin pending items badge -->
+                <span
+                  v-if="isAdmin && totalPendingCount > 0"
+                  class="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-xs font-bold bg-red-500 text-white rounded-full px-1"
+                >
+                  {{ totalPendingCount > 9 ? '9+' : totalPendingCount }}
+                </span>
               </UButton>
 
               <!-- User Menu Slideover -->
@@ -322,7 +329,7 @@
                         </NuxtLink>
                         <NuxtLink
                           v-if="adminCounts.artists > 0"
-                          to="/admin?tab=artists"
+                          to="/admin?tab=artist-approvals"
                           class="flex items-center justify-between text-sm py-1.5 px-3 rounded hover:bg-zinc-800/50 transition-colors"
                           @click="userMenuOpen = false"
                         >

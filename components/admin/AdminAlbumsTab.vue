@@ -61,7 +61,16 @@
             >
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center flex-shrink-0">
+                  <img
+                    v-if="coverUrls[album.id]"
+                    :src="coverUrls[album.id]"
+                    :alt="album.title"
+                    class="w-10 h-10 rounded object-cover flex-shrink-0"
+                  />
+                  <div
+                    v-else
+                    class="w-10 h-10 rounded bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center flex-shrink-0"
+                  >
                     <UIcon name="i-heroicons-square-3-stack-3d" class="w-5 h-5 text-violet-400" />
                   </div>
                   <div>
@@ -224,6 +233,32 @@ const { subscribe } = useAdminRealtime()
 
 // State
 const albums = ref<AdminAlbum[]>([])
+
+// Cover URL cache
+const coverUrls = ref<Record<string, string>>({})
+
+const getCoverUrl = async (album: AdminAlbum) => {
+  if (!album.cover_key) return null
+  if (coverUrls.value[album.id]) return coverUrls.value[album.id]
+
+  try {
+    const encodedKey = btoa(album.cover_key).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+    const response = await $fetch<{ url: string }>(`/api/stream/${encodedKey}`)
+    coverUrls.value[album.id] = response.url
+    return response.url
+  } catch {
+    return null
+  }
+}
+
+// Load cover URLs when albums change
+watch(() => albums.value, async (newAlbums) => {
+  for (const album of newAlbums) {
+    if (album.cover_key && !coverUrls.value[album.id]) {
+      getCoverUrl(album)
+    }
+  }
+}, { immediate: true })
 const albumsLoading = ref(false)
 const albumSearch = ref('')
 const albumPublishedFilter = ref('all')

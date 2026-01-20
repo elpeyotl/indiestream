@@ -29,13 +29,12 @@
           <UButton
             color="violet"
             :size="large ? 'lg' : 'md'"
-            :ui="{ rounded: 'rounded-full' }"
+            :icon="loading ? undefined : 'i-heroicons-play-solid'"
             :loading="loading"
+            :ui="{ rounded: 'rounded-full', padding: { sm: 'p-2', md: 'p-2.5', lg: 'p-3' } }"
             class="shadow-lg"
             @click.prevent.stop="$emit('play', artist)"
-          >
-            <UIcon v-if="!loading" name="i-heroicons-play-solid" :class="large ? 'w-6 h-6' : 'w-5 h-5'" />
-          </UButton>
+          />
         </div>
       </div>
     </div>

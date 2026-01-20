@@ -87,7 +87,14 @@
             >
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
+                  <img
+                    v-if="avatarUrls[band.id]"
+                    :src="avatarUrls[band.id]"
+                    :alt="band.name"
+                    class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  />
                   <div
+                    v-else
                     class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center flex-shrink-0"
                   >
                     <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-violet-400" />
@@ -407,6 +414,32 @@ const { subscribe } = useAdminRealtime()
 
 // State
 const bands = ref<AdminBand[]>([])
+
+// Avatar URL cache
+const avatarUrls = ref<Record<string, string>>({})
+
+const getAvatarUrl = async (band: AdminBand) => {
+  if (!band.avatar_key) return null
+  if (avatarUrls.value[band.id]) return avatarUrls.value[band.id]
+
+  try {
+    const encodedKey = btoa(band.avatar_key).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+    const response = await $fetch<{ url: string }>(`/api/stream/${encodedKey}`)
+    avatarUrls.value[band.id] = response.url
+    return response.url
+  } catch {
+    return null
+  }
+}
+
+// Load avatar URLs when bands change
+watch(() => bands.value, async (newBands) => {
+  for (const band of newBands) {
+    if (band.avatar_key && !avatarUrls.value[band.id]) {
+      getAvatarUrl(band)
+    }
+  }
+}, { immediate: true })
 const bandsLoading = ref(false)
 const bandSearch = ref('')
 const bandStatusFilter = ref('all')

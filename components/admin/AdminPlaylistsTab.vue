@@ -59,7 +59,16 @@
             >
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center flex-shrink-0">
+                  <img
+                    v-if="coverUrls[playlist.id]"
+                    :src="coverUrls[playlist.id]"
+                    :alt="playlist.title"
+                    class="w-10 h-10 rounded object-cover flex-shrink-0"
+                  />
+                  <div
+                    v-else
+                    class="w-10 h-10 rounded bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center flex-shrink-0"
+                  >
                     <UIcon name="i-heroicons-queue-list" class="w-5 h-5 text-violet-400" />
                   </div>
                   <div>
@@ -190,6 +199,32 @@ const { subscribe } = useAdminRealtime()
 
 // State
 const playlists = ref<AdminPlaylist[]>([])
+
+// Cover URL cache
+const coverUrls = ref<Record<string, string>>({})
+
+const getCoverUrl = async (playlist: AdminPlaylist) => {
+  if (!playlist.cover_key) return null
+  if (coverUrls.value[playlist.id]) return coverUrls.value[playlist.id]
+
+  try {
+    const encodedKey = btoa(playlist.cover_key).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+    const response = await $fetch<{ url: string }>(`/api/stream/${encodedKey}`)
+    coverUrls.value[playlist.id] = response.url
+    return response.url
+  } catch {
+    return null
+  }
+}
+
+// Load cover URLs when playlists change
+watch(() => playlists.value, async (newPlaylists) => {
+  for (const playlist of newPlaylists) {
+    if (playlist.cover_key && !coverUrls.value[playlist.id]) {
+      getCoverUrl(playlist)
+    }
+  }
+}, { immediate: true })
 const playlistsLoading = ref(false)
 const playlistSearch = ref('')
 const playlistFilter = ref('all')

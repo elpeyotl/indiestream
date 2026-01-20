@@ -137,7 +137,14 @@
             >
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
+                  <img
+                    v-if="item.track?.album?.id && albumCoverUrls[item.track.album.id]"
+                    :src="albumCoverUrls[item.track.album.id]"
+                    :alt="item.track?.album?.title || 'Album'"
+                    class="w-10 h-10 rounded object-cover flex-shrink-0"
+                  />
                   <div
+                    v-else
                     class="w-10 h-10 rounded bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center flex-shrink-0"
                   >
                     <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-violet-400" />
@@ -251,7 +258,16 @@
         <template #header>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center">
+              <img
+                v-if="selectedQueueItem?.track?.album?.id && albumCoverUrls[selectedQueueItem.track.album.id]"
+                :src="albumCoverUrls[selectedQueueItem.track.album.id]"
+                :alt="selectedQueueItem?.track?.album?.title || 'Album'"
+                class="w-12 h-12 rounded object-cover"
+              />
+              <div
+                v-else
+                class="w-12 h-12 rounded bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center"
+              >
                 <UIcon name="i-heroicons-musical-note" class="w-6 h-6 text-violet-400" />
               </div>
               <div>
@@ -522,6 +538,37 @@ const { subscribe } = useAdminRealtime()
 
 // State
 const moderationQueue = ref<ModerationQueueItem[]>([])
+
+// Album cover URL cache
+const albumCoverUrls = ref<Record<string, string>>({})
+
+const getAlbumCoverUrl = async (item: ModerationQueueItem) => {
+  const coverKey = item.track?.album?.cover_key
+  if (!coverKey) return null
+  const albumId = item.track?.album?.id
+  if (!albumId) return null
+  if (albumCoverUrls.value[albumId]) return albumCoverUrls.value[albumId]
+
+  try {
+    const encodedKey = btoa(coverKey).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+    const response = await $fetch<{ url: string }>(`/api/stream/${encodedKey}`)
+    albumCoverUrls.value[albumId] = response.url
+    return response.url
+  } catch {
+    return null
+  }
+}
+
+// Load album cover URLs when queue changes
+watch(() => moderationQueue.value, async (newQueue) => {
+  for (const item of newQueue) {
+    const albumId = item.track?.album?.id
+    const coverKey = item.track?.album?.cover_key
+    if (albumId && coverKey && !albumCoverUrls.value[albumId]) {
+      getAlbumCoverUrl(item)
+    }
+  }
+}, { immediate: true })
 const moderationLoading = ref(false)
 const moderationSearch = ref('')
 const moderationStatusFilter = ref('pending')

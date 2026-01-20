@@ -4,11 +4,17 @@ This document explains how audio files are processed from upload to playback in 
 
 ## Overview
 
-FairStream requires **lossless audio uploads** (WAV, FLAC, AIFF) to ensure the highest quality source files. These are then **transcoded to AAC 256kbps** for streaming. This dual-format approach allows us to:
+FairStream requires **lossless audio uploads** (WAV, FLAC, AIFF) to ensure the highest quality source files. These are transcoded to **dual formats**:
 
-1. Future-proof for hi-res streaming tiers
-2. Provide optimal streaming quality now
-3. Never lose quality from the original source
+1. **AAC 256kbps** - Standard quality streaming (efficient, universal compatibility)
+2. **FLAC 16-bit/44.1kHz** - Hi-fi quality streaming (CD quality, lossless)
+
+After transcoding, the original file is **archived** to long-term storage and the upload copy is deleted. This approach:
+
+1. Provides optimal standard streaming quality
+2. Enables hi-fi streaming tier for audiophiles
+3. Preserves originals for future reprocessing if needed
+4. Optimizes storage costs with tiered bucket structure
 
 ## Upload Flow
 
@@ -67,6 +73,7 @@ FairStream requires **lossless audio uploads** (WAV, FLAC, AIFF) to ensure the h
       │                   │                   │                    │
       │ 3. Request        │                   │                    │
       │    presigned URLs │                   │                    │
+      │   (3 upload URLs) │                   │                    │
       │──────────────────▶│                   │                    │
       │                   │                   │                    │
       │ 4. Download       │                   │                    │
@@ -74,18 +81,23 @@ FairStream requires **lossless audio uploads** (WAV, FLAC, AIFF) to ensure the h
       │───────────────────────────────────────▶                    │
       │                   │                   │                    │
       │ 5. FFmpeg         │                   │                    │
-      │    transcode      │                   │                    │
-      │   (local)         │                   │                    │
+      │    transcode to   │                   │                    │
+      │    AAC + FLAC     │                   │                    │
       │                   │                   │                    │
-      │ 6. Upload AAC     │                   │                    │
+      │ 6. Upload 3 files │                   │                    │
+      │    - AAC stream   │                   │                    │
+      │    - FLAC hifi    │                   │                    │
+      │    - Archive orig │                   │                    │
       │───────────────────────────────────────▶                    │
       │                   │                   │                    │
       │ 7. Mark complete  │                   │                    │
+      │    + delete orig  │                   │                    │
       │──────────────────▶│──────────────────────────────────────▶│
 ```
 
-### FFmpeg Command
+### FFmpeg Commands
 
+**Standard Streaming (AAC 256kbps):**
 ```bash
 ffmpeg -i input.flac \
   -vn \                    # No video
@@ -97,12 +109,31 @@ ffmpeg -i input.flac \
   -y output.m4a
 ```
 
-### Why AAC 256kbps?
+**Hi-Fi Streaming (FLAC 16-bit/44.1kHz):**
+```bash
+ffmpeg -i input.flac \
+  -vn \                    # No video
+  -c:a flac \              # FLAC codec
+  -sample_fmt s16 \        # 16-bit depth
+  -ar 44100 \              # 44.1kHz sample rate
+  -ac 2 \                  # Stereo
+  -compression_level 8 \   # High compression
+  -y output.flac
+```
 
+### Why Dual Formats?
+
+**AAC 256kbps (Standard):**
 - **Transparent quality**: Indistinguishable from lossless for most listeners
 - **Wide compatibility**: Plays on all devices and browsers
-- **Efficient streaming**: ~2MB per minute vs ~10MB+ for lossless
-- **Future flexibility**: Can add lossless tier without re-uploading
+- **Efficient streaming**: ~2MB per minute
+- **Default for all users**
+
+**FLAC 16-bit/44.1kHz (Hi-Fi):**
+- **Lossless quality**: Perfect CD-quality audio
+- **Audiophile tier**: For users who want the best
+- **Standardized format**: Consistent quality regardless of upload format
+- **~10MB per minute**: 5x larger than AAC
 
 ## Playback Flow
 
@@ -133,13 +164,20 @@ ffmpeg -i input.flac \
 
 ### Audio Source Selection
 
-The player automatically chooses the best available audio:
+The player automatically chooses audio based on user preference and availability:
 
 ```typescript
-const getPlaybackAudioKey = (track: Track): string | null => {
-  // Prefer transcoded AAC if available
-  if (track.streaming_audio_key && track.transcoding_status === 'complete') {
-    return track.streaming_audio_key
+const getPlaybackAudioKey = (track: Track, hifiEnabled: boolean): string | null => {
+  // Only use transcoded versions if transcoding is complete
+  if (track.transcoding_status === 'complete') {
+    // Hi-fi users get FLAC if available
+    if (hifiEnabled && track.hifi_audio_key) {
+      return track.hifi_audio_key
+    }
+    // Standard users get AAC
+    if (track.streaming_audio_key) {
+      return track.streaming_audio_key
+    }
   }
   // Fall back to original lossless (slower to load, but works)
   return track.original_audio_key || track.audio_key
@@ -153,9 +191,11 @@ const getPlaybackAudioKey = (track: Track): string | null => {
 | Column | Type | Description |
 |--------|------|-------------|
 | `audio_key` | TEXT | Legacy - original audio file (deprecated) |
-| `original_audio_key` | TEXT | Lossless source file in R2 |
+| `original_audio_key` | TEXT | Lossless source file in R2 (deleted after archiving) |
 | `original_format` | VARCHAR(10) | 'wav', 'flac', or 'aiff' |
-| `streaming_audio_key` | TEXT | Transcoded AAC file in R2 |
+| `streaming_audio_key` | TEXT | Transcoded AAC file in `streaming/` bucket |
+| `hifi_audio_key` | TEXT | Transcoded FLAC file in `hifi/` bucket |
+| `archive_audio_key` | TEXT | Archived original file in `archive/` bucket |
 | `transcoding_status` | VARCHAR(20) | 'pending', 'processing', 'complete', 'failed' |
 
 ### transcoding_queue table
@@ -269,15 +309,32 @@ fly scale count 1      # Start worker
 
 ## File Storage (R2)
 
-### Key Naming Convention
+### Bucket Structure
+
+Files are organized into buckets by access pattern and lifecycle:
 
 ```
-bands/{band_id}/audio/{track_id}/original.{ext}   # Lossless source
-bands/{band_id}/audio/{track_id}/stream.m4a       # Transcoded AAC
-bands/{band_id}/covers/{album_id}.{ext}           # Album covers
-bands/{band_id}/avatar.{ext}                       # Artist avatar
-bands/{band_id}/banner.{ext}                       # Artist banner
+streaming/{band_id}/{album_id}/{track_id}.m4a    # Standard AAC (hot storage)
+hifi/{band_id}/{album_id}/{track_id}.flac        # Hi-fi FLAC (warm storage)
+archive/{band_id}/{album_id}/{track_id}.{ext}    # Original files (cold storage)
+covers/{band_id}/{album_id}/cover.{ext}          # Album covers
+avatars/{band_id}/avatar.{ext}                   # Artist avatar
+banners/{band_id}/banner.{ext}                   # Artist banner
 ```
+
+### Storage Tiers
+
+| Bucket | Purpose | Access | Caching |
+|--------|---------|--------|---------|
+| `streaming/` | Standard playback | High frequency | Edge cached |
+| `hifi/` | Hi-fi playback | Medium frequency | Edge cached |
+| `archive/` | Original preservation | Rare (reprocessing) | No caching |
+
+### Lifecycle Rules (Cloudflare R2)
+
+- **streaming/**: Standard storage, edge caching enabled
+- **hifi/**: Standard storage, edge caching enabled
+- **archive/**: Infrequent access storage (cost optimized)
 
 ### File Size Limits
 

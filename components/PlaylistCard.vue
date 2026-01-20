@@ -40,14 +40,13 @@
             v-if="trackCount > 0"
             color="violet"
             size="lg"
-            :ui="{ rounded: 'rounded-full' }"
+            :icon="loading ? undefined : 'i-heroicons-play-solid'"
             :loading="loading"
+            :ui="{ rounded: 'rounded-full', padding: { lg: 'p-3' } }"
             :class="loading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
             class="transition-opacity shadow-lg shrink-0"
             @click.prevent.stop="$emit('play', playlist)"
-          >
-            <UIcon v-if="!loading" name="i-heroicons-play-solid" class="w-6 h-6" />
-          </UButton>
+          />
         </div>
       </div>
 
@@ -69,13 +68,12 @@
             <UButton
               color="violet"
               size="lg"
-              :ui="{ rounded: 'rounded-full' }"
+              :icon="loading ? undefined : 'i-heroicons-play-solid'"
               :loading="loading"
+              :ui="{ rounded: 'rounded-full', padding: { lg: 'p-3' } }"
               class="shadow-lg"
               @click.prevent.stop="$emit('play', playlist)"
-            >
-              <UIcon v-if="!loading" name="i-heroicons-play-solid" class="w-6 h-6" />
-            </UButton>
+            />
           </div>
         </div>
       </template>

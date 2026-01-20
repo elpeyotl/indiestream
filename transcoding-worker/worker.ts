@@ -3,6 +3,12 @@
  * Transcoding Worker for Fly.io
  *
  * Continuously polls the transcoding queue and processes jobs using FFmpeg.
+ * Generates dual-format outputs for each track:
+ *   1. AAC 256kbps - Standard quality streaming
+ *   2. FLAC 16-bit/44.1kHz - Hi-fi quality streaming
+ *
+ * After transcoding, the original file is archived and the upload copy deleted.
+ *
  * Designed for deployment on Fly.io with minimal resources.
  *
  * Environment variables:
@@ -50,8 +56,15 @@ interface TranscodingJob {
 
 interface PresignResponse {
   downloadUrl: string
-  uploadUrl: string
+  // Standard streaming (AAC)
+  streamingUploadUrl: string
   streamingKey: string
+  // Hi-fi streaming (FLAC)
+  hifiUploadUrl: string
+  hifiKey: string
+  // Archive (move original)
+  archiveUploadUrl: string
+  archiveKey: string
 }
 
 // Stats tracking
@@ -104,26 +117,25 @@ async function getPresignedUrls(job: TranscodingJob): Promise<PresignResponse> {
   return response.json()
 }
 
-async function markComplete(
-  jobId: string,
-  trackId: string,
-  success: boolean,
-  streamingAudioKey?: string,
+interface CompleteParams {
+  jobId: string
+  trackId: string
+  success: boolean
+  streamingAudioKey?: string
+  hifiAudioKey?: string
+  archiveAudioKey?: string
+  originalAudioKey?: string
   error?: string
-): Promise<void> {
+}
+
+async function markComplete(params: CompleteParams): Promise<void> {
   await fetch(`${API_BASE_URL}/api/transcoding/complete`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-transcoding-secret': TRANSCODING_SECRET!,
     },
-    body: JSON.stringify({
-      jobId,
-      trackId,
-      success,
-      streamingAudioKey,
-      error,
-    }),
+    body: JSON.stringify(params),
   })
 }
 
@@ -137,12 +149,12 @@ async function downloadFile(url: string, destPath: string): Promise<void> {
   fs.writeFileSync(destPath, Buffer.from(buffer))
 }
 
-async function uploadFile(url: string, filePath: string): Promise<void> {
+async function uploadFile(url: string, filePath: string, contentType: string): Promise<void> {
   const fileBuffer = fs.readFileSync(filePath)
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
-      'Content-Type': 'audio/mp4',
+      'Content-Type': contentType,
     },
     body: fileBuffer,
   })
@@ -170,43 +182,101 @@ async function transcodeToAAC(inputPath: string, outputPath: string): Promise<vo
   }
 }
 
+async function transcodeToFLAC(inputPath: string, outputPath: string): Promise<void> {
+  // FFmpeg command for standardized FLAC encoding for hi-fi streaming
+  // -vn: no video
+  // -c:a flac: use FLAC codec
+  // -sample_fmt s16: 16-bit depth (CD quality, reduces file size vs 24-bit)
+  // -ar 44100: 44.1kHz sample rate (CD quality)
+  // -ac 2: stereo
+  // -compression_level 8: high compression (slower encode, smaller file)
+  const command = `ffmpeg -i "${inputPath}" -vn -c:a flac -sample_fmt s16 -ar 44100 -ac 2 -compression_level 8 -y "${outputPath}"`
+
+  const { stderr } = await execAsync(command, { maxBuffer: 10 * 1024 * 1024 })
+
+  // FFmpeg outputs to stderr even on success
+  if (stderr && stderr.includes('Error')) {
+    throw new Error(stderr)
+  }
+}
+
+function getContentType(format: string): string {
+  switch (format.toLowerCase()) {
+    case 'wav': return 'audio/wav'
+    case 'flac': return 'audio/flac'
+    case 'aif':
+    case 'aiff': return 'audio/aiff'
+    default: return 'application/octet-stream'
+  }
+}
+
 async function processJob(job: TranscodingJob): Promise<boolean> {
   log(`Processing: "${job.trackTitle}" (attempt ${job.attempts + 1})`)
 
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'transcode-'))
   const inputPath = path.join(tempDir, `input.${job.originalFormat}`)
-  const outputPath = path.join(tempDir, 'output.m4a')
+  const aacOutputPath = path.join(tempDir, 'output.m4a')
+  const flacOutputPath = path.join(tempDir, 'output.flac')
 
   try {
-    // Get presigned URLs
-    const { downloadUrl, uploadUrl, streamingKey } = await getPresignedUrls(job)
+    // Get presigned URLs for dual-format transcoding
+    const urls = await getPresignedUrls(job)
 
     // Download original file
     log(`  Downloading ${job.originalFormat.toUpperCase()}...`)
-    await downloadFile(downloadUrl, inputPath)
+    await downloadFile(urls.downloadUrl, inputPath)
     const inputSize = fs.statSync(inputPath).size
     log(`  Downloaded: ${(inputSize / 1024 / 1024).toFixed(1)} MB`)
 
-    // Transcode
+    // Transcode to AAC for standard streaming
     log(`  Transcoding to AAC 256kbps...`)
-    const startTime = Date.now()
-    await transcodeToAAC(inputPath, outputPath)
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1)
-    const outputSize = fs.statSync(outputPath).size
-    const ratio = ((1 - outputSize / inputSize) * 100).toFixed(0)
-    log(`  Transcoded: ${(outputSize / 1024 / 1024).toFixed(1)} MB (${ratio}% smaller) in ${duration}s`)
+    const aacStartTime = Date.now()
+    await transcodeToAAC(inputPath, aacOutputPath)
+    const aacDuration = ((Date.now() - aacStartTime) / 1000).toFixed(1)
+    const aacSize = fs.statSync(aacOutputPath).size
+    const aacRatio = ((1 - aacSize / inputSize) * 100).toFixed(0)
+    log(`  AAC: ${(aacSize / 1024 / 1024).toFixed(1)} MB (${aacRatio}% smaller) in ${aacDuration}s`)
 
-    // Upload transcoded file
-    log(`  Uploading to R2...`)
-    await uploadFile(uploadUrl, outputPath)
+    // Transcode to FLAC for hi-fi streaming
+    log(`  Transcoding to FLAC 16-bit/44.1kHz...`)
+    const flacStartTime = Date.now()
+    await transcodeToFLAC(inputPath, flacOutputPath)
+    const flacDuration = ((Date.now() - flacStartTime) / 1000).toFixed(1)
+    const flacSize = fs.statSync(flacOutputPath).size
+    const flacRatio = ((1 - flacSize / inputSize) * 100).toFixed(0)
+    log(`  FLAC: ${(flacSize / 1024 / 1024).toFixed(1)} MB (${flacRatio}% ${flacSize < inputSize ? 'smaller' : 'larger'}) in ${flacDuration}s`)
 
-    // Mark complete
-    await markComplete(job.jobId, job.trackId, true, streamingKey)
+    // Upload all files in parallel
+    log(`  Uploading to R2 (3 files)...`)
+    const uploadStartTime = Date.now()
+    await Promise.all([
+      uploadFile(urls.streamingUploadUrl, aacOutputPath, 'audio/mp4'),
+      uploadFile(urls.hifiUploadUrl, flacOutputPath, 'audio/flac'),
+      uploadFile(urls.archiveUploadUrl, inputPath, getContentType(job.originalFormat)),
+    ])
+    const uploadDuration = ((Date.now() - uploadStartTime) / 1000).toFixed(1)
+    log(`  Uploaded in ${uploadDuration}s`)
+
+    // Mark complete with all keys
+    await markComplete({
+      jobId: job.jobId,
+      trackId: job.trackId,
+      success: true,
+      streamingAudioKey: urls.streamingKey,
+      hifiAudioKey: urls.hifiKey,
+      archiveAudioKey: urls.archiveKey,
+      originalAudioKey: job.originalAudioKey,
+    })
     log(`  ✓ Complete: "${job.trackTitle}"`)
     return true
   } catch (error: any) {
     log(`  ✗ Failed: ${error.message}`)
-    await markComplete(job.jobId, job.trackId, false, undefined, error.message)
+    await markComplete({
+      jobId: job.jobId,
+      trackId: job.trackId,
+      success: false,
+      error: error.message,
+    })
     return false
   } finally {
     // Cleanup temp files
