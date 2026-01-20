@@ -80,6 +80,28 @@ const pendingArtistCount = ref(0)
 const pendingReportsCount = ref(0)
 const pendingDmcaCount = ref(0)
 
+// Fetch pending counts on page load (before tabs are clicked)
+const fetchPendingCounts = async () => {
+  try {
+    const counts = await $fetch<{
+      moderation: number
+      artists: number
+      reports: number
+      dmca: number
+    }>('/api/admin/pending-counts')
+
+    pendingModerationCount.value = counts.moderation
+    pendingArtistCount.value = counts.artists
+    pendingReportsCount.value = counts.reports
+    pendingDmcaCount.value = counts.dmca
+  } catch (e) {
+    console.error('Failed to fetch pending counts:', e)
+  }
+}
+
+// Fetch counts immediately on mount
+onMounted(fetchPendingCounts)
+
 const tabs = computed(() => [
   { label: 'Overview', slot: 'overview', icon: 'i-heroicons-chart-bar' },
   {
