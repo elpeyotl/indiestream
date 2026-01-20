@@ -130,8 +130,8 @@
 
             <!-- Logged In -->
             <template v-else>
-              <!-- Notifications Bell (only show when there are notifications) -->
-              <UPopover v-if="unreadCount > 0" :popper="{ placement: 'bottom-end' }">
+              <!-- Notifications Bell -->
+              <UPopover :popper="{ placement: 'bottom-end' }">
                 <UButton
                   color="gray"
                   variant="ghost"
@@ -515,9 +515,9 @@ onUnmounted(() => {
   unsubscribeFromRealtime();
 });
 
-// Handle bell click - fetch full notifications
+// Handle bell click - force fetch notifications to ensure fresh data
 const handleBellClick = () => {
-  fetchNotifications();
+  fetchNotifications(true);
 };
 
 // Handle notification click - mark as read

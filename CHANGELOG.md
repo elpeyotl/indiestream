@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.18.5] - 2026-01-20
+
+### Fixed
+- **Notification Bell Bug**: In-app notifications no longer conflict with Nuxt UI toast system
+  - Fixed useState key conflict that caused notifications to appear as toasts
+  - Notifications now persist correctly and don't disappear when toasts auto-dismiss
+- **Notification UX Improvements**: Bell icon now always visible for logged-in users
+  - Force-fetch on bell click to ensure fresh notification data
+  - Added duplicate prevention for realtime notifications
+  - Fixed reactivity issue with "Mark all as read" function
+
 ## [0.18.4] - 2026-01-19
 
 ### Added

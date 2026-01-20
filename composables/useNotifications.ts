@@ -20,10 +20,11 @@ export const useNotifications = () => {
   const client = useSupabaseClient()
 
   // Use useState for SSR-safe shared state
-  const notifications = useState<Notification[]>('notifications', () => [])
-  const unreadCount = useState<number>('notificationsUnreadCount', () => 0)
-  const loading = useState<boolean>('notificationsLoading', () => false)
-  const lastFetch = useState<number>('notificationsLastFetch', () => 0)
+  // NOTE: Using unique keys to avoid conflict with Nuxt UI's toast system which uses 'notifications'
+  const notifications = useState<Notification[]>('inAppNotifications', () => [])
+  const unreadCount = useState<number>('inAppNotificationsUnreadCount', () => 0)
+  const loading = useState<boolean>('inAppNotificationsLoading', () => false)
+  const lastFetch = useState<number>('inAppNotificationsLastFetch', () => 0)
 
   // Fetch unread count (lightweight, for badge) - always fresh, no caching
   const fetchUnreadCount = async () => {
@@ -95,8 +96,8 @@ export const useNotifications = () => {
     try {
       await $fetch('/api/notifications/read-all', { method: 'POST' })
 
-      // Update local state
-      notifications.value.forEach(n => { n.read = true })
+      // Update local state - create new array to ensure reactivity
+      notifications.value = notifications.value.map(n => ({ ...n, read: true }))
       unreadCount.value = 0
     } catch (e) {
       console.error('Failed to mark all as read:', e)
@@ -197,13 +198,22 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.value.id}`,
         },
         (payload) => {
-          // Add new notification to the top of the list
+          // Add new notification to the top of the list (avoid duplicates)
           const newNotification = payload.new as Notification
-          notifications.value = [newNotification, ...notifications.value]
-          unreadCount.value += 1
+          const exists = notifications.value.some(n => n.id === newNotification.id)
+          if (!exists) {
+            notifications.value = [newNotification, ...notifications.value]
+            unreadCount.value += 1
+          }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.debug('[Notifications] Realtime subscription active')
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('[Notifications] Realtime subscription error')
+        }
+      })
   }
 
   // Unsubscribe from real-time notifications
