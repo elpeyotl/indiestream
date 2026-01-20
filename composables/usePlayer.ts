@@ -165,7 +165,7 @@ const preloadNextTrack = async (getStreamUrl: (key: string) => Promise<string>) 
 }
 
 export const usePlayer = () => {
-  const { getStreamUrl } = useAlbum()
+  const { getStreamUrl, getPlaybackAudioKey } = useAlbum()
   const user = useSupabaseUser()
   const { isSubscribed, canPlayFullTracks, useFreePlays, freePlaysRemaining } = useSubscription()
 
@@ -444,7 +444,9 @@ export const usePlayer = () => {
     coverUrl: string | null
   ) => {
     initAudio()
-    if (!audio || !track.audio_key) return
+    // Get best audio key (streaming if available, fallback to original)
+    const audioKey = getPlaybackAudioKey(track)
+    if (!audio || !audioKey) return
 
     // Initialize audio analyser on first play
     initAudioAnalyser()
@@ -454,7 +456,7 @@ export const usePlayer = () => {
     state.isLoading = true
 
     try {
-      const audioUrl = await getStreamUrl(track.audio_key)
+      const audioUrl = await getStreamUrl(audioKey)
 
       const playerTrack: PlayerTrack = {
         id: track.id,
@@ -491,8 +493,8 @@ export const usePlayer = () => {
     // Initialize audio analyser on first play
     initAudioAnalyser()
 
-    // Build queue from album tracks
-    const tracks = album.tracks.filter(t => t.audio_key)
+    // Build queue from album tracks (filter to playable tracks)
+    const tracks = album.tracks.filter(t => getPlaybackAudioKey(t))
     if (tracks.length === 0) return
 
     state.queue = []
@@ -501,7 +503,8 @@ export const usePlayer = () => {
     // Load all track URLs
     for (const track of tracks) {
       try {
-        const audioUrl = await getStreamUrl(track.audio_key!)
+        const audioKey = getPlaybackAudioKey(track)!
+        const audioUrl = await getStreamUrl(audioKey)
         state.queue.push({
           id: track.id,
           title: track.title,

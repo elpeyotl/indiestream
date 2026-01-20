@@ -448,8 +448,13 @@ const startUpload = async () => {
             })
 
             const duration = await getAudioDuration(track.file)
+            // Get file extension for original format
+            const ext = track.file.name.split('.').pop()?.toLowerCase() || 'flac'
             await updateTrack(dbTrack.id, {
-              audio_key: key,
+              audio_key: key, // Keep for backwards compatibility
+              original_audio_key: key, // Store as original lossless
+              original_format: ext,
+              transcoding_status: 'pending', // Will be transcoded by worker
               duration_seconds: Math.round(duration),
             })
 
@@ -561,8 +566,13 @@ const startUpload = async () => {
           })
 
           const duration = await getAudioDuration(track.file)
+          // Get file extension for original format
+          const ext = track.file.name.split('.').pop()?.toLowerCase() || 'flac'
           await updateTrack(dbTrack.id, {
-            audio_key: key,
+            audio_key: key, // Keep for backwards compatibility
+            original_audio_key: key, // Store as original lossless
+            original_format: ext,
+            transcoding_status: 'pending', // Will be transcoded by worker
             duration_seconds: Math.round(duration),
           })
 

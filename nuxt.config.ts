@@ -139,6 +139,16 @@ export default defineNuxtConfig({
   // CSS configuration
   css: ['~/assets/css/transitions.css'],
 
+  // Nitro config for server
+  nitro: {
+    // Increase body size limit for bulk uploads (2GB)
+    routeRules: {
+      '/api/bulk-upload/**': {
+        // Allow large body for bulk upload endpoints
+      },
+    },
+  },
+
   // Runtime config
   runtimeConfig: {
     // Private keys (server-side only)
@@ -152,6 +162,7 @@ export default defineNuxtConfig({
     resendApiKey: process.env.RESEND_API_KEY,
     resendFromEmail: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
     contactEmail: process.env.CONTACT_EMAIL || 'hello.indiestream@gmail.com',
+    transcodingSecret: process.env.TRANSCODING_SECRET,
 
     // Public keys (exposed to client)
     public: {

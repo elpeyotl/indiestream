@@ -20,6 +20,11 @@ export interface Track {
   spotify_track_id: string | null
   musicbrainz_work_id: string | null
   isrc_platform_assigned: boolean
+  // Transcoding (dual-format storage)
+  original_audio_key?: string | null
+  original_format?: string | null
+  streaming_audio_key?: string | null
+  transcoding_status?: 'pending' | 'processing' | 'complete' | 'failed'
   // Moderation
   moderation_status?: string
   moderation_notes?: string | null
@@ -573,6 +578,16 @@ export const useAlbum = () => {
     return response.url
   }
 
+  // Get the best audio key for playback (prefer streaming, fallback to original/audio_key)
+  const getPlaybackAudioKey = (track: Track): string | null => {
+    // Prefer transcoded streaming version if available
+    if (track.streaming_audio_key && track.transcoding_status === 'complete') {
+      return track.streaming_audio_key
+    }
+    // Fall back to original lossless (or legacy audio_key)
+    return track.original_audio_key || track.audio_key
+  }
+
   // Get cached cover URL or fetch new one
   const getCachedCoverUrl = async (key: string | null | undefined): Promise<string | null> => {
     if (!key) return null
@@ -733,6 +748,7 @@ export const useAlbum = () => {
     reorderTracks,
     getUploadUrl,
     getStreamUrl,
+    getPlaybackAudioKey,
     getCachedCoverUrl,
     invalidateAlbumCache,
     // Track credits
