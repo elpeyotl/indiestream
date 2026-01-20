@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.19.0] - 2026-01-20
+
+### Added
+- **Bulk Upload Feature**: Upload multiple albums and tracks at once via CSV + ZIP file
+  - CSV template for metadata (artist, album, tracks with cover art and audio paths)
+  - ZIP file containing all audio files and cover art
+  - Support for up to 2GB ZIP files via streaming upload to R2
+  - Validation step to catch errors before processing
+  - Progress tracking during upload
+  - Results page showing created artists, albums, and tracks
+- **Lossless Audio Requirement**: All audio uploads must be lossless format (WAV, FLAC, AIFF)
+  - Ensures highest quality source files for future hi-res streaming tier
+  - Rejects lossy formats (MP3, AAC, OGG) at upload time
+  - Maximum file size: 300MB per track
+  - Clear error messages explaining the requirement
+- **Audio Transcoding Infrastructure**: Background transcoding to AAC 256kbps for streaming
+  - Dual-format storage: original lossless preserved, AAC version for playback
+  - Transcoding queue with automatic job creation on track upload
+  - Player automatically uses transcoded version when available
+  - Falls back to original if transcoding not yet complete
+- **Fly.io Transcoding Worker**: Dedicated worker for audio processing
+  - FFmpeg-based transcoding to AAC 256kbps with optimal streaming settings
+  - Continuous polling with configurable batch size and interval
+  - Stats tracking and graceful shutdown handling
+  - Docker deployment with minimal resources (~$2-5/month)
+
+### Technical
+- New database columns on tracks table:
+  - `original_audio_key`: Stores the lossless source file
+  - `original_format`: Format of the original file (wav/flac/aiff)
+  - `streaming_audio_key`: Transcoded AAC file for playback
+  - `transcoding_status`: Queue status (pending/processing/complete/failed)
+- New `transcoding_queue` table with automatic trigger on track insert
+- API endpoints:
+  - `POST /api/bulk-upload/validate`: Validate CSV + ZIP before processing
+  - `POST /api/bulk-upload/presign-zip`: Get presigned URL for large ZIP upload
+  - `POST /api/bulk-upload/process`: Process ZIP from R2
+  - `GET /api/transcoding/queue`: Fetch pending jobs (worker)
+  - `POST /api/transcoding/presign`: Get download/upload URLs (worker)
+  - `POST /api/transcoding/complete`: Mark job complete (worker)
+- New composable `useBulkUpload` for managing bulk upload state
+- Updated `useAlbum` and `usePlayer` to handle dual-format audio
+
+### Fixed
+- Bulk upload results page now displays actual cover art and artist avatars
+
 ## [0.18.5] - 2026-01-20
 
 ### Fixed
