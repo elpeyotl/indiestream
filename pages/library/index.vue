@@ -3,386 +3,476 @@
     <!-- Header -->
     <div class="mb-6">
       <h1 class="text-3xl font-bold text-zinc-100">Your Library</h1>
-      <p class="text-zinc-400 mt-1">Artists, albums, playlists, and tracks you've saved</p>
+      <p class="text-zinc-400 mt-1">
+        Artists, albums, playlists, and tracks you've saved
+      </p>
     </div>
 
     <!-- Tab Selector -->
     <PillTabs v-model="activeTab" :tabs="tabs" sticky>
       <template #playlists>
-          <!-- Loading Skeleton -->
-          <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            <div v-for="i in 5" :key="i">
-              <USkeleton class="aspect-square rounded-lg mb-3" />
-              <USkeleton class="h-5 w-3/4 mb-1" />
-              <USkeleton class="h-4 w-1/2" />
-            </div>
+        <!-- Loading Skeleton -->
+        <div
+          v-if="loadingPlaylists"
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+        >
+          <div v-for="i in 5" :key="i">
+            <USkeleton class="aspect-square rounded-lg mb-3" />
+            <USkeleton class="h-5 w-3/4 mb-1" />
+            <USkeleton class="h-4 w-1/2" />
           </div>
+        </div>
 
-          <!-- Create Playlist Button -->
-          <div v-if="!loading && (userPlaylists.length > 0 || tracks.length > 0)" class="flex justify-start mb-6">
-            <UButton color="violet" variant="soft" @click="showCreatePlaylist = true">
-              <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
-              Create Playlist
-            </UButton>
-          </div>
+        <!-- Create Playlist Button -->
+        <div
+          v-if="
+            !loadingPlaylists &&
+            (userPlaylists?.length > 0 || tracks.length > 0)
+          "
+          class="flex justify-start mb-6"
+        >
+          <UButton
+            color="violet"
+            variant="soft"
+            @click="showCreatePlaylist = true"
+          >
+            <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
+            Create Playlist
+          </UButton>
+        </div>
 
-          <!-- Empty State (no playlists and no liked tracks) -->
-          <EmptyState
-            v-if="!loading && userPlaylists.length === 0 && tracks.length === 0"
-            icon="i-heroicons-queue-list"
-            title="No playlists yet"
-            description="Create playlists to organize your favorite tracks and share them with friends."
-            action-label="Create Playlist"
-            action-icon="i-heroicons-plus"
-            @action="showCreatePlaylist = true"
-          />
+        <!-- Empty State (no playlists and no liked tracks) -->
+        <EmptyState
+          v-if="
+            !loadingPlaylists &&
+            userPlaylists.length === 0 &&
+            tracks.length === 0
+          "
+          icon="i-heroicons-queue-list"
+          title="No playlists yet"
+          description="Create playlists to organize your favorite tracks and share them with friends."
+          action-label="Create Playlist"
+          action-icon="i-heroicons-plus"
+          @action="showCreatePlaylist = true"
+        />
 
-          <!-- Playlist Grid (includes Liked Songs as first item) -->
-          <div v-else-if="!loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            <!-- Liked Songs Card (first in grid if there are liked tracks) -->
-            <NuxtLink v-if="tracks.length > 0" to="/library/liked" class="group">
-              <div class="relative mb-3 group-hover:scale-[1.02] transition-all">
-                <!-- Use PlaylistCover with heart icon -->
-                <PlaylistCover :covers="[]" icon="i-heroicons-heart-solid" />
-                <!-- Overlay with info and play button -->
-                <div class="absolute inset-0 rounded-lg bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4">
-                  <div></div>
-                  <!-- Bottom info and play button -->
-                  <div class="flex items-end justify-between">
-                    <div class="min-w-0 flex-1 mr-2">
-                      <h3 class="font-semibold text-white text-lg truncate">Liked Songs</h3>
-                      <p class="text-white/70 text-sm">{{ tracks.length }} {{ tracks.length === 1 ? 'song' : 'songs' }}</p>
-                    </div>
-                    <UButton
-                      color="violet"
-                      size="lg"
-                      :icon="loadingPlayId === 'liked' ? undefined : 'i-heroicons-play-solid'"
-                      :loading="loadingPlayId === 'liked'"
-                      :ui="{ rounded: 'rounded-full', padding: { lg: 'p-3' } }"
-                      :class="loadingPlayId === 'liked' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
-                      class="transition-opacity shadow-lg shrink-0"
-                      @click.prevent.stop="playLikedSongs"
-                    />
+        <!-- Playlist Grid (includes Liked Songs as first item) -->
+        <div
+          v-else-if="!loadingPlaylists"
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+        >
+          <!-- Liked Songs Card (first in grid if there are liked tracks) -->
+          <NuxtLink v-if="tracks.length > 0" to="/library/liked" class="group">
+            <div class="relative mb-3 group-hover:scale-[1.02] transition-all">
+              <!-- Use PlaylistCover with heart icon -->
+              <PlaylistCover :covers="[]" icon="i-heroicons-heart-solid" />
+              <!-- Overlay with info and play button -->
+              <div
+                class="absolute inset-0 rounded-lg bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4"
+              >
+                <div></div>
+                <!-- Bottom info and play button -->
+                <div class="flex items-end justify-between">
+                  <div class="min-w-0 flex-1 mr-2">
+                    <h3 class="font-semibold text-white text-lg truncate">
+                      Liked Songs
+                    </h3>
+                    <p class="text-white/70 text-sm">
+                      {{ tracks.length }}
+                      {{ tracks.length === 1 ? 'song' : 'songs' }}
+                    </p>
                   </div>
+                  <UButton
+                    color="violet"
+                    size="lg"
+                    :icon="
+                      loadingPlayId === 'liked'
+                        ? undefined
+                        : 'i-heroicons-play-solid'
+                    "
+                    :loading="loadingPlayId === 'liked'"
+                    :ui="{ rounded: 'rounded-full', padding: { lg: 'p-3' } }"
+                    :class="
+                      loadingPlayId === 'liked'
+                        ? 'opacity-100'
+                        : 'opacity-0 group-hover:opacity-100'
+                    "
+                    class="transition-opacity shadow-lg shrink-0"
+                    @click.prevent.stop="playLikedSongs"
+                  />
                 </div>
               </div>
-            </NuxtLink>
+            </div>
+          </NuxtLink>
 
-            <!-- Regular Playlists -->
-            <PlaylistCard
-              v-for="playlist in userPlaylists"
-              :key="playlist.id"
-              :playlist="playlist"
-              :covers="playlistCovers[playlist.id] || []"
-              :loading="loadingPlayId === playlist.id"
-              overlay
-              @play="(p) => playPlaylistById(p.id)"
-            />
-          </div>
+          <!-- Regular Playlists -->
+          <PlaylistCard
+            v-for="playlist in userPlaylists"
+            :key="playlist.id"
+            :playlist="playlist"
+            :covers="playlistCovers[playlist.id] || []"
+            :loading="loadingPlayId === playlist.id"
+            overlay
+            @play="(p) => playPlaylistById(p.id)"
+          />
+        </div>
       </template>
 
       <template #artists>
-          <!-- Loading Skeleton -->
-          <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            <div v-for="i in 5" :key="i" class="text-center">
-              <USkeleton class="w-32 md:w-40 h-32 md:h-40 rounded-full mx-auto mb-3" />
-              <USkeleton class="h-5 w-24 mx-auto mb-1" />
-              <USkeleton class="h-4 w-16 mx-auto" />
-            </div>
+        <!-- Loading Skeleton -->
+        <div
+          v-if="loadingArtists"
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+        >
+          <div v-for="i in 5" :key="i" class="text-center">
+            <USkeleton
+              class="w-32 md:w-40 h-32 md:h-40 rounded-full mx-auto mb-3"
+            />
+            <USkeleton class="h-5 w-24 mx-auto mb-1" />
+            <USkeleton class="h-4 w-16 mx-auto" />
           </div>
+        </div>
 
-          <EmptyState
-            v-else-if="artists.length === 0"
-            icon="i-heroicons-user-group"
-            title="No followed artists yet"
-            description="Follow your favorite artists to see them here. You'll be notified when they release new music."
-            action-label="Discover Artists"
-            action-to="/discover"
-          />
+        <EmptyState
+          v-else-if="artists.length === 0"
+          icon="i-heroicons-user-group"
+          title="No followed artists yet"
+          description="Follow your favorite artists to see them here. You'll be notified when they release new music."
+          action-label="Discover Artists"
+          action-to="/discover"
+        />
 
-          <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            <NuxtLink
-              v-for="item in artists"
-              :key="item.band.id"
-              :to="`/${item.band.slug}`"
-              class="group text-center"
+        <div
+          v-else
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+        >
+          <NuxtLink
+            v-for="item in artists"
+            :key="item.band.id"
+            :to="`/${item.band.slug}`"
+            class="group text-center"
+          >
+            <div
+              class="aspect-square rounded-full overflow-hidden bg-zinc-800 mb-3 mx-auto w-32 md:w-40 shadow-lg group-hover:shadow-xl transition-shadow ring-2 ring-transparent group-hover:ring-violet-500/50"
             >
-              <div class="aspect-square rounded-full overflow-hidden bg-zinc-800 mb-3 mx-auto w-32 md:w-40 shadow-lg group-hover:shadow-xl transition-shadow ring-2 ring-transparent group-hover:ring-violet-500/50">
-                <img
-                  v-if="artistAvatars[item.band.id]"
-                  v-fade-image
-                  :src="artistAvatars[item.band.id]"
-                  :alt="item.band.name"
-                  class="w-full h-full object-cover"
-                  loading="lazy"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-600 to-fuchsia-600">
-                  <span class="text-3xl font-bold text-white">{{ item.band.name.charAt(0).toUpperCase() }}</span>
-                </div>
+              <img
+                v-if="artistAvatars[item.band.id]"
+                v-fade-image
+                :src="artistAvatars[item.band.id]"
+                :alt="item.band.name"
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-600 to-fuchsia-600"
+              >
+                <span class="text-3xl font-bold text-white">{{
+                  item.band.name.charAt(0).toUpperCase()
+                }}</span>
               </div>
-              <h3 class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
-                {{ item.band.name }}
-              </h3>
-              <p class="text-sm text-zinc-500">
-                {{ item.band.location || 'Artist' }}
-              </p>
-            </NuxtLink>
-          </div>
+            </div>
+            <h3
+              class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors"
+            >
+              {{ item.band.name }}
+            </h3>
+            <p class="text-sm text-zinc-500">
+              {{ item.band.location || 'Artist' }}
+            </p>
+          </NuxtLink>
+        </div>
       </template>
 
       <template #albums>
-          <!-- Loading Skeleton -->
-          <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            <div v-for="i in 5" :key="i">
-              <USkeleton class="aspect-square rounded-lg mb-3" />
-              <USkeleton class="h-5 w-3/4 mb-1" />
-              <USkeleton class="h-4 w-1/2" />
-            </div>
+        <!-- Loading Skeleton -->
+        <div
+          v-if="loadingAlbums"
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+        >
+          <div v-for="i in 5" :key="i">
+            <USkeleton class="aspect-square rounded-lg mb-3" />
+            <USkeleton class="h-5 w-3/4 mb-1" />
+            <USkeleton class="h-4 w-1/2" />
           </div>
+        </div>
 
-          <EmptyState
-            v-else-if="albums.length === 0"
-            icon="i-heroicons-square-3-stack-3d"
-            title="No saved albums yet"
-            description="Save albums to your library to access them quickly and show support for the artists."
-            action-label="Discover Music"
-            action-to="/discover"
-          />
+        <EmptyState
+          v-else-if="albums.length === 0"
+          icon="i-heroicons-square-3-stack-3d"
+          title="No saved albums yet"
+          description="Save albums to your library to access them quickly and show support for the artists."
+          action-label="Discover Music"
+          action-to="/discover"
+        />
 
-          <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            <NuxtLink
-              v-for="item in albums"
-              :key="item.album.id"
-              :to="`/${item.album.band.slug}/${item.album.slug}`"
-              class="group"
+        <div
+          v-else
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+        >
+          <NuxtLink
+            v-for="item in albums"
+            :key="item.album.id"
+            :to="`/${item.album.band.slug}/${item.album.slug}`"
+            class="group"
+          >
+            <div
+              class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow"
             >
-              <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
-                <img
-                  v-if="albumCovers[item.album.id]"
-                  v-fade-image
-                  :src="albumCovers[item.album.id]"
-                  :alt="item.album.title"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
+              <img
+                v-if="albumCovers[item.album.id]"
+                v-fade-image
+                :src="albumCovers[item.album.id]"
+                :alt="item.album.title"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center"
+              >
+                <UIcon
+                  name="i-heroicons-musical-note"
+                  class="w-12 h-12 text-zinc-600"
                 />
-                <div v-else class="w-full h-full flex items-center justify-center">
-                  <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
-                </div>
               </div>
-              <h3 class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
-                {{ item.album.title }}
-              </h3>
-              <p class="text-sm text-zinc-400 truncate">
-                {{ item.album.band.name }}
-              </p>
-            </NuxtLink>
-          </div>
+            </div>
+            <h3
+              class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors"
+            >
+              {{ item.album.title }}
+            </h3>
+            <p class="text-sm text-zinc-400 truncate">
+              {{ item.album.band.name }}
+            </p>
+          </NuxtLink>
+        </div>
       </template>
 
       <template #tracks>
-          <!-- Loading Skeleton -->
-          <div v-if="loading" class="space-y-1">
-            <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-3">
-              <USkeleton class="w-8 h-4" />
-              <USkeleton class="w-10 h-10 rounded" />
-              <div class="flex-1">
-                <USkeleton class="h-5 w-40 mb-1" />
-                <USkeleton class="h-4 w-24" />
-              </div>
-              <USkeleton class="hidden md:block h-4 w-32" />
-              <USkeleton class="w-12 h-4" />
+        <!-- Loading Skeleton -->
+        <div v-if="loadingTracks" class="space-y-1">
+          <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-3">
+            <USkeleton class="w-8 h-4" />
+            <USkeleton class="w-10 h-10 rounded" />
+            <div class="flex-1">
+              <USkeleton class="h-5 w-40 mb-1" />
+              <USkeleton class="h-4 w-24" />
             </div>
+            <USkeleton class="hidden md:block h-4 w-32" />
+            <USkeleton class="w-12 h-4" />
           </div>
+        </div>
 
-          <EmptyState
-            v-else-if="tracks.length === 0"
-            icon="i-heroicons-heart"
-            title="No liked tracks yet"
-            description="Like tracks by clicking the heart icon while browsing or playing music."
-            action-label="Discover Music"
-            action-to="/discover"
-          />
+        <EmptyState
+          v-else-if="tracks.length === 0"
+          icon="i-heroicons-heart"
+          title="No liked tracks yet"
+          description="Like tracks by clicking the heart icon while browsing or playing music."
+          action-label="Discover Music"
+          action-to="/discover"
+        />
 
-          <div v-else class="space-y-1">
-            <div
-              v-for="(item, index) in tracks"
-              :key="item.track.id"
-              class="flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors group"
-            >
-              <!-- Index / Play -->
-              <div class="w-8 text-center shrink-0">
+        <div v-else class="space-y-1">
+          <div
+            v-for="(item, index) in tracks"
+            :key="item.track.id"
+            class="flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors group"
+          >
+            <!-- Index / Play -->
+            <div class="w-8 text-center shrink-0">
+              <UIcon
+                v-if="loadingPlayId === item.track.id"
+                name="i-heroicons-arrow-path"
+                class="w-4 h-4 text-violet-400 animate-spin"
+              />
+              <template v-else>
+                <span class="text-sm text-zinc-500 group-hover:hidden">{{
+                  index + 1
+                }}</span>
                 <UIcon
-                  v-if="loadingPlayId === item.track.id"
-                  name="i-heroicons-arrow-path"
-                  class="w-4 h-4 text-violet-400 animate-spin"
+                  name="i-heroicons-play"
+                  class="w-4 h-4 text-zinc-100 hidden group-hover:inline cursor-pointer"
+                  @click.prevent="playTrack(item)"
                 />
-                <template v-else>
-                  <span class="text-sm text-zinc-500 group-hover:hidden">{{ index + 1 }}</span>
-                  <UIcon
-                    name="i-heroicons-play"
-                    class="w-4 h-4 text-zinc-100 hidden group-hover:inline cursor-pointer"
-                    @click.prevent="playTrack(item)"
-                  />
-                </template>
-              </div>
+              </template>
+            </div>
 
-              <!-- Cover -->
-              <div class="w-10 h-10 rounded bg-zinc-800 shrink-0 overflow-hidden">
-                <img
-                  v-if="trackCovers[item.track.id]"
-                  :src="trackCovers[item.track.id]"
-                  :alt="item.track.title"
-                  class="w-full h-full object-cover"
+            <!-- Cover -->
+            <div class="w-10 h-10 rounded bg-zinc-800 shrink-0 overflow-hidden">
+              <img
+                v-if="trackCovers[item.track.id]"
+                :src="trackCovers[item.track.id]"
+                :alt="item.track.title"
+                class="w-full h-full object-cover"
+              />
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center"
+              >
+                <UIcon
+                  name="i-heroicons-musical-note"
+                  class="w-4 h-4 text-zinc-600"
                 />
-                <div v-else class="w-full h-full flex items-center justify-center">
-                  <UIcon name="i-heroicons-musical-note" class="w-4 h-4 text-zinc-600" />
-                </div>
               </div>
+            </div>
 
-              <!-- Track Info -->
-              <div class="flex-1 min-w-0">
-                <p class="font-medium text-zinc-100 truncate">{{ item.track.title }}</p>
-                <NuxtLink
-                  :to="`/${item.track.album.band.slug}`"
-                  class="text-sm text-zinc-400 hover:text-violet-400 truncate block"
-                  @click.stop
-                >
-                  {{ item.track.album.band.name }}
-                </NuxtLink>
-              </div>
-
-              <!-- Album -->
+            <!-- Track Info -->
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-zinc-100 truncate">
+                {{ item.track.title }}
+              </p>
               <NuxtLink
-                :to="`/${item.track.album.band.slug}/${item.track.album.slug}`"
-                class="hidden md:block text-sm text-zinc-500 hover:text-zinc-300 truncate max-w-[200px]"
+                :to="`/${item.track.album.band.slug}`"
+                class="text-sm text-zinc-400 hover:text-violet-400 truncate block"
                 @click.stop
               >
-                {{ item.track.album.title }}
+                {{ item.track.album.band.name }}
               </NuxtLink>
+            </div>
 
-              <!-- Duration -->
-              <span class="text-sm text-zinc-500 w-12 text-right">
-                {{ formatDuration(item.track.duration_seconds) }}
-              </span>
+            <!-- Album -->
+            <NuxtLink
+              :to="`/${item.track.album.band.slug}/${item.track.album.slug}`"
+              class="hidden md:block text-sm text-zinc-500 hover:text-zinc-300 truncate max-w-[200px]"
+              @click.stop
+            >
+              {{ item.track.album.title }}
+            </NuxtLink>
 
-              <!-- Actions -->
-              <div class="flex items-center gap-1">
-                <!-- Heart (always filled since it's in liked tracks) -->
-                <UButton
-                  color="red"
-                  variant="ghost"
-                  size="xs"
-                  icon="i-heroicons-heart-solid"
-                  class="opacity-60 hover:opacity-100"
-                  @click.stop="handleUnlike(item.track.id)"
-                />
-                <!-- Desktop: Dropdown menu -->
-                <TrackActionsMenu
-                  :track="getPlayerTrack(item)"
-                  :show-on-hover="true"
-                  class="hidden md:block"
-                />
-                <!-- Mobile: Opens bottom sheet -->
-                <UButton
-                  color="gray"
-                  variant="ghost"
-                  size="xs"
-                  icon="i-heroicons-ellipsis-vertical"
-                  class="md:hidden"
-                  @click.stop="openActionsSheet(item)"
-                />
-              </div>
+            <!-- Duration -->
+            <span class="text-sm text-zinc-500 w-12 text-right">
+              {{ formatDuration(item.track.duration_seconds) }}
+            </span>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-1">
+              <!-- Heart (always filled since it's in liked tracks) -->
+              <UButton
+                color="red"
+                variant="ghost"
+                size="xs"
+                icon="i-heroicons-heart-solid"
+                class="opacity-60 hover:opacity-100"
+                @click.stop="handleUnlike(item.track.id)"
+              />
+              <!-- Desktop: Dropdown menu -->
+              <TrackActionsMenu
+                :track="getPlayerTrack(item)"
+                :show-on-hover="true"
+                class="hidden md:block"
+              />
+              <!-- Mobile: Opens bottom sheet -->
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="xs"
+                icon="i-heroicons-ellipsis-vertical"
+                class="md:hidden"
+                @click.stop="openActionsSheet(item)"
+              />
             </div>
           </div>
+        </div>
       </template>
 
       <template #history>
-          <!-- Loading Skeleton -->
-          <div v-if="loadingHistory" class="space-y-1">
-            <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-3">
-              <USkeleton class="w-8 h-4" />
-              <USkeleton class="w-10 h-10 rounded" />
-              <div class="flex-1">
-                <USkeleton class="h-5 w-40 mb-1" />
-                <USkeleton class="h-4 w-24" />
-              </div>
-              <USkeleton class="hidden md:block h-4 w-32" />
-              <USkeleton class="hidden sm:block h-4 w-20" />
+        <!-- Loading Skeleton -->
+        <div v-if="loadingHistory" class="space-y-1">
+          <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-3">
+            <USkeleton class="w-8 h-4" />
+            <USkeleton class="w-10 h-10 rounded" />
+            <div class="flex-1">
+              <USkeleton class="h-5 w-40 mb-1" />
+              <USkeleton class="h-4 w-24" />
             </div>
+            <USkeleton class="hidden md:block h-4 w-32" />
+            <USkeleton class="hidden sm:block h-4 w-20" />
           </div>
+        </div>
 
-          <EmptyState
-            v-else-if="recentlyPlayed.length === 0"
-            icon="i-heroicons-clock"
-            title="No listening history"
-            description="Start listening to music to see your history here."
-            action-label="Discover Music"
-            action-to="/discover"
-          />
+        <EmptyState
+          v-else-if="recentlyPlayed.length === 0"
+          icon="i-heroicons-clock"
+          title="No listening history"
+          description="Start listening to music to see your history here."
+          action-label="Discover Music"
+          action-to="/discover"
+        />
 
-          <div v-else class="space-y-1">
-            <div
-              v-for="(track, index) in recentlyPlayed"
-              :key="`${track.id}-${index}`"
-              class="flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors group cursor-pointer"
-              @click="playHistoryTrack(track, index)"
-            >
-              <!-- Index / Play -->
-              <div class="w-8 text-center shrink-0">
+        <div v-else class="space-y-1">
+          <div
+            v-for="(track, index) in recentlyPlayed"
+            :key="`${track.id}-${index}`"
+            class="flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors group cursor-pointer"
+            @click="playHistoryTrack(track, index)"
+          >
+            <!-- Index / Play -->
+            <div class="w-8 text-center shrink-0">
+              <UIcon
+                v-if="loadingPlayId === `history-${track.id}`"
+                name="i-heroicons-arrow-path"
+                class="w-4 h-4 text-violet-400 animate-spin"
+              />
+              <template v-else>
+                <span class="text-sm text-zinc-500 group-hover:hidden">{{
+                  index + 1
+                }}</span>
                 <UIcon
-                  v-if="loadingPlayId === `history-${track.id}`"
-                  name="i-heroicons-arrow-path"
-                  class="w-4 h-4 text-violet-400 animate-spin"
+                  name="i-heroicons-play"
+                  class="w-4 h-4 text-zinc-100 hidden group-hover:inline"
                 />
-                <template v-else>
-                  <span class="text-sm text-zinc-500 group-hover:hidden">{{ index + 1 }}</span>
-                  <UIcon
-                    name="i-heroicons-play"
-                    class="w-4 h-4 text-zinc-100 hidden group-hover:inline"
-                  />
-                </template>
-              </div>
+              </template>
+            </div>
 
-              <!-- Cover -->
-              <div class="w-10 h-10 rounded bg-zinc-800 shrink-0 overflow-hidden">
-                <img
-                  v-if="track.coverUrl"
-                  :src="track.coverUrl"
-                  :alt="track.title"
-                  class="w-full h-full object-cover"
+            <!-- Cover -->
+            <div class="w-10 h-10 rounded bg-zinc-800 shrink-0 overflow-hidden">
+              <img
+                v-if="track.coverUrl"
+                :src="track.coverUrl"
+                :alt="track.title"
+                class="w-full h-full object-cover"
+              />
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center"
+              >
+                <UIcon
+                  name="i-heroicons-musical-note"
+                  class="w-4 h-4 text-zinc-600"
                 />
-                <div v-else class="w-full h-full flex items-center justify-center">
-                  <UIcon name="i-heroicons-musical-note" class="w-4 h-4 text-zinc-600" />
-                </div>
               </div>
+            </div>
 
-              <!-- Track Info -->
-              <div class="flex-1 min-w-0">
-                <p class="font-medium text-zinc-100 truncate">{{ track.title }}</p>
-                <NuxtLink
-                  :to="`/${track.artistSlug}`"
-                  class="text-sm text-zinc-400 hover:text-violet-400 truncate block"
-                  @click.stop
-                >
-                  {{ track.artistName }}
-                </NuxtLink>
-              </div>
-
-              <!-- Album -->
+            <!-- Track Info -->
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-zinc-100 truncate">
+                {{ track.title }}
+              </p>
               <NuxtLink
-                :to="`/${track.artistSlug}/${track.albumSlug}`"
-                class="hidden md:block text-sm text-zinc-500 hover:text-zinc-300 truncate max-w-[200px]"
+                :to="`/${track.artistSlug}`"
+                class="text-sm text-zinc-400 hover:text-violet-400 truncate block"
                 @click.stop
               >
-                {{ track.albumTitle }}
+                {{ track.artistName }}
               </NuxtLink>
-
-              <!-- Played time -->
-              <span class="text-sm text-zinc-500 hidden sm:block">
-                {{ formatRelativeTime(track.playedAt) }}
-              </span>
             </div>
+
+            <!-- Album -->
+            <NuxtLink
+              :to="`/${track.artistSlug}/${track.albumSlug}`"
+              class="hidden md:block text-sm text-zinc-500 hover:text-zinc-300 truncate max-w-[200px]"
+              @click.stop
+            >
+              {{ track.albumTitle }}
+            </NuxtLink>
+
+            <!-- Played time -->
+            <span class="text-sm text-zinc-500 hidden sm:block">
+              {{ formatRelativeTime(track.playedAt) }}
+            </span>
           </div>
+        </div>
       </template>
     </PillTabs>
 
@@ -452,7 +542,11 @@
 </template>
 
 <script setup lang="ts">
-import type { SavedAlbum, LikedTrack, FollowedArtist } from '~/composables/useLibrary'
+import type {
+  SavedAlbum,
+  LikedTrack,
+  FollowedArtist,
+} from '~/composables/useLibrary'
 import type { PlayerTrack } from '~/composables/usePlayer'
 import type { RecentlyPlayedTrack } from '~/composables/useRecentActivity'
 
@@ -461,9 +555,20 @@ definePageMeta({
 })
 
 const { getStreamUrl, getCachedCoverUrl } = useAlbum()
-const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = useLibrary()
-const { playTrackFromLibrary, playPlaylist, isLoading: playerLoading, setQueue } = usePlayer()
-const { playlists: userPlaylists, fetchPlaylists, createPlaylist, getPlaylist } = usePlaylist()
+const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } =
+  useLibrary()
+const {
+  playTrackFromLibrary,
+  playPlaylist,
+  isLoading: playerLoading,
+  setQueue,
+} = usePlayer()
+const {
+  playlists: userPlaylists,
+  fetchPlaylists,
+  createPlaylist,
+  getPlaylist,
+} = usePlaylist()
 const { fetchRecentlyPlayed, recentlyPlayed } = useRecentActivity()
 const route = useRoute()
 const loadingHistory = ref(false)
@@ -485,45 +590,68 @@ const creatingPlaylist = ref(false)
 const showActionsSheet = ref(false)
 const selectedTrack = ref<PlayerTrack | null>(null)
 
-// Fetch library data using Nuxt's useLazyAsyncData with caching
-const nuxtApp = useNuxtApp()
-const { data: libraryData, pending: loading, refresh: refreshLibrary } = await useLazyAsyncData(
-  'user-library',
-  async () => {
-    const [artistsData, albumsData, tracksData] = await Promise.all([
-      getFollowedArtists(),
-      getSavedAlbums(),
-      getLikedTracks(),
-      fetchPlaylists(),
-    ])
-    return {
-      artists: artistsData,
-      albums: albumsData,
-      tracks: tracksData,
-    }
-  },
-  {
+// Fetch library data using separate useLazyAsyncData calls per section
+// This allows each tab to load independently for faster perceived performance
+
+// Artists tab data
+const {
+  data: artistsData,
+  pending: loadingArtists,
+  refresh: refreshArtists,
+} = await useLazyAsyncData('library-artists', () => getFollowedArtists(), {
+  server: false,
+  default: () => [] as FollowedArtist[],
+})
+
+// Albums tab data
+const {
+  data: albumsData,
+  pending: loadingAlbums,
+  refresh: refreshAlbums,
+} = await useLazyAsyncData('library-albums', () => getSavedAlbums(), {
+  server: false,
+  default: () => [] as SavedAlbum[],
+})
+
+// Tracks tab data
+const {
+  data: tracksData,
+  pending: loadingTracks,
+  refresh: refreshTracks,
+} = await useLazyAsyncData('library-tracks', () => getLikedTracks(), {
+  server: false,
+  default: () => [] as LikedTrack[],
+})
+
+// Playlists tab data (fetchPlaylists updates the shared useState in usePlaylist)
+const { pending: loadingPlaylists, refresh: refreshPlaylists } =
+  await useLazyAsyncData('library-playlists', () => fetchPlaylists(), {
     server: false,
-    default: () => ({
-      artists: [] as FollowedArtist[],
-      albums: [] as SavedAlbum[],
-      tracks: [] as LikedTrack[],
-    }),
-    // Return cached data if available to avoid skeleton on revisit
-    getCachedData: (key) => nuxtApp.payload.data[key] || nuxtApp.static.data[key],
-  }
-)
+  })
 
 // Computed accessors for library data
-const artists = computed(() => libraryData.value?.artists ?? [])
-const albums = computed(() => libraryData.value?.albums ?? [])
-const tracks = computed(() => libraryData.value?.tracks ?? [])
+const artists = computed(() => artistsData.value ?? [])
+const albums = computed(() => albumsData.value ?? [])
+const tracks = computed(() => tracksData.value ?? [])
+
+// Refresh all library data
+const refreshLibrary = async () => {
+  await Promise.all([
+    refreshArtists(),
+    refreshAlbums(),
+    refreshTracks(),
+    refreshPlaylists(),
+  ])
+}
 
 const handleCreatePlaylist = async () => {
   if (!newPlaylistTitle.value.trim()) return
 
   creatingPlaylist.value = true
-  const playlist = await createPlaylist(newPlaylistTitle.value, newPlaylistDescription.value)
+  const playlist = await createPlaylist(
+    newPlaylistTitle.value,
+    newPlaylistDescription.value,
+  )
   creatingPlaylist.value = false
 
   if (playlist) {
@@ -536,10 +664,26 @@ const handleCreatePlaylist = async () => {
 }
 
 const tabs = computed(() => [
-  { slot: 'playlists', label: `Playlists (${userPlaylists.value.length})`, icon: 'i-heroicons-queue-list' },
-  { slot: 'artists', label: `Artists (${artists.value.length})`, icon: 'i-heroicons-user-group' },
-  { slot: 'albums', label: `Albums (${albums.value.length})`, icon: 'i-heroicons-square-3-stack-3d' },
-  { slot: 'tracks', label: `Liked Songs (${tracks.value.length})`, icon: 'i-heroicons-heart' },
+  {
+    slot: 'playlists',
+    label: `Playlists (${userPlaylists.value.length})`,
+    icon: 'i-heroicons-queue-list',
+  },
+  {
+    slot: 'artists',
+    label: `Artists (${artists.value.length})`,
+    icon: 'i-heroicons-user-group',
+  },
+  {
+    slot: 'albums',
+    label: `Albums (${albums.value.length})`,
+    icon: 'i-heroicons-square-3-stack-3d',
+  },
+  {
+    slot: 'tracks',
+    label: `Liked Songs (${tracks.value.length})`,
+    icon: 'i-heroicons-heart',
+  },
   { slot: 'history', label: 'History', icon: 'i-heroicons-clock' },
 ])
 
@@ -573,10 +717,10 @@ const playHistoryTrack = async (track: RecentlyPlayedTrack, index: number) => {
 
   try {
     // Filter to only tracks with audioKey
-    const playableTracks = recentlyPlayed.value.filter(t => t.audioKey)
+    const playableTracks = recentlyPlayed.value.filter((t) => t.audioKey)
     if (playableTracks.length === 0) return
 
-    const queue = playableTracks.map(t => ({
+    const queue = playableTracks.map((t) => ({
       id: t.id,
       title: t.title,
       artist: t.artistName,
@@ -589,7 +733,7 @@ const playHistoryTrack = async (track: RecentlyPlayedTrack, index: number) => {
     }))
 
     // Find the index in the filtered queue
-    const queueIndex = queue.findIndex(t => t.id === track.id)
+    const queueIndex = queue.findIndex((t) => t.id === track.id)
     await setQueue(queue, queueIndex >= 0 ? queueIndex : 0)
   } finally {
     loadingPlayId.value = null
@@ -606,7 +750,10 @@ const playTrack = async (item: LikedTrack) => {
   if (loadingPlayId.value) return
   loadingPlayId.value = item.track.id
   try {
-    await playTrackFromLibrary(item.track, trackCovers.value[item.track.id] || null)
+    await playTrackFromLibrary(
+      item.track,
+      trackCovers.value[item.track.id] || null,
+    )
   } finally {
     loadingPlayId.value = null
   }
@@ -679,7 +826,7 @@ const playPlaylistById = async (playlistId: string) => {
           ...item.track,
           coverUrl,
         }
-      })
+      }),
     )
 
     await playPlaylist(playableTracks, 0)
@@ -701,7 +848,7 @@ const loadArtistAvatars = async () => {
       } else if (item.band.avatar_url) {
         artistAvatars.value[item.band.id] = item.band.avatar_url
       }
-    })
+    }),
   )
 }
 
@@ -715,7 +862,7 @@ const loadAlbumCovers = async () => {
       } else if (item.album.cover_url) {
         albumCovers.value[item.album.id] = item.album.cover_url
       }
-    })
+    }),
   )
 }
 
@@ -729,7 +876,7 @@ const loadTrackCovers = async () => {
       } else if (item.track.album.cover_url) {
         trackCovers.value[item.track.id] = item.track.album.cover_url
       }
-    })
+    }),
   )
 }
 
@@ -738,9 +885,9 @@ const loadPlaylistCovers = async () => {
   await Promise.all(
     userPlaylists.value.map(async (playlist) => {
       try {
-        const response = await $fetch<{ covers: Array<{ url?: string; key?: string }> }>(
-          `/api/playlists/${playlist.id}/covers`
-        )
+        const response = await $fetch<{
+          covers: Array<{ url?: string; key?: string }>
+        }>(`/api/playlists/${playlist.id}/covers`)
 
         // Convert cover keys to URLs (using cache)
         const coverUrls: string[] = []
@@ -758,24 +905,42 @@ const loadPlaylistCovers = async () => {
         console.error('Failed to load playlist covers:', e)
         playlistCovers.value[playlist.id] = []
       }
-    })
+    }),
   )
 }
 
-// Load all images when library data changes
-const loadAllImages = () => {
-  loadArtistAvatars()
-  loadAlbumCovers()
-  loadTrackCovers()
-  loadPlaylistCovers()
-}
+// Watch for data changes to load images per-section
+watch(
+  artistsData,
+  () => {
+    if (artistsData.value?.length) loadArtistAvatars()
+  },
+  { immediate: true },
+)
 
-// Watch for library data changes to load images
-watch(libraryData, () => {
-  if (libraryData.value) {
-    loadAllImages()
-  }
-}, { immediate: true })
+watch(
+  albumsData,
+  () => {
+    if (albumsData.value?.length) loadAlbumCovers()
+  },
+  { immediate: true },
+)
+
+watch(
+  tracksData,
+  () => {
+    if (tracksData.value?.length) loadTrackCovers()
+  },
+  { immediate: true },
+)
+
+watch(
+  userPlaylists,
+  () => {
+    if (userPlaylists.value?.length) loadPlaylistCovers()
+  },
+  { immediate: true },
+)
 
 // Load history when tab is selected
 const loadHistory = async () => {
@@ -796,8 +961,9 @@ watch(activeTab, (newTab) => {
   }
 })
 
-// Handle URL query param for deep linking (e.g., /library?tab=history)
+// Handle initial setup on mount
 onMounted(() => {
+  // Handle URL query param for deep linking (e.g., /library?tab=history)
   const tabParam = route.query.tab as string
   if (tabParam === 'history') {
     activeTab.value = 4

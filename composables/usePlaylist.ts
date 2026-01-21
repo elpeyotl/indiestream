@@ -13,6 +13,21 @@ export interface Playlist {
   updated_at: string
 }
 
+// Cache configuration for SWR behavior
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+interface CacheEntry {
+  data: Playlist[]
+  timestamp: number
+}
+
+const playlistsCache = new Map<string, CacheEntry>()
+
+const isCacheValid = (entry: CacheEntry | undefined): entry is CacheEntry => {
+  if (!entry) return false
+  return Date.now() - entry.timestamp < CACHE_TTL_MS
+}
+
 export interface PlaylistTrack {
   id: string
   position: number
@@ -62,23 +77,47 @@ export const usePlaylist = () => {
   const playlists = useState<Playlist[]>('playlists', () => [])
   const loading = useState<boolean>('playlistsLoading', () => false)
 
-  // Fetch user's playlists
-  const fetchPlaylists = async (): Promise<Playlist[]> => {
+  // Fetch user's playlists with SWR behavior
+  // Returns cached data immediately, then revalidates in background if stale
+  const fetchPlaylists = async (forceRefresh = false): Promise<Playlist[]> => {
     if (!user.value) {
       playlists.value = []
       return []
     }
 
+    const userId = user.value.id
+    const cached = playlistsCache.get(userId)
+
+    // SWR: Return cached data immediately, revalidate in background if stale
+    if (!forceRefresh && cached) {
+      playlists.value = cached.data
+      const isValid = Date.now() - cached.timestamp < CACHE_TTL_MS
+      if (!isValid) {
+        // Cache expired - revalidate in background
+        fetchPlaylistsFromApi(userId).catch(console.error)
+      }
+      return cached.data
+    }
+
+    // No cache - need to fetch with loading state
     loading.value = true
+    try {
+      return await fetchPlaylistsFromApi(userId)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Internal function to fetch from API and update cache
+  const fetchPlaylistsFromApi = async (userId: string): Promise<Playlist[]> => {
     try {
       const data = await $fetch<Playlist[]>('/api/playlists')
       playlists.value = data
+      playlistsCache.set(userId, { data, timestamp: Date.now() })
       return data
     } catch (e) {
       console.error('Failed to fetch playlists:', e)
-      return []
-    } finally {
-      loading.value = false
+      return playlists.value // Return existing data on error
     }
   }
 
@@ -119,6 +158,8 @@ export const usePlaylist = () => {
         body: { title, description },
       })
       playlists.value.unshift({ ...playlist, role: 'owner' })
+      // Invalidate cache
+      if (user.value) playlistsCache.delete(user.value.id)
       toast.add({
         title: 'Playlist created',
         description: `"${title}" is ready`,
@@ -171,6 +212,8 @@ export const usePlaylist = () => {
     try {
       await $fetch(`/api/playlists/${id}`, { method: 'DELETE' })
       playlists.value = playlists.value.filter((p) => p.id !== id)
+      // Invalidate cache
+      if (user.value) playlistsCache.delete(user.value.id)
       toast.add({
         title: 'Playlist deleted',
         color: 'green',

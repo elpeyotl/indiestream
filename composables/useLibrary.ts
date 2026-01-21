@@ -56,6 +56,24 @@ export interface FollowedArtist {
   }
 }
 
+// Cache configuration
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+// Module-level cache for library data (persists across navigation)
+interface CacheEntry<T> {
+  data: T
+  timestamp: number
+}
+
+const followedArtistsCache = new Map<string, CacheEntry<FollowedArtist[]>>()
+const savedAlbumsCache = new Map<string, CacheEntry<SavedAlbum[]>>()
+const likedTracksCache = new Map<string, CacheEntry<LikedTrack[]>>()
+
+const isCacheValid = <T>(entry: CacheEntry<T> | undefined): entry is CacheEntry<T> => {
+  if (!entry) return false
+  return Date.now() - entry.timestamp < CACHE_TTL_MS
+}
+
 // Global state for liked track IDs (for efficient UI updates)
 const likedTrackIds = ref<Set<string>>(new Set())
 const savedAlbumIds = ref<Set<string>>(new Set())
@@ -88,6 +106,8 @@ export const useLibrary = () => {
         body: { trackId },
       })
       likedTrackIds.value.add(trackId)
+      // Invalidate cache
+      if (user.value) likedTracksCache.delete(user.value.id)
       return true
     } catch (e) {
       console.error('Failed to like track:', e)
@@ -109,6 +129,8 @@ export const useLibrary = () => {
         body: { trackId },
       })
       likedTrackIds.value.delete(trackId)
+      // Invalidate cache
+      likedTracksCache.delete(user.value.id)
       return true
     } catch (e) {
       console.error('Failed to unlike track:', e)
@@ -142,13 +164,29 @@ export const useLibrary = () => {
     }
   }
 
-  const getLikedTracks = async (): Promise<LikedTrack[]> => {
+  const getLikedTracks = async (forceRefresh = false): Promise<LikedTrack[]> => {
     if (!user.value) return []
+    const userId = user.value.id
+    const cached = likedTracksCache.get(userId)
 
+    // SWR: Return cached data immediately, revalidate in background if stale
+    if (!forceRefresh && cached) {
+      const isValid = Date.now() - cached.timestamp < CACHE_TTL_MS
+      if (!isValid) {
+        // Cache expired - revalidate in background
+        fetchLikedTracksFromApi(userId).catch(console.error)
+      }
+      return cached.data
+    }
+
+    return fetchLikedTracksFromApi(userId)
+  }
+
+  const fetchLikedTracksFromApi = async (userId: string): Promise<LikedTrack[]> => {
     try {
       const data = await $fetch<LikedTrack[]>('/api/library/tracks/list')
-      // Update the IDs set from fetched data
       data.forEach(item => likedTrackIds.value.add(item.track.id))
+      likedTracksCache.set(userId, { data, timestamp: Date.now() })
       return data
     } catch (e) {
       console.error('Failed to fetch liked tracks:', e)
@@ -179,6 +217,8 @@ export const useLibrary = () => {
         body: { albumId },
       })
       savedAlbumIds.value.add(albumId)
+      // Invalidate cache
+      if (user.value) savedAlbumsCache.delete(user.value.id)
       toast.add({
         title: 'Added to Library',
         description: albumTitle ? `${albumTitle} saved to your library` : 'Album saved to your library',
@@ -205,6 +245,8 @@ export const useLibrary = () => {
         body: { albumId },
       })
       savedAlbumIds.value.delete(albumId)
+      // Invalidate cache
+      savedAlbumsCache.delete(user.value.id)
       toast.add({
         title: 'Removed from Library',
         description: albumTitle ? `${albumTitle} removed from your library` : 'Album removed from your library',
@@ -247,13 +289,29 @@ export const useLibrary = () => {
     }
   }
 
-  const getSavedAlbums = async (): Promise<SavedAlbum[]> => {
+  const getSavedAlbums = async (forceRefresh = false): Promise<SavedAlbum[]> => {
     if (!user.value) return []
+    const userId = user.value.id
+    const cached = savedAlbumsCache.get(userId)
 
+    // SWR: Return cached data immediately, revalidate in background if stale
+    if (!forceRefresh && cached) {
+      const isValid = Date.now() - cached.timestamp < CACHE_TTL_MS
+      if (!isValid) {
+        // Cache expired - revalidate in background
+        fetchSavedAlbumsFromApi(userId).catch(console.error)
+      }
+      return cached.data
+    }
+
+    return fetchSavedAlbumsFromApi(userId)
+  }
+
+  const fetchSavedAlbumsFromApi = async (userId: string): Promise<SavedAlbum[]> => {
     try {
       const data = await $fetch<SavedAlbum[]>('/api/library/albums/list')
-      // Update the IDs set from fetched data
       data.forEach(item => savedAlbumIds.value.add(item.album.id))
+      savedAlbumsCache.set(userId, { data, timestamp: Date.now() })
       return data
     } catch (e) {
       console.error('Failed to fetch saved albums:', e)
@@ -284,6 +342,8 @@ export const useLibrary = () => {
         body: { bandId },
       })
       followedBandIds.value.add(bandId)
+      // Invalidate cache
+      if (user.value) followedArtistsCache.delete(user.value.id)
       toast.add({
         title: 'Following',
         description: bandName ? `You're now following ${bandName}` : 'Artist followed',
@@ -310,6 +370,8 @@ export const useLibrary = () => {
         body: { bandId },
       })
       followedBandIds.value.delete(bandId)
+      // Invalidate cache
+      followedArtistsCache.delete(user.value.id)
       toast.add({
         title: 'Unfollowed',
         description: bandName ? `You unfollowed ${bandName}` : 'Artist unfollowed',
@@ -352,11 +414,29 @@ export const useLibrary = () => {
     }
   }
 
-  const getFollowedArtists = async (): Promise<FollowedArtist[]> => {
+  const getFollowedArtists = async (forceRefresh = false): Promise<FollowedArtist[]> => {
     if (!user.value) return []
+    const userId = user.value.id
+    const cached = followedArtistsCache.get(userId)
 
+    // SWR: Return cached data immediately, revalidate in background if stale
+    if (!forceRefresh && cached) {
+      const isValid = Date.now() - cached.timestamp < CACHE_TTL_MS
+      if (!isValid) {
+        // Cache expired - revalidate in background
+        fetchFollowedArtistsFromApi(userId).catch(console.error)
+      }
+      return cached.data
+    }
+
+    return fetchFollowedArtistsFromApi(userId)
+  }
+
+  const fetchFollowedArtistsFromApi = async (userId: string): Promise<FollowedArtist[]> => {
     try {
-      return await $fetch<FollowedArtist[]>('/api/follows/list')
+      const data = await $fetch<FollowedArtist[]>('/api/follows/list')
+      followedArtistsCache.set(userId, { data, timestamp: Date.now() })
+      return data
     } catch (e) {
       console.error('Failed to fetch followed artists:', e)
       return []
@@ -390,6 +470,10 @@ export const useLibrary = () => {
     likedTrackIds.value.clear()
     savedAlbumIds.value.clear()
     followedBandIds.value.clear()
+    // Clear all caches
+    followedArtistsCache.clear()
+    savedAlbumsCache.clear()
+    likedTracksCache.clear()
   }
 
   return {
