@@ -149,7 +149,6 @@
                     color="gray"
                     variant="ghost"
                     class="relative"
-                    @click="handleBellClick"
                   >
                     <UIcon name="i-heroicons-bell" class="w-5 h-5" />
                     <span
@@ -165,25 +164,25 @@
                 <div class="hidden md:flex items-center justify-between px-4 py-3 border-b border-zinc-800">
                   <span class="font-semibold text-zinc-100">Notifications</span>
                   <UButton
-                    v-if="unreadCount > 0"
+                    v-if="notifications.length > 0"
                     color="gray"
                     variant="ghost"
                     size="xs"
                     @click="markAllAsRead"
                   >
-                    Mark all read
+                    Clear all
                   </UButton>
                 </div>
 
-                <!-- Mobile: Mark all read button in content area -->
-                <div v-if="unreadCount > 0" class="md:hidden flex justify-end px-4 pt-2">
+                <!-- Mobile: Clear all button in content area -->
+                <div v-if="notifications.length > 0" class="md:hidden flex justify-end px-4 pt-2">
                   <UButton
                     color="gray"
                     variant="ghost"
                     size="xs"
                     @click="markAllAsRead"
                   >
-                    Mark all read
+                    Clear all
                   </UButton>
                 </div>
 
@@ -594,11 +593,12 @@ onUnmounted(() => {
   unsubscribeFromRealtime();
 });
 
-// Handle bell click - open popover and fetch notifications
-const handleBellClick = () => {
-  notificationsOpen.value = true;
-  fetchNotifications(true);
-};
+// Fetch notifications when popover opens
+watch(notificationsOpen, (isOpen) => {
+  if (isOpen) {
+    fetchNotifications(true);
+  }
+});
 
 // Handle notification click - mark as read
 const handleNotificationClick = (notification: Notification) => {

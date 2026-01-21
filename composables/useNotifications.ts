@@ -92,16 +92,16 @@ export const useNotifications = () => {
     }
   }
 
-  // Mark all notifications as read
+  // Clear all notifications (delete them)
   const markAllAsRead = async () => {
     try {
       await $fetch('/api/notifications/read-all', { method: 'POST' })
 
-      // Update local state - create new array to ensure reactivity
-      notifications.value = notifications.value.map(n => ({ ...n, read: true }))
+      // Clear local state
+      notifications.value = []
       unreadCount.value = 0
     } catch (e) {
-      console.error('Failed to mark all as read:', e)
+      console.error('Failed to clear notifications:', e)
     }
   }
 

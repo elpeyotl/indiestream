@@ -1,4 +1,4 @@
-// POST /api/notifications/read-all - Mark all notifications as read
+// POST /api/notifications/read-all - Delete all notifications (clear all)
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
@@ -11,12 +11,11 @@ export default defineEventHandler(async (event) => {
 
   const { error } = await client
     .from('notifications')
-    .update({ read: true })
+    .delete()
     .eq('user_id', user.id)
-    .eq('read', false)
 
   if (error) {
-    console.error('Failed to mark all notifications as read:', error)
+    console.error('Failed to delete all notifications:', error)
     throw createError({ statusCode: 500, statusMessage: error.message })
   }
 
