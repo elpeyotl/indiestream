@@ -8,9 +8,35 @@
       <p class="text-zinc-400 mt-1">Here's what's happening with your music</p>
     </div>
 
+    <!-- My Impact Hero Card Skeleton -->
+    <UCard
+      v-if="isSubscribed && impactLoading"
+      class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <USkeleton class="h-7 w-32" />
+        <USkeleton class="h-6 w-6 rounded" />
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+        <div>
+          <USkeleton class="h-8 w-20 mb-1" />
+          <USkeleton class="h-4 w-28" />
+        </div>
+        <div>
+          <USkeleton class="h-8 w-12 mb-1" />
+          <USkeleton class="h-4 w-28" />
+        </div>
+        <div class="col-span-2 md:col-span-1">
+          <USkeleton class="h-8 w-16 mb-1" />
+          <USkeleton class="h-4 w-20" />
+        </div>
+      </div>
+      <USkeleton class="h-10 w-full rounded-md" />
+    </UCard>
+
     <!-- My Impact Hero Card (Subscribers Only) -->
     <UCard
-      v-if="isSubscribed && !impactLoading"
+      v-else-if="isSubscribed"
       class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
     >
       <div class="flex items-center justify-between mb-4">
@@ -44,14 +70,45 @@
         <p class="text-zinc-400 text-sm">Start listening to see your impact!</p>
       </div>
 
-      <UButton to="/dashboard/my-impact" color="violet" block>
-        View Full Impact Report
+      <UButton to="/dashboard/stats" color="violet" block>
+        View Your Stats
       </UButton>
     </UCard>
 
+    <!-- Stats Grid Skeleton -->
+    <div v-if="listeningStatsLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <UCard class="bg-zinc-900/50 border-zinc-800">
+        <div class="flex items-center gap-4">
+          <USkeleton class="w-12 h-12 rounded-xl" />
+          <div>
+            <USkeleton class="h-4 w-24 mb-2" />
+            <USkeleton class="h-8 w-16" />
+          </div>
+        </div>
+      </UCard>
+      <UCard class="bg-zinc-900/50 border-zinc-800">
+        <div class="flex items-center gap-4">
+          <USkeleton class="w-12 h-12 rounded-xl" />
+          <div>
+            <USkeleton class="h-4 w-24 mb-2" />
+            <USkeleton class="h-8 w-16" />
+          </div>
+        </div>
+      </UCard>
+      <UCard class="bg-zinc-900/50 border-zinc-800">
+        <div class="flex items-center gap-4">
+          <USkeleton class="w-12 h-12 rounded-xl" />
+          <div>
+            <USkeleton class="h-4 w-24 mb-2" />
+            <USkeleton class="h-8 w-16" />
+          </div>
+        </div>
+      </UCard>
+    </div>
+
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <NuxtLink to="/dashboard/listening" class="block">
+    <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <NuxtLink to="/dashboard/stats" class="block">
         <UCard class="bg-zinc-900/50 border-zinc-800 hover:border-violet-500/50 transition-colors">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center">
@@ -65,7 +122,7 @@
         </UCard>
       </NuxtLink>
 
-      <NuxtLink to="/dashboard/listening" class="block">
+      <NuxtLink to="/dashboard/stats" class="block">
         <UCard class="bg-zinc-900/50 border-zinc-800 hover:border-teal-500/50 transition-colors">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center">
@@ -79,7 +136,7 @@
         </UCard>
       </NuxtLink>
 
-      <NuxtLink to="/dashboard/listening" class="block">
+      <NuxtLink to="/dashboard/stats" class="block">
         <UCard class="bg-zinc-900/50 border-zinc-800 hover:border-fuchsia-500/50 transition-colors">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-fuchsia-500/20 flex items-center justify-center">
@@ -95,7 +152,7 @@
     </div>
 
     <!-- Free tier upgrade prompt for empty stats -->
-    <div v-if="!isSubscribed && listeningStats.totalStreams === 0" class="mb-8">
+    <div v-if="!isSubscribed && !listeningStatsLoading && listeningStats.totalStreams === 0" class="mb-8">
       <UCard class="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/30">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center shrink-0">
@@ -141,9 +198,26 @@
         </div>
       </template>
 
-      <!-- Loading -->
-      <div v-if="bandsLoading" class="flex items-center justify-center py-8">
-        <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 text-zinc-400 animate-spin" />
+      <!-- Loading Skeleton -->
+      <div v-if="bandsLoading" class="space-y-4">
+        <div v-for="i in 2" :key="i" class="flex items-center gap-4 p-4 rounded-lg bg-zinc-800/50">
+          <USkeleton class="w-14 h-14 rounded-lg shrink-0" />
+          <div class="flex-1 min-w-0">
+            <USkeleton class="h-5 w-32 mb-2" />
+            <USkeleton class="h-4 w-40 hidden sm:block" />
+          </div>
+          <div class="hidden sm:flex items-center gap-6">
+            <div class="text-center">
+              <USkeleton class="h-5 w-12 mb-1 mx-auto" />
+              <USkeleton class="h-4 w-14" />
+            </div>
+            <div class="text-center">
+              <USkeleton class="h-5 w-14 mb-1 mx-auto" />
+              <USkeleton class="h-4 w-16" />
+            </div>
+          </div>
+          <USkeleton class="w-5 h-5 rounded" />
+        </div>
       </div>
 
       <!-- No Bands -->
@@ -400,6 +474,7 @@ const listeningStats = ref({
   totalStreams: 0,
   uniqueArtists: 0,
 })
+const listeningStatsLoading = ref(true)
 
 // Impact stats for hero card
 const impactStats = computed(() => {
@@ -483,6 +558,7 @@ const formatHours = (seconds: number): string => {
 }
 
 const loadListeningStats = async () => {
+  listeningStatsLoading.value = true
   try {
     // Only get user's own streams (not band owner views) and exclude free plays
     const { data, error } = await client
@@ -500,6 +576,8 @@ const loadListeningStats = async () => {
     }
   } catch (e) {
     console.error('Failed to load listening stats:', e)
+  } finally {
+    listeningStatsLoading.value = false
   }
 }
 

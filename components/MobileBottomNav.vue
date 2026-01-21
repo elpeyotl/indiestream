@@ -18,17 +18,17 @@
         <span class="text-xs font-medium">Discover</span>
       </NuxtLink>
 
-      <!-- 2. Impact -->
+      <!-- 2. Stats -->
       <NuxtLink
-        to="/dashboard/my-impact"
+        to="/dashboard/stats"
         class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 active:scale-95"
-        :class="isActive('/dashboard/my-impact') ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
+        :class="isActive('/dashboard/stats') ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
       >
         <UIcon
-          :name="isActive('/dashboard/my-impact') ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
+          :name="isActive('/dashboard/stats') ? 'i-heroicons-chart-bar-solid' : 'i-heroicons-chart-bar'"
           class="w-6 h-6"
         />
-        <span class="text-xs font-medium">Impact</span>
+        <span class="text-xs font-medium">Stats</span>
       </NuxtLink>
 
       <!-- 3. Search -->
@@ -39,19 +39,6 @@
         <UIcon name="i-heroicons-magnifying-glass" class="w-6 h-6" />
         <span class="text-xs font-medium">Search</span>
       </button>
-
-      <!-- 4. Listening -->
-      <NuxtLink
-        to="/dashboard/listening"
-        class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 active:scale-95"
-        :class="isActive('/dashboard/listening') ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
-      >
-        <UIcon
-          :name="isActive('/dashboard/listening') ? 'i-heroicons-chart-bar-solid' : 'i-heroicons-chart-bar'"
-          class="w-6 h-6"
-        />
-        <span class="text-xs font-medium">Listening</span>
-      </NuxtLink>
 
       <!-- 5. Library -->
       <NuxtLink

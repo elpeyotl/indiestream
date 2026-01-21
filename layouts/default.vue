@@ -73,6 +73,13 @@
                 <UIcon name="i-heroicons-bookmark" class="w-4 h-4" />
                 Library
               </NuxtLink>
+              <NuxtLink
+                to="/dashboard/stats"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                <UIcon name="i-heroicons-heart" class="w-4 h-4" />
+                Stats
+              </NuxtLink>
             </template>
 
             <!-- Logged-out navigation -->
@@ -117,8 +124,8 @@
 
           <!-- Auth / User Menu -->
           <div class="flex items-center gap-3">
-            <!-- Global Search -->
-            <GlobalSearch />
+            <!-- Global Search - Hidden on mobile (search is in bottom nav) -->
+            <GlobalSearch class="hidden md:block" />
 
             <!-- Logged Out -->
             <template v-if="!user">
