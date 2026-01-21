@@ -101,6 +101,11 @@
 <script setup lang="ts">
 import type { Band } from '~/composables/useBand'
 
+interface CachedArtistsData {
+  artists: Band[]
+  genres: string[]
+}
+
 const client = useSupabaseClient()
 const { getCachedCoverUrl } = useAlbum()
 const { setQueue } = usePlayer()
@@ -116,6 +121,13 @@ const sortBy = ref<{ label: string; value: string }>({ label: 'Newest', value: '
 const hasMore = ref(false)
 const page = ref(0)
 const pageSize = 24
+
+// Check if any filters are active (search, genre, or non-default sort)
+const hasActiveFilters = computed(() => {
+  return searchQuery.value.trim() !== '' ||
+    selectedGenre.value?.value ||
+    sortBy.value.value !== 'newest'
+})
 
 const sortOptions = [
   { label: 'Newest', value: 'newest' },
@@ -256,7 +268,7 @@ const loadMore = async () => {
   await loadArtists()
 }
 
-const loadGenres = async () => {
+const loadGenres = async (): Promise<string[]> => {
   try {
     // Get unique genres from all active bands
     const { data, error } = await client
@@ -275,14 +287,62 @@ const loadGenres = async () => {
       }
     }
 
+    const genreList = Array.from(allGenres).sort()
     genreOptions.value = [
       { label: 'All Genres', value: '' },
-      ...Array.from(allGenres).sort().map(g => ({ label: g, value: g })),
+      ...genreList.map(g => ({ label: g, value: g })),
     ]
+    return genreList
   } catch (e) {
     console.error('Failed to load genres:', e)
+    return []
   }
 }
+
+// Helper to populate genre options from cached data
+const populateGenreOptions = (genres: string[]) => {
+  genreOptions.value = [
+    { label: 'All Genres', value: '' },
+    ...genres.map(g => ({ label: g, value: g })),
+  ]
+}
+
+// Fetch initial artists for caching (no filters, default sort)
+const fetchInitialArtists = async (): Promise<Band[]> => {
+  const { data, error: fetchError } = await client
+    .from('bands')
+    .select('id, name, slug, theme_color, avatar_key, avatar_url, total_streams, is_verified, genres')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .range(0, pageSize - 1)
+
+  if (fetchError) throw fetchError
+
+  // Load avatar URLs from keys (using cache)
+  const artistsData = (data || []) as any[]
+  await Promise.all(
+    artistsData.map(async (artist) => {
+      if (artist.avatar_key) {
+        const url = await getCachedCoverUrl(artist.avatar_key)
+        if (url) artist.avatar_url = url
+      }
+    })
+  )
+
+  return artistsData as Band[]
+}
+
+// Persisted store for initial page data (stale-while-revalidate)
+const artistsStore = usePersistedStore<CachedArtistsData>({
+  key: 'artists_page',
+  fetcher: async () => {
+    const [artistsData, genresData] = await Promise.all([
+      fetchInitialArtists(),
+      loadGenres(),
+    ])
+    return { artists: artistsData, genres: genresData }
+  },
+})
 
 // SEO
 useHead({
@@ -292,10 +352,30 @@ useHead({
   ],
 })
 
+// Watch for cached data updates (background revalidation)
+watch(() => artistsStore.data.value, (cached) => {
+  // Only update if no filters are active (cached data is for unfiltered view)
+  if (cached && !hasActiveFilters.value && !loading.value) {
+    artists.value = [...cached.artists] as Band[]
+    populateGenreOptions([...cached.genres])
+    hasMore.value = cached.artists.length === pageSize
+  }
+})
+
 onMounted(async () => {
-  await Promise.all([
-    loadArtists(true),
-    loadGenres(),
-  ])
+  // Initialize from cache (memory -> localStorage -> fetch)
+  await artistsStore.initialize()
+
+  // If we have cached data and no filters, use it
+  if (artistsStore.data.value && !hasActiveFilters.value) {
+    artists.value = [...artistsStore.data.value.artists] as Band[]
+    populateGenreOptions([...artistsStore.data.value.genres])
+    hasMore.value = artistsStore.data.value.artists.length === pageSize
+    loading.value = false
+    error.value = artistsStore.error.value
+  } else {
+    // Filters active or no cache - fetch fresh
+    await loadArtists(true)
+  }
 })
 </script>

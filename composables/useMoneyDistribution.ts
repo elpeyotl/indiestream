@@ -1,4 +1,4 @@
-// Money distribution composable for "Where Your Money Went" feature
+// Money distribution composable for "Where Your Money Went" feature with caching
 
 interface ArtistBreakdown {
   bandId: string
@@ -26,32 +26,83 @@ interface MoneyDistribution {
   artistBreakdown: ArtistBreakdown[]
 }
 
+// Module-level cache for period-keyed distribution data
+const distributionCache = new Map<string, { data: MoneyDistribution; timestamp: number }>()
+const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
+
 export const useMoneyDistribution = () => {
+  const user = useSupabaseUser()
   const loading = ref(false)
   const error = ref<string | null>(null)
   const distribution = ref<MoneyDistribution | null>(null)
+  const isRevalidating = ref(false)
+
+  // Fetch distribution data from API with image URL resolution
+  const fetchFromApi = async (period: 'all-time' | 'last-month'): Promise<MoneyDistribution> => {
+    const data = await $fetch<MoneyDistribution>('/api/listener/money-distribution', {
+      query: { period },
+    })
+
+    // Get presigned URLs for artist avatars
+    const { getStreamUrl } = useAlbum()
+    for (const artist of data.artistBreakdown) {
+      if (artist.avatarKey) {
+        try {
+          artist.avatarUrl = await getStreamUrl(artist.avatarKey)
+        } catch (e) {
+          console.error('Failed to load avatar for artist:', artist.bandId, e)
+        }
+      }
+    }
+
+    return data
+  }
 
   const fetchDistribution = async (period: 'all-time' | 'last-month') => {
+    const userId = user.value?.id
+    if (!userId) {
+      loading.value = true
+      error.value = null
+      try {
+        distribution.value = await fetchFromApi(period)
+      } catch (e: any) {
+        console.error('Failed to fetch money distribution:', e)
+        error.value = e.message || 'Failed to load distribution data'
+      } finally {
+        loading.value = false
+      }
+      return
+    }
+
+    const cacheKey = `distribution_${userId}_${period}`
+    const cached = distributionCache.get(cacheKey)
+
+    // If we have cached data, show it immediately
+    if (cached) {
+      distribution.value = cached.data
+      loading.value = false
+
+      // Background revalidation (stale-while-revalidate)
+      isRevalidating.value = true
+      fetchFromApi(period)
+        .then((freshData) => {
+          distributionCache.set(cacheKey, { data: freshData, timestamp: Date.now() })
+          distribution.value = freshData
+        })
+        .catch((e) => console.error('Background revalidation failed:', e))
+        .finally(() => {
+          isRevalidating.value = false
+        })
+      return
+    }
+
+    // No cache - fetch fresh (blocking)
     loading.value = true
     error.value = null
 
     try {
-      const data = await $fetch<MoneyDistribution>('/api/listener/money-distribution', {
-        query: { period },
-      })
-
-      // Get presigned URLs for artist avatars
-      const { getStreamUrl } = useAlbum()
-      for (const artist of data.artistBreakdown) {
-        if (artist.avatarKey) {
-          try {
-            artist.avatarUrl = await getStreamUrl(artist.avatarKey)
-          } catch (e) {
-            console.error('Failed to load avatar for artist:', artist.bandId, e)
-          }
-        }
-      }
-
+      const data = await fetchFromApi(period)
+      distributionCache.set(cacheKey, { data, timestamp: Date.now() })
       distribution.value = data
     } catch (e: any) {
       console.error('Failed to fetch money distribution:', e)
@@ -90,6 +141,7 @@ export const useMoneyDistribution = () => {
     loading,
     error,
     distribution,
+    isRevalidating,
     fetchDistribution,
     formatCurrency,
     formatPercentage,

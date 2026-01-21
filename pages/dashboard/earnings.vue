@@ -207,6 +207,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const user = useSupabaseUser()
 const { fetchUserEarnings, startOnboarding, getAccountLink, formatCurrency } = useStripeConnect()
 const toast = useToast()
 const route = useRoute()
@@ -250,6 +251,28 @@ interface UserEarningsData {
 
 const earnings = ref<UserEarningsData | null>(null)
 
+// Wrapper that throws on fetch failure (for usePersistedStore)
+const fetchEarningsData = async (): Promise<UserEarningsData> => {
+  const data = await fetchUserEarnings()
+  if (!data) throw new Error('Failed to fetch earnings data')
+  return data
+}
+
+// User-scoped persisted store for earnings data
+const earningsStore = computed(() => {
+  if (!user.value?.id) return null
+  return usePersistedStore<UserEarningsData>({
+    key: `earnings_${user.value.id}`,
+    fetcher: fetchEarningsData,
+  })
+})
+
+// Apply cached data to local ref
+const applyCachedData = (cached: unknown) => {
+  const data = cached as UserEarningsData
+  earnings.value = JSON.parse(JSON.stringify(data)) as UserEarningsData
+}
+
 const formatNumber = (num: number): string => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
@@ -262,17 +285,6 @@ const formatDate = (dateStr: string): string => {
     month: 'short',
     day: 'numeric',
   })
-}
-
-const loadEarnings = async () => {
-  loading.value = true
-  try {
-    earnings.value = await fetchUserEarnings()
-  } catch (e) {
-    console.error('Failed to load earnings:', e)
-  } finally {
-    loading.value = false
-  }
 }
 
 const handleStripeConnect = async () => {
@@ -296,9 +308,35 @@ const handleStripeConnect = async () => {
   }
 }
 
+// Watch for store data updates (background revalidation)
+watch(
+  () => earningsStore.value?.data.value,
+  (newData) => {
+    if (newData) {
+      applyCachedData(newData)
+    }
+  }
+)
+
 // Handle return from Stripe
 onMounted(async () => {
-  await loadEarnings()
+  const store = earningsStore.value
+  if (store) {
+    await store.initialize()
+    if (store.data.value) {
+      applyCachedData(store.data.value)
+    }
+    loading.value = store.loading.value
+  } else {
+    // Fallback if no user
+    try {
+      earnings.value = await fetchUserEarnings()
+    } catch (e) {
+      console.error('Failed to load earnings:', e)
+    } finally {
+      loading.value = false
+    }
+  }
 
   if (route.query.connected === 'true') {
     toast.add({
@@ -308,6 +346,8 @@ onMounted(async () => {
       color: 'green',
     })
     router.replace({ query: { ...route.query, connected: undefined } })
+    // Refresh data after Stripe connection
+    store?.refresh()
   }
 
   if (route.query.refresh === 'true') {

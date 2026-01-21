@@ -263,17 +263,13 @@
 const { getCachedCoverUrl, getAlbumById } = useAlbum()
 const { setQueue, playPlaylist } = usePlayer()
 
-// Client-side cache for chart data (persists across navigation)
-interface ChartCache {
-  data: ChartData
-  timestamp: number
+interface ChartData {
+  tracks: any[]
+  albums: any[]
+  artists: any[]
 }
-const CHART_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
-const chartDataCache = useState<Record<string, ChartCache>>('charts-cache', () => ({}))
 
-const loading = ref(true)
 const loadingPlayId = ref<string | null>(null)
-const error = ref(false)
 const selectedPeriod = ref('7d')
 
 const periodOptions = [
@@ -281,12 +277,6 @@ const periodOptions = [
   { label: 'This Month', value: '30d' },
   { label: 'All Time', value: 'all' },
 ]
-
-interface ChartData {
-  tracks: any[]
-  albums: any[]
-  artists: any[]
-}
 
 const charts = ref<ChartData>({
   tracks: [],
@@ -298,6 +288,39 @@ const trackCovers = ref<Record<string, string>>({})
 const albumCovers = ref<Record<string, string>>({})
 const artistAvatars = ref<Record<string, string>>({})
 
+// Fetch charts from API
+const fetchChartsData = async (): Promise<ChartData> => {
+  const data = await $fetch('/api/charts/trending', {
+    query: { period: selectedPeriod.value, limit: 20 },
+  })
+  return data as ChartData
+}
+
+// Create separate stores for each period
+const chartsStores: Record<string, ReturnType<typeof usePersistedStore<ChartData>>> = {}
+
+const getChartsStore = (period: string) => {
+  if (!chartsStores[period]) {
+    chartsStores[period] = usePersistedStore<ChartData>({
+      key: `charts_${period}`,
+      fetcher: async () => {
+        const data = await $fetch('/api/charts/trending', {
+          query: { period, limit: 20 },
+        })
+        return data as ChartData
+      },
+    })
+  }
+  return chartsStores[period]
+}
+
+// Get current store based on selected period
+const currentStore = computed(() => getChartsStore(selectedPeriod.value))
+
+// Derived loading/error from store
+const loading = computed(() => currentStore.value.loading.value)
+const error = computed(() => currentStore.value.error.value)
+
 const formatNumber = (num: number): string => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
@@ -305,43 +328,27 @@ const formatNumber = (num: number): string => {
 }
 
 const loadCharts = async () => {
-  const cacheKey = selectedPeriod.value
-
-  // Check client-side cache first
-  const cached = chartDataCache.value[cacheKey]
-  if (cached && Date.now() - cached.timestamp < CHART_CACHE_TTL) {
-    charts.value = cached.data
-    loading.value = false
-    error.value = false
-    // Still load images in the background (don't await - let them load while user sees data)
-    loadImages()
-    return
-  }
-
-  loading.value = true
-  error.value = false
-  try {
-    const data = await $fetch('/api/charts/trending', {
-      query: { period: selectedPeriod.value, limit: 20 },
-    })
-
-    charts.value = data as ChartData
-
-    // Cache the chart data
-    chartDataCache.value[cacheKey] = {
-      data: charts.value,
-      timestamp: Date.now(),
-    }
-
-    // Show data immediately, load images in background
-    loading.value = false
-    loadImages() // Don't await - load in background
-  } catch (e) {
-    console.error('Failed to load charts:', e)
-    error.value = true
-    loading.value = false
-  }
+  const store = currentStore.value
+  await store.initialize()
 }
+
+// Watch for cached data updates
+watch(() => currentStore.value.data.value, (cached) => {
+  if (cached) {
+    charts.value = {
+      tracks: [...cached.tracks],
+      albums: [...cached.albums],
+      artists: [...cached.artists],
+    }
+    // Load images in background
+    loadImages()
+  }
+}, { immediate: true })
+
+// Reload when period changes
+watch(selectedPeriod, async () => {
+  await loadCharts()
+})
 
 // Load images using the cached cover URL helper
 const loadImages = async () => {

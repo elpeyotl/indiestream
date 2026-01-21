@@ -461,6 +461,15 @@ definePageMeta({
   middleware: 'auth',
 })
 
+// Cached library data structure
+interface CachedLibraryData {
+  artists: FollowedArtist[]
+  albums: SavedAlbum[]
+  tracks: LikedTrack[]
+  playlists: Playlist[]
+}
+
+const user = useSupabaseUser()
 const { getStreamUrl, getCachedCoverUrl } = useAlbum()
 const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = useLibrary()
 const { playTrackFromLibrary, playPlaylist, isLoading: playerLoading, setQueue } = usePlayer()
@@ -691,6 +700,22 @@ const loadLibrary = async () => {
   }
 }
 
+// Apply cached data to local refs and load images
+// Uses JSON clone to convert readonly types to mutable
+const applyCachedData = (cached: unknown) => {
+  const data = cached as CachedLibraryData
+  artists.value = JSON.parse(JSON.stringify(data.artists)) as FollowedArtist[]
+  albums.value = JSON.parse(JSON.stringify(data.albums)) as SavedAlbum[]
+  tracks.value = JSON.parse(JSON.stringify(data.tracks)) as LikedTrack[]
+  // Note: playlists are managed by usePlaylist composable which has its own state
+
+  // Load images in background
+  loadArtistAvatars()
+  loadAlbumCovers()
+  loadTrackCovers()
+  loadPlaylistCovers()
+}
+
 const loadArtistAvatars = async () => {
   await Promise.all(
     artists.value.map(async (item) => {
@@ -759,6 +784,33 @@ const loadPlaylistCovers = async () => {
   )
 }
 
+// Fetch library data for caching
+const fetchLibraryData = async (): Promise<CachedLibraryData> => {
+  const [artistsData, albumsData, tracksData] = await Promise.all([
+    getFollowedArtists(),
+    getSavedAlbums(),
+    getLikedTracks(),
+    fetchPlaylists(),
+  ])
+
+  return {
+    artists: artistsData,
+    albums: albumsData,
+    tracks: tracksData,
+    playlists: [...userPlaylists.value],
+  }
+}
+
+// Create user-scoped persisted store for library data
+// The key includes user ID so each user has their own cache
+const libraryStore = computed(() => {
+  if (!user.value?.id) return null
+  return usePersistedStore<CachedLibraryData>({
+    key: `library_${user.value.id}`,
+    fetcher: fetchLibraryData,
+  })
+})
+
 // Load history when tab is selected
 const loadHistory = async () => {
   if (recentlyPlayed.value.length > 0) return // Already loaded
@@ -778,6 +830,13 @@ watch(activeTab, (newTab) => {
   }
 })
 
+// Watch for cached data updates (background revalidation)
+watch(() => libraryStore.value?.data.value, (cached) => {
+  if (cached && !loading.value) {
+    applyCachedData(cached)
+  }
+})
+
 // Handle URL query param for deep linking (e.g., /library?tab=history)
 onMounted(() => {
   const tabParam = route.query.tab as string
@@ -786,10 +845,32 @@ onMounted(() => {
   }
 })
 
-// Pull to refresh
-usePullToRefresh(loadLibrary)
+// Pull to refresh - force refresh from store
+const handleRefresh = async () => {
+  if (libraryStore.value) {
+    await libraryStore.value.refresh()
+  } else {
+    await loadLibrary()
+  }
+}
+usePullToRefresh(handleRefresh)
 
-onMounted(() => {
-  loadLibrary()
+onMounted(async () => {
+  // Initialize from cache if available
+  if (libraryStore.value) {
+    await libraryStore.value.initialize()
+
+    // If we have cached data, use it
+    if (libraryStore.value.data.value) {
+      applyCachedData(libraryStore.value.data.value)
+      loading.value = false
+    } else {
+      // No cache - will be populated by initialize()
+      loading.value = libraryStore.value.loading.value
+    }
+  } else {
+    // No user yet - fallback to direct load
+    await loadLibrary()
+  }
 })
 </script>

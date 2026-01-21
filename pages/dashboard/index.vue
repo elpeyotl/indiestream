@@ -427,6 +427,16 @@ definePageMeta({
   middleware: 'auth',
 })
 
+// Cached dashboard data structure
+interface CachedDashboardData {
+  bands: Band[]
+  listeningStats: {
+    totalSeconds: number
+    totalStreams: number
+    uniqueArtists: number
+  }
+}
+
 const user = useSupabaseUser()
 const client = useSupabaseClient()
 const { getUserBands } = useBand()
@@ -581,10 +591,76 @@ const loadListeningStats = async () => {
   }
 }
 
+// Fetch dashboard data for caching
+const fetchDashboardData = async (): Promise<CachedDashboardData> => {
+  // Fetch bands
+  const bandsData = await getUserBands()
+
+  // Load fresh avatar URLs from keys
+  for (const band of bandsData) {
+    if (band.avatar_key) {
+      try {
+        band.avatar_url = await getStreamUrl(band.avatar_key)
+      } catch (e) {
+        console.error('Failed to load avatar for band:', band.id, e)
+      }
+    }
+  }
+
+  // Fetch listening stats
+  const { data: historyData, error } = await client
+    .from('listening_history')
+    .select('duration_seconds, completed, band_id, is_free_play')
+    .eq('user_id', user.value?.id)
+    .eq('is_free_play', false)
+
+  if (error) throw error
+
+  const stats = {
+    totalSeconds: 0,
+    totalStreams: 0,
+    uniqueArtists: 0,
+  }
+
+  if (historyData) {
+    stats.totalSeconds = historyData.reduce((sum, item) => sum + (item.duration_seconds || 0), 0)
+    stats.totalStreams = historyData.filter(item => item.completed).length
+    stats.uniqueArtists = new Set(historyData.map(item => item.band_id)).size
+  }
+
+  return {
+    bands: bandsData,
+    listeningStats: stats,
+  }
+}
+
+// Create user-scoped persisted store for dashboard data
+const dashboardStore = computed(() => {
+  if (!user.value?.id) return null
+  return usePersistedStore<CachedDashboardData>({
+    key: `dashboard_${user.value.id}`,
+    fetcher: fetchDashboardData,
+  })
+})
+
+// Apply cached data to local refs
+const applyCachedData = (cached: unknown) => {
+  const data = cached as CachedDashboardData
+  bands.value = JSON.parse(JSON.stringify(data.bands)) as Band[]
+  listeningStats.value = { ...data.listeningStats }
+}
+
 // Watch for subscription status changes and fetch impact data
 watch(isSubscribed, (newValue) => {
   if (newValue && !distribution.value) {
     fetchDistribution('this-month')
+  }
+})
+
+// Watch for cached data updates (background revalidation)
+watch(() => dashboardStore.value?.data.value, (cached) => {
+  if (cached && !bandsLoading.value) {
+    applyCachedData(cached)
   }
 })
 
@@ -597,26 +673,43 @@ onMounted(async () => {
     fetchDistribution('this-month')
   }
 
-  try {
-    bands.value = await getUserBands()
+  // Initialize from cache if available
+  if (dashboardStore.value) {
+    await dashboardStore.value.initialize()
 
-    // Load fresh avatar URLs from keys
-    for (const band of bands.value) {
-      if (band.avatar_key) {
-        try {
-          band.avatar_url = await getStreamUrl(band.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar for band:', band.id, e)
+    // If we have cached data, use it
+    if (dashboardStore.value.data.value) {
+      applyCachedData(dashboardStore.value.data.value)
+      bandsLoading.value = false
+      listeningStatsLoading.value = false
+    } else {
+      // No cache - will be populated by initialize()
+      bandsLoading.value = dashboardStore.value.loading.value
+      listeningStatsLoading.value = dashboardStore.value.loading.value
+    }
+  } else {
+    // No user yet - fallback to direct load
+    try {
+      bands.value = await getUserBands()
+
+      // Load fresh avatar URLs from keys
+      for (const band of bands.value) {
+        if (band.avatar_key) {
+          try {
+            band.avatar_url = await getStreamUrl(band.avatar_key)
+          } catch (e) {
+            console.error('Failed to load avatar for band:', band.id, e)
+          }
         }
       }
+    } catch (e) {
+      console.error('Failed to load bands:', e)
+    } finally {
+      bandsLoading.value = false
     }
-  } catch (e) {
-    console.error('Failed to load bands:', e)
-  } finally {
-    bandsLoading.value = false
-  }
 
-  // Load listening stats
-  loadListeningStats()
+    // Load listening stats
+    loadListeningStats()
+  }
 })
 </script>

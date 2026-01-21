@@ -143,7 +143,7 @@
               </p>
             </div>
           </div>
-          <UButton color="teal" to="/dashboard/my-impact" class="shrink-0">
+          <UButton color="teal" to="/dashboard/stats" class="shrink-0">
             View Impact
           </UButton>
         </div>
@@ -181,12 +181,33 @@ interface PaymentData {
   subscriptionStatus: string
 }
 
+const user = useSupabaseUser()
 const loading = ref(true)
 const paymentData = ref<PaymentData>({
   invoices: [],
   totalPaid: 0,
   subscriptionStatus: 'inactive',
 })
+
+// Fetch payment data from API
+const fetchPaymentData = async (): Promise<PaymentData> => {
+  return await $fetch<PaymentData>('/api/stripe/payment-history')
+}
+
+// User-scoped persisted store for payment history
+const paymentsStore = computed(() => {
+  if (!user.value?.id) return null
+  return usePersistedStore<PaymentData>({
+    key: `payments_${user.value.id}`,
+    fetcher: fetchPaymentData,
+  })
+})
+
+// Apply cached data to local refs
+const applyCachedData = (cached: unknown) => {
+  const data = cached as PaymentData
+  paymentData.value = JSON.parse(JSON.stringify(data)) as PaymentData
+}
 
 const isSubscribed = computed(() => {
   return ['active', 'trialing'].includes(paymentData.value.subscriptionStatus)
@@ -239,18 +260,33 @@ const getStatusColor = (status: string | null): string => {
   }
 }
 
-const loadPaymentHistory = async () => {
-  loading.value = true
-  try {
-    paymentData.value = await $fetch('/api/stripe/payment-history')
-  } catch (e) {
-    console.error('Failed to load payment history:', e)
-  } finally {
-    loading.value = false
+// Watch for store data updates (background revalidation)
+watch(
+  () => paymentsStore.value?.data.value,
+  (newData) => {
+    if (newData) {
+      applyCachedData(newData)
+    }
   }
-}
+)
 
-onMounted(() => {
-  loadPaymentHistory()
+onMounted(async () => {
+  const store = paymentsStore.value
+  if (store) {
+    await store.initialize()
+    if (store.data.value) {
+      applyCachedData(store.data.value)
+    }
+    loading.value = store.loading.value
+  } else {
+    // Fallback if no user
+    try {
+      paymentData.value = await fetchPaymentData()
+    } catch (e) {
+      console.error('Failed to load payment history:', e)
+    } finally {
+      loading.value = false
+    }
+  }
 })
 </script>

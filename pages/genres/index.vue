@@ -107,11 +107,29 @@ interface Genre {
   avatarKeys: string[]
 }
 
-const loading = ref(true)
+interface CachedGenresData {
+  genres: Genre[]
+}
+
 const loadingPlayId = ref<string | null>(null)
-const error = ref(false)
 const genres = ref<Genre[]>([])
 const genreAvatars = ref<Record<string, string[]>>({})
+
+// Fetch genres from API
+const fetchGenresData = async (): Promise<CachedGenresData> => {
+  const data = await $fetch('/api/genres')
+  return { genres: data.genres }
+}
+
+// Persisted store for genres (stale-while-revalidate)
+const genresStore = usePersistedStore<CachedGenresData>({
+  key: 'genres_page',
+  fetcher: fetchGenresData,
+})
+
+// Derived loading/error from store
+const loading = computed(() => genresStore.loading.value)
+const error = computed(() => genresStore.error.value)
 
 // Generate consistent gradient colors based on genre name
 const getGenreGradient = (name: string): string => {
@@ -208,20 +226,19 @@ useHead({
 })
 
 const loadGenres = async () => {
-  loading.value = true
-  error.value = false
-  try {
-    const data = await $fetch('/api/genres')
-    genres.value = data.genres
-    // Load avatars after genres are loaded (non-blocking)
-    loadAvatars()
-  } catch (e) {
-    console.error('Failed to load genres:', e)
-    error.value = true
-  } finally {
-    loading.value = false
-  }
+  await genresStore.refresh()
 }
 
-onMounted(loadGenres)
+// Watch for cached data updates
+watch(() => genresStore.data.value, (cached) => {
+  if (cached) {
+    genres.value = [...cached.genres] as Genre[]
+    // Load avatars after genres are loaded (non-blocking)
+    loadAvatars()
+  }
+}, { immediate: true })
+
+onMounted(async () => {
+  await genresStore.initialize()
+})
 </script>
