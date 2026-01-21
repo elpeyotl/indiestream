@@ -35,7 +35,9 @@
       <Transition name="slide-up">
         <div
           v-if="isOpen"
-          class="fixed bottom-0 left-0 right-0 z-50 bg-zinc-900 rounded-t-2xl border-t border-zinc-800"
+          class="fixed bottom-0 left-0 right-0 z-[60] bg-zinc-900 rounded-t-2xl border-t border-zinc-800"
+          @click.stop
+          @touchstart.stop
         >
           <!-- Drag Handle -->
           <div class="flex justify-center pt-3 pb-1">

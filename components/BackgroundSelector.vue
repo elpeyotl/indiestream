@@ -21,7 +21,8 @@
         <button
           v-for="(option, index) in backgroundOptions"
           :key="option.value"
-          class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors"
+          type="button"
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors touch-manipulation"
           :class="[
             currentEffect === option.value
               ? 'bg-violet-500/20 text-violet-400'
