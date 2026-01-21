@@ -2,7 +2,7 @@
   <component
     :is="backgroundComponent"
     v-if="backgroundComponent"
-    :key="currentEffect"
+    :key="`${currentEffect}-${componentKey}`"
     :audio-data="audioData"
   />
 </template>
@@ -26,6 +26,12 @@ const props = defineProps<{
 }>()
 
 const { currentEffect } = useBackgroundEffect()
+
+// Force component key to update when effect changes
+const componentKey = ref(0)
+watch(currentEffect, () => {
+  componentKey.value++
+}, { flush: 'sync' })
 
 const backgroundComponent = computed<Component | null>(() => {
   switch (currentEffect.value) {
