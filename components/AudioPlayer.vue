@@ -16,7 +16,7 @@
           </div>
 
           <!-- Header with Background Selector and Close Button -->
-          <div class="flex justify-between items-center p-4">
+          <div class="flex justify-between items-center p-4 relative z-10">
             <BackgroundSelector />
             <UButton
               color="gray"

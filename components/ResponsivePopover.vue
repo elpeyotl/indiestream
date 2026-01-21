@@ -4,7 +4,7 @@
     v-if="!isMobile"
     v-model:open="isOpen"
     mode="click"
-    :popper="{ placement }"
+    :popper="{ placement, strategy: 'fixed' }"
     :ui="{ container: 'z-[100]' }"
   >
     <slot name="trigger" />
