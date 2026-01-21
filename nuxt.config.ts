@@ -170,6 +170,7 @@ export default defineNuxtConfig({
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
       appUrl: process.env.APP_URL || 'https://fairstream.fm',
+      comingSoonMode: process.env.COMING_SOON_MODE === 'true',
     },
   },
 
