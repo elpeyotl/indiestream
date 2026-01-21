@@ -14,25 +14,25 @@
 
       <template #moderation>
         <AdminTrackModerationTab
-          @update-pending-count="pendingModerationCount = $event"
+          @update-pending-count="() => refreshPendingCounts()"
         />
       </template>
 
       <template #artist-approvals>
         <AdminArtistApprovalsTab
-          @update-pending-count="pendingArtistCount = $event"
+          @update-pending-count="() => refreshPendingCounts()"
         />
       </template>
 
       <template #reports>
         <AdminContentReportsTab
-          @update-pending-count="pendingReportsCount = $event"
+          @update-pending-count="() => refreshPendingCounts()"
         />
       </template>
 
       <template #dmca>
         <AdminDmcaRequestsTab
-          @update-pending-count="pendingDmcaCount = $event"
+          @update-pending-count="() => refreshPendingCounts()"
         />
       </template>
 
@@ -100,35 +100,26 @@ const initTabFromUrl = () => {
   }
 }
 
-// Badge counts for tabs
-const pendingModerationCount = ref(0)
-const pendingArtistCount = ref(0)
-const pendingReportsCount = ref(0)
-const pendingDmcaCount = ref(0)
+// Fetch pending counts using useLazyFetch
+const { data: pendingCounts, refresh: refreshPendingCounts } = await useLazyFetch<{
+  moderation: number
+  artists: number
+  reports: number
+  dmca: number
+}>('/api/admin/pending-counts', {
+  server: false,
+  default: () => ({ moderation: 0, artists: 0, reports: 0, dmca: 0 }),
+})
 
-// Fetch pending counts on page load (before tabs are clicked)
-const fetchPendingCounts = async () => {
-  try {
-    const counts = await $fetch<{
-      moderation: number
-      artists: number
-      reports: number
-      dmca: number
-    }>('/api/admin/pending-counts')
+// Computed badge counts from fetched data
+const pendingModerationCount = computed(() => pendingCounts.value?.moderation ?? 0)
+const pendingArtistCount = computed(() => pendingCounts.value?.artists ?? 0)
+const pendingReportsCount = computed(() => pendingCounts.value?.reports ?? 0)
+const pendingDmcaCount = computed(() => pendingCounts.value?.dmca ?? 0)
 
-    pendingModerationCount.value = counts.moderation
-    pendingArtistCount.value = counts.artists
-    pendingReportsCount.value = counts.reports
-    pendingDmcaCount.value = counts.dmca
-  } catch (e) {
-    console.error('Failed to fetch pending counts:', e)
-  }
-}
-
-// Fetch counts and init tab on mount
+// Init tab from URL on mount
 onMounted(() => {
   initTabFromUrl()
-  fetchPendingCounts()
 })
 
 const tabs = computed(() => [

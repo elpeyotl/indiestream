@@ -5,7 +5,7 @@
       description="Combined earnings across all your artists"
     />
 
-    <LoadingSpinner v-if="loading" />
+    <LoadingSpinner v-if="pending" />
 
     <template v-else-if="earnings">
       <!-- Stripe Connect Status -->
@@ -207,13 +207,11 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const user = useSupabaseUser()
-const { fetchUserEarnings, startOnboarding, getAccountLink, formatCurrency } = useStripeConnect()
+const { startOnboarding, getAccountLink } = useStripeConnect()
 const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 
-const loading = ref(true)
 const connectLoading = ref(false)
 
 interface BandEarnings {
@@ -249,28 +247,16 @@ interface UserEarningsData {
   }>
 }
 
-const earnings = ref<UserEarningsData | null>(null)
-
-// Wrapper that throws on fetch failure (for usePersistedStore)
-const fetchEarningsData = async (): Promise<UserEarningsData> => {
-  const data = await fetchUserEarnings()
-  if (!data) throw new Error('Failed to fetch earnings data')
-  return data
-}
-
-// User-scoped persisted store for earnings data
-const earningsStore = computed(() => {
-  if (!user.value?.id) return null
-  return usePersistedStore<UserEarningsData>({
-    key: `earnings_${user.value.id}`,
-    fetcher: fetchEarningsData,
-  })
+// Fetch earnings data using Nuxt's useLazyFetch
+const { data: earnings, pending, refresh } = await useLazyFetch<UserEarningsData>('/api/user/earnings', {
+  key: 'user-earnings',
 })
 
-// Apply cached data to local ref
-const applyCachedData = (cached: unknown) => {
-  const data = cached as UserEarningsData
-  earnings.value = JSON.parse(JSON.stringify(data)) as UserEarningsData
+const formatCurrency = (cents: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100)
 }
 
 const formatNumber = (num: number): string => {
@@ -308,36 +294,8 @@ const handleStripeConnect = async () => {
   }
 }
 
-// Watch for store data updates (background revalidation)
-watch(
-  () => earningsStore.value?.data.value,
-  (newData) => {
-    if (newData) {
-      applyCachedData(newData)
-    }
-  }
-)
-
 // Handle return from Stripe
 onMounted(async () => {
-  const store = earningsStore.value
-  if (store) {
-    await store.initialize()
-    if (store.data.value) {
-      applyCachedData(store.data.value)
-    }
-    loading.value = store.loading.value
-  } else {
-    // Fallback if no user
-    try {
-      earnings.value = await fetchUserEarnings()
-    } catch (e) {
-      console.error('Failed to load earnings:', e)
-    } finally {
-      loading.value = false
-    }
-  }
-
   if (route.query.connected === 'true') {
     toast.add({
       title: 'Stripe Connected',
@@ -347,7 +305,7 @@ onMounted(async () => {
     })
     router.replace({ query: { ...route.query, connected: undefined } })
     // Refresh data after Stripe connection
-    store?.refresh()
+    refresh()
   }
 
   if (route.query.refresh === 'true') {

@@ -2,18 +2,9 @@
 import type { PublicUserProfile } from '~/composables/useUserProfile'
 
 const route = useRoute()
-const userId = route.params.id as string
+const getUserId = () => route.params.id as string
 
 const { fetchPublicProfile } = useUserProfile()
-
-// Local state for this page's profile (public profile, not own)
-const profile = ref<PublicUserProfile | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
-
-// Impact stats
-const impactStats = ref<any>(null)
-const impactLoading = ref(false)
 
 // Helper functions
 const formatCurrency = (cents: number): string => {
@@ -36,33 +27,47 @@ const formatDuration = (seconds: number): string => {
   }
 }
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    // Use cached public profile fetch
-    const data = await fetchPublicProfile(userId)
-    profile.value = data
-    if (!data) {
-      error.value = 'User not found'
-    }
-  } catch (e: any) {
-    error.value = e.message || 'Failed to load profile'
-  } finally {
-    loading.value = false
+// Fetch user profile using useLazyAsyncData
+const { data: profile, pending: loading, error: fetchError } = await useLazyAsyncData(
+  `user-profile-${route.params.id}`,
+  () => fetchPublicProfile(getUserId()),
+  {
+    watch: [() => route.params.id],
   }
+)
 
-  // Fetch public impact stats
-  try {
-    impactLoading.value = true
-    const stats = await $fetch(`/api/user/${userId}/impact-stats`)
-    impactStats.value = stats
-  } catch (e) {
-    console.error('Failed to fetch impact stats:', e)
-    // Fail silently - not critical
-  } finally {
-    impactLoading.value = false
-  }
+const error = computed(() => {
+  if (fetchError.value) return fetchError.value.message || 'Failed to load profile'
+  if (!loading.value && !profile.value) return 'User not found'
+  return null
 })
+
+// Impact stats type
+interface UserImpactStats {
+  impactPublic: boolean
+  stats?: {
+    totalEarned: number
+    artistsSupported: number
+    listeningTime: number
+    streamCount: number
+  }
+}
+
+// Fetch impact stats using useLazyAsyncData
+const { data: impactStats, pending: impactLoading } = await useLazyAsyncData<UserImpactStats | null>(
+  `user-impact-${route.params.id}`,
+  async () => {
+    try {
+      return await $fetch<UserImpactStats>(`/api/user/${getUserId()}/impact-stats`)
+    } catch (e) {
+      console.error('Failed to fetch impact stats:', e)
+      return null
+    }
+  },
+  {
+    watch: [() => route.params.id],
+  }
+)
 
 // Show first 8 artists, then "Show All" button
 const displayedArtists = computed(() =>

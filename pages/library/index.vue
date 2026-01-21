@@ -453,7 +453,6 @@
 
 <script setup lang="ts">
 import type { SavedAlbum, LikedTrack, FollowedArtist } from '~/composables/useLibrary'
-import type { Playlist } from '~/composables/usePlaylist'
 import type { PlayerTrack } from '~/composables/usePlayer'
 import type { RecentlyPlayedTrack } from '~/composables/useRecentActivity'
 
@@ -461,28 +460,14 @@ definePageMeta({
   middleware: 'auth',
 })
 
-// Cached library data structure
-interface CachedLibraryData {
-  artists: FollowedArtist[]
-  albums: SavedAlbum[]
-  tracks: LikedTrack[]
-  playlists: Playlist[]
-}
-
-const user = useSupabaseUser()
 const { getStreamUrl, getCachedCoverUrl } = useAlbum()
 const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = useLibrary()
 const { playTrackFromLibrary, playPlaylist, isLoading: playerLoading, setQueue } = usePlayer()
 const { playlists: userPlaylists, fetchPlaylists, createPlaylist, getPlaylist } = usePlaylist()
 const { fetchRecentlyPlayed, recentlyPlayed } = useRecentActivity()
 const route = useRoute()
-const loading = ref(true)
 const loadingHistory = ref(false)
 const activeTab = ref(0)
-
-const artists = ref<FollowedArtist[]>([])
-const albums = ref<SavedAlbum[]>([])
-const tracks = ref<LikedTrack[]>([])
 
 const artistAvatars = ref<Record<string, string>>({})
 const albumCovers = ref<Record<string, string>>({})
@@ -499,6 +484,40 @@ const creatingPlaylist = ref(false)
 // Track actions sheet
 const showActionsSheet = ref(false)
 const selectedTrack = ref<PlayerTrack | null>(null)
+
+// Fetch library data using Nuxt's useLazyAsyncData with caching
+const nuxtApp = useNuxtApp()
+const { data: libraryData, pending: loading, refresh: refreshLibrary } = await useLazyAsyncData(
+  'user-library',
+  async () => {
+    const [artistsData, albumsData, tracksData] = await Promise.all([
+      getFollowedArtists(),
+      getSavedAlbums(),
+      getLikedTracks(),
+      fetchPlaylists(),
+    ])
+    return {
+      artists: artistsData,
+      albums: albumsData,
+      tracks: tracksData,
+    }
+  },
+  {
+    server: false,
+    default: () => ({
+      artists: [] as FollowedArtist[],
+      albums: [] as SavedAlbum[],
+      tracks: [] as LikedTrack[],
+    }),
+    // Return cached data if available to avoid skeleton on revisit
+    getCachedData: (key) => nuxtApp.payload.data[key] || nuxtApp.static.data[key],
+  }
+)
+
+// Computed accessors for library data
+const artists = computed(() => libraryData.value?.artists ?? [])
+const albums = computed(() => libraryData.value?.albums ?? [])
+const tracks = computed(() => libraryData.value?.tracks ?? [])
 
 const handleCreatePlaylist = async () => {
   if (!newPlaylistTitle.value.trim()) return
@@ -579,7 +598,8 @@ const playHistoryTrack = async (track: RecentlyPlayedTrack, index: number) => {
 
 const handleUnlike = async (trackId: string) => {
   await unlikeTrack(trackId)
-  tracks.value = tracks.value.filter(t => t.track.id !== trackId)
+  // Refresh to get updated tracks list
+  await refreshLibrary()
 }
 
 const playTrack = async (item: LikedTrack) => {
@@ -670,55 +690,11 @@ const playPlaylistById = async (playlistId: string) => {
   }
 }
 
-const loadLibrary = async () => {
-  loading.value = true
-
-  try {
-    // Load all library data in parallel
-    const [artistsData, albumsData, tracksData] = await Promise.all([
-      getFollowedArtists(),
-      getSavedAlbums(),
-      getLikedTracks(),
-      fetchPlaylists(),
-    ])
-
-    artists.value = artistsData
-    albums.value = albumsData
-    tracks.value = tracksData
-
-    // Show content immediately
-    loading.value = false
-
-    // Load images in background (don't block)
-    loadArtistAvatars()
-    loadAlbumCovers()
-    loadTrackCovers()
-    loadPlaylistCovers()
-  } catch (e) {
-    console.error('Failed to load library:', e)
-    loading.value = false
-  }
-}
-
-// Apply cached data to local refs and load images
-// Uses JSON clone to convert readonly types to mutable
-const applyCachedData = (cached: unknown) => {
-  const data = cached as CachedLibraryData
-  artists.value = JSON.parse(JSON.stringify(data.artists)) as FollowedArtist[]
-  albums.value = JSON.parse(JSON.stringify(data.albums)) as SavedAlbum[]
-  tracks.value = JSON.parse(JSON.stringify(data.tracks)) as LikedTrack[]
-  // Note: playlists are managed by usePlaylist composable which has its own state
-
-  // Load images in background
-  loadArtistAvatars()
-  loadAlbumCovers()
-  loadTrackCovers()
-  loadPlaylistCovers()
-}
-
+// Image loading functions - defined before the watch that uses them
 const loadArtistAvatars = async () => {
+  const currentArtists = artists.value
   await Promise.all(
-    artists.value.map(async (item) => {
+    currentArtists.map(async (item) => {
       if (item.band.avatar_key) {
         const url = await getCachedCoverUrl(item.band.avatar_key)
         if (url) artistAvatars.value[item.band.id] = url
@@ -730,8 +706,9 @@ const loadArtistAvatars = async () => {
 }
 
 const loadAlbumCovers = async () => {
+  const currentAlbums = albums.value
   await Promise.all(
-    albums.value.map(async (item) => {
+    currentAlbums.map(async (item) => {
       if (item.album.cover_key) {
         const url = await getCachedCoverUrl(item.album.cover_key)
         if (url) albumCovers.value[item.album.id] = url
@@ -743,8 +720,9 @@ const loadAlbumCovers = async () => {
 }
 
 const loadTrackCovers = async () => {
+  const currentTracks = tracks.value
   await Promise.all(
-    tracks.value.map(async (item) => {
+    currentTracks.map(async (item) => {
       if (item.track.album.cover_key) {
         const url = await getCachedCoverUrl(item.track.album.cover_key)
         if (url) trackCovers.value[item.track.id] = url
@@ -784,32 +762,20 @@ const loadPlaylistCovers = async () => {
   )
 }
 
-// Fetch library data for caching
-const fetchLibraryData = async (): Promise<CachedLibraryData> => {
-  const [artistsData, albumsData, tracksData] = await Promise.all([
-    getFollowedArtists(),
-    getSavedAlbums(),
-    getLikedTracks(),
-    fetchPlaylists(),
-  ])
-
-  return {
-    artists: artistsData,
-    albums: albumsData,
-    tracks: tracksData,
-    playlists: [...userPlaylists.value],
-  }
+// Load all images when library data changes
+const loadAllImages = () => {
+  loadArtistAvatars()
+  loadAlbumCovers()
+  loadTrackCovers()
+  loadPlaylistCovers()
 }
 
-// Create user-scoped persisted store for library data
-// The key includes user ID so each user has their own cache
-const libraryStore = computed(() => {
-  if (!user.value?.id) return null
-  return usePersistedStore<CachedLibraryData>({
-    key: `library_${user.value.id}`,
-    fetcher: fetchLibraryData,
-  })
-})
+// Watch for library data changes to load images
+watch(libraryData, () => {
+  if (libraryData.value) {
+    loadAllImages()
+  }
+}, { immediate: true })
 
 // Load history when tab is selected
 const loadHistory = async () => {
@@ -830,13 +796,6 @@ watch(activeTab, (newTab) => {
   }
 })
 
-// Watch for cached data updates (background revalidation)
-watch(() => libraryStore.value?.data.value, (cached) => {
-  if (cached && !loading.value) {
-    applyCachedData(cached)
-  }
-})
-
 // Handle URL query param for deep linking (e.g., /library?tab=history)
 onMounted(() => {
   const tabParam = route.query.tab as string
@@ -845,32 +804,6 @@ onMounted(() => {
   }
 })
 
-// Pull to refresh - force refresh from store
-const handleRefresh = async () => {
-  if (libraryStore.value) {
-    await libraryStore.value.refresh()
-  } else {
-    await loadLibrary()
-  }
-}
-usePullToRefresh(handleRefresh)
-
-onMounted(async () => {
-  // Initialize from cache if available
-  if (libraryStore.value) {
-    await libraryStore.value.initialize()
-
-    // If we have cached data, use it
-    if (libraryStore.value.data.value) {
-      applyCachedData(libraryStore.value.data.value)
-      loading.value = false
-    } else {
-      // No cache - will be populated by initialize()
-      loading.value = libraryStore.value.loading.value
-    }
-  } else {
-    // No user yet - fallback to direct load
-    await loadLibrary()
-  }
-})
+// Pull to refresh
+usePullToRefresh(refreshLibrary)
 </script>

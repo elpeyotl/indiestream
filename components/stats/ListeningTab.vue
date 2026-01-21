@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Period Toggle -->
-    <div class="mb-6">
+    <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
       <div class="inline-flex gap-2 p-1 rounded-lg bg-zinc-900/50 border border-zinc-800">
         <UButton
           :color="selectedPeriod === 'this-year' ? 'violet' : 'gray'"
@@ -28,12 +28,20 @@
           All Time
         </UButton>
       </div>
+
+      <!-- Revalidating indicator -->
+      <UIcon
+        v-if="loading && stats"
+        name="i-heroicons-arrow-path"
+        class="w-4 h-4 text-zinc-400 animate-spin"
+      />
     </div>
 
-    <LoadingSpinner v-if="loading" />
+    <!-- Loading - only show spinner on initial load (no data yet) -->
+    <LoadingSpinner v-if="loading && !stats" />
 
     <EmptyState
-      v-else-if="error"
+      v-else-if="error && !stats"
       icon="i-heroicons-exclamation-triangle"
       :title="'Failed to Load Stats'"
       :description="error"
@@ -330,19 +338,150 @@
 </template>
 
 <script setup lang="ts">
-const { stats, loading, error, fetchStats, formatTime } = useListeningStats()
+const { getStreamUrl } = useAlbum()
+
+interface TopArtist {
+  bandId: string
+  bandName: string
+  bandSlug: string
+  avatarKey: string | null
+  avatarUrl: string | null
+  streamCount: number
+  listeningSeconds: number
+  percentageOfTotal: number
+  firstListenedAt: string
+}
+
+interface TopTrack {
+  trackId: string
+  trackTitle: string
+  artistName: string
+  artistSlug: string
+  albumTitle: string
+  coverKey: string | null
+  coverUrl: string | null
+  playCount: number
+  listeningSeconds: number
+  percentageOfTotal: number
+}
+
+interface TopAlbum {
+  albumId: string
+  albumTitle: string
+  artistName: string
+  artistSlug: string
+  coverKey: string | null
+  coverUrl: string | null
+  streamCount: number
+  listeningSeconds: number
+  percentageOfTotal: number
+}
+
+interface TopGenre {
+  genre: string
+  streamCount: number
+  artistCount: number
+  percentageOfTotal: number
+}
+
+interface ListeningStats {
+  period: string
+  periodLabel: string
+  totalListeningSeconds: number
+  totalStreams: number
+  uniqueArtists: number
+  uniqueTracks: number
+  uniqueAlbums: number
+  averageSessionDuration: number
+  totalListeningDays: number
+  longestStreak: number
+  currentStreak: number
+  mostActiveDay: string
+  mostActiveHour: number
+  listeningByHour: { hour: number; minutes: number }[]
+  listeningByDayOfWeek: { day: string; minutes: number }[]
+  listeningByMonth: { month: string; minutes: number }[]
+  topArtists: TopArtist[]
+  topTracks: TopTrack[]
+  topAlbums: TopAlbum[]
+  topGenres: TopGenre[]
+  newArtistsDiscovered: number
+  artistDiversity: number
+  repeatListenerScore: number
+  vsLastPeriod?: {
+    listeningSecondsChange: number
+    streamsChange: number
+    newArtistsChange: number
+  }
+  topListeningDay: { date: string; minutes: number }
+  favoriteArtist: TopArtist | null
+  mostPlayedTrack: TopTrack | null
+}
 
 const selectedPeriod = ref<'this-year' | 'last-month' | 'all-time'>('this-year')
 
-// Function to load stats
-const loadStats = () => {
-  fetchStats(selectedPeriod.value)
-}
+// Fetch stats using Nuxt's useLazyAsyncData
+// server: false ensures this only runs on client (requires auth session)
+const { data: stats, pending: loading, error: fetchError, refresh } = await useLazyAsyncData(
+  'listening-stats',
+  async () => {
+    const data = await $fetch<ListeningStats>('/api/listener/stats', {
+      query: { period: selectedPeriod.value },
+    })
 
-// Load stats when period changes
-watch(selectedPeriod, () => {
-  loadStats()
-}, { immediate: true })
+    // Get presigned URLs for images
+    // Load artist avatars
+    for (const artist of data.topArtists) {
+      if (artist.avatarKey) {
+        try {
+          artist.avatarUrl = await getStreamUrl(artist.avatarKey)
+        } catch (e) {
+          console.error('Failed to load avatar for artist:', artist.bandId, e)
+        }
+      }
+    }
+
+    // Load album/track covers
+    for (const track of data.topTracks) {
+      if (track.coverKey) {
+        try {
+          track.coverUrl = await getStreamUrl(track.coverKey)
+        } catch (e) {
+          console.error('Failed to load cover for track:', track.trackId, e)
+        }
+      }
+    }
+
+    for (const album of data.topAlbums) {
+      if (album.coverKey) {
+        try {
+          album.coverUrl = await getStreamUrl(album.coverKey)
+        } catch (e) {
+          console.error('Failed to load cover for album:', album.albumId, e)
+        }
+      }
+    }
+
+    return data
+  },
+  {
+    watch: [selectedPeriod],
+    server: false,
+  }
+)
+
+const error = computed(() => fetchError.value?.message || null)
+
+const loadStats = () => refresh()
+
+const formatTime = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  return `${minutes}m`
+}
 
 const periodDescription = computed(() => {
   switch (selectedPeriod.value) {

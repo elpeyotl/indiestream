@@ -124,6 +124,14 @@
 - [ ] Swipe gestures on track rows
 - [ ] Long-press context menus
 
+#### Native Mobile Apps (Phase 3 - Post-Launch)
+- [ ] React Native (Expo) app for iOS/Android
+- [ ] react-native-track-player for background audio, lock screen controls, CarPlay/Android Auto
+- [ ] Shared backend (same Supabase API)
+- [ ] Shared design tokens (colors, spacing, typography)
+- [ ] Offline playback support
+- [ ] Push notifications
+
 #### Discovery
 - [x] Genre pages (browse by genre, genre detail pages with artist filtering)
 - [x] Curated playlists

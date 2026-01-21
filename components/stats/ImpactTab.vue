@@ -29,24 +29,33 @@
         </UButton>
       </div>
 
-      <!-- Share Button -->
-      <UButton
-        v-if="distribution && distribution.subscriptionStatus !== 'inactive'"
-        color="violet"
-        variant="outline"
-        @click="showShareModal = true">
-        <UIcon name="i-heroicons-share" class="w-4 h-4" />
-        Share
-      </UButton>
+      <div class="flex items-center gap-3">
+        <!-- Revalidating indicator -->
+        <UIcon
+          v-if="loading && distribution"
+          name="i-heroicons-arrow-path"
+          class="w-4 h-4 text-zinc-400 animate-spin"
+        />
+
+        <!-- Share Button -->
+        <UButton
+          v-if="distribution && distribution.subscriptionStatus !== 'inactive'"
+          color="violet"
+          variant="outline"
+          @click="showShareModal = true">
+          <UIcon name="i-heroicons-share" class="w-4 h-4" />
+          Share
+        </UButton>
+      </div>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
+    <!-- Loading - only show spinner on initial load (no data yet) -->
+    <div v-if="loading && !distribution" class="flex items-center justify-center py-20">
       <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-zinc-400 animate-spin" />
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="text-center py-12">
+    <div v-else-if="error && !distribution" class="text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
         <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-red-400" />
       </div>
@@ -224,7 +233,33 @@
 </template>
 
 <script setup lang="ts">
-const { distribution, loading, error, fetchDistribution, formatCurrency, formatDuration } = useMoneyDistribution()
+const { getStreamUrl } = useAlbum()
+
+interface ArtistBreakdown {
+  bandId: string
+  bandName: string
+  bandSlug: string
+  avatarKey: string | null
+  avatarUrl: string | null
+  listeningSeconds: number
+  streamCount: number
+  percentageOfListening: number
+  earningsCents: number
+}
+
+interface MoneyDistribution {
+  period: 'all-time' | 'last-month' | 'this-month'
+  periodLabel: string
+  subscriptionStatus: 'active' | 'trialing' | 'inactive'
+  totalPaidCents: number
+  artistPoolCents: number
+  cmoFeeCents: number
+  platformFeeCents: number
+  totalListeningSeconds: number
+  totalStreams: number
+  monthsSubscribed: number
+  artistBreakdown: ArtistBreakdown[]
+}
 
 // Period selector - default to this-month
 const selectedPeriod = ref<'all-time' | 'last-month' | 'this-month'>('this-month')
@@ -232,13 +267,56 @@ const selectedPeriod = ref<'all-time' | 'last-month' | 'this-month'>('this-month
 // Share modal
 const showShareModal = ref(false)
 
-// Function to load distribution
-const loadDistribution = () => {
-  fetchDistribution(selectedPeriod.value)
+// Fetch distribution using Nuxt's useLazyAsyncData
+// server: false ensures this only runs on client (requires auth session)
+const { data: distribution, pending: loading, error: fetchError, refresh } = await useLazyAsyncData(
+  'money-distribution',
+  async () => {
+    const data = await $fetch<MoneyDistribution>('/api/listener/money-distribution', {
+      query: { period: selectedPeriod.value },
+    })
+
+    // Get presigned URLs for artist avatars
+    for (const artist of data.artistBreakdown) {
+      if (artist.avatarKey) {
+        try {
+          artist.avatarUrl = await getStreamUrl(artist.avatarKey)
+        } catch (e) {
+          console.error('Failed to load avatar for artist:', artist.bandId, e)
+        }
+      }
+    }
+
+    return data
+  },
+  {
+    watch: [selectedPeriod],
+    server: false,
+  }
+)
+
+const error = computed(() => fetchError.value?.message || null)
+
+const loadDistribution = () => refresh()
+
+const formatCurrency = (cents: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100)
 }
 
-// Load distribution when period changes
-watch(selectedPeriod, () => {
-  loadDistribution()
-}, { immediate: true })
+const formatDuration = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = seconds % 60
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  } else if (minutes > 0) {
+    return `${minutes}m ${secs}s`
+  } else {
+    return `${secs}s`
+  }
+}
 </script>

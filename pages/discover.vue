@@ -100,7 +100,7 @@
     </section>
 
     <!-- Featured Artists Section (loads independently) -->
-    <section v-if="loadingFeatured || featuredArtists.length > 0" class="mb-12">
+    <section v-if="loadingFeatured || (featuredArtists && featuredArtists.length > 0)" class="mb-12">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-zinc-100">Featured Artists</h2>
       </div>
@@ -245,6 +245,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Database } from '~/types/database'
 import type { Band } from '~/composables/useBand'
 import type { Album } from '~/composables/useAlbum'
 import type { RecentlyPlayedTrack } from '~/composables/useRecentActivity'
@@ -266,60 +267,95 @@ interface FeaturedPlaylist {
   }>
 }
 
-const {
-  getFeaturedArtists,
-  getNewReleases,
-  getAllArtists,
-  loadMoreArtists: loadMoreArtistsFromComposable,
-} = useDiscover()
-
+const client = useSupabaseClient<Database>()
 const { getCachedCoverUrl, getAlbumById } = useAlbum()
+const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 const { fetchRecentlyPlayed, recentlyPlayed, loadingRecentlyPlayed } = useRecentActivity()
 const user = useSupabaseUser()
 const { setQueue, playPlaylist } = usePlayer()
 
-// Independent loading states for each section
-const loadingReleases = ref(true)
-const loadingPlaylists = ref(true)
-const loadingFeatured = ref(true)
-const loadingAllArtists = ref(true)
 const loadingPlayId = ref<string | null>(null)
 const loadingMore = ref(false)
-
-const featuredArtists = ref<Band[]>([])
-const newReleases = ref<Album[]>([])
-const allArtists = ref<Band[]>([])
-const albumCovers = ref<Record<string, string>>({})
-const featuredPlaylists = ref<FeaturedPlaylist[]>([])
-const playlistCovers = ref<Record<string, string[]>>({})
-const hasMoreArtists = ref(false)
 const artistPage = ref(0)
+const pageSize = 12
 
-// Load new releases independently
-const loadNewReleases = async (forceRefresh = false) => {
-  loadingReleases.value = true
-  try {
-    const releases = await getNewReleases(forceRefresh)
-    newReleases.value = releases.albums
-    albumCovers.value = releases.covers
-  } catch (e) {
-    console.error('Failed to load new releases:', e)
-  } finally {
-    loadingReleases.value = false
-  }
-}
+// New Releases - using useLazyAsyncData
+const { data: releasesData, pending: loadingReleases, refresh: refreshReleases } = await useLazyAsyncData(
+  'discover-releases',
+  async () => {
+    await loadModerationSetting()
 
-// Load featured playlists independently
-const loadFeaturedPlaylists = async () => {
-  loadingPlaylists.value = true
-  try {
+    const { data, error } = await client
+      .from('albums')
+      .select(`
+        id,
+        title,
+        slug,
+        release_type,
+        release_date,
+        cover_key,
+        cover_url,
+        band_id,
+        band:bands!inner (
+          id,
+          name,
+          slug
+        ),
+        tracks (
+          id,
+          moderation_status
+        )
+      `)
+      .eq('is_published', true)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (error) throw error
+
+    let albums = (data || []).map(album => ({
+      ...album,
+      band: Array.isArray(album.band) ? album.band[0] : album.band,
+    }))
+
+    if (moderationEnabled.value) {
+      albums = albums.filter(album => {
+        if (!album.tracks || album.tracks.length === 0) return false
+        return album.tracks.some((track: any) => track.moderation_status === 'approved')
+      })
+    }
+
+    const releasesResult = albums.slice(0, 10) as Album[]
+    const covers: Record<string, string> = {}
+
+    await Promise.all(
+      releasesResult.map(async (album) => {
+        if (album.cover_key) {
+          const url = await getCachedCoverUrl(album.cover_key)
+          if (url) covers[album.id] = url
+        } else if (album.cover_url) {
+          covers[album.id] = album.cover_url
+        }
+      })
+    )
+
+    return { albums: releasesResult, covers }
+  },
+  { server: false }
+)
+
+const newReleases = computed(() => releasesData.value?.albums || [])
+const albumCovers = computed(() => releasesData.value?.covers || {})
+
+// Featured Playlists - using useLazyAsyncData
+const { data: playlistsData, pending: loadingPlaylists, refresh: refreshPlaylists } = await useLazyAsyncData(
+  'discover-playlists',
+  async () => {
     const data = await $fetch<{ playlists: FeaturedPlaylist[] }>('/api/playlists/featured')
-    featuredPlaylists.value = data.playlists
+    const covers: Record<string, string[]> = {}
 
-    // Load cover images from preview tracks (for mosaic) - in parallel
     await Promise.all(
       data.playlists.map(async (playlist) => {
-        const covers: string[] = []
+        const playlistCovers: string[] = []
         const seen = new Set<string>()
 
         for (const track of playlist.previewTracks || []) {
@@ -327,48 +363,95 @@ const loadFeaturedPlaylists = async () => {
             seen.add(track.album.cover_key)
             const url = await getCachedCoverUrl(track.album.cover_key)
             if (url) {
-              covers.push(url)
-              if (covers.length >= 4) break
+              playlistCovers.push(url)
+              if (playlistCovers.length >= 4) break
             }
           }
         }
 
-        playlistCovers.value[playlist.id] = covers
+        covers[playlist.id] = playlistCovers
       })
     )
-  } catch (e) {
-    console.error('Failed to load featured playlists:', e)
-  } finally {
-    loadingPlaylists.value = false
-  }
-}
 
-// Load featured artists independently
-const loadFeaturedArtists = async (forceRefresh = false) => {
-  loadingFeatured.value = true
-  try {
-    featuredArtists.value = await getFeaturedArtists(forceRefresh)
-  } catch (e) {
-    console.error('Failed to load featured artists:', e)
-  } finally {
-    loadingFeatured.value = false
-  }
-}
+    return { playlists: data.playlists, covers }
+  },
+  { server: false }
+)
 
-// Load all artists independently
-const loadAllArtistsSection = async (forceRefresh = false) => {
-  loadingAllArtists.value = true
-  try {
-    const artists = await getAllArtists(forceRefresh)
-    allArtists.value = artists.artists
-    hasMoreArtists.value = artists.hasMore
-    artistPage.value = 0
-  } catch (e) {
-    console.error('Failed to load all artists:', e)
-  } finally {
-    loadingAllArtists.value = false
+const featuredPlaylists = computed(() => playlistsData.value?.playlists || [])
+const playlistCovers = computed(() => playlistsData.value?.covers || {})
+
+// Featured Artists - using useLazyAsyncData
+const { data: featuredArtists, pending: loadingFeatured, refresh: refreshFeatured } = await useLazyAsyncData(
+  'discover-featured',
+  async () => {
+    const { data, error } = await client
+      .from('bands')
+      .select('id, name, slug, theme_color, total_streams, is_verified, avatar_key, avatar_url')
+      .eq('status', 'active')
+      .eq('is_verified', true)
+      .order('total_streams', { ascending: false })
+      .limit(6)
+
+    if (error) throw error
+
+    const artists = (data || []) as any[]
+    await Promise.all(
+      artists.map(async (artist) => {
+        if (artist.avatar_key) {
+          const url = await getCachedCoverUrl(artist.avatar_key)
+          if (url) artist.avatar_url = url
+        }
+      })
+    )
+
+    return artists as Band[]
+  },
+  { server: false }
+)
+
+// All Artists - using useLazyAsyncData (first page only)
+const { data: allArtistsData, pending: loadingAllArtists, refresh: refreshAllArtists } = await useLazyAsyncData(
+  'discover-all-artists',
+  async () => {
+    const { data, error } = await client
+      .from('bands')
+      .select('id, name, slug, theme_color, total_streams, avatar_key, avatar_url')
+      .eq('status', 'active')
+      .order('total_streams', { ascending: false })
+      .range(0, pageSize - 1)
+
+    if (error) throw error
+
+    const artists = (data || []) as any[]
+    await Promise.all(
+      artists.map(async (artist) => {
+        if (artist.avatar_key) {
+          const url = await getCachedCoverUrl(artist.avatar_key)
+          if (url) artist.avatar_url = url
+        }
+      })
+    )
+
+    return {
+      artists: artists as Band[],
+      hasMore: artists.length === pageSize,
+    }
+  },
+  { server: false }
+)
+
+// Mutable list for pagination (starts with initial data)
+const allArtists = ref<Band[]>([])
+const hasMoreArtists = ref(false)
+
+// Sync initial data when it loads
+watch(allArtistsData, (data) => {
+  if (data && allArtists.value.length === 0) {
+    allArtists.value = data.artists
+    hasMoreArtists.value = data.hasMore
   }
-}
+}, { immediate: true })
 
 // Load recently played for logged-in users
 const loadRecentlyPlayed = async () => {
@@ -377,15 +460,23 @@ const loadRecentlyPlayed = async () => {
   }
 }
 
-// Load all data - each section loads independently in parallel
-const loadData = async (forceRefresh = false) => {
-  // Start all loads in parallel - each section will show as soon as it's ready
-  loadNewReleases(forceRefresh)
-  loadFeaturedPlaylists()
-  loadFeaturedArtists(forceRefresh)
-  loadAllArtistsSection(forceRefresh)
-  loadRecentlyPlayed()
+// Refresh all sections
+const refreshAll = async () => {
+  artistPage.value = 0
+  allArtists.value = []
+  await Promise.all([
+    refreshReleases(),
+    refreshPlaylists(),
+    refreshFeatured(),
+    refreshAllArtists(),
+    loadRecentlyPlayed(),
+  ])
 }
+
+// Initial load for recently played
+onMounted(() => {
+  loadRecentlyPlayed()
+})
 
 // Play a recently played track
 const playRecentTrack = (track: RecentlyPlayedTrack) => {
@@ -449,7 +540,7 @@ const playAlbum = async (album: Album) => {
 }
 
 // Play a featured playlist
-const playFeaturedPlaylist = async (playlist: FeaturedPlaylist) => {
+const playFeaturedPlaylist = async (playlist: { id: string }) => {
   if (loadingPlayId.value) return
   loadingPlayId.value = playlist.id
 
@@ -552,9 +643,27 @@ const loadMoreArtists = async () => {
   loadingMore.value = true
   try {
     artistPage.value += 1
-    const result = await loadMoreArtistsFromComposable(artistPage.value)
-    allArtists.value = [...allArtists.value, ...result.artists]
-    hasMoreArtists.value = result.hasMore
+    const { data, error } = await client
+      .from('bands')
+      .select('id, name, slug, theme_color, total_streams, avatar_key, avatar_url')
+      .eq('status', 'active')
+      .order('total_streams', { ascending: false })
+      .range(artistPage.value * pageSize, (artistPage.value + 1) * pageSize - 1)
+
+    if (error) throw error
+
+    const artists = (data || []) as any[]
+    await Promise.all(
+      artists.map(async (artist) => {
+        if (artist.avatar_key) {
+          const url = await getCachedCoverUrl(artist.avatar_key)
+          if (url) artist.avatar_url = url
+        }
+      })
+    )
+
+    allArtists.value = [...allArtists.value, ...artists as Band[]]
+    hasMoreArtists.value = artists.length === pageSize
   } catch (e) {
     console.error('Failed to load more artists:', e)
   } finally {
@@ -562,8 +671,8 @@ const loadMoreArtists = async () => {
   }
 }
 
-// Pull to refresh - force refresh to bypass cache
-usePullToRefresh(() => loadData(true))
+// Pull to refresh
+usePullToRefresh(() => refreshAll())
 
 // SEO
 useHead({
@@ -571,9 +680,5 @@ useHead({
   meta: [
     { name: 'description', content: 'Discover independent artists and new music releases on FairStream. Stream music that directly supports artists.' },
   ],
-})
-
-onMounted(() => {
-  loadData()
 })
 </script>

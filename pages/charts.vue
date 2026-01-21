@@ -278,48 +278,32 @@ const periodOptions = [
   { label: 'All Time', value: 'all' },
 ]
 
-const charts = ref<ChartData>({
-  tracks: [],
-  albums: [],
-  artists: [],
-})
-
 const trackCovers = ref<Record<string, string>>({})
 const albumCovers = ref<Record<string, string>>({})
 const artistAvatars = ref<Record<string, string>>({})
 
-// Fetch charts from API
-const fetchChartsData = async (): Promise<ChartData> => {
-  const data = await $fetch('/api/charts/trending', {
-    query: { period: selectedPeriod.value, limit: 20 },
-  })
-  return data as ChartData
-}
-
-// Create separate stores for each period
-const chartsStores: Record<string, ReturnType<typeof usePersistedStore<ChartData>>> = {}
-
-const getChartsStore = (period: string) => {
-  if (!chartsStores[period]) {
-    chartsStores[period] = usePersistedStore<ChartData>({
-      key: `charts_${period}`,
-      fetcher: async () => {
-        const data = await $fetch('/api/charts/trending', {
-          query: { period, limit: 20 },
-        })
-        return data as ChartData
-      },
+// Fetch charts using Nuxt's useLazyAsyncData with period as watch source
+const { data: chartsData, pending: loading, error: fetchError, refresh } = await useLazyAsyncData(
+  'charts-page',
+  async () => {
+    const data = await $fetch('/api/charts/trending', {
+      query: { period: selectedPeriod.value, limit: 20 },
     })
+    return data as ChartData
+  },
+  {
+    default: () => ({
+      tracks: [],
+      albums: [],
+      artists: [],
+    }),
+    watch: [selectedPeriod],
   }
-  return chartsStores[period]
-}
+)
 
-// Get current store based on selected period
-const currentStore = computed(() => getChartsStore(selectedPeriod.value))
-
-// Derived loading/error from store
-const loading = computed(() => currentStore.value.loading.value)
-const error = computed(() => currentStore.value.error.value)
+// Computed accessors
+const charts = computed(() => chartsData.value ?? { tracks: [], albums: [], artists: [] })
+const error = computed(() => !!fetchError.value)
 
 const formatNumber = (num: number): string => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
@@ -327,30 +311,9 @@ const formatNumber = (num: number): string => {
   return num.toString()
 }
 
-const loadCharts = async () => {
-  const store = currentStore.value
-  await store.initialize()
-}
+const loadCharts = () => refresh()
 
-// Watch for cached data updates
-watch(() => currentStore.value.data.value, (cached) => {
-  if (cached) {
-    charts.value = {
-      tracks: [...cached.tracks],
-      albums: [...cached.albums],
-      artists: [...cached.artists],
-    }
-    // Load images in background
-    loadImages()
-  }
-}, { immediate: true })
-
-// Reload when period changes
-watch(selectedPeriod, async () => {
-  await loadCharts()
-})
-
-// Load images using the cached cover URL helper
+// Load images using the cached cover URL helper - defined before the watch that uses it
 const loadImages = async () => {
   // Load cover images for tracks (parallel)
   await Promise.all(
@@ -382,6 +345,13 @@ const loadImages = async () => {
     })
   )
 }
+
+// Load images when charts data changes
+watch(chartsData, () => {
+  if (chartsData.value) {
+    loadImages()
+  }
+}, { immediate: true })
 
 const playTrack = async (track: any) => {
   if (loadingPlayId.value) return
@@ -496,8 +466,6 @@ const playArtist = async (artist: any) => {
     loadingPlayId.value = null
   }
 }
-
-onMounted(loadCharts)
 
 useHead({
   title: 'Charts | FairStream',

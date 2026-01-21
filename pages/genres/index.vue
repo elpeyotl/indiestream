@@ -107,29 +107,25 @@ interface Genre {
   avatarKeys: string[]
 }
 
-interface CachedGenresData {
-  genres: Genre[]
-}
-
 const loadingPlayId = ref<string | null>(null)
-const genres = ref<Genre[]>([])
 const genreAvatars = ref<Record<string, string[]>>({})
 
-// Fetch genres from API
-const fetchGenresData = async (): Promise<CachedGenresData> => {
-  const data = await $fetch('/api/genres')
-  return { genres: data.genres }
-}
-
-// Persisted store for genres (stale-while-revalidate)
-const genresStore = usePersistedStore<CachedGenresData>({
-  key: 'genres_page',
-  fetcher: fetchGenresData,
+// Fetch genres using Nuxt's useLazyFetch
+const { data: genresData, pending: loading, error: fetchError, refresh } = await useLazyFetch<{ genres: Genre[] }>('/api/genres', {
+  key: 'genres-page',
+  default: () => ({ genres: [] }),
 })
 
-// Derived loading/error from store
-const loading = computed(() => genresStore.loading.value)
-const error = computed(() => genresStore.error.value)
+// Computed accessors
+const genres = computed(() => genresData.value?.genres ?? [])
+const error = computed(() => !!fetchError.value)
+
+// Load avatars when genres data changes
+watch(genres, async (newGenres) => {
+  if (newGenres.length > 0) {
+    await loadAvatars(newGenres)
+  }
+}, { immediate: true })
 
 // Generate consistent gradient colors based on genre name
 const getGenreGradient = (name: string): string => {
@@ -199,9 +195,9 @@ const playGenre = async (genre: Genre) => {
   }
 }
 
-const loadAvatars = async () => {
+const loadAvatars = async (genreList: Genre[]) => {
   // Load avatar URLs for all genres in parallel
-  const avatarPromises = genres.value.map(async (genre) => {
+  const avatarPromises = genreList.map(async (genre) => {
     if (!genre.avatarKeys?.length) return
 
     const urls: string[] = []
@@ -217,28 +213,13 @@ const loadAvatars = async () => {
   await Promise.all(avatarPromises)
 }
 
+const loadGenres = () => refresh()
+
 // SEO
 useHead({
   title: 'Browse Genres | FairStream',
   meta: [
     { name: 'description', content: 'Explore music by genre on FairStream. Discover independent artists across rock, electronic, hip-hop, jazz, and more.' },
   ],
-})
-
-const loadGenres = async () => {
-  await genresStore.refresh()
-}
-
-// Watch for cached data updates
-watch(() => genresStore.data.value, (cached) => {
-  if (cached) {
-    genres.value = [...cached.genres] as Genre[]
-    // Load avatars after genres are loaded (non-blocking)
-    loadAvatars()
-  }
-}, { immediate: true })
-
-onMounted(async () => {
-  await genresStore.initialize()
 })
 </script>

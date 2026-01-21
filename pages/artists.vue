@@ -36,7 +36,7 @@
     </div>
 
     <!-- Loading Skeleton -->
-    <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+    <div v-if="loading || isSearching" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
       <div v-for="i in 12" :key="i" class="text-center">
         <USkeleton class="w-full aspect-square rounded-full mb-3" />
         <USkeleton class="h-5 w-3/4 mx-auto mb-1" />
@@ -45,7 +45,7 @@
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="text-center py-20">
+    <div v-else-if="error && !isSearching" class="text-center py-20">
       <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
         <UIcon name="i-heroicons-exclamation-circle" class="w-8 h-8 text-red-400" />
       </div>
@@ -101,19 +101,12 @@
 <script setup lang="ts">
 import type { Band } from '~/composables/useBand'
 
-interface CachedArtistsData {
-  artists: Band[]
-  genres: string[]
-}
-
 const client = useSupabaseClient()
 const { getCachedCoverUrl } = useAlbum()
 const { setQueue } = usePlayer()
 
-const loading = ref(true)
 const loadingMore = ref(false)
 const loadingPlayId = ref<string | null>(null)
-const error = ref(false)
 const artists = ref<Band[]>([])
 const searchQuery = ref('')
 const selectedGenre = ref<{ label: string; value: string } | null>(null)
@@ -137,6 +130,76 @@ const sortOptions = [
 const genreOptions = ref<{ label: string; value: string }[]>([
   { label: 'All Genres', value: '' },
 ])
+
+// Fetch initial artists and genres using Nuxt's useLazyAsyncData
+const { data: initialData, pending: loading, error: fetchError } = await useLazyAsyncData(
+  'artists-page',
+  async () => {
+    // Fetch artists
+    const { data: artistsData, error: artistsError } = await client
+      .from('bands')
+      .select('id, name, slug, theme_color, avatar_key, avatar_url, total_streams, is_verified, genres')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .range(0, pageSize - 1)
+
+    if (artistsError) throw artistsError
+
+    // Load avatar URLs from keys (using cache)
+    const loadedArtists = (artistsData || []) as any[]
+    await Promise.all(
+      loadedArtists.map(async (artist) => {
+        if (artist.avatar_key) {
+          const url = await getCachedCoverUrl(artist.avatar_key)
+          if (url) artist.avatar_url = url
+        }
+      })
+    )
+
+    // Fetch genres
+    const { data: genresData, error: genresError } = await client
+      .from('bands')
+      .select('genres')
+      .eq('status', 'active')
+
+    if (genresError) throw genresError
+
+    const allGenres = new Set<string>()
+    for (const band of (genresData || []) as { genres: string[] | null }[]) {
+      if (band.genres) {
+        for (const genre of band.genres) {
+          allGenres.add(genre)
+        }
+      }
+    }
+
+    return {
+      artists: loadedArtists as Band[],
+      genres: Array.from(allGenres).sort(),
+    }
+  },
+  {
+    default: () => ({
+      artists: [] as Band[],
+      genres: [] as string[],
+    }),
+  }
+)
+
+// Apply initial data and watch for updates
+watch(initialData, (data) => {
+  if (data && !hasActiveFilters.value && page.value === 0) {
+    artists.value = data.artists
+    genreOptions.value = [
+      { label: 'All Genres', value: '' },
+      ...data.genres.map(g => ({ label: g, value: g })),
+    ]
+    hasMore.value = data.artists.length === pageSize
+  }
+}, { immediate: true })
+
+// Computed error state
+const error = computed(() => !!fetchError.value)
 
 const formatNumber = (num: number): string => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
@@ -204,12 +267,14 @@ const playArtist = async (artist: Band) => {
   }
 }
 
+// Flag for tracking if we're doing a filtered search
+const isSearching = ref(false)
+
 const loadArtists = async (reset = false) => {
   if (reset) {
     page.value = 0
     artists.value = []
-    loading.value = true
-    error.value = false
+    isSearching.value = true
   }
 
   try {
@@ -238,9 +303,9 @@ const loadArtists = async (reset = false) => {
     // Pagination
     query = query.range(page.value * pageSize, (page.value + 1) * pageSize - 1)
 
-    const { data, error } = await query
+    const { data, error: queryError } = await query
 
-    if (error) throw error
+    if (queryError) throw queryError
 
     // Load avatar URLs from keys (using cache)
     const newArtists = (data || []) as any[]
@@ -255,9 +320,8 @@ const loadArtists = async (reset = false) => {
     hasMore.value = newArtists.length === pageSize
   } catch (e) {
     console.error('Failed to load artists:', e)
-    error.value = true
   } finally {
-    loading.value = false
+    isSearching.value = false
     loadingMore.value = false
   }
 }
@@ -268,82 +332,6 @@ const loadMore = async () => {
   await loadArtists()
 }
 
-const loadGenres = async (): Promise<string[]> => {
-  try {
-    // Get unique genres from all active bands
-    const { data, error } = await client
-      .from('bands')
-      .select('genres')
-      .eq('status', 'active')
-
-    if (error) throw error
-
-    const allGenres = new Set<string>()
-    for (const band of (data || [])) {
-      if (band.genres) {
-        for (const genre of band.genres) {
-          allGenres.add(genre)
-        }
-      }
-    }
-
-    const genreList = Array.from(allGenres).sort()
-    genreOptions.value = [
-      { label: 'All Genres', value: '' },
-      ...genreList.map(g => ({ label: g, value: g })),
-    ]
-    return genreList
-  } catch (e) {
-    console.error('Failed to load genres:', e)
-    return []
-  }
-}
-
-// Helper to populate genre options from cached data
-const populateGenreOptions = (genres: string[]) => {
-  genreOptions.value = [
-    { label: 'All Genres', value: '' },
-    ...genres.map(g => ({ label: g, value: g })),
-  ]
-}
-
-// Fetch initial artists for caching (no filters, default sort)
-const fetchInitialArtists = async (): Promise<Band[]> => {
-  const { data, error: fetchError } = await client
-    .from('bands')
-    .select('id, name, slug, theme_color, avatar_key, avatar_url, total_streams, is_verified, genres')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .range(0, pageSize - 1)
-
-  if (fetchError) throw fetchError
-
-  // Load avatar URLs from keys (using cache)
-  const artistsData = (data || []) as any[]
-  await Promise.all(
-    artistsData.map(async (artist) => {
-      if (artist.avatar_key) {
-        const url = await getCachedCoverUrl(artist.avatar_key)
-        if (url) artist.avatar_url = url
-      }
-    })
-  )
-
-  return artistsData as Band[]
-}
-
-// Persisted store for initial page data (stale-while-revalidate)
-const artistsStore = usePersistedStore<CachedArtistsData>({
-  key: 'artists_page',
-  fetcher: async () => {
-    const [artistsData, genresData] = await Promise.all([
-      fetchInitialArtists(),
-      loadGenres(),
-    ])
-    return { artists: artistsData, genres: genresData }
-  },
-})
-
 // SEO
 useHead({
   title: 'Browse Artists | FairStream',
@@ -352,30 +340,4 @@ useHead({
   ],
 })
 
-// Watch for cached data updates (background revalidation)
-watch(() => artistsStore.data.value, (cached) => {
-  // Only update if no filters are active (cached data is for unfiltered view)
-  if (cached && !hasActiveFilters.value && !loading.value) {
-    artists.value = [...cached.artists] as Band[]
-    populateGenreOptions([...cached.genres])
-    hasMore.value = cached.artists.length === pageSize
-  }
-})
-
-onMounted(async () => {
-  // Initialize from cache (memory -> localStorage -> fetch)
-  await artistsStore.initialize()
-
-  // If we have cached data and no filters, use it
-  if (artistsStore.data.value && !hasActiveFilters.value) {
-    artists.value = [...artistsStore.data.value.artists] as Band[]
-    populateGenreOptions([...artistsStore.data.value.genres])
-    hasMore.value = artistsStore.data.value.artists.length === pageSize
-    loading.value = false
-    error.value = artistsStore.error.value
-  } else {
-    // Filters active or no cache - fetch fresh
-    await loadArtists(true)
-  }
-})
 </script>

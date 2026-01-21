@@ -48,10 +48,6 @@ import { marked } from 'marked'
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
 
-const loading = ref(true)
-const error = ref(false)
-const renderedContent = ref('')
-
 // Map slugs to actual filenames
 const docFiles: Record<string, string> = {
   'todo': 'TODO.md',
@@ -83,34 +79,32 @@ const docTitles: Record<string, string> = {
   'content-protection-policy': 'Content Protection Policy',
 }
 
-const loadDocument = async () => {
-  loading.value = true
-  error.value = false
-
-  const filename = docFiles[slug.value]
-  if (!filename) {
-    error.value = true
-    loading.value = false
-    return
-  }
-
-  try {
+// Fetch document using useLazyAsyncData
+const { data: docContent, pending: loading, error: fetchError } = await useLazyAsyncData(
+  `doc-${route.params.slug}`,
+  async () => {
+    const filename = docFiles[slug.value]
+    if (!filename) {
+      throw new Error('Document not found')
+    }
     const response = await $fetch(`/api/docs/${slug.value}`)
-    renderedContent.value = marked(response as string) as string
-  } catch (e) {
-    console.error('Failed to load document:', e)
-    error.value = true
-  } finally {
-    loading.value = false
+    return response as string
+  },
+  {
+    watch: [slug],
   }
-}
+)
+
+const renderedContent = computed(() => {
+  if (!docContent.value) return ''
+  return marked(docContent.value) as string
+})
+
+const error = computed(() => !!fetchError.value || (!loading.value && !docFiles[slug.value]))
 
 useHead({
   title: computed(() => `${docTitles[slug.value] || 'Documentation'} - Fairstream`),
 })
-
-onMounted(loadDocument)
-watch(slug, loadDocument)
 </script>
 
 <style>

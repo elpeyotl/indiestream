@@ -512,12 +512,45 @@ const {
 const { playPlaylist, isLoading: playerLoading } = usePlayer()
 const { isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
 
-const playlistId = route.params.id as string
-
-const loading = ref(true)
-const playlist = ref<PlaylistWithTracks | null>(null)
+// Use a simple getter for playlistId since it's used in many places
+const getPlaylistId = () => route.params.id as string
 const collaborators = ref<Collaborator[]>([])
 const trackCovers = ref<Record<string, string>>({})
+
+// Fetch playlist using useLazyAsyncData
+const { data: playlist, pending: loading, refresh: refreshPlaylist } = await useLazyAsyncData(
+  `playlist-${route.params.id}`,
+  async () => {
+    const data = await getPlaylist(getPlaylistId())
+    return data
+  },
+  {
+    watch: [() => route.params.id],
+    server: false,
+  }
+)
+
+// Load collaborators and track covers when playlist loads
+watch(playlist, async (newPlaylist) => {
+  if (!newPlaylist) return
+
+  // Load collaborators
+  collaborators.value = await getCollaborators(getPlaylistId())
+
+  // Load track covers
+  await loadTrackCovers()
+
+  // Fetch liked status for all tracks
+  if (newPlaylist.playlist_tracks?.length) {
+    const trackIds = newPlaylist.playlist_tracks.map(item => item.track.id)
+    await fetchLikedTrackIds(trackIds)
+  }
+
+  // Sync edit form values
+  editTitle.value = newPlaylist.title
+  editDescription.value = newPlaylist.description || ''
+  editIsPublic.value = newPlaylist.is_public
+}, { immediate: true })
 
 // Edit modal
 const showEditModal = ref(false)
@@ -613,31 +646,6 @@ const formatTotalDuration = (seconds: number): string => {
   return `${mins} min`
 }
 
-const loadPlaylist = async () => {
-  loading.value = true
-  try {
-    playlist.value = await getPlaylist(playlistId)
-    if (playlist.value) {
-      editTitle.value = playlist.value.title
-      editDescription.value = playlist.value.description || ''
-      editIsPublic.value = playlist.value.is_public
-
-      collaborators.value = await getCollaborators(playlistId)
-      await loadTrackCovers()
-
-      // Fetch liked status for all tracks
-      if (playlist.value.playlist_tracks?.length) {
-        const trackIds = playlist.value.playlist_tracks.map(item => item.track.id)
-        await fetchLikedTrackIds(trackIds)
-      }
-    }
-  } catch (e) {
-    console.error('Failed to load playlist:', e)
-  } finally {
-    loading.value = false
-  }
-}
-
 const loadTrackCovers = async () => {
   if (!playlist.value?.playlist_tracks) return
 
@@ -714,7 +722,7 @@ const playFromIndex = async (index: number) => {
 
 const handleSave = async () => {
   saving.value = true
-  const success = await updatePlaylist(playlistId, {
+  const success = await updatePlaylist(getPlaylistId(), {
     title: editTitle.value,
     description: editDescription.value,
     is_public: editIsPublic.value,
@@ -732,14 +740,14 @@ const handleSave = async () => {
 const handleDelete = async () => {
   if (!confirm('Are you sure you want to delete this playlist?')) return
 
-  const success = await deletePlaylist(playlistId)
+  const success = await deletePlaylist(getPlaylistId())
   if (success) {
     router.push('/library')
   }
 }
 
 const handleRemoveTrack = async (trackId: string) => {
-  const success = await removeTrack(playlistId, trackId)
+  const success = await removeTrack(getPlaylistId(), trackId)
   if (success && playlist.value) {
     playlist.value.playlist_tracks = playlist.value.playlist_tracks.filter(
       (item) => item.track.id !== trackId
@@ -753,7 +761,7 @@ const handleShare = async () => {
     const config = useRuntimeConfig()
     shareUrl.value = `${config.public.appUrl || window.location.origin}/playlist/share/${playlist.value.share_token}`
   } else {
-    const url = await generateShareLink(playlistId)
+    const url = await generateShareLink(getPlaylistId())
     if (url) {
       shareUrl.value = url
       if (playlist.value) {
@@ -809,7 +817,7 @@ const handleInvite = async () => {
 
   inviting.value = true
   const success = await inviteCollaborator(
-    playlistId,
+    getPlaylistId(),
     selectedUser.value.id,
     inviteRole.value as 'editor' | 'viewer',
     selectedUser.value.display_name
@@ -818,12 +826,12 @@ const handleInvite = async () => {
 
   if (success) {
     selectedUser.value = null
-    collaborators.value = await getCollaborators(playlistId)
+    collaborators.value = await getCollaborators(getPlaylistId())
   }
 }
 
 const handleRemoveCollaborator = async (userId: string) => {
-  const success = await removeCollaborator(playlistId, userId)
+  const success = await removeCollaborator(getPlaylistId(), userId)
   if (success) {
     collaborators.value = collaborators.value.filter((c) => c.user_id !== userId)
   }
@@ -859,7 +867,7 @@ const dragDrop = async (targetIndex: number) => {
   }))
 
   // Save to server
-  await reorderTracks(playlistId, updatedTracks)
+  await reorderTracks(getPlaylistId(), updatedTracks)
 
   draggedIndex.value = null
 }
@@ -875,7 +883,4 @@ useHead(() => ({
   ],
 }))
 
-onMounted(() => {
-  loadPlaylist()
-})
 </script>

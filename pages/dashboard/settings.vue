@@ -3,7 +3,7 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const { ownProfile: profile, ownProfileLoading: loading, fetchOwnProfile, updateProfile, uploadAvatar } = useUserProfile()
+const { ownProfile: profile, fetchOwnProfile, updateProfile, uploadAvatar } = useUserProfile()
 const toast = useToast()
 
 // Form state
@@ -17,17 +17,23 @@ const form = reactive({
 const user = useSupabaseUser()
 const showImpactPublicly = ref(false)
 
-// Load current profile
-onMounted(async () => {
-  await fetchOwnProfile()
-  if (profile.value) {
-    form.displayName = profile.value.displayName || ''
-    form.bio = profile.value.bio || ''
-    form.location = profile.value.location || ''
-    form.website = profile.value.website || ''
-    showImpactPublicly.value = (profile.value as any).showImpactPublicly || false
+// Load profile using useLazyAsyncData
+const { pending: loading } = await useLazyAsyncData(
+  'settings-profile',
+  () => fetchOwnProfile(),
+  { server: false }
+)
+
+// Sync form values when profile loads
+watch(profile, (newProfile) => {
+  if (newProfile) {
+    form.displayName = newProfile.displayName || ''
+    form.bio = newProfile.bio || ''
+    form.location = newProfile.location || ''
+    form.website = newProfile.website || ''
+    showImpactPublicly.value = (newProfile as any).showImpactPublicly || false
   }
-})
+}, { immediate: true })
 
 // Avatar upload
 const avatarInput = ref<HTMLInputElement | null>(null)

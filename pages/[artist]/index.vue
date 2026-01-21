@@ -251,7 +251,7 @@
               </div>
             </div>
             <!-- Album grid -->
-            <div v-else-if="albums.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div v-else-if="albums && albums.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               <NuxtLink
                 v-for="album in albums"
                 :key="album.id"
@@ -520,18 +520,54 @@ const { getBandBySlug } = useBand()
 const { getBandAlbums, getCachedCoverUrl } = useAlbum()
 const { playAlbum } = usePlayer()
 
-const band = ref<Band | null>(null)
-const albums = ref<Album[]>([])
-const albumCovers = ref<Record<string, string>>({})
-const loading = ref(true)
-const loadingAlbums = ref(true) // Separate loading state for albums
 // Track avatar loaded state per URL to handle navigation between artists
 const avatarLoadedUrl = ref<string | null>(null)
-const avatarLoaded = computed(() => avatarLoadedUrl.value === band.value?.avatar_url)
 const avatarImgRef = ref<HTMLImageElement | null>(null)
 const loadingPlayAll = ref(false)
 const isFollowing = ref(false)
 const loadingFollow = ref(false)
+const albumCovers = ref<Record<string, string>>({})
+
+// Fetch artist data using useLazyAsyncData
+const { data: band, pending: loading, refresh: refreshBand } = await useLazyAsyncData(
+  `artist-${route.params.artist}`,
+  async () => {
+    const slug = route.params.artist as string
+    return await getBandBySlug(slug)
+  },
+  {
+    watch: [() => route.params.artist],
+  }
+)
+
+const avatarLoaded = computed(() => avatarLoadedUrl.value === band.value?.avatar_url)
+
+// Fetch albums using useLazyAsyncData (depends on band)
+const { data: albums, pending: loadingAlbums, refresh: refreshAlbums } = await useLazyAsyncData(
+  `artist-albums-${route.params.artist}`,
+  async () => {
+    if (!band.value) return []
+    const albumList = await getBandAlbums(band.value.id)
+
+    // Load cover URLs for albums in parallel (cached)
+    await Promise.all(
+      albumList.map(async (album) => {
+        if (album.cover_key) {
+          const coverUrl = await getCachedCoverUrl(album.cover_key)
+          if (coverUrl) albumCovers.value[album.id] = coverUrl
+        } else if (album.cover_url) {
+          albumCovers.value[album.id] = album.cover_url
+        }
+      })
+    )
+
+    return albumList
+  },
+  {
+    watch: [band],
+    server: false,
+  }
+)
 
 // Check if current user is the owner of this artist profile
 const isOwner = computed(() => {
@@ -595,22 +631,22 @@ const formatSocialUrl = (value: string, platform: string): string => {
   }
 }
 
-// Check follow status
-const checkFollowStatus = async () => {
-  if (!band.value || !user.value) {
+// Check follow status when band loads
+watch(band, async (newBand) => {
+  if (!newBand || !user.value) {
     isFollowing.value = false
     return
   }
 
   try {
     const { isFollowing: status } = await $fetch('/api/follows/status', {
-      query: { bandId: band.value.id },
+      query: { bandId: newBand.id },
     })
     isFollowing.value = status
   } catch (e) {
     console.error('Failed to check follow status:', e)
   }
-}
+}, { immediate: true })
 
 // Handle follow/unfollow
 const handleFollow = async () => {
@@ -668,17 +704,17 @@ const handleFollow = async () => {
 
 // Play all tracks from first album with tracks
 const handlePlayAll = async () => {
-  if (!albums.value.length || !band.value) return
+  if (!albums.value?.length || !band.value) return
 
   loadingPlayAll.value = true
   try {
     // Find first album with tracks
-    for (const album of albums.value) {
-      if (album.tracks && album.tracks.length > 0) {
-        const coverUrl = albumCovers.value[album.id] || null
+    for (const albumItem of albums.value) {
+      if (albumItem.tracks && albumItem.tracks.length > 0) {
+        const coverUrl = albumCovers.value[albumItem.id] || null
         // Add band info to album for player display
         const albumWithBand = {
-          ...album,
+          ...albumItem,
           band: {
             id: band.value.id,
             name: band.value.name,
@@ -702,7 +738,7 @@ const fetchFollowers = async () => {
 
   followersLoading.value = true
   try {
-    const data = await $fetch(`/api/artist/${band.value.slug}/followers`)
+    const data = await $fetch<{ followers: Array<{ id: string; displayName: string | null; avatarUrl: string | null; followedAt: string }> }>(`/api/artist/${band.value.slug}/followers`)
     followers.value = data.followers
     followersLoaded.value = true
   } catch (e) {
@@ -746,61 +782,11 @@ useHead(() => ({
   ],
 }))
 
-// Load albums independently (with skeleton while loading)
-const loadAlbums = async (bandId: string) => {
-  loadingAlbums.value = true
-  try {
-    albums.value = await getBandAlbums(bandId)
-
-    // Load cover URLs for albums in parallel (cached)
-    await Promise.all(
-      albums.value.map(async (album) => {
-        if (album.cover_key) {
-          const coverUrl = await getCachedCoverUrl(album.cover_key)
-          if (coverUrl) albumCovers.value[album.id] = coverUrl
-        } else if (album.cover_url) {
-          albumCovers.value[album.id] = album.cover_url
-        }
-      })
-    )
-  } catch (e) {
-    console.error('Failed to load albums:', e)
-  } finally {
-    loadingAlbums.value = false
-  }
+// Pull to refresh
+const refreshAll = async () => {
+  albumCovers.value = {}
+  await Promise.all([refreshBand(), refreshAlbums()])
 }
 
-const loadArtistData = async () => {
-  try {
-    const slug = route.params.artist as string
-    band.value = await getBandBySlug(slug)
-
-    if (band.value) {
-      // Avatar and banner URLs are now resolved by getBandBySlug
-      // Show the hero section immediately, load albums and follow status in parallel
-      loadAlbums(band.value.id) // Don't await - load in background
-      checkFollowStatus() // Don't await - load in background
-    }
-  } catch (e) {
-    console.error('Failed to load band:', e)
-  }
-}
-
-// Pull to refresh - just register the callback, indicator is in layout
-usePullToRefresh(loadArtistData)
-
-// Watch for artist slug changes (e.g., navigating from menu)
-watch(() => route.params.artist, async (newSlug, oldSlug) => {
-  if (newSlug && newSlug !== oldSlug) {
-    loading.value = true
-    await loadArtistData()
-    loading.value = false
-  }
-})
-
-onMounted(async () => {
-  loading.value = true
-  await loadArtistData()
-  loading.value = false
-})
+usePullToRefresh(refreshAll)
 </script>

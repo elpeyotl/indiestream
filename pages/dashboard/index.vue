@@ -76,7 +76,7 @@
     </UCard>
 
     <!-- Stats Grid Skeleton -->
-    <div v-if="listeningStatsLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div v-if="statsPending" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <UCard class="bg-zinc-900/50 border-zinc-800">
         <div class="flex items-center gap-4">
           <USkeleton class="w-12 h-12 rounded-xl" />
@@ -116,7 +116,7 @@
             </div>
             <div>
               <p class="text-zinc-400 text-sm">Hours Listened</p>
-              <p class="text-2xl font-bold text-zinc-100">{{ formatHours(listeningStats.totalSeconds) }}</p>
+              <p class="text-2xl font-bold text-zinc-100">{{ formatHours(listeningStats?.totalSeconds ?? 0) }}</p>
             </div>
           </div>
         </UCard>
@@ -130,7 +130,7 @@
             </div>
             <div>
               <p class="text-zinc-400 text-sm">Total Streams</p>
-              <p class="text-2xl font-bold text-zinc-100">{{ listeningStats.totalStreams }}</p>
+              <p class="text-2xl font-bold text-zinc-100">{{ listeningStats?.totalStreams ?? 0 }}</p>
             </div>
           </div>
         </UCard>
@@ -144,7 +144,7 @@
             </div>
             <div>
               <p class="text-zinc-400 text-sm">Artists Supported</p>
-              <p class="text-2xl font-bold text-zinc-100">{{ listeningStats.uniqueArtists }}</p>
+              <p class="text-2xl font-bold text-zinc-100">{{ listeningStats?.uniqueArtists ?? 0 }}</p>
             </div>
           </div>
         </UCard>
@@ -152,7 +152,7 @@
     </div>
 
     <!-- Free tier upgrade prompt for empty stats -->
-    <div v-if="!isSubscribed && !listeningStatsLoading && listeningStats.totalStreams === 0" class="mb-8">
+    <div v-if="!isSubscribed && !statsPending && (listeningStats?.totalStreams ?? 0) === 0" class="mb-8">
       <UCard class="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/30">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center shrink-0">
@@ -185,7 +185,7 @@
               Bulk Upload
             </UButton>
             <UButton
-              v-if="bands.length > 0"
+              v-if="bands && bands.length > 0"
               color="violet"
               variant="soft"
               size="sm"
@@ -199,7 +199,7 @@
       </template>
 
       <!-- Loading Skeleton -->
-      <div v-if="bandsLoading" class="space-y-4">
+      <div v-if="bandsPending" class="space-y-4">
         <div v-for="i in 2" :key="i" class="flex items-center gap-4 p-4 rounded-lg bg-zinc-800/50">
           <USkeleton class="w-14 h-14 rounded-lg shrink-0" />
           <div class="flex-1 min-w-0">
@@ -221,7 +221,7 @@
       </div>
 
       <!-- No Bands -->
-      <div v-else-if="bands.length === 0" class="text-center py-8">
+      <div v-else-if="!bands || bands.length === 0" class="text-center py-8">
         <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
           <UIcon name="i-heroicons-microphone" class="w-8 h-8 text-violet-400" />
         </div>
@@ -273,7 +273,7 @@
             <div class="flex items-center gap-3 text-xs text-zinc-400 sm:hidden mt-0.5">
               <span>{{ formatNumber(band.total_streams) }} streams</span>
               <span>&middot;</span>
-              <span>${{ (band.total_earnings_cents / 100).toFixed(2) }}</span>
+              <span>${{ ((band.total_earnings_cents ?? 0) / 100).toFixed(2) }}</span>
             </div>
           </div>
 
@@ -284,7 +284,7 @@
               <p class="text-zinc-500">Streams</p>
             </div>
             <div class="text-center">
-              <p class="text-zinc-100 font-semibold">${{ (band.total_earnings_cents / 100).toFixed(2) }}</p>
+              <p class="text-zinc-100 font-semibold">${{ ((band.total_earnings_cents ?? 0) / 100).toFixed(2) }}</p>
               <p class="text-zinc-500">Earnings</p>
             </div>
           </div>
@@ -421,33 +421,95 @@
 </template>
 
 <script setup lang="ts">
+import type { Database } from '~/types/database'
 import type { Band } from '~/composables/useBand'
 
 definePageMeta({
   middleware: 'auth',
 })
 
-// Cached dashboard data structure
-interface CachedDashboardData {
-  bands: Band[]
-  listeningStats: {
-    totalSeconds: number
-    totalStreams: number
-    uniqueArtists: number
-  }
-}
-
 const user = useSupabaseUser()
-const client = useSupabaseClient()
+const client = useSupabaseClient<Database>()
 const { getUserBands } = useBand()
 const { getStreamUrl } = useAlbum()
 const { subscription, isSubscribed, freeTierStatus, loading: subscriptionLoading, openCustomerPortal, fetchSubscription } = useSubscription()
-const { distribution, fetchDistribution, loading: impactLoading } = useMoneyDistribution()
 
-const bands = ref<Band[]>([])
-const bandsLoading = ref(true)
+// Impact distribution interface
+interface ImpactDistribution {
+  period: string
+  artistPoolCents: number
+  artistBreakdown: Array<{ bandId: string }>
+}
+
 const syncing = ref(false)
 const toast = useToast()
+
+// Fetch bands using useAsyncData
+const { data: bands, pending: bandsPending } = await useLazyAsyncData(
+  'dashboard-bands',
+  async () => {
+    const bandsData = await getUserBands()
+
+    // Load fresh avatar URLs from keys
+    for (const band of bandsData) {
+      if (band.avatar_key) {
+        try {
+          band.avatar_url = await getStreamUrl(band.avatar_key)
+        } catch (e) {
+          console.error('Failed to load avatar for band:', band.id, e)
+        }
+      }
+    }
+
+    return bandsData
+  },
+  {
+    default: () => [] as Band[],
+  }
+)
+
+// Fetch listening stats using useAsyncData
+const { data: listeningStats, pending: statsPending } = await useLazyAsyncData(
+  'dashboard-listening-stats',
+  async () => {
+    if (!user.value?.id) return { totalSeconds: 0, totalStreams: 0, uniqueArtists: 0 }
+
+    const { data, error } = await client
+      .from('listening_history')
+      .select('duration_seconds, completed, band_id, is_free_play')
+      .eq('user_id', user.value.id)
+      .eq('is_free_play', false)
+
+    if (error) throw error
+
+    return {
+      totalSeconds: data?.reduce((sum, item) => sum + (item.duration_seconds || 0), 0) ?? 0,
+      totalStreams: data?.filter(item => item.completed).length ?? 0,
+      uniqueArtists: new Set(data?.map(item => item.band_id) ?? []).size,
+    }
+  },
+  {
+    default: () => ({ totalSeconds: 0, totalStreams: 0, uniqueArtists: 0 }),
+  }
+)
+
+// Fetch impact distribution for subscribers using useLazyAsyncData
+const { data: distribution, pending: impactLoading, refresh: refreshDistribution } = await useLazyAsyncData<ImpactDistribution | null>(
+  'dashboard-impact',
+  async () => {
+    // Only fetch if user is subscribed
+    if (!isSubscribed.value) return null
+
+    const data = await $fetch<ImpactDistribution>('/api/listener/money-distribution', {
+      query: { period: 'this-month' },
+    })
+    return data
+  },
+  {
+    default: () => null,
+    watch: [isSubscribed],
+  }
+)
 
 const syncSubscription = async () => {
   syncing.value = true
@@ -479,21 +541,9 @@ const syncSubscription = async () => {
   }
 }
 
-const listeningStats = ref({
-  totalSeconds: 0,
-  totalStreams: 0,
-  uniqueArtists: 0,
-})
-const listeningStatsLoading = ref(true)
-
 // Impact stats for hero card
 const impactStats = computed(() => {
   if (!distribution.value || !isSubscribed.value) return null
-
-  // Calculate this month's earnings
-  const now = new Date()
-  const currentMonth = now.getMonth()
-  const currentYear = now.getFullYear()
 
   // We'll use the "last-month" data if available, otherwise show 0
   let thisMonthEarned = 0
@@ -567,149 +617,8 @@ const formatHours = (seconds: number): string => {
   return hours.toFixed(1)
 }
 
-const loadListeningStats = async () => {
-  listeningStatsLoading.value = true
-  try {
-    // Only get user's own streams (not band owner views) and exclude free plays
-    const { data, error } = await client
-      .from('listening_history')
-      .select('duration_seconds, completed, band_id, is_free_play')
-      .eq('user_id', user.value?.id)
-      .eq('is_free_play', false)
-
-    if (error) throw error
-
-    if (data) {
-      listeningStats.value.totalSeconds = data.reduce((sum, item) => sum + (item.duration_seconds || 0), 0)
-      listeningStats.value.totalStreams = data.filter(item => item.completed).length
-      listeningStats.value.uniqueArtists = new Set(data.map(item => item.band_id)).size
-    }
-  } catch (e) {
-    console.error('Failed to load listening stats:', e)
-  } finally {
-    listeningStatsLoading.value = false
-  }
-}
-
-// Fetch dashboard data for caching
-const fetchDashboardData = async (): Promise<CachedDashboardData> => {
-  // Fetch bands
-  const bandsData = await getUserBands()
-
-  // Load fresh avatar URLs from keys
-  for (const band of bandsData) {
-    if (band.avatar_key) {
-      try {
-        band.avatar_url = await getStreamUrl(band.avatar_key)
-      } catch (e) {
-        console.error('Failed to load avatar for band:', band.id, e)
-      }
-    }
-  }
-
-  // Fetch listening stats
-  const { data: historyData, error } = await client
-    .from('listening_history')
-    .select('duration_seconds, completed, band_id, is_free_play')
-    .eq('user_id', user.value?.id)
-    .eq('is_free_play', false)
-
-  if (error) throw error
-
-  const stats = {
-    totalSeconds: 0,
-    totalStreams: 0,
-    uniqueArtists: 0,
-  }
-
-  if (historyData) {
-    stats.totalSeconds = historyData.reduce((sum, item) => sum + (item.duration_seconds || 0), 0)
-    stats.totalStreams = historyData.filter(item => item.completed).length
-    stats.uniqueArtists = new Set(historyData.map(item => item.band_id)).size
-  }
-
-  return {
-    bands: bandsData,
-    listeningStats: stats,
-  }
-}
-
-// Create user-scoped persisted store for dashboard data
-const dashboardStore = computed(() => {
-  if (!user.value?.id) return null
-  return usePersistedStore<CachedDashboardData>({
-    key: `dashboard_${user.value.id}`,
-    fetcher: fetchDashboardData,
-  })
-})
-
-// Apply cached data to local refs
-const applyCachedData = (cached: unknown) => {
-  const data = cached as CachedDashboardData
-  bands.value = JSON.parse(JSON.stringify(data.bands)) as Band[]
-  listeningStats.value = { ...data.listeningStats }
-}
-
-// Watch for subscription status changes and fetch impact data
-watch(isSubscribed, (newValue) => {
-  if (newValue && !distribution.value) {
-    fetchDistribution('this-month')
-  }
-})
-
-// Watch for cached data updates (background revalidation)
-watch(() => dashboardStore.value?.data.value, (cached) => {
-  if (cached && !bandsLoading.value) {
-    applyCachedData(cached)
-  }
-})
-
-onMounted(async () => {
+onMounted(() => {
   // Refresh subscription status on mount (in case webhook updated it)
   fetchSubscription()
-
-  // Load impact stats for subscribers
-  if (isSubscribed.value) {
-    fetchDistribution('this-month')
-  }
-
-  // Initialize from cache if available
-  if (dashboardStore.value) {
-    await dashboardStore.value.initialize()
-
-    // If we have cached data, use it
-    if (dashboardStore.value.data.value) {
-      applyCachedData(dashboardStore.value.data.value)
-      bandsLoading.value = false
-      listeningStatsLoading.value = false
-    } else {
-      // No cache - will be populated by initialize()
-      bandsLoading.value = dashboardStore.value.loading.value
-      listeningStatsLoading.value = dashboardStore.value.loading.value
-    }
-  } else {
-    // No user yet - fallback to direct load
-    try {
-      bands.value = await getUserBands()
-
-      // Load fresh avatar URLs from keys
-      for (const band of bands.value) {
-        if (band.avatar_key) {
-          try {
-            band.avatar_url = await getStreamUrl(band.avatar_key)
-          } catch (e) {
-            console.error('Failed to load avatar for band:', band.id, e)
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load bands:', e)
-    } finally {
-      bandsLoading.value = false
-    }
-
-    // Load listening stats
-    loadListeningStats()
-  }
 })
 </script>

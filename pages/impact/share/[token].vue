@@ -153,11 +153,7 @@
 
 <script setup lang="ts">
 const route = useRoute()
-const token = route.params.token as string
-
-const loading = ref(true)
-const error = ref<string | null>(null)
-const impactData = ref<any>(null)
+const getToken = () => route.params.token as string
 
 // Helper functions from useMoneyDistribution
 const formatCurrency = (cents: number): string => {
@@ -187,14 +183,37 @@ const getStreamUrl = async (key: string): Promise<string> => {
   return response.url
 }
 
-onMounted(async () => {
-  try {
-    const data = await $fetch(`/api/impact/share/${token}`)
+// Define impact data type
+interface ImpactShareData {
+  user: { displayName: string }
+  periodLabel: string
+  stats: {
+    totalEarned: number | null
+    artistsSupported: number | null
+    listeningTime: number | null
+    streamCount: number | null
+  }
+  artistBreakdown: Array<{
+    bandId: string
+    bandName: string
+    avatarKey?: string
+    avatarUrl?: string | null
+    streamCount: number
+    listeningSeconds: number
+    earningsCents: number
+  }>
+}
+
+// Fetch impact data using useLazyAsyncData
+const { data: impactData, pending: loading, error: fetchError } = await useLazyAsyncData(
+  `impact-share-${route.params.token}`,
+  async () => {
+    const data = await $fetch<ImpactShareData>(`/api/impact/share/${getToken()}`)
 
     // Fetch presigned URLs for artist avatars
     if (data.artistBreakdown && data.artistBreakdown.length > 0) {
       await Promise.all(
-        data.artistBreakdown.map(async (artist: any) => {
+        data.artistBreakdown.map(async (artist) => {
           if (artist.avatarKey) {
             try {
               artist.avatarUrl = await getStreamUrl(artist.avatarKey)
@@ -209,13 +228,16 @@ onMounted(async () => {
       )
     }
 
-    impactData.value = data
-  } catch (e: any) {
-    console.error('Failed to load shared impact:', e)
-    error.value = e.statusMessage || 'Failed to load shared impact'
-  } finally {
-    loading.value = false
+    return data
+  },
+  {
+    watch: [() => route.params.token],
   }
+)
+
+const error = computed(() => {
+  if (fetchError.value) return (fetchError.value as any).statusMessage || 'Failed to load shared impact'
+  return null
 })
 
 // SEO meta tags for social sharing

@@ -103,7 +103,7 @@
             </span>
             <span class="flex items-center gap-1">
               <UIcon name="i-heroicons-clock" class="w-4 h-4" />
-              {{ formatDuration(album.total_duration_seconds) }}
+              {{ formatDuration(album.total_duration_seconds || 0) }}
             </span>
           </div>
 
@@ -373,10 +373,7 @@ const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrac
 const { isAdmin } = useUserProfile()
 const user = useSupabaseUser()
 
-const album = ref<Album | null>(null)
-const band = ref<any>(null)
 const otherAlbums = ref<Album[]>([])
-const loading = ref(true)
 const coverUrl = ref<string | null>(null)
 const imageLoaded = ref(false)
 const savingAlbum = ref(false)
@@ -386,7 +383,65 @@ const trackCredits = ref<Record<string, TrackCredit[]>>({})
 const expandedTrack = ref<string | null>(null)
 const showActionsSheet = ref(false)
 const selectedTrack = ref<PlayerTrack | null>(null)
-const isOwnerOrAdmin = ref(false)
+const otherAlbumCovers = ref<Record<string, string>>({})
+
+// Fetch album data using useLazyAsyncData
+const { data: albumData, pending: loading, refresh: refreshAlbum } = await useLazyAsyncData(
+  `album-${route.params.artist}-${route.params.album}`,
+  async () => {
+    const artistSlug = route.params.artist as string
+    const albumSlug = route.params.album as string
+
+    // First load the band to check ownership
+    const bandResult = await getBandBySlug(artistSlug)
+    if (!bandResult) return null
+
+    // Check if current user is owner or admin
+    const isOwner = user.value && bandResult.owner_id === user.value.id
+    const isOwnerOrAdminFlag = isOwner || isAdmin.value
+
+    // Load album - use owner view if user is owner/admin to see unpublished albums
+    let albumResult: Album | null = null
+    if (isOwnerOrAdminFlag) {
+      albumResult = await getAlbumBySlugForOwner(artistSlug, albumSlug)
+    } else {
+      albumResult = await getAlbumBySlug(artistSlug, albumSlug)
+    }
+
+    if (!albumResult) return null
+
+    // Load cover URL if exists (cached)
+    let cover: string | null = null
+    if (albumResult.cover_key) {
+      cover = await getCachedCoverUrl(albumResult.cover_key)
+    } else if (albumResult.cover_url) {
+      cover = albumResult.cover_url
+    }
+
+    return {
+      album: albumResult,
+      band: bandResult,
+      coverUrl: cover,
+      isOwnerOrAdmin: isOwnerOrAdminFlag,
+    }
+  },
+  {
+    watch: [() => route.params.artist, () => route.params.album],
+  }
+)
+
+// Computed accessors
+const album = computed(() => albumData.value?.album ?? null)
+const band = computed(() => albumData.value?.band ?? null)
+const isOwnerOrAdmin = computed(() => albumData.value?.isOwnerOrAdmin ?? false)
+
+// Sync cover URL when data loads
+watch(albumData, (data) => {
+  if (data?.coverUrl) {
+    coverUrl.value = data.coverUrl
+    imageLoaded.value = false // Reset image loaded state for new album
+  }
+}, { immediate: true })
 
 const releaseTypeLabel = computed(() => {
   const types: Record<string, string> = {
@@ -548,9 +603,6 @@ useHead(() => ({
   ],
 }))
 
-// Store cover URLs for other albums
-const otherAlbumCovers = ref<Record<string, string>>({})
-
 // Load other albums from artist (lazy, in background)
 const loadOtherAlbums = async (bandId: string, currentAlbumId: string) => {
   try {
@@ -559,11 +611,11 @@ const loadOtherAlbums = async (bandId: string, currentAlbumId: string) => {
     otherAlbums.value = filtered
 
     // Load cover URLs for each album
-    for (const album of filtered) {
-      if (album.cover_key) {
-        getCachedCoverUrl(album.cover_key).then(url => {
+    for (const albumItem of filtered) {
+      if (albumItem.cover_key) {
+        getCachedCoverUrl(albumItem.cover_key).then(url => {
           if (url) {
-            otherAlbumCovers.value[album.id] = url
+            otherAlbumCovers.value[albumItem.id] = url
           }
         })
       }
@@ -586,77 +638,18 @@ const loadTrackMetadata = async (trackIds: string[]) => {
   ])
 }
 
-const loadAlbumData = async () => {
-  loading.value = true
-  isOwnerOrAdmin.value = false
-
-  try {
-    const artistSlug = route.params.artist as string
-    const albumSlug = route.params.album as string
-
-    // First load the band to check ownership
-    const bandResult = await getBandBySlug(artistSlug)
-    band.value = bandResult
-
-    if (!band.value) {
-      loading.value = false
-      return
-    }
-
-    // Check if current user is owner or admin
-    const isOwner = user.value && band.value.owner_id === user.value.id
-    isOwnerOrAdmin.value = isOwner || isAdmin.value
-
-    // Load album - use owner view if user is owner/admin to see unpublished albums
-    let albumResult: Album | null = null
-    if (isOwnerOrAdmin.value) {
-      albumResult = await getAlbumBySlugForOwner(artistSlug, albumSlug)
-    } else {
-      albumResult = await getAlbumBySlug(artistSlug, albumSlug)
-    }
-
-    album.value = albumResult
-
-    if (!album.value) {
-      loading.value = false
-      return
-    }
-
-    // Load cover URL if exists (cached)
-    if (album.value.cover_key) {
-      coverUrl.value = await getCachedCoverUrl(album.value.cover_key)
-    } else if (album.value.cover_url) {
-      coverUrl.value = album.value.cover_url
-    }
-
-    // Show the main content now
-    loading.value = false
-
+// Load secondary data when album data is available
+watch(albumData, (data) => {
+  if (data?.album && data?.band) {
     // Load secondary data in background (don't block rendering)
-    loadOtherAlbums(band.value.id, album.value.id)
-    checkAlbumSaved(album.value.id)
+    loadOtherAlbums(data.band.id, data.album.id)
+    checkAlbumSaved(data.album.id)
 
     // Fetch liked status and credits for all tracks
-    if (album.value.tracks?.length) {
-      const trackIds = album.value.tracks.map(t => t.id)
+    if (data.album.tracks?.length) {
+      const trackIds = data.album.tracks.map(t => t.id)
       loadTrackMetadata(trackIds)
     }
-
-  } catch (e) {
-    console.error('Failed to load album:', e)
-    loading.value = false
   }
-}
-
-// Watch for route param changes (e.g., navigating from track actions menu)
-watch(
-  () => [route.params.artist, route.params.album],
-  async ([newArtist, newAlbum], [oldArtist, oldAlbum]) => {
-    if ((newArtist !== oldArtist || newAlbum !== oldAlbum) && newArtist && newAlbum) {
-      await loadAlbumData()
-    }
-  }
-)
-
-onMounted(loadAlbumData)
+}, { immediate: true })
 </script>

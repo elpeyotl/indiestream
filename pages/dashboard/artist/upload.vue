@@ -100,11 +100,6 @@ const { state, toast, uploadFileWithProgress, uploadProcessedCover, getAudioDura
 const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 const user = useSupabaseUser()
 
-// Local state (not persisted)
-const bands = ref<Band[]>([])
-const bandsLoading = ref(true)
-const editLoading = ref(false)
-
 // Deezer modal
 const deezerModalOpen = ref(false)
 const deezerModalTrackIndex = ref<number | null>(null)
@@ -113,16 +108,46 @@ const deezerInitialQuery = ref('')
 // Check for edit mode query param
 const editAlbumId = computed(() => route.query.edit as string | undefined)
 
-// Load album for editing if edit param is present
-const loadEditAlbum = async (albumId: string) => {
-  editLoading.value = true
-  try {
+// Load bands for create mode using useLazyAsyncData
+const { data: bands, pending: bandsLoading } = await useLazyAsyncData(
+  'upload-bands',
+  async () => {
+    // Skip if in edit mode
+    if (editAlbumId.value) return []
+
+    const loadedBands = await getUserBands()
+    // Load avatar URLs from keys
+    for (const band of loadedBands) {
+      if (band.avatar_key) {
+        try {
+          band.avatar_url = await getStreamUrl(band.avatar_key)
+        } catch (e) {
+          console.error('Failed to load avatar for band:', band.name, e)
+        }
+      }
+    }
+    // Only show active bands (pending/suspended can't upload)
+    return loadedBands.filter(b => b.status === 'active')
+  },
+  {
+    server: false,
+    default: () => [] as Band[],
+  }
+)
+
+// Load album for edit mode using useLazyAsyncData
+const { pending: editLoading } = await useLazyAsyncData(
+  `upload-edit-${editAlbumId.value || 'none'}`,
+  async () => {
+    // Skip if not in edit mode
+    if (!editAlbumId.value) return null
+
     // Fetch album with tracks (no moderation filter for owner)
-    const album = await getAlbumById(albumId, false, true)
+    const album = await getAlbumById(editAlbumId.value, false, true)
     if (!album) {
       toast.add({ title: 'Album not found', color: 'red' })
       navigateTo('/dashboard')
-      return
+      return null
     }
 
     // Get band data
@@ -130,7 +155,7 @@ const loadEditAlbum = async (albumId: string) => {
     if (!band) {
       toast.add({ title: 'Artist not found', color: 'red' })
       navigateTo('/dashboard')
-      return
+      return null
     }
 
     // Load band avatar
@@ -158,45 +183,18 @@ const loadEditAlbum = async (albumId: string) => {
 
     // Load into wizard state
     await loadAlbumForEdit(album, band, coverUrl, credits)
-  } catch (e: any) {
-    console.error('Failed to load album for editing:', e)
-    toast.add({ title: 'Failed to load album', description: e.message, color: 'red' })
-    navigateTo('/dashboard')
-  } finally {
-    editLoading.value = false
-  }
-}
 
-// Load bands and moderation setting
-onMounted(async () => {
-  // Load moderation setting in parallel
+    return { album, band }
+  },
+  {
+    server: false,
+    watch: [editAlbumId],
+  }
+)
+
+// Load moderation setting on mount
+onMounted(() => {
   loadModerationSetting()
-
-  // If edit mode, load the album
-  if (editAlbumId.value) {
-    await loadEditAlbum(editAlbumId.value)
-    return
-  }
-
-  try {
-    const loadedBands = await getUserBands()
-    // Load avatar URLs from keys
-    for (const band of loadedBands) {
-      if (band.avatar_key) {
-        try {
-          band.avatar_url = await getStreamUrl(band.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar for band:', band.name, e)
-        }
-      }
-    }
-    // Only show active bands (pending/suspended can't upload)
-    bands.value = loadedBands.filter(b => b.status === 'active')
-  } catch (e) {
-    console.error('Failed to load bands:', e)
-  } finally {
-    bandsLoading.value = false
-  }
 })
 
 // Deezer modal

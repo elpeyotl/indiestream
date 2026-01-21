@@ -99,13 +99,13 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
       <UCard class="bg-zinc-900/50 border-zinc-800">
         <div class="text-center">
-          <p class="text-3xl font-bold text-zinc-100">{{ formatNumber(band.total_streams) }}</p>
+          <p class="text-3xl font-bold text-zinc-100">{{ formatNumber(band.total_streams || 0) }}</p>
           <p class="text-sm text-zinc-400">Total Streams</p>
         </div>
       </UCard>
       <UCard class="bg-zinc-900/50 border-zinc-800">
         <div class="text-center">
-          <p class="text-3xl font-bold text-teal-400">${{ (band.total_earnings_cents / 100).toFixed(2) }}</p>
+          <p class="text-3xl font-bold text-teal-400">${{ ((band.total_earnings_cents || 0) / 100).toFixed(2) }}</p>
           <p class="text-sm text-zinc-400">Total Earnings</p>
         </div>
       </UCard>
@@ -129,8 +129,8 @@
         <DashboardArtistReleasesTab
           :albums="albums"
           :album-covers="albumCovers"
-          :band-slug="band.slug"
-          :band-status="band.status"
+          :band-slug="band.slug || ''"
+          :band-status="band.status || 'pending'"
           @delete-album="confirmDeleteAlbum"
         />
       </template>
@@ -241,11 +241,78 @@ const { getBandById, deleteBand } = useBand()
 const { getBandAlbums, getStreamUrl, deleteAlbum } = useAlbum()
 const { subscribeToAll, subscribeToAlbumTracks } = useArtistRealtime()
 
-// Core state
-const band = ref<Band | null>(null)
+// Mutable state for albums (can be updated by realtime)
 const albums = ref<Album[]>([])
 const albumCovers = ref<Record<string, string>>({})
-const loading = ref(true)
+
+// Fetch band data using useLazyAsyncData
+const { data: band, pending: loading, refresh: refreshBand } = await useLazyAsyncData(
+  `dashboard-artist-${route.params.id}`,
+  async () => {
+    const id = route.params.id as string
+    const bandData = await getBandById(id)
+
+    if (!bandData) return null
+
+    // Load avatar URL from key if available
+    if (bandData.avatar_key) {
+      try {
+        bandData.avatar_url = await getStreamUrl(bandData.avatar_key)
+      } catch (e) {
+        console.error('Failed to load avatar:', e)
+      }
+    }
+
+    // Load banner URL from key if available
+    if (bandData.banner_key) {
+      try {
+        bandData.banner_url = await getStreamUrl(bandData.banner_key)
+      } catch (e) {
+        console.error('Failed to load banner:', e)
+      }
+    }
+
+    return bandData
+  },
+  {
+    server: false,
+  }
+)
+
+// Load albums when band is available
+watch(band, async (newBand) => {
+  if (!newBand) return
+
+  try {
+    // Load albums (including unpublished drafts, no moderation filtering)
+    albums.value = await getBandAlbums(newBand.id, true, false)
+
+    // Load cover URLs
+    for (const album of albums.value) {
+      if (album.cover_key && !albumCovers.value[album.id]) {
+        try {
+          albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
+        } catch (e) {
+          console.error('Failed to load cover:', e)
+        }
+      }
+    }
+
+    // Subscribe to realtime updates
+    subscribeToAll(newBand.id, {
+      onStreamUpdate: reloadBandStats,
+      onBandUpdate: reloadBandStats,
+      onAlbumUpdate: reloadAlbums,
+    })
+
+    // Subscribe to track changes for each album (for moderation status updates)
+    for (const album of albums.value) {
+      subscribeToAlbumTracks(album.id, reloadAlbums)
+    }
+  } catch (e) {
+    console.error('Failed to load albums:', e)
+  }
+}, { immediate: true })
 
 // Delete artist state
 const deleting = ref(false)
@@ -315,20 +382,7 @@ const handleDelete = async () => {
 
 // Reload band stats (for realtime updates)
 const reloadBandStats = async () => {
-  if (!band.value) return
-  try {
-    const updatedBand = await getBandById(band.value.id)
-    if (updatedBand) {
-      // Preserve avatar/banner URLs we already loaded
-      const avatarUrl = band.value.avatar_url
-      const bannerUrl = band.value.banner_url
-      band.value = updatedBand
-      band.value.avatar_url = avatarUrl
-      band.value.banner_url = bannerUrl
-    }
-  } catch (e) {
-    console.error('Failed to reload band stats:', e)
-  }
+  await refreshBand()
 }
 
 // Reload albums (for realtime updates on moderation status)
@@ -337,10 +391,10 @@ const reloadAlbums = async () => {
   try {
     albums.value = await getBandAlbums(band.value.id, true, false)
     // Reload cover URLs for any new albums
-    for (const album of albums.value) {
-      if (album.cover_key && !albumCovers.value[album.id]) {
+    for (const albumItem of albums.value) {
+      if (albumItem.cover_key && !albumCovers.value[albumItem.id]) {
         try {
-          albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
+          albumCovers.value[albumItem.id] = await getStreamUrl(albumItem.cover_key)
         } catch (e) {
           console.error('Failed to load cover:', e)
         }
@@ -373,80 +427,23 @@ const handleDeleteAlbum = async () => {
   }
 }
 
-onMounted(async () => {
+// Handle URL query params on mount
+onMounted(() => {
   initTabFromUrl()
 
-  try {
-    const id = route.params.id as string
-    band.value = await getBandById(id)
+  // Check for Stripe Connect return
+  if (route.query.connected === 'true') {
+    toast.add({
+      title: 'Stripe Connected',
+      description: 'Your payout account is being set up. It may take a moment to verify.',
+      icon: 'i-heroicons-check-circle',
+      color: 'green',
+    })
+    router.replace({ query: { ...route.query, connected: undefined, tab: 'earnings' } })
+  }
 
-    // Check for Stripe Connect return
-    if (route.query.connected === 'true') {
-      toast.add({
-        title: 'Stripe Connected',
-        description: 'Your payout account is being set up. It may take a moment to verify.',
-        icon: 'i-heroicons-check-circle',
-        color: 'green',
-      })
-      router.replace({ query: { ...route.query, connected: undefined, tab: 'earnings' } })
-    }
-
-    if (route.query.refresh === 'true') {
-      router.replace({ query: { ...route.query, refresh: undefined, tab: 'earnings' } })
-    }
-
-    if (band.value) {
-      // Load avatar URL from key if available
-      if (band.value.avatar_key) {
-        try {
-          band.value.avatar_url = await getStreamUrl(band.value.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar:', e)
-        }
-      }
-
-      // Load banner URL from key if available
-      if (band.value.banner_key) {
-        try {
-          band.value.banner_url = await getStreamUrl(band.value.banner_key)
-        } catch (e) {
-          console.error('Failed to load banner:', e)
-        }
-      }
-
-      // Load albums (including unpublished drafts, no moderation filtering)
-      albums.value = await getBandAlbums(band.value.id, true, false)
-
-      // Load cover URLs
-      for (const album of albums.value) {
-        if (album.cover_key) {
-          try {
-            albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
-          } catch (e) {
-            console.error('Failed to load cover:', e)
-          }
-        }
-      }
-
-      // Subscribe to realtime updates
-      // - Stream updates: refresh band stats (total_streams, total_earnings_cents)
-      // - Band updates: refresh if admin changes status or other fields
-      // - Album updates: refresh album list if moderation status changes
-      subscribeToAll(band.value.id, {
-        onStreamUpdate: reloadBandStats,
-        onBandUpdate: reloadBandStats,
-        onAlbumUpdate: reloadAlbums,
-      })
-
-      // Subscribe to track changes for each album (for moderation status updates)
-      for (const album of albums.value) {
-        subscribeToAlbumTracks(album.id, reloadAlbums)
-      }
-    }
-  } catch (e) {
-    console.error('Failed to load band:', e)
-  } finally {
-    loading.value = false
+  if (route.query.refresh === 'true') {
+    router.replace({ query: { ...route.query, refresh: undefined, tab: 'earnings' } })
   }
 })
 </script>

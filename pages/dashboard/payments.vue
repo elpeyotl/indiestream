@@ -5,9 +5,9 @@
       description="View your subscription invoices and receipts"
     />
 
-    <LoadingSpinner v-if="loading" />
+    <LoadingSpinner v-if="pending" />
 
-    <template v-else>
+    <template v-else-if="paymentData">
       <!-- Summary Card -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <UCard class="bg-zinc-900/50 border-zinc-800">
@@ -181,40 +181,23 @@ interface PaymentData {
   subscriptionStatus: string
 }
 
-const user = useSupabaseUser()
-const loading = ref(true)
-const paymentData = ref<PaymentData>({
-  invoices: [],
-  totalPaid: 0,
-  subscriptionStatus: 'inactive',
+// Fetch payment data using Nuxt's useFetch
+const { data: paymentData, pending, refresh } = await useLazyFetch<PaymentData>('/api/stripe/payment-history', {
+  key: 'payment-history',
+  default: () => ({
+    invoices: [],
+    totalPaid: 0,
+    subscriptionStatus: 'inactive',
+  }),
 })
-
-// Fetch payment data from API
-const fetchPaymentData = async (): Promise<PaymentData> => {
-  return await $fetch<PaymentData>('/api/stripe/payment-history')
-}
-
-// User-scoped persisted store for payment history
-const paymentsStore = computed(() => {
-  if (!user.value?.id) return null
-  return usePersistedStore<PaymentData>({
-    key: `payments_${user.value.id}`,
-    fetcher: fetchPaymentData,
-  })
-})
-
-// Apply cached data to local refs
-const applyCachedData = (cached: unknown) => {
-  const data = cached as PaymentData
-  paymentData.value = JSON.parse(JSON.stringify(data)) as PaymentData
-}
 
 const isSubscribed = computed(() => {
+  if (!paymentData.value) return false
   return ['active', 'trialing'].includes(paymentData.value.subscriptionStatus)
 })
 
 const statusLabel = computed(() => {
-  const status = paymentData.value.subscriptionStatus
+  const status = paymentData.value?.subscriptionStatus
   switch (status) {
     case 'active':
       return 'Active'
@@ -244,7 +227,7 @@ const formatDate = (timestamp: number): string => {
   })
 }
 
-const getStatusColor = (status: string | null): string => {
+const getStatusColor = (status: string | null): 'green' | 'yellow' | 'gray' | 'red' => {
   switch (status) {
     case 'paid':
       return 'green'
@@ -259,34 +242,4 @@ const getStatusColor = (status: string | null): string => {
       return 'gray'
   }
 }
-
-// Watch for store data updates (background revalidation)
-watch(
-  () => paymentsStore.value?.data.value,
-  (newData) => {
-    if (newData) {
-      applyCachedData(newData)
-    }
-  }
-)
-
-onMounted(async () => {
-  const store = paymentsStore.value
-  if (store) {
-    await store.initialize()
-    if (store.data.value) {
-      applyCachedData(store.data.value)
-    }
-    loading.value = store.loading.value
-  } else {
-    // Fallback if no user
-    try {
-      paymentData.value = await fetchPaymentData()
-    } catch (e) {
-      console.error('Failed to load payment history:', e)
-    } finally {
-      loading.value = false
-    }
-  }
-})
 </script>
