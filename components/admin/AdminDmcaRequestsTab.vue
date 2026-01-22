@@ -349,15 +349,15 @@ const dmcaStats = computed(() => {
 })
 
 const getDmcaStatusColor = (status: string) => {
-  const colors: Record<string, string> = {
-    pending: 'yellow',
-    processing: 'blue',
-    content_removed: 'green',
-    counter_notice: 'orange',
-    resolved: 'gray',
-    rejected: 'red',
+  const colors = {
+    pending: 'yellow' as const,
+    processing: 'blue' as const,
+    content_removed: 'green' as const,
+    counter_notice: 'orange' as const,
+    resolved: 'gray' as const,
+    rejected: 'red' as const,
   }
-  return colors[status] || 'gray'
+  return (colors as Record<string, 'yellow' | 'blue' | 'green' | 'orange' | 'gray' | 'red'>)[status] || ('gray' as const)
 }
 
 const loadDmcaRequests = async () => {

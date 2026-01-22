@@ -232,7 +232,7 @@
           </UFormGroup>
 
           <UFormGroup label="Bio" hint="Full bio shown in About tab">
-            <UTextarea v-model="editBandForm.bio" rows="3" />
+            <UTextarea v-model="editBandForm.bio" :rows="3" />
           </UFormGroup>
 
           <div class="grid grid-cols-2 gap-4">
@@ -312,7 +312,7 @@
 
             <div v-if="editBandForm.status === 'suspended'" class="mt-4">
               <UFormGroup label="Suspension Reason">
-                <UTextarea v-model="editBandForm.suspension_reason" rows="2" />
+                <UTextarea v-model="editBandForm.suspension_reason" :rows="2" />
               </UFormGroup>
             </div>
 
