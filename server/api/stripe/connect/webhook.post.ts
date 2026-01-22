@@ -138,11 +138,6 @@ export default defineEventHandler(async (event) => {
             .eq('stripe_account_id', accountId)
 
           console.log(`Stripe account ${accountId} disconnected`)
-              })
-              .eq('id', profile.id)
-
-            console.log(`User ${profile.id} disconnected Stripe account`)
-          }
         }
         break
       }
