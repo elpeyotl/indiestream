@@ -264,7 +264,7 @@
           <div class="flex gap-2">
             <UButton
               color="gray"
-              variant="dashed"
+              variant="outline"
               size="sm"
               class="flex-1"
               @click="$emit('add-credit')"

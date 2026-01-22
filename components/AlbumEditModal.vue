@@ -15,7 +15,7 @@
             <div class="w-32 h-32 rounded-lg overflow-hidden bg-zinc-800 border border-zinc-700">
               <img
                 v-if="coverPreview || coverUrl"
-                :src="coverPreview || coverUrl"
+                :src="coverPreview ?? coverUrl ?? undefined"
                 class="w-full h-full object-cover"
                 alt="Album cover"
               />
@@ -282,7 +282,8 @@
                   <div class="flex items-center gap-2">
                     <span class="text-xs text-zinc-500 w-10">ISRC</span>
                     <UInput
-                      v-model="track.isrc"
+                      :model-value="track.isrc ?? undefined"
+                      @update:model-value="track.isrc = $event ?? null"
                       placeholder="e.g. USRC12345678"
                       size="xs"
                       class="flex-1"
@@ -295,7 +296,8 @@
                   <div class="flex items-center gap-2">
                     <span class="text-xs text-zinc-500 w-10">ISWC</span>
                     <UInput
-                      v-model="track.iswc"
+                      :model-value="track.iswc ?? undefined"
+                      @update:model-value="track.iswc = $event ?? null"
                       placeholder="e.g. T-123.456.789-0"
                       size="xs"
                       class="flex-1"
@@ -346,7 +348,8 @@
                       :disabled="saving"
                     />
                     <UInput
-                      v-model="credit.ipi_number"
+                      :model-value="credit.ipi_number ?? undefined"
+                      @update:model-value="credit.ipi_number = $event ?? null"
                       placeholder="IPI #"
                       size="xs"
                       class="w-28"
@@ -367,7 +370,7 @@
                   <div class="flex gap-2">
                     <UButton
                       color="gray"
-                      variant="dashed"
+                      variant="outline"
                       size="xs"
                       class="flex-1"
                       :disabled="saving"
@@ -527,9 +530,9 @@ watch(() => props.album, (newAlbum) => {
   if (newAlbum) {
     form.title = newAlbum.title
     form.description = newAlbum.description || ''
-    form.release_type = newAlbum.release_type
+    form.release_type = newAlbum.release_type as 'album' | 'ep' | 'single'
     form.release_date = newAlbum.release_date?.split('T')[0] || ''
-    form.is_published = newAlbum.is_published
+    form.is_published = newAlbum.is_published ?? false
     form.label_name = newAlbum.label_name || ''
     form.p_line = newAlbum.p_line || ''
     form.c_line = newAlbum.c_line || ''
