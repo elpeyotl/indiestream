@@ -124,19 +124,10 @@ export default defineEventHandler(async (event) => {
 
       case 'account.application.deauthorized': {
         // User disconnected their Stripe account
-        const application = stripeEvent.data.object as Stripe.Application
+        const application = stripeEvent.data.object as any
         const accountId = typeof application.account === 'string' ? application.account : application.account?.id
 
-        // Look up user by Stripe account ID
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('stripe_account_id', accountId)
-          .single()
-
-        const userId = profile?.id
-
-        if (userId) {
+        if (accountId) {
           await supabase
             .from('profiles')
             .update({
@@ -144,24 +135,9 @@ export default defineEventHandler(async (event) => {
               stripe_account_status: 'not_connected',
               stripe_onboarding_complete: false,
             })
-            .eq('id', userId)
+            .eq('stripe_account_id', accountId)
 
-          console.log(`User ${userId} disconnected Stripe account`)
-        } else {
-          // Try to find by account ID
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('stripe_account_id', account.id)
-            .single()
-
-          if (profile) {
-            await supabase
-              .from('profiles')
-              .update({
-                stripe_account_id: null,
-                stripe_account_status: 'not_connected',
-                stripe_onboarding_complete: false,
+          console.log(`Stripe account ${accountId} disconnected`)
               })
               .eq('id', profile.id)
 

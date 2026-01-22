@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
 
         if (userId && subscriptionId) {
           // Get subscription details
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any
 
           const { error: upsertError } = await supabase.from('subscriptions').upsert({
             user_id: userId,
@@ -120,7 +120,7 @@ export default defineEventHandler(async (event) => {
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
-        const subscription = stripeEvent.data.object as Stripe.Subscription
+        const subscription = stripeEvent.data.object as any
 
         // Try to get userId from metadata first, otherwise look up by subscription ID
         let userId = subscription.metadata?.supabase_user_id
@@ -172,11 +172,11 @@ export default defineEventHandler(async (event) => {
       }
 
       case 'invoice.payment_succeeded': {
-        const invoice = stripeEvent.data.object as Stripe.Invoice
+        const invoice = stripeEvent.data.object as any
         const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
 
         if (subscriptionId) {
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any
           const userId = subscription.metadata?.supabase_user_id
 
           if (userId) {
@@ -193,7 +193,7 @@ export default defineEventHandler(async (event) => {
       }
 
       case 'invoice.payment_failed': {
-        const invoice = stripeEvent.data.object as Stripe.Invoice
+        const invoice = stripeEvent.data.object as any
         const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
 
         if (subscriptionId) {

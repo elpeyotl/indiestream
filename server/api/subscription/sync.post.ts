@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
         return { synced: false, message: 'No Stripe subscription found' }
       }
 
-      const subscription = subscriptions.data[0] as Stripe.Subscription
+      const subscription = subscriptions.data[0] as any
 
       // Update the database
       const { error: upsertError } = await supabase
@@ -86,7 +86,7 @@ export default defineEventHandler(async (event) => {
       return { synced: false, message: 'No Stripe subscription found for customer' }
     }
 
-    const subscription = subscriptions.data[0] as Stripe.Subscription
+    const subscription = subscriptions.data[0] as any
 
     // Update the database
     const { error: updateError } = await supabase
