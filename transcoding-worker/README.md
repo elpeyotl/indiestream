@@ -1,4 +1,4 @@
-# IndieStream Transcoding Worker
+# Fairtune Transcoding Worker
 
 Background worker that transcodes lossless audio (WAV, FLAC, AIFF) to dual formats:
 - **AAC 256kbps** - Standard quality streaming
@@ -30,7 +30,7 @@ fly launch --no-deploy
 ```
 
 When prompted:
-- App name: `indiestream-transcoder` (or your preferred name)
+- App name: `fairtune-transcoder` (or your preferred name)
 - Region: Choose one close to your R2 bucket
 - Don't set up PostgreSQL or Redis
 
@@ -54,7 +54,7 @@ Environment variables:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `TRANSCODING_SECRET` | Yes | - | Secret key matching your Nuxt config |
-| `API_BASE_URL` | Yes | - | Your IndieStream API URL |
+| `API_BASE_URL` | Yes | - | Your Fairtune API URL |
 | `POLL_INTERVAL` | No | 30 | Seconds between queue polls |
 | `BATCH_SIZE` | No | 3 | Jobs to process per poll |
 

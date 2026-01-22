@@ -54,7 +54,7 @@
     <!-- Features Section -->
     <section class="container mx-auto px-4 py-24">
       <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">Why Fairstream?</h2>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Why Fairtune?</h2>
         <p class="text-zinc-400 max-w-xl mx-auto">A streaming platform built on transparency and fair artist compensation.</p>
       </div>
 

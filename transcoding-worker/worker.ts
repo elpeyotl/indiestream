@@ -13,7 +13,7 @@
  *
  * Environment variables:
  *   - TRANSCODING_SECRET: Secret key for API authentication (required)
- *   - API_BASE_URL: Base URL of the IndieStream API (required)
+ *   - API_BASE_URL: Base URL of the Fairtune API (required)
  *   - POLL_INTERVAL: Seconds between queue polls when idle (default: 30)
  *   - BATCH_SIZE: Number of jobs to fetch per poll (default: 3)
  */
@@ -314,7 +314,7 @@ function printStats(): void {
 }
 
 async function main(): Promise<void> {
-  log('=== IndieStream Transcoding Worker ===')
+  log('=== Fairtune Transcoding Worker ===')
   log(`API: ${API_BASE_URL}`)
   log(`Poll interval: ${POLL_INTERVAL / 1000}s`)
   log(`Batch size: ${BATCH_SIZE}`)

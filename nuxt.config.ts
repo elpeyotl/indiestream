@@ -70,8 +70,8 @@ export default defineNuxtConfig({
     strategies: 'generateSW',
     registerType: 'autoUpdate',
     manifest: {
-      name: 'Fairstream',
-      short_name: 'Fairstream',
+      name: 'Fairtune',
+      short_name: 'Fairtune',
       description: 'Stream Fair. Support Direct.',
       theme_color: '#8b5cf6',
       background_color: '#09090b',
@@ -150,7 +150,7 @@ export default defineNuxtConfig({
   // App configuration
   app: {
     head: {
-      title: 'Fairstream - Stream Fair. Support Direct.',
+      title: 'Fairtune - Stream Fair. Support Direct.',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover' },
@@ -162,7 +162,7 @@ export default defineNuxtConfig({
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-        { name: 'apple-mobile-web-app-title', content: 'Fairstream' },
+        { name: 'apple-mobile-web-app-title', content: 'Fairtune' },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' },
@@ -216,7 +216,7 @@ export default defineNuxtConfig({
     r2AccountId: process.env.R2_ACCOUNT_ID,
     resendApiKey: process.env.RESEND_API_KEY,
     resendFromEmail: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-    contactEmail: process.env.CONTACT_EMAIL || 'hello.indiestream@gmail.com',
+    contactEmail: process.env.CONTACT_EMAIL || 'hello@fairtune.fm',
     transcodingSecret: process.env.TRANSCODING_SECRET,
 
     // Public keys (exposed to client)
@@ -224,7 +224,7 @@ export default defineNuxtConfig({
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-      appUrl: process.env.APP_URL || 'https://fairstream.fm',
+      appUrl: process.env.APP_URL || 'https://fairtune.fm',
       comingSoonMode: process.env.COMING_SOON_MODE === 'true',
     },
   },

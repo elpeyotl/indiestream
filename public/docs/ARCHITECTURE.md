@@ -1,4 +1,4 @@
-# Indiestream Platform Architecture
+# Fairtune Platform Architecture
 
 **Document Version:** 1.1
 **Date:** January 2026 (Updated: HiFi Analysis Added)
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Indiestream is built on a modern, serverless architecture optimized for cost efficiency and global scalability. The platform leverages best-in-class cloud services while maintaining significantly lower operational costs than traditional AWS or Google Cloud deployments.
+Fairtune is built on a modern, serverless architecture optimized for cost efficiency and global scalability. The platform leverages best-in-class cloud services while maintaining significantly lower operational costs than traditional AWS or Google Cloud deployments.
 
 **Key Metrics:**
 - **Estimated monthly cost at 10,000 MAU:** ~$150-300/month
@@ -318,7 +318,7 @@ This section analyzes the feasibility and cost implications of adding high-quali
 
 ### Bandwidth Impact (Still Free!)
 
-One of Indiestream's biggest advantages is **zero egress fees** with Cloudflare R2. This means:
+One of Fairtune's biggest advantages is **zero egress fees** with Cloudflare R2. This means:
 
 | Quality | Data per Stream | 1M streams/month | Egress Cost |
 |---------|-----------------|------------------|-------------|
@@ -449,7 +449,7 @@ Proposed Architecture (Multi-quality):
 
 ## Conclusion
 
-Indiestream's architecture is **production-ready, cost-efficient, and globally scalable**. The combination of Vercel, Supabase, and Cloudflare R2 provides:
+Fairtune's architecture is **production-ready, cost-efficient, and globally scalable**. The combination of Vercel, Supabase, and Cloudflare R2 provides:
 
 1. **10-14x lower costs** than equivalent AWS/GCP deployments
 2. **Global performance** with zero egress fees
@@ -475,4 +475,4 @@ The platform can comfortably serve **100,000+ monthly active users** on the curr
 
 ---
 
-*Document prepared by the Indiestream Technical Team*
+*Document prepared by the Fairtune Technical Team*

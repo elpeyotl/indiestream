@@ -103,7 +103,7 @@ const renderedContent = computed(() => {
 const error = computed(() => !!fetchError.value || (!loading.value && !docFiles[slug.value]))
 
 useHead({
-  title: computed(() => `${docTitles[slug.value] || 'Documentation'} - Fairstream`),
+  title: computed(() => `${docTitles[slug.value] || 'Documentation'} - Fairtune`),
 })
 </script>
 

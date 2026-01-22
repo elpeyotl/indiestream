@@ -267,7 +267,7 @@
               />
             </div>
             <p class="text-sm text-zinc-400 truncate hidden sm:block">
-              fairstream.fm/{{ band.slug }}
+              fairtune.fm/{{ band.slug }}
             </p>
             <!-- Mobile stats (shown below name on small screens) -->
             <div class="flex items-center gap-3 text-xs text-zinc-400 sm:hidden mt-0.5">

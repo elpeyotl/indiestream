@@ -78,11 +78,11 @@ export const getNewReleaseEmailTemplate = ({
     </mj-text>
 
     <mj-text font-size="13px" color="#71717a" padding-top="24px">
-      You're receiving this because you follow ${bandName} on Fairstream. Your support helps independent artists thrive.
+      You're receiving this because you follow ${bandName} on Fairtune. Your support helps independent artists thrive.
     </mj-text>
   `
 
-  return wrapInBaseTemplate(content, `${bandName} released "${albumTitle}" - Listen now on Fairstream`)
+  return wrapInBaseTemplate(content, `${bandName} released "${albumTitle}" - Listen now on Fairtune`)
 }
 
 export default getNewReleaseEmailTemplate

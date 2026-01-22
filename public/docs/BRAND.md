@@ -1,8 +1,8 @@
-# Indiestream Brand Guidelines
+# Fairtune Brand Guidelines
 
 ## Platform Identity
 
-**Name:** Indiestream
+**Name:** Fairtune
 **Tagline:** "Stream Fair. Support Direct."
 **Mission:** Create a streaming economy where independent artists are paid fairly and fans know exactly where their money goes.
 
@@ -162,7 +162,7 @@ Confident, creative, forward-thinking. We're building the future of fair streami
 ## Positioning
 
 **For indie music fans** who want their subscription to matter,
-**Indiestream** is the streaming platform that **shows you exactly how your money supports the artists you love** —
+**Fairtune** is the streaming platform that **shows you exactly how your money supports the artists you love** —
 unlike Spotify where payments are hidden and artists earn fractions of pennies.
 
 ### vs. Competitors
@@ -179,8 +179,8 @@ unlike Spotify where payments are hidden and artists earn fractions of pennies.
 ## Logo Guidelines
 
 ### Logo Mark
-- **Icon:** Rounded square with gradient (violet → fuchsia), containing "IS" initials
-- **Wordmark:** "Indie" in gradient text + "stream" in white
+- **Icon:** Rounded square with gradient (violet → fuchsia), containing "FT" initials
+- **Wordmark:** "Fair" in gradient text + "tune" in white
 - **Full Logo:** Icon + Wordmark combination
 
 ### Color Usage
@@ -202,10 +202,10 @@ unlike Spotify where payments are hidden and artists earn fractions of pennies.
 
 ## Domain & Social
 
-**Primary Domain:** indiestream.art ✅
-**Why .art:** Emphasizes the artistic, creative nature of the platform. Unique and memorable.
+**Primary Domain:** fairtune.fm ✅
+**Why .fm:** The .fm TLD is the music industry standard (last.fm, indie.fm). Instantly communicates "this is about music" and is memorable and professional.
 
-**Social Handles:** @indiestream (check: Twitter/X, Instagram, TikTok, Threads)
+**Social Handles:** @fairtune (check: Twitter/X, Instagram, TikTok, Threads)
 
 ---
 

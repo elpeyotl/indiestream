@@ -8,14 +8,14 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">1. Acceptance of Terms</h2>
           <p class="text-zinc-400 mb-4">
-            By accessing or using Fairstream ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
+            By accessing or using Fairtune ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
           </p>
         </section>
 
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">2. Description of Service</h2>
           <p class="text-zinc-400 mb-4">
-            Fairstream is a music streaming platform that connects independent artists with listeners. We provide:
+            Fairtune is a music streaming platform that connects independent artists with listeners. We provide:
           </p>
           <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4">
             <li>Music streaming services for subscribers</li>
@@ -47,12 +47,12 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">5. Artist Terms</h2>
           <p class="text-zinc-400 mb-4">
-            Artists who upload content to Fairstream agree that:
+            Artists who upload content to Fairtune agree that:
           </p>
           <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4">
             <li>They own or have the rights to distribute all uploaded content</li>
             <li>Content does not infringe on any third-party rights</li>
-            <li>They grant Fairstream a license to stream and distribute their content</li>
+            <li>They grant Fairtune a license to stream and distribute their content</li>
             <li>Revenue will be distributed according to our payment terms</li>
           </ul>
         </section>
@@ -74,7 +74,7 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">6a. AI-Generated Content Policy</h2>
           <p class="text-zinc-400 mb-4">
-            Fairstream is a platform for human artists. We have a strict policy regarding AI-generated content:
+            Fairtune is a platform for human artists. We have a strict policy regarding AI-generated content:
           </p>
           <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4">
             <li><strong class="text-zinc-300">AI-generated music is NOT permitted.</strong> Content where the core composition, melody, or performance was created by AI systems (such as Suno, Udio, or similar) is prohibited.</li>
@@ -90,10 +90,10 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">6b. Copyright and DMCA</h2>
           <p class="text-zinc-400 mb-4">
-            Fairstream respects the intellectual property rights of others. We comply with the Digital Millennium Copyright Act (DMCA) and respond to valid takedown notices.
+            Fairtune respects the intellectual property rights of others. We comply with the Digital Millennium Copyright Act (DMCA) and respond to valid takedown notices.
           </p>
           <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4">
-            <li>If you believe content on Fairstream infringes your copyright, please submit a DMCA takedown request through our <NuxtLink to="/dmca" class="text-violet-400 hover:text-violet-300">DMCA page</NuxtLink>.</li>
+            <li>If you believe content on Fairtune infringes your copyright, please submit a DMCA takedown request through our <NuxtLink to="/dmca" class="text-violet-400 hover:text-violet-300">DMCA page</NuxtLink>.</li>
             <li>We will promptly investigate and remove infringing content.</li>
             <li>Repeat infringers will have their accounts terminated.</li>
             <li>Counter-notices may be filed if you believe content was wrongly removed.</li>
@@ -103,7 +103,7 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">7. Intellectual Property</h2>
           <p class="text-zinc-400 mb-4">
-            Artists retain full ownership of their content. By uploading to Fairstream, you grant us a non-exclusive license to stream, display, and distribute your content on the platform.
+            Artists retain full ownership of their content. By uploading to Fairtune, you grant us a non-exclusive license to stream, display, and distribute your content on the platform.
           </p>
         </section>
 
@@ -124,7 +124,7 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">10. Limitation of Liability</h2>
           <p class="text-zinc-400 mb-4">
-            Fairstream shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service.
+            Fairtune shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service.
           </p>
         </section>
 
@@ -149,9 +149,9 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'Terms of Service | Fairstream',
+  title: 'Terms of Service | Fairtune',
   meta: [
-    { name: 'description', content: 'Terms of Service for Fairstream music streaming platform.' },
+    { name: 'description', content: 'Terms of Service for Fairtune music streaming platform.' },
   ],
 })
 </script>

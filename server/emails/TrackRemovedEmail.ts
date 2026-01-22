@@ -14,7 +14,7 @@ const getReasonText = (reason: string): string => {
     case 'copyright':
       return 'Copyright Violation - The track was reported as infringing on copyrighted material.'
     case 'ai_generated':
-      return 'AI-Generated Content - The track was determined to be AI-generated, which is not permitted on Fairstream.'
+      return 'AI-Generated Content - The track was determined to be AI-generated, which is not permitted on Fairtune.'
     case 'inappropriate':
       return 'Inappropriate Content - The track contained content that violates our community guidelines.'
     default:
@@ -53,7 +53,7 @@ export const getTrackRemovedEmailTemplate = ({
     </mj-text>
 
     <mj-text>
-      We're writing to inform you that your track <span class="highlight"><strong>"${trackTitle}"</strong></span> from the album <span class="highlight"><strong>${albumTitle}</strong></span> (${bandName}) has been removed from Fairstream.
+      We're writing to inform you that your track <span class="highlight"><strong>"${trackTitle}"</strong></span> from the album <span class="highlight"><strong>${albumTitle}</strong></span> (${bandName}) has been removed from Fairtune.
     </mj-text>
 
     <mj-divider />

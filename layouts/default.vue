@@ -23,15 +23,7 @@
           <div class="flex items-center gap-4">
             <BackButton class="md:hidden" />
             <!-- Logo -->
-            <NuxtLink to="/" class="flex items-center gap-2 group">
-              <img src="/logo.svg" alt="Fairstream" class="w-8 h-8" />
-              <div class="text-xl font-bold">
-                <span
-                  class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent"
-                  >Fair</span
-                ><span class="text-zinc-100">stream</span>
-              </div>
-            </NuxtLink>
+            <AppLogo />
           </div>
 
           <!-- Navigation -->
@@ -420,14 +412,8 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
           <!-- Brand -->
           <div class="col-span-1 md:col-span-2">
-            <div class="flex items-center gap-2 mb-4">
-              <img src="/logo.svg" alt="Fairstream" class="w-8 h-8" />
-              <div class="text-xl font-bold">
-                <span
-                  class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent"
-                  >Fair</span
-                ><span class="text-zinc-100">stream</span>
-              </div>
+            <div class="mb-4">
+              <AppLogo />
             </div>
             <p class="text-zinc-400 max-w-md">Stream Fair. Support Direct.</p>
             <p class="text-zinc-500 text-sm mt-2">
@@ -517,7 +503,7 @@
           class="mt-8 pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-zinc-500 text-sm"
         >
           <p>
-            &copy; 2026 Fairstream. ❤️ Built for independent artists. Designed
+            &copy; 2026 Fairtune. ❤️ Built for independent artists. Designed
             for fans.
           </p>
           <NuxtLink

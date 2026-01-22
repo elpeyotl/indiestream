@@ -1,13 +1,13 @@
-// Base MJML template wrapper with Fairstream branding
+// Base MJML template wrapper with Fairtune branding
 // Colors: dark theme (#09090b background), violet accent (#8b5cf6)
 
 // Get app URL from runtime config or use default
 const getAppUrl = () => {
   try {
     const config = useRuntimeConfig()
-    return config.public.appUrl || 'https://fairstream.fm'
+    return config.public.appUrl || 'https://fairtune.fm'
   } catch {
-    return 'https://fairstream.fm'
+    return 'https://fairtune.fm'
   }
 }
 
@@ -16,7 +16,7 @@ export const wrapInBaseTemplate = (content: string, previewText: string = '') =>
   return `
 <mjml>
   <mj-head>
-    <mj-title>Fairstream</mj-title>
+    <mj-title>Fairtune</mj-title>
     <mj-preview>${previewText}</mj-preview>
     <mj-attributes>
       <mj-all font-family="system-ui, -apple-system, sans-serif" />
@@ -35,7 +35,7 @@ export const wrapInBaseTemplate = (content: string, previewText: string = '') =>
     <mj-section padding="32px 24px 16px">
       <mj-column>
         <mj-text align="center" font-size="24px" font-weight="700" color="#f4f4f5">
-          Fairstream
+          Fairtune
         </mj-text>
       </mj-column>
     </mj-section>
@@ -51,7 +51,7 @@ export const wrapInBaseTemplate = (content: string, previewText: string = '') =>
     <mj-section padding="24px">
       <mj-column>
         <mj-text align="center" font-size="12px" color="#52525b">
-          &copy; ${new Date().getFullYear()} Fairstream. Supporting independent artists.
+          &copy; ${new Date().getFullYear()} Fairtune. Supporting independent artists.
         </mj-text>
         <mj-text align="center" font-size="12px" color="#52525b" padding-top="8px">
           <a href="${appUrl}/help" style="color: #71717a;">Help</a> &nbsp;|&nbsp;

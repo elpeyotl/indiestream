@@ -287,7 +287,7 @@ const handleSubmit = async () => {
               Show my impact stats on my public profile
             </span>
             <span class="text-xs text-zinc-500 leading-relaxed block">
-              Let others see how much you've supported artists on Fairstream. This displays your total earnings sent to artists, number of artists supported, listening time, and stream count on your public profile page.
+              Let others see how much you've supported artists on Fairtune. This displays your total earnings sent to artists, number of artists supported, listening time, and stream count on your public profile page.
             </span>
           </div>
         </label>

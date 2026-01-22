@@ -1,6 +1,6 @@
 # Artist Payout & Royalty System
 
-This document outlines the requirements and implementation plan for paying artists and handling royalty obligations on Indiestream.
+This document outlines the requirements and implementation plan for paying artists and handling royalty obligations on Fairtune.
 
 ## Overview
 

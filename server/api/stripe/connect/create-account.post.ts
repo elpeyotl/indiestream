@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
       },
       business_profile: {
         name: profile.display_name || user.email,
-        product_description: 'Music streaming royalties from Fairstream',
+        product_description: 'Music streaming royalties from Fairtune',
       },
       capabilities: {
         transfers: { requested: true },

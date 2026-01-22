@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
   const response = await fetch(url, {
     headers: {
       // MusicBrainz requires a User-Agent with app name and contact
-      'User-Agent': 'Fairstream/1.0 (https://fairstream.fm)',
+      'User-Agent': 'Fairtune/1.0 (https://fairtune.fm)',
       Accept: 'application/json',
     },
   })

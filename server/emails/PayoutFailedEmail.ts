@@ -57,7 +57,7 @@ export const getPayoutFailedEmailTemplate = ({
     ${primaryButton('Check Dashboard', `${appUrl}/dashboard`)}
 
     <mj-text font-size="13px" color="#71717a" padding-top="24px">
-      Need help? Reply to this email or contact us at <a href="mailto:hello.indiestream@gmail.com">hello.indiestream@gmail.com</a>
+      Need help? Reply to this email or contact us at <a href="mailto:hello@fairtune.fm">hello@fairtune.fm</a>
     </mj-text>
   `
 

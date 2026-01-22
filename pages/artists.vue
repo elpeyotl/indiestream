@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-zinc-100 mb-2">Artists</h1>
-      <p class="text-zinc-400">Discover independent artists on Fairstream</p>
+      <p class="text-zinc-400">Discover independent artists on Fairtune</p>
     </div>
 
     <!-- Filters -->
@@ -336,9 +336,9 @@ const loadMore = async () => {
 
 // SEO
 useHead({
-  title: 'Browse Artists | FairStream',
+  title: 'Browse Artists | Fairtune',
   meta: [
-    { name: 'description', content: 'Explore independent artists on FairStream. Discover new music and support artists directly with your streams.' },
+    { name: 'description', content: 'Explore independent artists on Fairtune. Discover new music and support artists directly with your streams.' },
   ],
 })
 

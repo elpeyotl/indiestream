@@ -5,7 +5,7 @@
  * This script polls the transcoding queue and processes jobs using FFmpeg.
  * Run it on a server with FFmpeg installed:
  *
- *   TRANSCODING_SECRET=xxx API_URL=https://fairstream.fm npx tsx scripts/transcoding-worker.ts
+ *   TRANSCODING_SECRET=xxx API_URL=https://fairtune.fm npx tsx scripts/transcoding-worker.ts
  *
  * Or set up as a cron job to run every minute.
  *

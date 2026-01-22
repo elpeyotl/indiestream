@@ -679,9 +679,9 @@ usePullToRefresh(() => refreshAll())
 
 // SEO
 useHead({
-  title: 'Discover Music | FairStream',
+  title: 'Discover Music | Fairtune',
   meta: [
-    { name: 'description', content: 'Discover independent artists and new music releases on FairStream. Stream music that directly supports artists.' },
+    { name: 'description', content: 'Discover independent artists and new music releases on Fairtune. Stream music that directly supports artists.' },
   ],
 })
 </script>

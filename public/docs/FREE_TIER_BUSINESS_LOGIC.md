@@ -2,7 +2,7 @@
 
 ## Overview
 
-Indiestream offers a free tier with limited full-track access to encourage user sign-ups while protecting artist revenue. This document describes the implementation and business rules.
+Fairtune offers a free tier with limited full-track access to encourage user sign-ups while protecting artist revenue. This document describes the implementation and business rules.
 
 ## User Tiers
 

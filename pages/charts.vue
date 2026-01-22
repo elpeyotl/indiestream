@@ -4,7 +4,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
       <div>
         <h1 class="text-3xl font-bold text-zinc-100 mb-2">Charts</h1>
-        <p class="text-zinc-400">See what's trending on Fairstream</p>
+        <p class="text-zinc-400">See what's trending on Fairtune</p>
       </div>
 
       <!-- Period Selector -->
@@ -482,9 +482,9 @@ const playArtist = async (artist: any) => {
 }
 
 useHead({
-  title: 'Charts | FairStream',
+  title: 'Charts | Fairtune',
   meta: [
-    { name: 'description', content: 'See what\'s trending on FairStream. Discover top tracks, albums, and artists from independent musicians.' },
+    { name: 'description', content: 'See what\'s trending on Fairtune. Discover top tracks, albums, and artists from independent musicians.' },
   ],
 })
 </script>

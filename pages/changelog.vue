@@ -7,7 +7,7 @@
           <span class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Changelog</span>
         </h1>
         <p class="text-zinc-400 text-lg">
-          Track all the updates and improvements to Fairstream.
+          Track all the updates and improvements to Fairtune.
         </p>
         <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-full">
           <span class="w-2 h-2 bg-violet-500 rounded-full animate-pulse"></span>
@@ -100,9 +100,9 @@
 import { APP_VERSION, CHANGELOG } from '~/utils/version'
 
 useHead({
-  title: 'Changelog - Fairstream',
+  title: 'Changelog - Fairtune',
   meta: [
-    { name: 'description', content: 'See what\'s new in Fairstream - all updates, improvements, and bug fixes.' },
+    { name: 'description', content: 'See what\'s new in Fairtune - all updates, improvements, and bug fixes.' },
   ],
 })
 

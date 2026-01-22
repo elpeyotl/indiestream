@@ -7,10 +7,10 @@ export default defineAppConfig({
 
   // Brand Identity
   brand: {
-    name: 'Fairstream',
+    name: 'Fairtune',
     tagline: 'Stream Fair. Support Direct.',
-    domain: 'fairstream.fm',
-    url: 'https://fairstream.fm',
+    domain: 'fairtune.fm',
+    url: 'https://fairtune.fm',
   },
 
   // Color System - Electric Purple Theme

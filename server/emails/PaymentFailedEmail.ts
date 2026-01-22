@@ -27,7 +27,7 @@ export const getPaymentFailedEmailTemplate = ({
     </mj-text>
 
     <mj-text>
-      We couldn't process your payment of <span class="highlight"><strong>${formattedAmount}</strong></span> for your Fairstream subscription.
+      We couldn't process your payment of <span class="highlight"><strong>${formattedAmount}</strong></span> for your Fairtune subscription.
     </mj-text>
 
     <mj-text padding="16px 20px" background-color="#292524" border-radius="8px" border-left="4px solid #f59e0b" color="#fbbf24" font-size="14px" line-height="22px">
@@ -60,7 +60,7 @@ export const getPaymentFailedEmailTemplate = ({
     ${primaryButton('Update Payment Method', paymentUrl)}
 
     <mj-text font-size="13px" color="#71717a" padding-top="24px">
-      Need help? Reply to this email or contact us at <a href="mailto:hello.indiestream@gmail.com">hello.indiestream@gmail.com</a>
+      Need help? Reply to this email or contact us at <a href="mailto:hello@fairtune.fm">hello@fairtune.fm</a>
     </mj-text>
   `
 

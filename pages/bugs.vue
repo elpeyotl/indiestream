@@ -93,9 +93,9 @@ onMounted(() => {
 })
 
 useHead({
-  title: 'Report a Bug | Fairstream',
+  title: 'Report a Bug | Fairtune',
   meta: [
-    { name: 'description', content: 'Report bugs and issues you find on Fairstream. Help us improve the platform.' },
+    { name: 'description', content: 'Report bugs and issues you find on Fairtune. Help us improve the platform.' },
   ],
 })
 </script>

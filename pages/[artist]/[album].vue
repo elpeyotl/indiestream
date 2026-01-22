@@ -607,12 +607,12 @@ const toggleCredits = (trackId: string) => {
 // Set page meta
 useHead(() => ({
   title: album.value && band.value
-    ? `${album.value.title} by ${band.value.name} | Fairstream`
-    : 'Album | Fairstream',
+    ? `${album.value.title} by ${band.value.name} | Fairtune`
+    : 'Album | Fairtune',
   meta: [
     {
       name: 'description',
-      content: album.value?.description || `Listen to ${album.value?.title || 'this album'} on Fairstream`,
+      content: album.value?.description || `Listen to ${album.value?.title || 'this album'} on Fairtune`,
     },
   ],
 }))

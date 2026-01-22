@@ -8,12 +8,8 @@
 
     <div class="relative z-10 text-center max-w-2xl">
       <!-- Logo -->
-      <div class="flex items-center justify-center gap-3 mb-8">
-        <img src="/logo.svg" alt="Fairstream" class="w-12 h-12" />
-        <div class="text-3xl font-bold">
-          <span class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Fair</span>
-          <span class="text-zinc-100">stream</span>
-        </div>
+      <div class="flex justify-center mb-8">
+        <AppLogo size="xl" />
       </div>
 
       <!-- Heading -->
@@ -33,7 +29,7 @@
       <!-- Email signup (optional placeholder) -->
       <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mb-12">
         <a
-          href="mailto:hello@fairstream.fm"
+          href="mailto:hello@fairtune.fm"
           class="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-lg transition-colors"
         >
           Get Notified
@@ -54,9 +50,9 @@ definePageMeta({
 })
 
 useHead({
-  title: 'Coming Soon - Fairstream',
+  title: 'Coming Soon - Fairtune',
   meta: [
-    { name: 'description', content: 'Fairstream - Stream Fair. Support Direct. A new music streaming platform coming soon.' },
+    { name: 'description', content: 'Fairtune - Stream Fair. Support Direct. A new music streaming platform coming soon.' },
   ],
 })
 </script>

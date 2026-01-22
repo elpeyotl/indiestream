@@ -1,4 +1,4 @@
-# Indiestream - TODO
+# Fairtune - TODO
 
 ## Completed Features
 

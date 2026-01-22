@@ -1,4 +1,4 @@
-// Authentication composable for Fairstream
+// Authentication composable for Fairtune
 
 export const useAuth = () => {
   const supabase = useSupabaseClient()

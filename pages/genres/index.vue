@@ -219,9 +219,9 @@ const loadGenres = () => refresh()
 
 // SEO
 useHead({
-  title: 'Browse Genres | FairStream',
+  title: 'Browse Genres | Fairtune',
   meta: [
-    { name: 'description', content: 'Explore music by genre on FairStream. Discover independent artists across rock, electronic, hip-hop, jazz, and more.' },
+    { name: 'description', content: 'Explore music by genre on Fairtune. Discover independent artists across rock, electronic, hip-hop, jazz, and more.' },
   ],
 })
 </script>

@@ -9,7 +9,7 @@
         </span>
       </h1>
       <p class="text-xl text-zinc-400 max-w-2xl mx-auto">
-        We built Fairstream because we believe artists deserve better. A platform where your support goes directly to the musicians you love.
+        We built Fairtune because we believe artists deserve better. A platform where your support goes directly to the musicians you love.
       </p>
     </div>
 
@@ -25,7 +25,7 @@
             This means your subscription might end up supporting artists you've never even heard of, while the indie artists you actually listen to get almost nothing.
           </p>
           <p class="text-zinc-400">
-            We're changing that. On Fairstream, your subscription is divided among only the artists you listen to. If you spend 100% of your time listening to one artist, 100% of your subscription (minus our small platform fee) goes to them.
+            We're changing that. On Fairtune, your subscription is divided among only the artists you listen to. If you spend 100% of your time listening to one artist, 100% of your subscription (minus our small platform fee) goes to them.
           </p>
         </div>
         <div class="bg-zinc-900 rounded-2xl p-8 border border-zinc-800">
@@ -92,7 +92,7 @@
     <div class="max-w-3xl mx-auto text-center">
       <h2 class="text-2xl font-bold text-zinc-100 mb-4">Built by Music Lovers</h2>
       <p class="text-zinc-400 mb-8">
-        Fairstream was created by a small team of developers and musicians who were frustrated with the current state of music streaming. We're building the platform we wish existed.
+        Fairtune was created by a small team of developers and musicians who were frustrated with the current state of music streaming. We're building the platform we wish existed.
       </p>
       <UButton color="violet" to="/contact">
         Get in Touch
@@ -103,9 +103,9 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'About | Fairstream',
+  title: 'About | Fairtune',
   meta: [
-    { name: 'description', content: 'Fairstream is a music streaming platform where your subscription goes directly to the artists you listen to.' },
+    { name: 'description', content: 'Fairtune is a music streaming platform where your subscription goes directly to the artists you listen to.' },
   ],
 })
 </script>

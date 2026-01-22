@@ -260,12 +260,12 @@ Instructions:
 2. Replace placeholder audio files with your lossless audio (WAV, FLAC, or AIFF only)
 3. Replace placeholder images (.jpg) with your cover art and artist avatars
 4. Keep the same file paths as specified in the CSV
-5. Upload the completed ZIP to FairStream
+5. Upload the completed ZIP to Fairtune
 
 IMPORTANT: Only lossless audio formats are accepted (WAV, FLAC, AIFF). Max 300MB per file.
 This ensures the highest quality for streaming and future hi-res audio support.
 
-For help, visit: https://fairstream.fm/help/bulk-upload
+For help, visit: https://fairtune.fm/help/bulk-upload
 `
     zip.file('README.txt', readme)
 

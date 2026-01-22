@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working with the Indiestream codebase.
+This file provides guidance to Claude Code when working with the Fairtune codebase.
 
 ## Project Overview
 
-Indiestream is a music streaming platform connecting independent artists with listeners. It's a full-stack web application with PWA and native mobile support via Capacitor.
+Fairtune is a music streaming platform connecting independent artists with listeners. It's a full-stack web application with PWA and native mobile support via Capacitor.
 
 **Business Model:** 85% revenue to artists, 15% platform fee. Human-moderated releases for quality control.
 

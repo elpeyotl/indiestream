@@ -21,7 +21,7 @@ export interface RecentSearch {
 }
 
 // Constants
-const RECENT_SEARCHES_KEY = 'fairstream_recent_searches'
+const RECENT_SEARCHES_KEY = 'fairtune_recent_searches'
 const MAX_RECENT_SEARCHES = 5
 
 // Cache TTL: 1 minute (data changes frequently)

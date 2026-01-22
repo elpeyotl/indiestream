@@ -162,6 +162,6 @@ const { data: artists, pending: loading } = await useLazyAsyncData(
 
 // Update page title
 useHead({
-  title: () => `${displayGenre.value} Artists - Fairstream`,
+  title: () => `${displayGenre.value} Artists - Fairtune`,
 })
 </script>

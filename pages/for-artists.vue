@@ -70,7 +70,7 @@
           <div class="bg-gradient-to-br from-fuchsia-900/30 to-violet-900/30 rounded-xl p-6 border border-fuchsia-500/30">
             <div class="flex items-center gap-2 text-green-400 mb-4">
               <UIcon name="i-heroicons-check-circle" class="w-6 h-6" />
-              <span class="font-semibold">Fairstream</span>
+              <span class="font-semibold">Fairtune</span>
             </div>
             <ul class="space-y-3 text-zinc-300 text-sm">
               <li class="flex items-start gap-2">
@@ -186,7 +186,7 @@
       <div class="text-center bg-gradient-to-r from-fuchsia-900/30 to-violet-900/30 rounded-2xl p-12 border border-fuchsia-500/30 max-w-3xl mx-auto">
         <h2 class="text-3xl font-bold text-zinc-100 mb-4">Ready to Share Your Music?</h2>
         <p class="text-zinc-400 mb-8">
-          Join Fairstream today and start earning what you deserve.
+          Join Fairtune today and start earning what you deserve.
         </p>
         <UButton color="fuchsia" size="xl" to="/dashboard/artist/new">
           Create Your Artist Profile
@@ -199,9 +199,9 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'For Artists | Fairstream',
+  title: 'For Artists | Fairtune',
   meta: [
-    { name: 'description', content: 'Keep 70% of your streaming revenue on Fairstream. Upload your music for free and get paid directly by your fans.' },
+    { name: 'description', content: 'Keep 70% of your streaming revenue on Fairtune. Upload your music for free and get paid directly by your fans.' },
   ],
 })
 </script>

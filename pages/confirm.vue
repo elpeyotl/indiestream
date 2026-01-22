@@ -16,7 +16,7 @@
           <UIcon name="i-heroicons-check-circle" class="w-8 h-8 text-teal-400" />
         </div>
         <h1 class="text-2xl font-bold text-zinc-100 mb-2">Email confirmed!</h1>
-        <p class="text-zinc-400 mb-6">Your account is now active. Welcome to Fairstream!</p>
+        <p class="text-zinc-400 mb-6">Your account is now active. Welcome to Fairtune!</p>
         <UButton color="violet" size="lg" to="/dashboard">
           Go to Dashboard
         </UButton>

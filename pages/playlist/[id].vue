@@ -879,11 +879,11 @@ const dragDrop = async (targetIndex: number) => {
 
 // SEO - dynamic based on playlist data
 useHead(() => ({
-  title: playlist.value ? `${playlist.value.title} | FairStream` : 'Playlist | FairStream',
+  title: playlist.value ? `${playlist.value.title} | Fairtune` : 'Playlist | Fairtune',
   meta: [
     {
       name: 'description',
-      content: playlist.value?.description || `Listen to this playlist on FairStream`,
+      content: playlist.value?.description || `Listen to this playlist on Fairtune`,
     },
   ],
 }))

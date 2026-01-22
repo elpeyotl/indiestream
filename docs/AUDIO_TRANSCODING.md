@@ -1,10 +1,10 @@
 # Audio Transcoding Architecture
 
-This document explains how audio files are processed from upload to playback in FairStream.
+This document explains how audio files are processed from upload to playback in Fairtune.
 
 ## Overview
 
-FairStream requires **lossless audio uploads** (WAV, FLAC, AIFF) to ensure the highest quality source files. These are transcoded to **dual formats**:
+Fairtune requires **lossless audio uploads** (WAV, FLAC, AIFF) to ensure the highest quality source files. These are transcoded to **dual formats**:
 
 1. **AAC 256kbps** - Standard quality streaming (efficient, universal compatibility)
 2. **FLAC 16-bit/44.1kHz** - Hi-fi quality streaming (CD quality, lossless)
@@ -273,7 +273,7 @@ Located in `/transcoding-worker/`:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `TRANSCODING_SECRET` | Yes | - | Must match Nuxt server config |
-| `API_BASE_URL` | Yes | - | Your FairStream URL |
+| `API_BASE_URL` | Yes | - | Your Fairtune URL |
 | `POLL_INTERVAL` | No | 30 | Seconds between queue polls |
 | `BATCH_SIZE` | No | 3 | Jobs to fetch per poll |
 
@@ -286,7 +286,7 @@ fly launch --no-deploy
 
 # Set secrets
 fly secrets set TRANSCODING_SECRET="your-secret"
-fly secrets set API_BASE_URL="https://fairstream.fm"
+fly secrets set API_BASE_URL="https://fairtune.fm"
 
 # Deploy
 fly deploy
@@ -376,7 +376,7 @@ LIMIT 20;
 ### Fly.io worker logs
 
 ```bash
-fly logs -a indiestream-transcoder
+fly logs -a fairtune-transcoder
 ```
 
 ### Manual requeue a failed job

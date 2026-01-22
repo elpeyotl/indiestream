@@ -34,7 +34,7 @@ export const getArtistRejectedEmailTemplate = ({
     </mj-text>
 
     <mj-text>
-      Thank you for your interest in joining Fairstream. After reviewing your application for <span class="highlight"><strong>${bandName}</strong></span>, we're unable to approve it at this time.
+      Thank you for your interest in joining Fairtune. After reviewing your application for <span class="highlight"><strong>${bandName}</strong></span>, we're unable to approve it at this time.
     </mj-text>
 
     ${reasonSection}

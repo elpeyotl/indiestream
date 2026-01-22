@@ -8,7 +8,7 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">1. Introduction</h2>
           <p class="text-zinc-400 mb-4">
-            Fairstream ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and share information about you when you use our music streaming service.
+            Fairtune ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and share information about you when you use our music streaming service.
           </p>
         </section>
 
@@ -95,7 +95,7 @@
         <section class="mb-8">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">9. Children's Privacy</h2>
           <p class="text-zinc-400 mb-4">
-            Fairstream is not intended for users under 13 years of age. We do not knowingly collect personal information from children under 13.
+            Fairtune is not intended for users under 13 years of age. We do not knowingly collect personal information from children under 13.
           </p>
         </section>
 
@@ -127,9 +127,9 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'Privacy Policy | Fairstream',
+  title: 'Privacy Policy | Fairtune',
   meta: [
-    { name: 'description', content: 'Privacy Policy for Fairstream music streaming platform. Learn how we collect, use, and protect your data.' },
+    { name: 'description', content: 'Privacy Policy for Fairtune music streaming platform. Learn how we collect, use, and protect your data.' },
   ],
 })
 </script>

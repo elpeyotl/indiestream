@@ -1,7 +1,7 @@
-# Indiestream - Development Notes
+# Fairtune - Development Notes
 
 ## Project Overview
-Indiestream is a Bandcamp-clone music streaming platform focused on fair artist compensation. Artists keep 85% of streaming revenue, distributed based on actual listener engagement rather than a pooled model.
+Fairtune is a Bandcamp-clone music streaming platform focused on fair artist compensation. Artists keep 85% of streaming revenue, distributed based on actual listener engagement rather than a pooled model.
 
 ## Tech Stack
 - **Frontend**: Nuxt 3, Vue 3 (Composition API), TypeScript
@@ -14,8 +14,8 @@ Indiestream is a Bandcamp-clone music streaming platform focused on fair artist 
 - **Payments**: Stripe (planned)
 
 ## Live URLs
-- **Production**: https://indiestream.vercel.app/
-- **GitHub**: https://github.com/elpeyotl/indiestream.git
+- **Production**: https://fairtune.vercel.app/
+- **GitHub**: https://github.com/elpeyotl/fairtune.git
 
 ## Key Architecture Decisions
 
@@ -115,7 +115,7 @@ If a subscriber listens 100 hours/month:
 |----------|-----------------|----------------|
 | Spotify  | ~$0.003         | ~333 streams   |
 | Apple    | ~$0.007         | ~143 streams   |
-| **Indiestream** | ~$0.007+ | Direct split   |
+| **Fairtune** | ~$0.007+ | Direct split   |
 
 ### Infrastructure Costs (Estimated Monthly)
 
@@ -185,7 +185,7 @@ Image uploads in the dashboard use the `/api/upload/process-image` endpoint inst
 - Traditionally for physical copies, now applies to streaming
 - In US: Handled by Harry Fox Agency, rate set by Copyright Royalty Board
 - In EU: Collected by national CMOs (GEMA, SACEM, etc.)
-- **For Indiestream**: Required when streaming copyrighted compositions
+- **For Fairtune**: Required when streaming copyrighted compositions
 
 #### 2. Performance Royalties
 - Paid when music is publicly performed or broadcast
@@ -196,7 +196,7 @@ Image uploads in the dashboard use the `/api/upload/process-image` endpoint inst
   - Germany: GEMA
   - UK: PRS for Music
   - France: SACEM
-- **For Indiestream**: Streaming counts as public performance = PRO license required
+- **For Fairtune**: Streaming counts as public performance = PRO license required
 
 #### 3. Master Recording Royalties
 - Paid to owner of the recording (usually label or artist)
@@ -208,7 +208,7 @@ Image uploads in the dashboard use the `/api/upload/process-image` endpoint inst
 
 #### Independent Artists (Own Masters + Publishing)
 - Artist owns both recording AND composition
-- Can license directly to Indiestream
+- Can license directly to Fairtune
 - No intermediary needed
 - Artist agreement covers all rights
 - **Simplest case for the platform**
@@ -224,7 +224,7 @@ Image uploads in the dashboard use the `/api/upload/process-image` endpoint inst
 - May still owe PRO royalties even if artist agrees
 - Need to verify publishing status
 
-### Licensing Requirements for Indiestream
+### Licensing Requirements for Fairtune
 
 #### Option A: Indies-Only Platform
 - Only accept artists who own all rights

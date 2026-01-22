@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Dev endpoint only' })
   }
 
-  const to = 'hello.indiestream@gmail.com'
+  const to = 'hello@fairtune.fm'
   const results: { template: string; success: boolean; emailId?: string; error?: string }[] = []
 
   // Helper to delay between sends (Resend rate limit: 2/sec)

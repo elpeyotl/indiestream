@@ -789,11 +789,11 @@ watch(() => band.value?.avatar_url, async (newUrl) => {
 
 // Set page meta based on band
 useHead(() => ({
-  title: band.value ? `${band.value.name} | Fairstream` : 'Artist | Fairstream',
+  title: band.value ? `${band.value.name} | Fairtune` : 'Artist | Fairtune',
   meta: [
     {
       name: 'description',
-      content: band.value?.bio || `Listen to ${band.value?.name || 'this artist'} on Fairstream`,
+      content: band.value?.bio || `Listen to ${band.value?.name || 'this artist'} on Fairtune`,
     },
   ],
 }))

@@ -1,5 +1,5 @@
 {
-  "name": "indiestream-transcoding-worker",
+  "name": "fairtune-transcoding-worker",
   "version": "1.0.0",
   "private": true,
   "type": "module",

@@ -33,7 +33,7 @@ export const backgroundOptions: BackgroundOption[] = [
   { value: 'tunnel', label: 'Tunnel', description: 'Hypnotic wormhole' },
 ]
 
-const STORAGE_KEY = 'fairstream-background-effect'
+const STORAGE_KEY = 'fairtune-background-effect'
 
 export const useBackgroundEffectStore = defineStore('backgroundEffect', () => {
   // Use useState for SSR-safe shared state

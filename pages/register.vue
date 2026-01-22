@@ -2,13 +2,8 @@
   <div class="min-h-screen flex items-center justify-center px-4 py-12">
     <div class="w-full max-w-md">
       <!-- Logo -->
-      <div class="text-center mb-8">
-        <NuxtLink to="/" class="inline-flex items-center gap-2">
-          <img src="/logo.svg" alt="Fairstream" class="w-10 h-10" />
-          <span class="text-2xl font-bold">
-            <span class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Fair</span><span class="text-zinc-100">stream</span>
-          </span>
-        </NuxtLink>
+      <div class="text-center mb-8 flex justify-center">
+        <AppLogo size="lg" />
       </div>
 
       <!-- Card -->

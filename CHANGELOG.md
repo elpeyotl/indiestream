@@ -234,7 +234,7 @@
 - **Bug Report Page**: New `/bugs` page with embedded Tally form for user feedback
   - Auto-captures technical context (user ID, browser, screen size, timezone, timestamp)
   - Hidden field pre-fills device info for easier debugging
-  - Dark theme styling to match IndieStream
+  - Dark theme styling to match Fairtune
 - **Admin Album Management**: Full CRUD for albums in admin panel
   - New "Albums" tab with search, filters (published/draft), and pagination
   - Edit all album fields including track moderation status
@@ -361,7 +361,7 @@
     - "View Full Impact Report" CTA button
     - Empty state for new subscribers with encouraging message
   - **Navigation Reordering**: Mobile nav now ordered: Discover → Library → Listening → Impact
-  - Reinforces Indiestream's "Stream Fair. Support Direct." value proposition
+  - Reinforces Fairtune's "Stream Fair. Support Direct." value proposition
   - Back button automatically hidden on My Impact page
 
 ### Technical

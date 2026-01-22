@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const config = useRuntimeConfig()
-  const baseUrl = config.public.appUrl || 'https://fairstream.fm'
+  const baseUrl = config.public.appUrl || 'https://fairtune.fm'
 
   return {
     token: data,

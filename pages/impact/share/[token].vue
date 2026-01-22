@@ -132,7 +132,7 @@
             Stream music that supports artists directly
           </p>
           <UButton to="/pricing" color="violet" size="lg" block>
-            Join Fairstream
+            Join Fairtune
           </UButton>
         </div>
       </UCard>
@@ -142,7 +142,7 @@
         <p class="text-sm text-zinc-500">
           Shared via
           <NuxtLink to="/" class="text-violet-400 hover:underline font-medium">
-            Fairstream
+            Fairtune
           </NuxtLink>
            · Stream Fair. Support Direct.
         </p>
@@ -244,15 +244,15 @@ const error = computed(() => {
 useHead({
   title: computed(() =>
     impactData.value
-      ? `${impactData.value.user.displayName}'s Fairstream Impact`
-      : 'Fairstream Impact Share'
+      ? `${impactData.value.user.displayName}'s Fairtune Impact`
+      : 'Fairtune Impact Share'
   ),
   meta: [
-    { name: 'description', content: 'See how my listening supports artists directly on Fairstream' },
+    { name: 'description', content: 'See how my listening supports artists directly on Fairtune' },
     { property: 'og:title', content: computed(() =>
       impactData.value
-        ? `${impactData.value.user.displayName}'s Fairstream Impact`
-        : 'Fairstream Impact Share'
+        ? `${impactData.value.user.displayName}'s Fairtune Impact`
+        : 'Fairtune Impact Share'
     ) },
     { property: 'og:description', content: 'Stream Fair. Support Direct.' },
     { property: 'og:type', content: 'website' },

@@ -1,4 +1,4 @@
-# Indiestream
+# Fairtune
 
 > Stream Fair. Support Direct.
 
@@ -6,7 +6,7 @@ The streaming platform where your subscription directly supports the artists you
 
 ## 🎵 About
 
-Indiestream is a music streaming platform built on radical transparency and fair artist compensation. Unlike traditional streaming services:
+Fairtune is a music streaming platform built on radical transparency and fair artist compensation. Unlike traditional streaming services:
 
 - **Fair Revenue Distribution**: Artists earn based on your actual listening time
 - **Total Transparency**: See exactly where your subscription money goes
@@ -23,8 +23,8 @@ Indiestream is a music streaming platform built on radical transparency and fair
 
 ## 🎨 Brand Identity
 
-- **Name**: Indiestream
-- **Domain**: [indiestream.art](https://indiestream.art)
+- **Name**: Fairtune
+- **Domain**: [fairtune.art](https://fairtune.art)
 - **Theme**: Warm Underground (dark theme with coral/cream accents)
 - **Values**: Fair Play, Transparency, Artist-First, Quality, Direct Connection
 

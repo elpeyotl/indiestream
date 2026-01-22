@@ -73,7 +73,7 @@
             </div>
             <div class="flex-1">
               <p class="font-medium text-zinc-100">{{ artist.name }}</p>
-              <p class="text-sm text-zinc-500">fairstream.fm/{{ artist.slug }}</p>
+              <p class="text-sm text-zinc-500">fairtune.fm/{{ artist.slug }}</p>
             </div>
             <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 text-zinc-500" />
           </NuxtLink>

@@ -1,7 +1,7 @@
-# IndieStream Go-Live Deployment Strategy
+# Fairtune Go-Live Deployment Strategy
 
 ## Summary
-Deployment strategy for taking IndieStream from development to production, covering environment setup, database handling, testing strategy, and content migration.
+Deployment strategy for taking Fairtune from development to production, covering environment setup, database handling, testing strategy, and content migration.
 
 ---
 
@@ -44,7 +44,7 @@ For a project of this size, **Dev + Prod is sufficient**. A Staging/Acceptance e
 
 ### Supabase: Two Separate Projects (Recommended)
 
-Create a new `indiestream-prod` Supabase project for production:
+Create a new `fairtune-prod` Supabase project for production:
 - Complete isolation from dev data
 - Run all 39 migrations on the new project
 - Pro plan ($25/mo) gives you daily backups, no row limits, better performance
@@ -66,9 +66,9 @@ SUPABASE_SERVICE_KEY=your-prod-service-key
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
-R2_BUCKET_NAME=indiestream-prod (or same bucket)
-NUXT_PUBLIC_R2_PUBLIC_URL=https://cdn.indiestream.app
-NUXT_PUBLIC_SITE_URL=https://indiestream.app
+R2_BUCKET_NAME=fairtune-prod (or same bucket)
+NUXT_PUBLIC_R2_PUBLIC_URL=https://cdn.fairtune.app
+NUXT_PUBLIC_SITE_URL=https://fairtune.app
 ```
 
 ---
@@ -93,7 +93,7 @@ NUXT_PUBLIC_SITE_URL=https://indiestream.app
 
 ### Phase 1: Vercel Preview (Pre-launch)
 - Push to a branch → Vercel creates preview URL
-- Share URL: `https://indiestream-git-feature-yourname.vercel.app`
+- Share URL: `https://fairtune-git-feature-yourname.vercel.app`
 - Uses dev Supabase + Stripe test mode
 - **This is your beta testing phase**
 
@@ -165,7 +165,7 @@ ALTER TABLE profiles ADD COLUMN is_invited BOOLEAN DEFAULT false;
 ### Flow
 
 1. You generate invite codes in admin
-2. Share codes with friends: `indiestream.app/invite/ABC123`
+2. Share codes with friends: `fairtune.app/invite/ABC123`
 3. Friend clicks link, registers/logs in
 4. Code is marked used, user is marked as invited
 5. User can now access the full site

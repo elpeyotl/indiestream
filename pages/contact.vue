@@ -114,9 +114,9 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'Contact | Fairstream',
+  title: 'Contact | Fairtune',
   meta: [
-    { name: 'description', content: 'Get in touch with the Fairstream team. We\'re here to help with any questions.' },
+    { name: 'description', content: 'Get in touch with the Fairtune team. We\'re here to help with any questions.' },
   ],
 })
 

@@ -9,7 +9,7 @@
         <section class="p-6 bg-zinc-900/50 rounded-xl border border-zinc-800">
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">Our Commitment to Copyright Protection</h2>
           <p class="text-zinc-400">
-            Fairstream respects the intellectual property rights of others and expects our users to do the same.
+            Fairtune respects the intellectual property rights of others and expects our users to do the same.
             In accordance with the Digital Millennium Copyright Act of 1998 (DMCA), we will respond expeditiously
             to claims of copyright infringement committed using our service.
           </p>
@@ -23,8 +23,8 @@
               Our designated agent for receiving notifications of claimed infringement is:
             </p>
             <div class="space-y-2 text-zinc-300">
-              <p><strong>Fairstream Copyright Agent</strong></p>
-              <p>Email: <a href="mailto:dmca@fairstream.fm" class="text-violet-400 hover:text-violet-300">dmca@fairstream.fm</a></p>
+              <p><strong>Fairtune Copyright Agent</strong></p>
+              <p>Email: <a href="mailto:dmca@fairtune.fm" class="text-violet-400 hover:text-violet-300">dmca@fairtune.fm</a></p>
             </div>
           </div>
         </section>
@@ -33,13 +33,13 @@
         <section>
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">How to File a DMCA Takedown Notice</h2>
           <p class="text-zinc-400 mb-4">
-            If you believe your copyrighted work has been infringed on Fairstream, please provide our DMCA
+            If you believe your copyrighted work has been infringed on Fairtune, please provide our DMCA
             agent with the following information:
           </p>
           <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4 mb-6">
             <li>A physical or electronic signature of the copyright owner or authorized representative</li>
             <li>Identification of the copyrighted work claimed to have been infringed</li>
-            <li>Identification of the material on Fairstream that you claim is infringing, including the URL</li>
+            <li>Identification of the material on Fairtune that you claim is infringing, including the URL</li>
             <li>Your contact information (name, address, phone number, and email)</li>
             <li>A statement that you have a good faith belief that the use of the material is not authorized</li>
             <li>A statement that the information in the notification is accurate, and under penalty of perjury,
@@ -128,11 +128,11 @@
                 <UInput
                   v-model="form.infringing_url"
                   type="url"
-                  placeholder="https://fairstream.fm/artist/album"
+                  placeholder="https://fairtune.fm/artist/album"
                   size="lg"
                 />
                 <template #hint>
-                  The direct link to the content on Fairstream that you believe infringes your copyright
+                  The direct link to the content on Fairtune that you believe infringes your copyright
                 </template>
               </UFormGroup>
             </div>
@@ -222,7 +222,7 @@
             <p class="text-zinc-400 mb-4">
               If you believe your content was wrongly removed due to a DMCA takedown notice, you may file
               a counter-notification. To file a counter-notification, please email
-              <a href="mailto:dmca@fairstream.fm" class="text-violet-400 hover:text-violet-300">dmca@fairstream.fm</a>
+              <a href="mailto:dmca@fairtune.fm" class="text-violet-400 hover:text-violet-300">dmca@fairtune.fm</a>
               with the following information:
             </p>
             <ul class="list-disc list-inside text-zinc-400 space-y-2 ml-4">
@@ -243,7 +243,7 @@
           <h2 class="text-xl font-semibold text-zinc-100 mb-4">Repeat Infringer Policy</h2>
           <div class="p-6 bg-zinc-900/50 rounded-xl border border-zinc-800">
             <p class="text-zinc-400">
-              In accordance with the DMCA, Fairstream has adopted a policy of terminating, in appropriate
+              In accordance with the DMCA, Fairtune has adopted a policy of terminating, in appropriate
               circumstances, users who are deemed to be repeat infringers. We may also, at our discretion,
               limit access to the service and/or terminate the accounts of any users who infringe any
               intellectual property rights of others, whether or not there is any repeat infringement.
@@ -257,9 +257,9 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'DMCA Policy | Fairstream',
+  title: 'DMCA Policy | Fairtune',
   meta: [
-    { name: 'description', content: 'Fairstream DMCA Policy and takedown request form.' },
+    { name: 'description', content: 'Fairtune DMCA Policy and takedown request form.' },
   ],
 })
 

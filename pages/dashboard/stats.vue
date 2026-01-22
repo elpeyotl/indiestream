@@ -27,7 +27,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'Your Stats | FairStream',
+  title: 'Your Stats | Fairtune',
   meta: [
     { name: 'description', content: 'Track your listening history and see how your subscription supports independent artists.' },
   ],

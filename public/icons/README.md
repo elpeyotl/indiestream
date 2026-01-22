@@ -1,6 +1,6 @@
 # App Icons
 
-This directory contains the PWA app icons for Indiestream.
+This directory contains the PWA app icons for Fairtune.
 
 ## Required Icons
 
@@ -12,7 +12,7 @@ This directory contains the PWA app icons for Indiestream.
 To generate the app icons:
 
 1. **Using Figma/Design Tool**:
-   - Export the Indiestream logo at 512x512px
+   - Export the Fairtune logo at 512x512px
    - Export at 192x192px
    - Save as PNG with transparent background
    - Use the brand violet color (#8b5cf6) on dark background (#09090b)

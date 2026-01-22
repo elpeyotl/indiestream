@@ -1,4 +1,4 @@
-# Fairstream Content Protection Policy
+# Fairtune Content Protection Policy
 
 **Document Version:** 1.0
 **Effective Date:** January 2026
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Fairstream is committed to protecting intellectual property rights and ensuring our platform hosts only legitimate, human-created music. This document outlines our content protection measures, DMCA compliance procedures, and AI content policy.
+Fairtune is committed to protecting intellectual property rights and ensuring our platform hosts only legitimate, human-created music. This document outlines our content protection measures, DMCA compliance procedures, and AI content policy.
 
 ---
 
@@ -16,7 +16,7 @@ Fairstream is committed to protecting intellectual property rights and ensuring 
 
 ### 1.1 DMCA Safe Harbor Compliance
 
-Fairstream operates under the Digital Millennium Copyright Act (DMCA) Safe Harbor provisions (17 U.S.C. § 512). This provides legal protection for online service providers who:
+Fairtune operates under the Digital Millennium Copyright Act (DMCA) Safe Harbor provisions (17 U.S.C. § 512). This provides legal protection for online service providers who:
 
 - Do not have actual knowledge of infringing material
 - Act expeditiously to remove infringing content upon notification
@@ -25,9 +25,9 @@ Fairstream operates under the Digital Millennium Copyright Act (DMCA) Safe Harbo
 
 ### 1.2 Designated DMCA Agent
 
-**Fairstream Copyright Agent**
-Email: dmca@fairstream.fm
-Web: https://fairstream.fm/dmca
+**Fairtune Copyright Agent**
+Email: dmca@fairtune.fm
+Web: https://fairtune.fm/dmca
 
 ---
 
@@ -128,7 +128,7 @@ Users who believe content was wrongly removed may file a counter-notification in
 
 ### 4.4 Repeat Infringer Policy
 
-Fairstream maintains a repeat infringer policy:
+Fairtune maintains a repeat infringer policy:
 
 - **First offense:** Content removal + warning
 - **Second offense:** Content removal + 30-day upload suspension
@@ -140,7 +140,7 @@ Fairstream maintains a repeat infringer policy:
 
 ### 5.1 Prohibition
 
-Fairstream prohibits AI-generated music where the core composition, melody, or performance was created by AI systems (such as Suno, Udio, or similar).
+Fairtune prohibits AI-generated music where the core composition, melody, or performance was created by AI systems (such as Suno, Udio, or similar).
 
 ### 5.2 Permitted AI Usage
 
@@ -278,10 +278,10 @@ The following sections in Terms of Service address content protection:
 
 ## 10. Contact Information
 
-**General Inquiries:** contact@fairstream.fm
-**DMCA/Copyright:** dmca@fairstream.fm
-**Website:** https://fairstream.fm
+**General Inquiries:** contact@fairtune.fm
+**DMCA/Copyright:** dmca@fairtune.fm
+**Website:** https://fairtune.fm
 
 ---
 
-*This document is for internal reference and legal compliance purposes. For public-facing policies, see /terms and /dmca on the Fairstream website.*
+*This document is for internal reference and legal compliance purposes. For public-facing policies, see /terms and /dmca on the Fairtune website.*

@@ -2,11 +2,9 @@
   <div class="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
     <div class="text-center">
       <!-- Logo -->
-      <NuxtLink to="/" class="inline-block mb-8">
-        <span class="text-2xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-          FairStream
-        </span>
-      </NuxtLink>
+      <div class="flex justify-center mb-8">
+        <AppLogo size="lg" />
+      </div>
 
       <!-- Error Icon -->
       <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-zinc-800 flex items-center justify-center">
@@ -82,6 +80,6 @@ const clearError = () => {
 
 // Set page title
 useHead({
-  title: 'Error | FairStream',
+  title: 'Error | Fairtune',
 })
 </script>

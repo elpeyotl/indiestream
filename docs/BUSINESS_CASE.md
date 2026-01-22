@@ -1,4 +1,4 @@
-# Indiestream Business Case
+# Fairtune Business Case
 
 **Document Version:** 1.0
 **Date:** January 2026
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Indiestream is a **fair-pay music streaming platform** for independent artists. Unlike traditional streaming services where revenue pools benefit major labels, Indiestream uses a **user-centric payment model** where each subscriber's fee goes directly to the artists they listen to.
+Fairtune is a **fair-pay music streaming platform** for independent artists. Unlike traditional streaming services where revenue pools benefit major labels, Fairtune uses a **user-centric payment model** where each subscriber's fee goes directly to the artists they listen to.
 
 **Tagline:** *Stream Fair. Support Direct.*
 
@@ -18,7 +18,7 @@ Indiestream is a **fair-pay music streaming platform** for independent artists. 
 
 ### Traditional Streaming Is Broken for Indie Artists
 
-| Issue | Traditional Platforms | Indiestream Solution |
+| Issue | Traditional Platforms | Fairtune Solution |
 |-------|----------------------|----------------------|
 | **Revenue Pool** | All subscriptions go into one pool | Your $9.99 goes to artists YOU listen to |
 | **Major Label Dominance** | ~70% of streams go to major labels | Independent artists only |
@@ -57,7 +57,7 @@ Indiestream is a **fair-pay music streaming platform** for independent artists. 
 
 ### Key Differentiator: 85% to Music Rights
 
-**Indiestream allocates 85% of subscription revenue to music rights** - the highest in the streaming industry:
+**Fairtune allocates 85% of subscription revenue to music rights** - the highest in the streaming industry:
 - **70%** directly to the artist
 - **15%** to Performance Rights Organizations (SUISA, GEMA, ASCAP, BMI, etc.)
 
@@ -114,7 +114,7 @@ Indiestream is a **fair-pay music streaming platform** for independent artists. 
 
 ## Competitive Analysis
 
-| Feature | Indiestream | Spotify | Apple Music | Bandcamp |
+| Feature | Fairtune | Spotify | Apple Music | Bandcamp |
 |---------|-------------|---------|-------------|----------|
 | **To Music Rights** | **85%** | ~70% | ~70% | 82% |
 | **Direct to Artist** | **70%** | ~30% | ~30% | 82%* |
@@ -321,7 +321,7 @@ Indiestream is a **fair-pay music streaming platform** for independent artists. 
 
 ---
 
-## Summary: Why Indiestream?
+## Summary: Why Fairtune?
 
 ### For Investors
 
@@ -349,4 +349,4 @@ Indiestream is a **fair-pay music streaming platform** for independent artists. 
 
 ---
 
-*Document prepared by the Indiestream Team*
+*Document prepared by the Fairtune Team*

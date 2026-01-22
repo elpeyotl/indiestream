@@ -1,13 +1,13 @@
 # Supabase Setup Guide
 
-This guide walks you through setting up Supabase for the Indiestream platform.
+This guide walks you through setting up Supabase for the Fairtune platform.
 
 ## 1. Create Supabase Project
 
 1. Go to [supabase.com](https://supabase.com) and sign in
 2. Click "New Project"
 3. Fill in details:
-   - **Name**: indiestream
+   - **Name**: fairtune
    - **Database Password**: (generate strong password and save it)
    - **Region**: Choose closest to your users
 4. Click "Create new project"

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Transform Indiestream from a traditional web app into a native-feeling mobile-first experience that removes clutter and feels like an installed app, even on desktop.
+Transform Fairtune from a traditional web app into a native-feeling mobile-first experience that removes clutter and feels like an installed app, even on desktop.
 
 ## Philosophy
 
@@ -134,8 +134,8 @@ onMounted(() => {
 **Manifest Structure**:
 ```json
 {
-  "name": "Indiestream",
-  "short_name": "Indiestream",
+  "name": "Fairtune",
+  "short_name": "Fairtune",
   "description": "Stream Fair. Support Direct.",
   "start_url": "/discover",
   "display": "standalone",
@@ -168,7 +168,7 @@ app: {
       { name: 'mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-      { name: 'apple-mobile-web-app-title', content: 'Indiestream' },
+      { name: 'apple-mobile-web-app-title', content: 'Fairtune' },
       { name: 'theme-color', content: '#8b5cf6' }
     ],
     link: [
@@ -263,8 +263,8 @@ export const useHaptics = () => {
 **Goal**: Separate marketing from app, optimize for scale
 
 #### 3.1 Subdomain Architecture
-- Marketing site: `indiestream.art` (static, SEO-optimized)
-- Main app: `app.indiestream.art` (dynamic, app-focused)
+- Marketing site: `fairtune.art` (static, SEO-optimized)
+- Main app: `app.fairtune.art` (dynamic, app-focused)
 - Separate deployments and optimization strategies
 
 **Benefits**:
@@ -275,7 +275,7 @@ export const useHaptics = () => {
 - Independent scaling
 
 **Migration Strategy**:
-1. Set up `app.indiestream.art` subdomain
+1. Set up `app.fairtune.art` subdomain
 2. Deploy app to subdomain (same codebase, different build)
 3. Update authentication to work cross-domain (shared cookies)
 4. Redirect authenticated users to app subdomain
@@ -286,7 +286,7 @@ export const useHaptics = () => {
 ```typescript
 // For cross-domain auth
 {
-  domain: '.indiestream.art', // Note the leading dot
+  domain: '.fairtune.art', // Note the leading dot
   secure: true,
   sameSite: 'lax'
 }
@@ -406,7 +406,7 @@ Desktop (≥ 768px):
 - [ ] Skeleton loading states replace spinners
 
 ### Phase 3 (Scale)
-- [ ] App deployed to `app.indiestream.art`
+- [ ] App deployed to `app.fairtune.art`
 - [ ] Marketing site remains on root domain
 - [ ] Cross-domain auth working
 - [ ] Service worker for offline mode

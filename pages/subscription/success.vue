@@ -5,7 +5,7 @@
         <UIcon name="i-heroicons-check-circle" class="w-12 h-12 text-green-400" />
       </div>
 
-      <h1 class="text-3xl font-bold text-zinc-100 mb-4">Welcome to Fairstream!</h1>
+      <h1 class="text-3xl font-bold text-zinc-100 mb-4">Welcome to Fairtune!</h1>
 
       <p class="text-zinc-400 mb-8">
         Your subscription is now active. You have full access to unlimited streaming
@@ -40,7 +40,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'Subscription Activated | Fairstream',
+  title: 'Subscription Activated | Fairtune',
 })
 
 // Refresh subscription status with retry (webhook may not have processed yet)

@@ -74,11 +74,11 @@
               class="text-sm text-violet-400 hover:text-violet-300"
               target="_blank"
             >
-              fairstream.fm/{{ band.slug }}
+              fairtune.fm/{{ band.slug }}
               <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3 h-3 inline" />
             </NuxtLink>
             <span v-else class="text-sm text-zinc-500">
-              fairstream.fm/{{ band.slug }} (not visible until approved)
+              fairtune.fm/{{ band.slug }} (not visible until approved)
             </span>
           </div>
         </div>

@@ -90,7 +90,7 @@ export default defineEventHandler(async (event) => {
     try {
       const config = useRuntimeConfig()
       // Generate a public URL for the cover (simplified - in production you'd use proper presigned URL)
-      coverUrl = `${config.public.appUrl || 'https://fairstream.fm'}/api/stream/${btoa(album.cover_key).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')}`
+      coverUrl = `${config.public.appUrl || 'https://fairtune.fm'}/api/stream/${btoa(album.cover_key).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')}`
     } catch {
       // Ignore cover URL errors
     }

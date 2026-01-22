@@ -172,13 +172,13 @@
 
     <!-- Comparison -->
     <div class="max-w-3xl mx-auto mb-16">
-      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">Why Fairstream?</h2>
+      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">Why Fairtune?</h2>
       <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
         <table class="w-full">
           <thead>
             <tr class="border-b border-zinc-800">
               <th class="text-left p-4 text-zinc-400 font-medium"></th>
-              <th class="text-center p-4 text-violet-400 font-semibold">Fairstream</th>
+              <th class="text-center p-4 text-violet-400 font-semibold">Fairtune</th>
               <th class="text-center p-4 text-zinc-500 font-medium">Others</th>
             </tr>
           </thead>
@@ -248,7 +248,7 @@ const { isSubscribed, startCheckout, loading } = subscriptionStore
 const toast = useToast()
 
 useHead({
-  title: 'Pricing | Fairstream',
+  title: 'Pricing | Fairtune',
   meta: [
     { name: 'description', content: 'Simple, fair pricing. Your subscription goes directly to the artists you listen to.' },
   ],
@@ -282,7 +282,7 @@ const faqItems = [
   },
   {
     label: 'Do you pay royalties on every stream?',
-    content: 'Yes! Unlike some platforms that allow unlimited free streaming (generating no royalties), every stream on Fairstream from a paying subscriber generates revenue for both artists and royalty societies (SUISA, GEMA, ASCAP, BMI, etc.). Our free tier only offers 30-second previews, ensuring all full-length plays are properly compensated. No loopholes.',
+    content: 'Yes! Unlike some platforms that allow unlimited free streaming (generating no royalties), every stream on Fairtune from a paying subscriber generates revenue for both artists and royalty societies (SUISA, GEMA, ASCAP, BMI, etc.). Our free tier only offers 30-second previews, ensuring all full-length plays are properly compensated. No loopholes.',
   },
   {
     label: 'Can I cancel anytime?',
