@@ -187,8 +187,8 @@ export default defineNuxtConfig({
 
   // TypeScript configuration
   typescript: {
-    strict: false,  // Disable strict mode for now
-    typeCheck: false,  // Disable type checking for dev speed
+    strict: true,
+    typeCheck: true,
   },
 
   // CSS configuration

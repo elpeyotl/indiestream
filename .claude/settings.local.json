@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(npm run test:e2e:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nFix TypeScript errors in dashboard/index.vue\n\n- Add null coalescing for total_streams in formatNumber calls\n- Add explicit type to subscription sync fetch result\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npm install:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInstall @types/mjml to fix server/utils/email.ts type error\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

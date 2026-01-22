@@ -28,37 +28,37 @@ export const useAdminUtils = () => {
   }
 
   // Status color mappings
-  const getStatusColor = (status: string): string => {
-    const colors: Record<string, string> = {
+  const getStatusColor = (status: string) => {
+    const colors = {
       // General statuses
-      active: 'green',
-      pending: 'yellow',
-      approved: 'green',
-      rejected: 'red',
-      suspended: 'orange',
-      removed: 'red',
+      active: 'green' as const,
+      pending: 'yellow' as const,
+      approved: 'green' as const,
+      rejected: 'red' as const,
+      suspended: 'orange' as const,
+      removed: 'red' as const,
       // Report/DMCA statuses
-      investigating: 'blue',
-      processing: 'blue',
-      resolved: 'gray',
-      dismissed: 'gray',
-      content_removed: 'green',
-      counter_notice: 'orange',
+      investigating: 'blue' as const,
+      processing: 'blue' as const,
+      resolved: 'gray' as const,
+      dismissed: 'gray' as const,
+      content_removed: 'green' as const,
+      counter_notice: 'orange' as const,
       // Moderation statuses
-      revision_requested: 'orange',
-      pending_update: 'yellow',
+      revision_requested: 'orange' as const,
+      pending_update: 'yellow' as const,
     }
-    return colors[status] || 'gray'
+    return (colors as Record<string, 'green' | 'yellow' | 'red' | 'orange' | 'blue' | 'gray'>)[status] || ('gray' as const)
   }
 
-  const getReasonColor = (reason: string): string => {
-    const colors: Record<string, string> = {
-      copyright: 'red',
-      ai_generated: 'violet',
-      inappropriate: 'orange',
-      other: 'gray',
+  const getReasonColor = (reason: string) => {
+    const colors = {
+      copyright: 'red' as const,
+      ai_generated: 'violet' as const,
+      inappropriate: 'orange' as const,
+      other: 'gray' as const,
     }
-    return colors[reason] || 'gray'
+    return (colors as Record<string, 'red' | 'violet' | 'orange' | 'gray'>)[reason] || ('gray' as const)
   }
 
   const getReasonLabel = (reason: string): string => {
@@ -71,22 +71,22 @@ export const useAdminUtils = () => {
     return labels[reason] || reason
   }
 
-  const getPriorityColor = (priority: string): string => {
-    const colors: Record<string, string> = {
-      urgent: 'red',
-      high: 'orange',
-      normal: 'gray',
+  const getPriorityColor = (priority: string) => {
+    const colors = {
+      urgent: 'red' as const,
+      high: 'orange' as const,
+      normal: 'gray' as const,
     }
-    return colors[priority] || 'gray'
+    return (colors as Record<string, 'red' | 'orange' | 'gray'>)[priority] || ('gray' as const)
   }
 
-  const getReleaseTypeColor = (type: string): string => {
-    const colors: Record<string, string> = {
-      album: 'violet',
-      ep: 'blue',
-      single: 'green',
+  const getReleaseTypeColor = (type: string) => {
+    const colors = {
+      album: 'violet' as const,
+      ep: 'blue' as const,
+      single: 'green' as const,
     }
-    return colors[type] || 'gray'
+    return (colors as Record<string, 'violet' | 'blue' | 'green'>)[type] || ('gray' as const)
   }
 
   // Check if artist has any social links

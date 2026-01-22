@@ -423,13 +423,13 @@ const confirmRemoveTrackOpen = ref(false)
 const removingTrack = ref(false)
 
 const getReportStatusColor = (status: string) => {
-  const colors: Record<string, string> = {
-    pending: 'yellow',
-    investigating: 'blue',
-    resolved: 'green',
-    dismissed: 'gray',
+  const colors = {
+    pending: 'yellow' as const,
+    investigating: 'blue' as const,
+    resolved: 'green' as const,
+    dismissed: 'gray' as const,
   }
-  return colors[status] || 'gray'
+  return (colors as Record<string, 'yellow' | 'blue' | 'green' | 'gray'>)[status] || ('gray' as const)
 }
 
 const loadContentReports = async () => {

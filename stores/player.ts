@@ -566,7 +566,11 @@ export const usePlayerStore = defineStore('player', () => {
     if (isPlaying.value) {
       audio.pause()
     } else {
-      audio.play()
+      audio.play().catch((e) => {
+        console.error('Failed to play audio:', e)
+        isPlaying.value = false
+        isLoading.value = false
+      })
     }
   }
 

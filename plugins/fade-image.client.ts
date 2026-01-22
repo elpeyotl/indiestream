@@ -6,7 +6,7 @@
 
 export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.directive('fade-image', {
-    mounted(el: HTMLImageElement) {
+    mounted(el: HTMLImageElement & { _fadeImageCleanup?: () => void }) {
       // Set initial state
       el.style.opacity = '0'
       el.style.transition = 'opacity 500ms ease-out'

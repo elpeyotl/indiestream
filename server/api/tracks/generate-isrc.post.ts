@@ -86,7 +86,11 @@ export default defineEventHandler(async (event) => {
     if (assignError) {
       console.error('Failed to assign ISRC to track:', assignError)
       // Try to release the allocated ISRC since we couldn't assign it
-      await client.rpc('release_platform_isrc', { p_track_id: trackId }).catch(() => {})
+      try {
+        await client.rpc('release_platform_isrc', { p_track_id: trackId })
+      } catch {
+        // Ignore release errors
+      }
       throw createError({ statusCode: 500, statusMessage: 'Failed to assign ISRC to track' })
     }
   }

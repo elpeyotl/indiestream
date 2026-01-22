@@ -5,7 +5,7 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const stripe = new Stripe(config.stripeSecretKey, {
-    apiVersion: '2025-02-24.acacia',
+    apiVersion: '2025-12-15.clover',
   })
 
   // Get raw body for signature verification
@@ -124,10 +124,10 @@ export default defineEventHandler(async (event) => {
 
       case 'account.application.deauthorized': {
         // User disconnected their Stripe account
-        const account = stripeEvent.data.object as Stripe.Account
-        const userId = account.metadata?.supabase_user_id
+        const application = stripeEvent.data.object as any
+        const accountId = typeof application.account === 'string' ? application.account : application.account?.id
 
-        if (userId) {
+        if (accountId) {
           await supabase
             .from('profiles')
             .update({
@@ -135,29 +135,9 @@ export default defineEventHandler(async (event) => {
               stripe_account_status: 'not_connected',
               stripe_onboarding_complete: false,
             })
-            .eq('id', userId)
+            .eq('stripe_account_id', accountId)
 
-          console.log(`User ${userId} disconnected Stripe account`)
-        } else {
-          // Try to find by account ID
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('stripe_account_id', account.id)
-            .single()
-
-          if (profile) {
-            await supabase
-              .from('profiles')
-              .update({
-                stripe_account_id: null,
-                stripe_account_status: 'not_connected',
-                stripe_onboarding_complete: false,
-              })
-              .eq('id', profile.id)
-
-            console.log(`User ${profile.id} disconnected Stripe account`)
-          }
+          console.log(`Stripe account ${accountId} disconnected`)
         }
         break
       }

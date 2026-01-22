@@ -404,7 +404,7 @@
             <UTextarea
               v-model="moderationNotes"
               placeholder="Add notes about this track..."
-              rows="3"
+              :rows="3"
             />
           </UFormGroup>
         </div>
@@ -467,7 +467,7 @@
           <UTextarea
             v-model="moderationNotes"
             placeholder="Explain why this track is being rejected..."
-            rows="4"
+            :rows="4"
           />
         </UFormGroup>
 
@@ -504,7 +504,7 @@
           <UTextarea
             v-model="moderationNotes"
             placeholder="Explain what changes are needed..."
-            rows="4"
+            :rows="4"
           />
         </UFormGroup>
 

@@ -139,7 +139,7 @@ export default defineEventHandler(async (event) => {
     // Upload to R2
     const response = await fetch(uploadUrl, {
       method: 'PUT',
-      body: data,
+      body: data as any,
       headers: { 'Content-Type': contentType },
     })
 

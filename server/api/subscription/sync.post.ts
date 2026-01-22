@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const stripe = new Stripe(config.stripeSecretKey, {
-    apiVersion: '2025-02-24.acacia',
+    apiVersion: '2025-12-15.clover',
   })
 
   const supabase = await serverSupabaseServiceRole(event)
@@ -47,7 +47,25 @@ export default defineEventHandler(async (event) => {
         return { synced: false, message: 'No Stripe subscription found' }
       }
 
-      const subscription = subscriptions.data[0]
+      const subscription = subscriptions.data[0] as any
+
+      // Handle date fields (trialing subscriptions use trial_start/trial_end)
+      const periodStart = subscription.current_period_start || subscription.trial_start
+      const periodEnd = subscription.trial_end || subscription.current_period_end
+
+      if (!periodStart || !periodEnd) {
+        console.warn('Subscription missing date fields:', {
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          hasStart: !!periodStart,
+          hasEnd: !!periodEnd,
+        })
+        return {
+          synced: false,
+          message: 'Subscription missing required date fields',
+          status: subscription.status,
+        }
+      }
 
       // Update the database
       const { error: upsertError } = await supabase
@@ -58,8 +76,8 @@ export default defineEventHandler(async (event) => {
           stripe_subscription_id: subscription.id,
           status: subscription.status,
           plan: 'listener',
-          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date((subscription.trial_end || subscription.current_period_end) * 1000).toISOString(),
+          current_period_start: new Date(periodStart * 1000).toISOString(),
+          current_period_end: new Date(periodEnd * 1000).toISOString(),
           cancel_at_period_end: subscription.cancel_at_period_end,
         }, { onConflict: 'user_id' })
 
@@ -68,10 +86,16 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 500, statusMessage: 'Failed to sync subscription' })
       }
 
+      // Return the full subscription data so the client can update the store directly
       return {
         synced: true,
-        status: subscription.status,
-        subscriptionId: subscription.id,
+        subscription: {
+          status: subscription.status,
+          plan: 'listener',
+          current_period_end: new Date(periodEnd * 1000).toISOString(),
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          stripe_subscription_id: subscription.id,
+        },
       }
     }
 
@@ -86,7 +110,25 @@ export default defineEventHandler(async (event) => {
       return { synced: false, message: 'No Stripe subscription found for customer' }
     }
 
-    const subscription = subscriptions.data[0]
+    const subscription = subscriptions.data[0] as any
+
+    // Handle date fields (trialing subscriptions use trial_start/trial_end)
+    const periodStart = subscription.current_period_start || subscription.trial_start
+    const periodEnd = subscription.trial_end || subscription.current_period_end
+
+    if (!periodStart || !periodEnd) {
+      console.warn('Subscription missing date fields:', {
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        hasStart: !!periodStart,
+        hasEnd: !!periodEnd,
+      })
+      return {
+        synced: false,
+        message: 'Subscription missing required date fields',
+        status: subscription.status,
+      }
+    }
 
     // Update the database
     const { error: updateError } = await supabase
@@ -94,8 +136,8 @@ export default defineEventHandler(async (event) => {
       .update({
         stripe_subscription_id: subscription.id,
         status: subscription.status,
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date((subscription.trial_end || subscription.current_period_end) * 1000).toISOString(),
+        current_period_start: new Date(periodStart * 1000).toISOString(),
+        current_period_end: new Date(periodEnd * 1000).toISOString(),
         cancel_at_period_end: subscription.cancel_at_period_end,
       })
       .eq('user_id', user.id)
@@ -105,10 +147,16 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Failed to update subscription' })
     }
 
+    // Return the full subscription data so the client can update the store directly
     return {
       synced: true,
-      status: subscription.status,
-      subscriptionId: subscription.id,
+      subscription: {
+        status: subscription.status,
+        plan: 'listener',
+        current_period_end: new Date(periodEnd * 1000).toISOString(),
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        stripe_subscription_id: subscription.id,
+      },
     }
   } catch (error: any) {
     console.error('Sync subscription error:', error)

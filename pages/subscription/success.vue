@@ -45,20 +45,33 @@ useHead({
 
 // Refresh subscription status with retry (webhook may not have processed yet)
 import { storeToRefs } from 'pinia'
+import type { SubscriptionData } from '~/stores/subscription'
 
 const subscriptionStore = useSubscriptionStore()
 const { isSubscribed } = storeToRefs(subscriptionStore)
-const { fetchSubscription } = subscriptionStore
+const { setSubscription, fetchSubscription, fetchFreeTierStatus } = subscriptionStore
 
 const syncAndFetch = async () => {
-  // First try to sync from Stripe (in case webhook didn't fire)
+  // Try to sync from Stripe (in case webhook didn't fire)
   try {
-    await $fetch('/api/subscription/sync', { method: 'POST' })
+    const result = await $fetch<{
+      synced: boolean
+      subscription?: SubscriptionData
+      message?: string
+    }>('/api/subscription/sync', { method: 'POST' })
+
+    if (result.synced && result.subscription) {
+      // Update store directly with the synced data
+      setSubscription(result.subscription)
+      // Also refresh free tier status
+      await fetchFreeTierStatus()
+      return
+    }
   } catch (e) {
-    console.log('Sync attempt:', e)
+    console.log('Sync attempt failed:', e)
   }
 
-  // Then fetch the subscription
+  // Fallback: fetch from database (webhook may have updated it)
   await fetchSubscription()
 }
 

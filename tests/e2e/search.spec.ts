@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Search Functionality', () => {
   test('search can be opened via keyboard shortcut', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     // Press Cmd+K or Ctrl+K to open search
     await page.keyboard.press('Meta+k')
@@ -30,7 +30,7 @@ test.describe('Search Functionality', () => {
 
   test('search input accepts text', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     // Find search button in navigation
     const searchButton = page.locator('nav button, header button').filter({
@@ -59,7 +59,7 @@ test.describe('Search Functionality', () => {
 
   test('search shows results or empty state', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     // Open search
     await page.keyboard.press('Meta+k')
@@ -90,7 +90,7 @@ test.describe('Search Functionality', () => {
 
   test('clicking search result navigates', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     // Open search
     await page.keyboard.press('Meta+k')
@@ -118,7 +118,7 @@ test.describe('Search Functionality', () => {
     if (resultCount > 0) {
       const initialUrl = page.url()
       await resultLinks.first().click()
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Should have navigated somewhere
       const newUrl = page.url()
@@ -129,7 +129,7 @@ test.describe('Search Functionality', () => {
 
   test('search can be closed with Escape', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     // Open search
     await page.keyboard.press('Meta+k')

@@ -55,8 +55,8 @@ export interface BulkUploadResults {
   albumsCreated: number
   tracksCreated: number
   errors: string[]
-  createdArtists: { id: string; name: string; slug: string }[]
-  createdAlbums: { id: string; title: string; artistName: string }[]
+  createdArtists: { id: string; name: string; slug: string; avatarKey?: string }[]
+  createdAlbums: { id: string; title: string; artistName: string; artistSlug?: string; albumSlug?: string; coverKey?: string }[]
 }
 
 const defaultState = (): BulkUploadState => ({
@@ -243,7 +243,7 @@ export const useBulkUpload = () => {
       state.value.error = e.message || 'Failed to process ZIP file'
       toast.add({
         title: 'Failed to process ZIP',
-        description: state.value.error,
+        description: state.value.error ?? undefined,
         color: 'red',
         icon: 'i-heroicons-exclamation-triangle',
       })
@@ -308,7 +308,7 @@ export const useBulkUpload = () => {
       state.value.error = e.data?.message || e.message || 'Validation failed'
       toast.add({
         title: 'Validation failed',
-        description: state.value.error,
+        description: state.value.error ?? undefined,
         color: 'red',
         icon: 'i-heroicons-exclamation-triangle',
       })
@@ -435,7 +435,7 @@ export const useBulkUpload = () => {
       state.value.error = e.data?.message || e.message || 'Import failed'
       toast.add({
         title: 'Import failed',
-        description: state.value.error,
+        description: state.value.error ?? undefined,
         color: 'red',
         icon: 'i-heroicons-exclamation-triangle',
       })
