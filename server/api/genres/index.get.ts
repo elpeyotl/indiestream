@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Failed to fetch genres' })
   }
 
-  // Count artists per genre and collect avatar keys (up to 4 per genre)
+  // Count artists per genre and collect all avatar keys
   const genreData = new Map<string, { count: number; avatarKeys: string[] }>()
 
   for (const band of bands || []) {
@@ -24,8 +24,8 @@ export default defineEventHandler(async (event) => {
       for (const genre of band.genres) {
         const existing = genreData.get(genre) || { count: 0, avatarKeys: [] }
         existing.count++
-        // Only add avatar if we have one and haven't collected 4 yet
-        if (band.avatar_key && existing.avatarKeys.length < 4) {
+        // Collect all avatar keys for random selection
+        if (band.avatar_key) {
           existing.avatarKeys.push(band.avatar_key)
         }
         genreData.set(genre, existing)
@@ -33,14 +33,20 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Convert to sorted array
+  // Convert to sorted array, picking one random avatar per genre
   const genres = Array.from(genreData.entries())
-    .map(([name, data]) => ({
-      name,
-      slug: name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-      artistCount: data.count,
-      avatarKeys: data.avatarKeys,
-    }))
+    .map(([name, data]) => {
+      // Pick a random avatar from all available
+      const randomAvatar = data.avatarKeys.length > 0
+        ? data.avatarKeys[Math.floor(Math.random() * data.avatarKeys.length)]
+        : null
+      return {
+        name,
+        slug: name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+        artistCount: data.count,
+        avatarKeys: randomAvatar ? [randomAvatar] : [],
+      }
+    })
     .sort((a, b) => b.artistCount - a.artistCount)
 
   return { genres }

@@ -1,14 +1,32 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <!-- Header -->
+    <!-- Header + Search -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-zinc-100 mb-2">Browse by Genre</h1>
-      <p class="text-zinc-400">Explore music across different styles and sounds</p>
+      <p class="text-zinc-400 mb-4">Explore music across different styles and sounds</p>
+      <UInput
+        v-model="searchQuery"
+        placeholder="Search genres..."
+        icon="i-heroicons-magnifying-glass"
+        size="lg"
+        :ui="{ wrapper: 'max-w-md' }"
+      />
     </div>
 
     <!-- Loading Skeleton -->
-    <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      <USkeleton v-for="i in 15" :key="i" class="h-32 rounded-xl" />
+    <div v-if="loading" class="space-y-8">
+      <div>
+        <USkeleton class="h-5 w-24 mb-3" />
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <USkeleton v-for="i in 6" :key="i" class="h-40 rounded-xl" />
+        </div>
+      </div>
+      <div>
+        <USkeleton class="h-5 w-24 mb-3" />
+        <div class="flex flex-wrap gap-2">
+          <USkeleton v-for="i in 12" :key="i" class="h-8 w-24 rounded-full" />
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -24,66 +42,80 @@
       </UButton>
     </div>
 
-    <!-- Genre Grid -->
-    <div v-else-if="genres.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      <NuxtLink
-        v-for="genre in genres"
-        :key="genre.slug"
-        :to="`/genres/${genre.slug}`"
-        class="group relative h-32 rounded-xl overflow-hidden"
-      >
-        <!-- Background: Avatar collage or gradient fallback -->
-        <div class="absolute inset-0">
-          <!-- 4-image grid collage -->
-          <div v-if="genreAvatars[genre.slug]?.length >= 4" class="grid grid-cols-2 grid-rows-2 h-full w-full">
-            <img
-              v-for="(url, idx) in genreAvatars[genre.slug].slice(0, 4)"
-              :key="idx"
-              :src="url"
-              :alt="genre.name"
-              class="w-full h-full object-cover"
-            />
-          </div>
-          <!-- 2-image split -->
-          <div v-else-if="genreAvatars[genre.slug]?.length >= 2" class="grid grid-cols-2 h-full w-full">
-            <img
-              v-for="(url, idx) in genreAvatars[genre.slug].slice(0, 2)"
-              :key="idx"
-              :src="url"
-              :alt="genre.name"
-              class="w-full h-full object-cover"
-            />
-          </div>
-          <!-- Single image -->
-          <div v-else-if="genreAvatars[genre.slug]?.length === 1" class="h-full w-full">
-            <img
-              :src="genreAvatars[genre.slug][0]"
-              :alt="genre.name"
-              class="w-full h-full object-cover"
-            />
-          </div>
-          <!-- Gradient fallback -->
-          <div v-else class="h-full w-full" :style="{ background: getGenreGradient(genre.name) }" />
+    <!-- Content -->
+    <div v-else-if="genres.length > 0" class="space-y-8">
+      <!-- Featured Section -->
+      <section v-if="featuredGenres.length > 0">
+        <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">Featured</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <NuxtLink
+            v-for="genre in featuredGenres"
+            :key="genre.slug"
+            :to="`/genres/${genre.slug}`"
+            class="group relative h-40 rounded-xl overflow-hidden"
+          >
+            <!-- Background: Single hero image or gradient fallback -->
+            <div class="absolute inset-0">
+              <img
+                v-if="genreAvatars[genre.slug]?.[0]"
+                :src="genreAvatars[genre.slug][0]"
+                :alt="genre.name"
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div v-else class="h-full w-full" :style="{ background: getGenreGradient(genre.name) }" />
+            </div>
+
+            <!-- Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10 group-hover:from-black/70 transition-colors" />
+
+            <!-- Content -->
+            <div class="relative h-full flex flex-col justify-end p-4">
+              <h3 class="font-bold text-white text-lg drop-shadow-lg">{{ genre.name }}</h3>
+              <p class="text-white/80 text-sm drop-shadow">{{ genre.artistCount }} {{ genre.artistCount === 1 ? 'artist' : 'artists' }}</p>
+            </div>
+
+            <!-- Play button -->
+            <button
+              class="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-violet-500 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 shadow-lg hover:bg-violet-400 hover:scale-105"
+              @click.prevent.stop="playGenre(genre)"
+            >
+              <UIcon v-if="loadingPlayId === genre.slug" name="i-heroicons-arrow-path" class="w-5 h-5 text-white animate-spin" />
+              <UIcon v-else name="i-heroicons-play-solid" class="w-5 h-5 text-white ml-0.5" />
+            </button>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- All Genres (Tag Cloud) -->
+      <section v-if="regularGenres.length > 0">
+        <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">All Genres</h2>
+        <div class="flex flex-wrap gap-2">
+          <NuxtLink
+            v-for="genre in visibleRegularGenres"
+            :key="genre.slug"
+            :to="`/genres/${genre.slug}`"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-full text-sm text-zinc-300 hover:text-zinc-100 transition-colors"
+          >
+            {{ genre.name }}
+            <span class="text-zinc-500">{{ genre.artistCount }}</span>
+          </NuxtLink>
         </div>
 
-        <!-- Overlay -->
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 group-hover:from-black/70 group-hover:via-black/30 transition-colors" />
-
-        <!-- Content -->
-        <div class="relative h-full flex flex-col justify-end p-4">
-          <h3 class="font-bold text-white text-lg drop-shadow-lg">{{ genre.name }}</h3>
-          <p class="text-white/80 text-sm drop-shadow">{{ genre.artistCount }} {{ genre.artistCount === 1 ? 'artist' : 'artists' }}</p>
-        </div>
-
-        <!-- Play button (bottom right) -->
+        <!-- Show All Button -->
         <button
-          class="absolute bottom-2 right-2 w-10 h-10 rounded-full bg-violet-500 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 shadow-lg hover:bg-violet-400 hover:scale-105"
-          @click.prevent.stop="playGenre(genre)"
+          v-if="hasMoreTags && !showAllTags"
+          class="mt-4 text-sm text-violet-400 hover:text-violet-300 transition-colors"
+          @click="showAllTags = true"
         >
-          <UIcon v-if="loadingPlayId === genre.slug" name="i-heroicons-arrow-path" class="w-5 h-5 text-white animate-spin" />
-          <UIcon v-else name="i-heroicons-play-solid" class="w-5 h-5 text-white ml-0.5" />
+          Show all {{ regularGenres.length }} genres
         </button>
-      </NuxtLink>
+      </section>
+
+      <!-- No Results -->
+      <div v-if="searchQuery && filteredGenres.length === 0" class="text-center py-12">
+        <UIcon name="i-heroicons-magnifying-glass" class="w-12 h-12 mx-auto mb-3 text-zinc-600" />
+        <p class="text-zinc-400">No genres found for "{{ searchQuery }}"</p>
+      </div>
     </div>
 
     <!-- Empty State -->
@@ -109,43 +141,102 @@ interface Genre {
   avatarKeys: string[]
 }
 
+const FEATURED_THRESHOLD = 10
+const INITIAL_TAG_COUNT = 20
+
 const loadingPlayId = ref<string | null>(null)
 const genreAvatars = ref<Record<string, string[]>>({})
+const searchQuery = ref('')
+const showAllTags = ref(false)
 
-// Fetch genres using Nuxt's useLazyFetch
-const { data: genresData, pending: loading, error: fetchError, refresh } = await useLazyFetch<{ genres: Genre[] }>('/api/genres', {
+// Fetch all genres
+const { data: genresData, pending: loadingGenres, error: fetchError, refresh } = await useLazyFetch<{ genres: Genre[] }>('/api/genres', {
   key: 'genres-page',
   default: () => ({ genres: [] }),
 })
+
+// Fetch admin-curated featured genres
+const { data: featuredData, pending: loadingFeatured } = await useLazyFetch<{ featuredGenres: Genre[] }>('/api/genres/featured', {
+  key: 'featured-genres',
+  default: () => ({ featuredGenres: [] }),
+})
+
+const loading = computed(() => loadingGenres.value || loadingFeatured.value)
 
 // Computed accessors
 const genres = computed(() => genresData.value?.genres ?? [])
 const error = computed(() => !!fetchError.value)
 
-// Load avatar URLs for all genres in parallel
+// Filter genres by search query
+const filteredGenres = computed(() => {
+  if (!searchQuery.value.trim()) return genres.value
+  const query = searchQuery.value.toLowerCase()
+  return genres.value.filter(g => g.name.toLowerCase().includes(query))
+})
+
+// Featured genres: use admin-curated list if available, fallback to threshold-based
+const featuredGenres = computed(() => {
+  // If admin has curated featured genres, use those
+  const curatedFeatured = featuredData.value?.featuredGenres || []
+  if (curatedFeatured.length > 0) {
+    // Filter by search query if active
+    if (searchQuery.value.trim()) {
+      const query = searchQuery.value.toLowerCase()
+      return curatedFeatured.filter(g => g.name.toLowerCase().includes(query))
+    }
+    return curatedFeatured
+  }
+  // Fallback to threshold-based selection
+  return filteredGenres.value.filter(g => g.artistCount >= FEATURED_THRESHOLD).slice(0, 6)
+})
+
+const regularGenres = computed(() => {
+  const featuredSlugs = new Set(featuredGenres.value.map(g => g.slug))
+  return filteredGenres.value.filter(g => !featuredSlugs.has(g.slug))
+})
+
+// Visible tags with "show all" toggle
+const visibleRegularGenres = computed(() =>
+  showAllTags.value ? regularGenres.value : regularGenres.value.slice(0, INITIAL_TAG_COUNT)
+)
+
+const hasMoreTags = computed(() => regularGenres.value.length > INITIAL_TAG_COUNT)
+
+// Load avatar URLs for featured genres only (for performance)
 const loadAvatars = async (genreList: Genre[]) => {
   const avatarPromises = genreList.map(async (genre) => {
     if (!genre.avatarKeys?.length) return
 
-    const urls: string[] = []
-    for (const key of genre.avatarKeys) {
-      const url = await getCachedCoverUrl(key)
-      if (url) urls.push(url)
-    }
-    if (urls.length > 0) {
-      genreAvatars.value[genre.slug] = urls
+    // Only load 1 avatar (hero image)
+    const url = await getCachedCoverUrl(genre.avatarKeys[0])
+    if (url) {
+      genreAvatars.value[genre.slug] = [url]
     }
   })
 
   await Promise.all(avatarPromises)
 }
 
-// Load avatars when genres data changes
-watch(genres, async (newGenres) => {
-  if (newGenres.length > 0) {
-    await loadAvatars(newGenres)
+// Load avatars when featured genres change
+watch(featuredGenres, async (newFeatured) => {
+  if (newFeatured.length > 0) {
+    await loadAvatars(newFeatured)
   }
 }, { immediate: true })
+
+// Also load avatars for threshold-based featured genres from all genres
+watch(genres, async (newGenres) => {
+  // Only if no curated featured genres
+  if (!featuredData.value?.featuredGenres?.length && newGenres.length > 0) {
+    const thresholdFeatured = newGenres.filter(g => g.artistCount >= FEATURED_THRESHOLD).slice(0, 6)
+    await loadAvatars(thresholdFeatured)
+  }
+}, { immediate: true })
+
+// Reset showAllTags when search changes
+watch(searchQuery, () => {
+  showAllTags.value = false
+})
 
 // Generate consistent gradient colors based on genre name
 const getGenreGradient = (name: string): string => {

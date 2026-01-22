@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.21.0] - 2026-01-22
+
+### Added
+- **Genre Detail Page Enhancements**:
+  - Hero banner with random artist avatar image (fallback to gradient)
+  - Search filter to find artists within a genre
+  - Sort options: A-Z, Z-A, Newest (persisted in localStorage)
+  - Shuffle play button to play random tracks from the genre
+  - Refactored to use ArtistCard component (hides stream counts)
+- **Featured Genres System**:
+  - Admin-controlled featured genres on `/genres` page
+  - Database table `featured_genres` with RLS policies
+  - Admin tab for managing featured genres with drag-and-drop reordering
+  - API endpoints: GET/POST featured genres, DELETE by ID, PATCH reorder
+  - Fallback to threshold-based selection when no curated genres exist
+- **Genres Index Redesign**:
+  - Two-tier layout: Featured genres with hero images + tag cloud for rest
+  - Search input to filter all genres
+  - Random artist images for genre cards (session-cached)
+
 ## [0.20.0] - 2026-01-22
 
 ### Changed
