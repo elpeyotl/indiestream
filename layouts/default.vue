@@ -70,7 +70,7 @@
                 class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
                 <UIcon name="i-heroicons-heart" class="w-4 h-4" />
-                Stats
+                My Impact
               </NuxtLink>
             </template>
 
