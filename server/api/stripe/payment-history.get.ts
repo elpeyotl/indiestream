@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const stripe = new Stripe(config.stripeSecretKey, {
-    apiVersion: '2025-02-24.acacia',
+    apiVersion: '2025-12-15.clover',
   })
 
   try {

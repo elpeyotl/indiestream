@@ -5,7 +5,7 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const stripe = new Stripe(config.stripeSecretKey, {
-    apiVersion: '2025-02-24.acacia',
+    apiVersion: '2025-12-15.clover',
   })
 
   // Get raw body for signature verification
@@ -124,8 +124,17 @@ export default defineEventHandler(async (event) => {
 
       case 'account.application.deauthorized': {
         // User disconnected their Stripe account
-        const account = stripeEvent.data.object as Stripe.Account
-        const userId = account.metadata?.supabase_user_id
+        const application = stripeEvent.data.object as Stripe.Application
+        const accountId = typeof application.account === 'string' ? application.account : application.account?.id
+
+        // Look up user by Stripe account ID
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('stripe_account_id', accountId)
+          .single()
+
+        const userId = profile?.id
 
         if (userId) {
           await supabase

@@ -11,7 +11,7 @@ const toISOString = (timestamp: number | undefined | null): string | null => {
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const stripe = new Stripe(config.stripeSecretKey, {
-    apiVersion: '2025-02-24.acacia',
+    apiVersion: '2025-12-15.clover',
   })
 
   // Get raw body for signature verification
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
 
         if (userId && subscriptionId) {
           // Get subscription details
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
 
           const { error: upsertError } = await supabase.from('subscriptions').upsert({
             user_id: userId,
@@ -173,10 +173,10 @@ export default defineEventHandler(async (event) => {
 
       case 'invoice.payment_succeeded': {
         const invoice = stripeEvent.data.object as Stripe.Invoice
-        const subscriptionId = invoice.subscription as string
+        const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
 
         if (subscriptionId) {
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
           const userId = subscription.metadata?.supabase_user_id
 
           if (userId) {
@@ -194,7 +194,7 @@ export default defineEventHandler(async (event) => {
 
       case 'invoice.payment_failed': {
         const invoice = stripeEvent.data.object as Stripe.Invoice
-        const subscriptionId = invoice.subscription as string
+        const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
 
         if (subscriptionId) {
           // Get the subscription to find the user

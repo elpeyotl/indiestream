@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const stripe = new Stripe(config.stripeSecretKey, {
-    apiVersion: '2025-02-24.acacia',
+    apiVersion: '2025-12-15.clover',
   })
 
   const supabase = await serverSupabaseServiceRole(event)
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
         return { synced: false, message: 'No Stripe subscription found' }
       }
 
-      const subscription = subscriptions.data[0]
+      const subscription = subscriptions.data[0] as Stripe.Subscription
 
       // Update the database
       const { error: upsertError } = await supabase
@@ -86,7 +86,7 @@ export default defineEventHandler(async (event) => {
       return { synced: false, message: 'No Stripe subscription found for customer' }
     }
 
-    const subscription = subscriptions.data[0]
+    const subscription = subscriptions.data[0] as Stripe.Subscription
 
     // Update the database
     const { error: updateError } = await supabase
