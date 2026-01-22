@@ -3,13 +3,13 @@
     <!-- Mobile: Icon only -->
     <NuxtImg src="/logo.png" alt="Fairtune" :class="[iconSizeClass, 'lg:hidden']" />
     <!-- Desktop: Logo with tagline -->
-    <NuxtImg src="/logo-text.svg" alt="Fairtune - Heavy Riffs. Fair Pay. No Bullshit." :class="[textLogoSizeClass, 'hidden lg:block']" />
+    <img src="/logo-text.svg" alt="Fairtune - Heavy Riffs. Fair Pay. No Bullshit." :class="[textLogoSizeClass, 'hidden lg:block']" />
   </NuxtLink>
   <div v-else class="flex items-center group">
     <!-- Mobile: Icon only -->
     <NuxtImg src="/logo.png" alt="Fairtune" :class="[iconSizeClass, 'lg:hidden']" />
     <!-- Desktop: Logo with tagline -->
-    <NuxtImg src="/logo-text.svg" alt="Fairtune - Heavy Riffs. Fair Pay. No Bullshit." :class="[textLogoSizeClass, 'hidden lg:block']" />
+    <img src="/logo-text.svg" alt="Fairtune - Heavy Riffs. Fair Pay. No Bullshit." :class="[textLogoSizeClass, 'hidden lg:block']" />
   </div>
 </template>
 
