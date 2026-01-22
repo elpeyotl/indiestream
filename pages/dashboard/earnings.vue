@@ -207,7 +207,8 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { startOnboarding, getAccountLink } = useStripeConnect()
+const stripeConnectStore = useStripeConnectStore()
+const { startOnboarding, getAccountLink } = stripeConnectStore
 const toast = useToast()
 const route = useRoute()
 const router = useRouter()

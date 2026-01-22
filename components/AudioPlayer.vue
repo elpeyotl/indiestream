@@ -42,10 +42,13 @@
                 class="w-full aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl cover-slide"
                 :class="slideClass"
               >
-                <img
+                <NuxtImg
                   v-if="currentTrack.coverUrl"
                   :src="currentTrack.coverUrl"
                   :alt="currentTrack.albumTitle"
+                  :width="384"
+                  :height="384"
+                  format="webp"
                   class="w-full h-full object-cover"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
@@ -325,10 +328,14 @@
             <div class="flex items-center gap-3 flex-1 min-w-0">
               <!-- Cover -->
               <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
-                <img
+                <NuxtImg
                   v-if="currentTrack.coverUrl"
                   :src="currentTrack.coverUrl"
                   :alt="currentTrack.albumTitle"
+                  :width="56"
+                  :height="56"
+                  format="webp"
+                  loading="lazy"
                   class="w-full h-full object-cover"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
@@ -532,10 +539,14 @@
 
               <!-- Cover -->
               <div class="w-10 h-10 rounded overflow-hidden bg-zinc-800 shrink-0">
-                <img
+                <NuxtImg
                   v-if="track.coverUrl"
                   :src="track.coverUrl"
                   :alt="track.albumTitle"
+                  :width="40"
+                  :height="40"
+                  format="webp"
+                  loading="lazy"
                   class="w-full h-full object-cover"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
@@ -569,9 +580,15 @@
 </template>
 
 <script setup lang="ts">
-const user = useSupabaseUser()
-const { freePlaysRemaining, isSubscribed } = useSubscription()
+import { storeToRefs } from 'pinia'
 
+const user = useSupabaseUser()
+const subscriptionStore = useSubscriptionStore()
+const { freePlaysRemaining, isSubscribed } = storeToRefs(subscriptionStore)
+
+const playerStore = usePlayerStore()
+
+// Use storeToRefs for reactive state
 const {
   currentTrack,
   queue,
@@ -583,6 +600,22 @@ const {
   isMuted,
   isLoading,
   progress,
+  // Preview mode
+  isPreviewMode,
+  previewEnded,
+  effectiveDuration,
+  // Free tier
+  isFreePlay,
+  showUpgradePrompt,
+  // Shuffle and repeat
+  shuffleEnabled,
+  repeatMode,
+  // Audio visualizer data
+  audioData,
+} = storeToRefs(playerStore)
+
+// Destructure actions and getters directly
+const {
   togglePlay,
   playNext,
   playPrevious,
@@ -593,23 +626,12 @@ const {
   toggleShuffle,
   cycleRepeatMode,
   formatTime,
-  // Preview mode
-  isPreviewMode,
-  previewEnded,
-  previewLimit,
-  effectiveDuration,
-  // Free tier
-  isFreePlay,
-  showUpgradePrompt,
   dismissUpgradePrompt,
-  // Shuffle and repeat
-  shuffleEnabled,
-  repeatMode,
-  // Audio visualizer data
-  audioData,
-} = usePlayer()
+  previewLimit,
+} = playerStore
 
-const { isTrackLiked, toggleTrackLike } = useLibrary()
+const libraryStore = useLibraryStore()
+const { isTrackLiked, toggleTrackLike } = libraryStore
 
 const isExpanded = ref(false)
 const showQueue = ref(false)

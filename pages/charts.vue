@@ -75,10 +75,14 @@
 
               <!-- Cover -->
               <div class="w-10 h-10 rounded overflow-hidden bg-zinc-800 shrink-0 relative">
-                <img
+                <NuxtImg
                   v-if="trackCovers[track.id]"
                   :src="trackCovers[track.id]"
                   :alt="track.title"
+                  :width="40"
+                  :height="40"
+                  format="webp"
+                  loading="lazy"
                   class="w-full h-full object-cover"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
@@ -146,10 +150,14 @@
 
               <!-- Cover with play button -->
               <div class="w-10 h-10 rounded overflow-hidden bg-zinc-800 shrink-0 relative cursor-pointer" @click="playAlbum(album)">
-                <img
+                <NuxtImg
                   v-if="albumCovers[album.id]"
                   :src="albumCovers[album.id]"
                   :alt="album.title"
+                  :width="40"
+                  :height="40"
+                  format="webp"
+                  loading="lazy"
                   class="w-full h-full object-cover"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
@@ -211,10 +219,14 @@
 
               <!-- Avatar with play button -->
               <div class="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 shrink-0 relative cursor-pointer" @click="playArtist(artist)">
-                <img
+                <NuxtImg
                   v-if="artistAvatars[artist.id]"
                   :src="artistAvatars[artist.id]"
                   :alt="artist.name"
+                  :width="40"
+                  :height="40"
+                  format="webp"
+                  loading="lazy"
                   class="w-full h-full object-cover"
                 />
                 <div
@@ -260,8 +272,10 @@
 </template>
 
 <script setup lang="ts">
-const { getCachedCoverUrl, getAlbumById } = useAlbum()
-const { setQueue, playPlaylist } = usePlayer()
+const albumStore = useAlbumStore()
+const { getCachedCoverUrl, getAlbumById } = albumStore
+const playerStore = usePlayerStore()
+const { setQueue, playPlaylist } = playerStore
 
 interface ChartData {
   tracks: any[]

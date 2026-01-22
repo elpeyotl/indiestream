@@ -151,15 +151,18 @@
 </template>
 
 <script setup lang="ts">
-import type { LikedTrack } from '~/composables/useLibrary'
+import type { LikedTrack } from '~/stores/library'
 
 definePageMeta({
   middleware: 'auth',
 })
 
-const { getStreamUrl } = useAlbum()
-const { getLikedTracks, unlikeTrack } = useLibrary()
-const { playPlaylist } = usePlayer()
+const albumStore = useAlbumStore()
+const { getStreamUrl } = albumStore
+const libraryStore = useLibraryStore()
+const { getLikedTracks, unlikeTrack } = libraryStore
+const playerStore = usePlayerStore()
+const { playPlaylist } = playerStore
 
 const loading = ref(true)
 const tracks = ref<LikedTrack[]>([])

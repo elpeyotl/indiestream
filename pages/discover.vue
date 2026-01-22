@@ -31,13 +31,15 @@
         >
           <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
             <div class="absolute inset-0">
-              <img
+              <NuxtImg
                 v-if="albumCovers[album.id]"
-                v-fade-image
                 :src="albumCovers[album.id]"
                 :alt="album.title"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                :width="256"
+                :height="256"
+                format="webp"
                 loading="lazy"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div v-else class="w-full h-full flex items-center justify-center">
                 <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
@@ -157,13 +159,15 @@
         >
           <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
             <div class="absolute inset-0">
-              <img
+              <NuxtImg
                 v-if="track.coverUrl"
-                v-fade-image
                 :src="track.coverUrl"
                 :alt="track.title"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                :width="256"
+                :height="256"
+                format="webp"
                 loading="lazy"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div v-else class="w-full h-full flex items-center justify-center">
                 <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
@@ -246,9 +250,9 @@
 
 <script setup lang="ts">
 import type { Database } from '~/types/database'
-import type { Band } from '~/composables/useBand'
-import type { Album } from '~/composables/useAlbum'
-import type { RecentlyPlayedTrack } from '~/composables/useRecentActivity'
+import type { Band } from '~/stores/band'
+import type { Album } from '~/stores/album'
+import type { RecentlyPlayedTrack } from '~/stores/recentActivity'
 
 interface FeaturedPlaylist {
   id: string
@@ -268,11 +272,14 @@ interface FeaturedPlaylist {
 }
 
 const client = useSupabaseClient<Database>()
-const { getCachedCoverUrl, getAlbumById } = useAlbum()
+const albumStore = useAlbumStore()
+const { getCachedCoverUrl, getAlbumById } = albumStore
 const { moderationEnabled, loadModerationSetting } = useModerationFilter()
-const { fetchRecentlyPlayed, recentlyPlayed, loadingRecentlyPlayed } = useRecentActivity()
+const recentActivityStore = useRecentActivityStore()
+const { fetchRecentlyPlayed, recentlyPlayed, loadingRecentlyPlayed } = recentActivityStore
 const user = useSupabaseUser()
-const { setQueue, playPlaylist } = usePlayer()
+const playerStore = usePlayerStore()
+const { setQueue, playPlaylist } = playerStore
 
 const loadingPlayId = ref<string | null>(null)
 const loadingMore = ref(false)
@@ -339,8 +346,7 @@ const { data: releasesData, pending: loadingReleases, refresh: refreshReleases }
     )
 
     return { albums: releasesResult, covers }
-  },
-  { server: false }
+  }
 )
 
 const newReleases = computed(() => releasesData.value?.albums || [])
@@ -374,8 +380,7 @@ const { data: playlistsData, pending: loadingPlaylists, refresh: refreshPlaylist
     )
 
     return { playlists: data.playlists, covers }
-  },
-  { server: false }
+  }
 )
 
 const featuredPlaylists = computed(() => playlistsData.value?.playlists || [])
@@ -406,8 +411,7 @@ const { data: featuredArtists, pending: loadingFeatured, refresh: refreshFeature
     )
 
     return artists as Band[]
-  },
-  { server: false }
+  }
 )
 
 // All Artists - using useLazyAsyncData (first page only)
@@ -437,8 +441,7 @@ const { data: allArtistsData, pending: loadingAllArtists, refresh: refreshAllArt
       artists: artists as Band[],
       hasMore: artists.length === pageSize,
     }
-  },
-  { server: false }
+  }
 )
 
 // Mutable list for pagination (starts with initial data)

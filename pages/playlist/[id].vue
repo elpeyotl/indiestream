@@ -491,13 +491,16 @@
 </template>
 
 <script setup lang="ts">
-import type { PlaylistWithTracks, Collaborator } from '~/composables/usePlaylist'
-import type { PlayerTrack } from '~/composables/usePlayer'
+import { storeToRefs } from 'pinia'
+import type { PlaylistWithTracks, Collaborator } from '~/stores/playlist'
+import type { PlayerTrack } from '~/stores/player'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
-const { getStreamUrl } = useAlbum()
+const albumStore = useAlbumStore()
+const { getStreamUrl } = albumStore
+const playlistStore = usePlaylistStore()
 const {
   getPlaylist,
   updatePlaylist,
@@ -508,16 +511,19 @@ const {
   inviteCollaborator,
   removeCollaborator,
   generateShareLink,
-} = usePlaylist()
-const { playPlaylist, isLoading: playerLoading } = usePlayer()
-const { isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
+} = playlistStore
+const playerStore = usePlayerStore()
+const { isLoading: playerLoading } = storeToRefs(playerStore)
+const { playPlaylist } = playerStore
+const libraryStore = useLibraryStore()
+const { isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = libraryStore
 
 // Use a simple getter for playlistId since it's used in many places
 const getPlaylistId = () => route.params.id as string
 const collaborators = ref<Collaborator[]>([])
 const trackCovers = ref<Record<string, string>>({})
 
-// Fetch playlist using useLazyAsyncData
+// Fetch playlist using useLazyAsyncData (SSR enabled for public playlists)
 const { data: playlist, pending: loading, refresh: refreshPlaylist } = await useLazyAsyncData(
   `playlist-${route.params.id}`,
   async () => {
@@ -526,7 +532,6 @@ const { data: playlist, pending: loading, refresh: refreshPlaylist } = await use
   },
   {
     watch: [() => route.params.id],
-    server: false,
   }
 )
 

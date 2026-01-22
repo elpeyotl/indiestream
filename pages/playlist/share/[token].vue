@@ -147,14 +147,19 @@
 </template>
 
 <script setup lang="ts">
-import type { PlaylistWithTracks } from '~/composables/usePlaylist'
+import { storeToRefs } from 'pinia'
+import type { PlaylistWithTracks } from '~/stores/playlist'
 
 const route = useRoute()
 const toast = useToast()
 const user = useSupabaseUser()
-const { getStreamUrl } = useAlbum()
-const { getSharedPlaylist } = usePlaylist()
-const { playPlaylist, isLoading: playerLoading } = usePlayer()
+const albumStore = useAlbumStore()
+const { getStreamUrl } = albumStore
+const playlistStore = usePlaylistStore()
+const { getSharedPlaylist } = playlistStore
+const playerStore = usePlayerStore()
+const { isLoading: playerLoading } = storeToRefs(playerStore)
+const { playPlaylist } = playerStore
 
 const token = route.params.token as string
 

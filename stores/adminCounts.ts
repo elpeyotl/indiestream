@@ -1,7 +1,8 @@
-// Global admin pending counts with realtime updates
+// Admin pending counts store using plain Pinia with realtime updates
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import type { Database } from '~/types/database'
 
+// Types
 export interface AdminCounts {
   moderation: number
   artists: number
@@ -9,16 +10,18 @@ export interface AdminCounts {
   dmca: number
 }
 
-// Global state (shared across all components)
-const adminCounts = ref<AdminCounts | null>(null)
-const isLoading = ref(false)
-const isAdmin = ref(false)
+// Client-only state (not reactive, used for realtime subscription)
 let realtimeChannel: RealtimeChannel | null = null
 let fetchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
-export const useAdminCounts = () => {
+export const useAdminCountsStore = defineStore('adminCounts', () => {
   const client = useSupabaseClient<Database>()
   const user = useSupabaseUser()
+
+  // Use useState for SSR-safe shared state
+  const adminCounts = useState<AdminCounts | null>('adminCounts', () => null)
+  const isLoading = useState<boolean>('adminCountsLoading', () => false)
+  const isAdmin = useState<boolean>('adminCountsIsAdmin', () => false)
 
   const totalPendingCount = computed(() => {
     if (!adminCounts.value) return 0
@@ -35,7 +38,7 @@ export const useAdminCounts = () => {
     }, 500)
   }
 
-  // Fetch counts from API
+  // Fetch counts from API - always fetches fresh data
   const fetchCounts = async () => {
     if (!isAdmin.value || isLoading.value) return
 
@@ -51,6 +54,9 @@ export const useAdminCounts = () => {
 
   // Check if current user is admin and set up counts
   const initializeForUser = async (userId: string | undefined) => {
+    // Skip on server to avoid "Auth session missing" errors
+    if (import.meta.server) return
+
     if (!userId) {
       isAdmin.value = false
       adminCounts.value = null
@@ -169,17 +175,11 @@ export const useAdminCounts = () => {
     initializeForUser(newUser?.id)
   }, { immediate: true })
 
-  // Cleanup on unmount (only unsubscribe if no other components need it)
-  onUnmounted(() => {
-    // Don't unsubscribe here since state is global
-    // Cleanup happens when user logs out
-  })
-
   return {
-    adminCounts: readonly(adminCounts),
+    adminCounts,
     totalPendingCount,
-    isAdmin: readonly(isAdmin),
-    isLoading: readonly(isLoading),
+    isAdmin,
+    isLoading,
     fetchCounts,
   }
-}
+})

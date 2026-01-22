@@ -9,6 +9,7 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent, type Component } from 'vue'
+import { storeToRefs } from 'pinia'
 
 // Lazy-load all background components to reduce initial bundle size
 const ParticleBackground = defineAsyncComponent(() => import('~/components/ParticleBackground.vue'))
@@ -25,7 +26,8 @@ const props = defineProps<{
   audioData?: Uint8Array | null
 }>()
 
-const { currentEffect } = useBackgroundEffect()
+const backgroundEffectStore = useBackgroundEffectStore()
+const { currentEffect } = storeToRefs(backgroundEffectStore)
 
 const backgroundComponent = computed<Component | null>(() => {
   switch (currentEffect.value) {

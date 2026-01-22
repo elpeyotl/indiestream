@@ -123,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PlayerTrack } from '~/composables/usePlayer'
+import type { PlayerTrack } from '~/stores/player'
 
 const props = defineProps<{
   modelValue: boolean
@@ -134,8 +134,10 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
-const { addNextInQueue, addToQueue } = usePlayer()
-const { isTrackLiked, toggleTrackLike } = useLibrary()
+const playerStore = usePlayerStore()
+const { addNextInQueue, addToQueue } = playerStore
+const libraryStore = useLibraryStore()
+const { isTrackLiked, toggleTrackLike } = libraryStore
 const toast = useToast()
 
 const showPlaylistPicker = ref(false)

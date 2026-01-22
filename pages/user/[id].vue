@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { PublicUserProfile } from '~/composables/useUserProfile'
+import type { PublicUserProfile } from '~/stores/userProfile'
 
 const route = useRoute()
 const getUserId = () => route.params.id as string
 
-const { fetchPublicProfile } = useUserProfile()
+const userProfileStore = useUserProfileStore()
+const { fetchPublicProfile } = userProfileStore
 
 // Helper functions
 const formatCurrency = (cents: number): string => {

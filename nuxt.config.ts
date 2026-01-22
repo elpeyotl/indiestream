@@ -4,11 +4,66 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   modules: [
+    '@pinia/nuxt',
     '@nuxtjs/supabase',
     '@nuxt/eslint',
     '@nuxt/ui',
     '@vite-pwa/nuxt',
+    '@nuxt/image',
   ],
+
+  // Image optimization configuration
+  image: {
+    // Use IPX for local image optimization
+    provider: 'ipx',
+    // Quality defaults
+    quality: 80,
+    // Format preferences (webp first, then original)
+    format: ['webp', 'jpeg', 'png'],
+    // Screen sizes for responsive images
+    screens: {
+      xs: 320,
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+    },
+    // Presets for common image types
+    presets: {
+      albumCover: {
+        modifiers: {
+          format: 'webp',
+          width: 320,
+          height: 320,
+          fit: 'cover',
+        },
+      },
+      albumCoverLarge: {
+        modifiers: {
+          format: 'webp',
+          width: 640,
+          height: 640,
+          fit: 'cover',
+        },
+      },
+      avatar: {
+        modifiers: {
+          format: 'webp',
+          width: 96,
+          height: 96,
+          fit: 'cover',
+        },
+      },
+      avatarLarge: {
+        modifiers: {
+          format: 'webp',
+          width: 192,
+          height: 192,
+          fit: 'cover',
+        },
+      },
+    },
+  },
 
   // PWA configuration
   pwa: {
@@ -81,7 +136,7 @@ export default defineNuxtConfig({
     cookieOptions: {
       maxAge: 60 * 60 * 8, // 8 hours
       sameSite: 'lax',
-      secure: false, // Set to true in production
+      secure: process.env.NODE_ENV === 'production',
     },
   },
 

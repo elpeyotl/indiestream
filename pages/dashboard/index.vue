@@ -422,7 +422,7 @@
 
 <script setup lang="ts">
 import type { Database } from '~/types/database'
-import type { Band } from '~/composables/useBand'
+import type { Band } from '~/stores/band'
 
 definePageMeta({
   middleware: 'auth',
@@ -430,9 +430,13 @@ definePageMeta({
 
 const user = useSupabaseUser()
 const client = useSupabaseClient<Database>()
-const { getUserBands } = useBand()
-const { getStreamUrl } = useAlbum()
-const { subscription, isSubscribed, freeTierStatus, loading: subscriptionLoading, openCustomerPortal, fetchSubscription } = useSubscription()
+const bandStore = useBandStore()
+const { getUserBands } = bandStore
+const albumStore = useAlbumStore()
+const { getStreamUrl } = albumStore
+const subscriptionStore = useSubscriptionStore()
+const { subscription, isSubscribed, freeTierStatus, loading: subscriptionLoading } = storeToRefs(subscriptionStore)
+const { openCustomerPortal, fetchSubscription } = subscriptionStore
 
 // Impact distribution interface
 interface ImpactDistribution {
@@ -444,7 +448,7 @@ interface ImpactDistribution {
 const syncing = ref(false)
 const toast = useToast()
 
-// Fetch bands using useAsyncData
+// Fetch bands using useAsyncData (auth-required, client-only)
 const { data: bands, pending: bandsPending } = await useLazyAsyncData(
   'dashboard-bands',
   async () => {
@@ -465,10 +469,11 @@ const { data: bands, pending: bandsPending } = await useLazyAsyncData(
   },
   {
     default: () => [] as Band[],
+    server: false,
   }
 )
 
-// Fetch listening stats using useAsyncData
+// Fetch listening stats using useAsyncData (auth-required, client-only)
 const { data: listeningStats, pending: statsPending } = await useLazyAsyncData(
   'dashboard-listening-stats',
   async () => {
@@ -490,10 +495,11 @@ const { data: listeningStats, pending: statsPending } = await useLazyAsyncData(
   },
   {
     default: () => ({ totalSeconds: 0, totalStreams: 0, uniqueArtists: 0 }),
+    server: false,
   }
 )
 
-// Fetch impact distribution for subscribers using useLazyAsyncData
+// Fetch impact distribution for subscribers using useLazyAsyncData (auth-required, client-only)
 const { data: distribution, pending: impactLoading, refresh: refreshDistribution } = await useLazyAsyncData<ImpactDistribution | null>(
   'dashboard-impact',
   async () => {
@@ -508,6 +514,7 @@ const { data: distribution, pending: impactLoading, refresh: refreshDistribution
   {
     default: () => null,
     watch: [isSubscribed],
+    server: false,
   }
 )
 

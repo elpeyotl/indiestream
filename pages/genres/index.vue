@@ -97,8 +97,10 @@
 </template>
 
 <script setup lang="ts">
-const { getCachedCoverUrl } = useAlbum()
-const { setQueue } = usePlayer()
+const albumStore = useAlbumStore()
+const { getCachedCoverUrl } = albumStore
+const playerStore = usePlayerStore()
+const { setQueue } = playerStore
 
 interface Genre {
   name: string
@@ -119,6 +121,24 @@ const { data: genresData, pending: loading, error: fetchError, refresh } = await
 // Computed accessors
 const genres = computed(() => genresData.value?.genres ?? [])
 const error = computed(() => !!fetchError.value)
+
+// Load avatar URLs for all genres in parallel
+const loadAvatars = async (genreList: Genre[]) => {
+  const avatarPromises = genreList.map(async (genre) => {
+    if (!genre.avatarKeys?.length) return
+
+    const urls: string[] = []
+    for (const key of genre.avatarKeys) {
+      const url = await getCachedCoverUrl(key)
+      if (url) urls.push(url)
+    }
+    if (urls.length > 0) {
+      genreAvatars.value[genre.slug] = urls
+    }
+  })
+
+  await Promise.all(avatarPromises)
+}
 
 // Load avatars when genres data changes
 watch(genres, async (newGenres) => {
@@ -193,24 +213,6 @@ const playGenre = async (genre: Genre) => {
   } finally {
     loadingPlayId.value = null
   }
-}
-
-const loadAvatars = async (genreList: Genre[]) => {
-  // Load avatar URLs for all genres in parallel
-  const avatarPromises = genreList.map(async (genre) => {
-    if (!genre.avatarKeys?.length) return
-
-    const urls: string[] = []
-    for (const key of genre.avatarKeys) {
-      const url = await getCachedCoverUrl(key)
-      if (url) urls.push(url)
-    }
-    if (urls.length > 0) {
-      genreAvatars.value[genre.slug] = urls
-    }
-  })
-
-  await Promise.all(avatarPromises)
 }
 
 const loadGenres = () => refresh()

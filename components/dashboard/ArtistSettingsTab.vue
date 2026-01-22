@@ -342,7 +342,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Band } from '~/composables/useBand'
+import type { Band } from '~/stores/band'
 import { useArtistDashboard } from '~/composables/useArtistDashboard'
 
 const props = defineProps<{
@@ -355,8 +355,10 @@ const emit = defineEmits<{
 }>()
 
 const { toast } = useArtistDashboard()
-const { updateBand } = useBand()
-const { getStreamUrl } = useAlbum()
+const bandStore = useBandStore()
+const { updateBand } = bandStore
+const albumStore = useAlbumStore()
+const { getStreamUrl } = albumStore
 
 // State
 const saving = ref(false)

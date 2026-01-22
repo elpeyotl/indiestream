@@ -21,6 +21,17 @@ const sizeClasses = {
   xl: 'w-24 h-24 text-2xl'
 }
 
+// Image widths for NuxtImg optimization
+const sizeWidths = {
+  xs: 24,
+  sm: 32,
+  md: 48,
+  lg: 64,
+  xl: 96
+}
+
+const imageWidth = computed(() => sizeWidths[props.size])
+
 const getInitials = (name?: string | null): string => {
   if (!name) return '?'
   const parts = name.trim().split(' ')
@@ -40,10 +51,14 @@ const initials = computed(() => getInitials(props.user.displayName))
       sizeClasses[size]
     ]"
   >
-    <img
+    <NuxtImg
       v-if="user.avatarUrl"
       :src="user.avatarUrl"
       :alt="user.displayName || 'User avatar'"
+      :width="imageWidth"
+      :height="imageWidth"
+      format="webp"
+      loading="lazy"
       class="w-full h-full object-cover"
     />
     <div

@@ -75,11 +75,14 @@
             v-if="band.avatar_url && !avatarLoaded"
             class="absolute inset-0 rounded-none"
           />
-          <img
+          <NuxtImg
             v-if="band.avatar_url"
             ref="avatarImgRef"
             :src="band.avatar_url"
             :alt="band.name"
+            :width="192"
+            :height="192"
+            format="webp"
             class="w-full h-full object-cover transition-opacity duration-300"
             :class="avatarLoaded ? 'opacity-100' : 'opacity-0'"
             @load="avatarLoadedUrl = band.avatar_url"
@@ -259,13 +262,15 @@
                 class="group"
               >
                 <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
-                  <img
+                  <NuxtImg
                     v-if="albumCovers[album.id]"
-                    v-fade-image
                     :src="albumCovers[album.id]"
                     :alt="album.title"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    :width="256"
+                    :height="256"
+                    format="webp"
                     loading="lazy"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div v-else class="w-full h-full flex items-center justify-center">
                     <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
@@ -397,10 +402,14 @@
               >
                 <!-- Avatar -->
                 <div class="w-20 h-20 rounded-full overflow-hidden mb-3 ring-2 ring-zinc-800 group-hover:ring-violet-500 transition-all">
-                  <img
+                  <NuxtImg
                     v-if="follower.avatarUrl"
                     :src="follower.avatarUrl"
                     :alt="follower.displayName || 'User'"
+                    :width="80"
+                    :height="80"
+                    format="webp"
+                    loading="lazy"
                     class="w-full h-full object-cover"
                   />
                   <div
@@ -510,15 +519,18 @@
 </template>
 
 <script setup lang="ts">
-import type { Band } from '~/composables/useBand'
-import type { Album } from '~/composables/useAlbum'
+import type { Band } from '~/stores/band'
+import type { Album } from '~/stores/album'
 
 const route = useRoute()
 const user = useSupabaseUser()
 const toast = useToast()
-const { getBandBySlug } = useBand()
-const { getBandAlbums, getCachedCoverUrl } = useAlbum()
-const { playAlbum } = usePlayer()
+const bandStore = useBandStore()
+const { getBandBySlug } = bandStore
+const albumStore = useAlbumStore()
+const { getBandAlbums, getCachedCoverUrl } = albumStore
+const playerStore = usePlayerStore()
+const { playAlbum } = playerStore
 
 // Track avatar loaded state per URL to handle navigation between artists
 const avatarLoadedUrl = ref<string | null>(null)
@@ -533,7 +545,11 @@ const { data: band, pending: loading, refresh: refreshBand } = await useLazyAsyn
   `artist-${route.params.artist}`,
   async () => {
     const slug = route.params.artist as string
-    return await getBandBySlug(slug)
+    const result = await getBandBySlug(slug)
+    if (!result) {
+      throw createError({ statusCode: 404, statusMessage: 'Artist not found' })
+    }
+    return result
   },
   {
     watch: [() => route.params.artist],

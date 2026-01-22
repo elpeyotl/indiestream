@@ -64,10 +64,13 @@
               v-if="!imageLoaded"
               class="absolute inset-0 rounded-none"
             />
-            <img
+            <NuxtImg
               v-if="coverUrl"
               :src="coverUrl"
               :alt="album.title"
+              :width="320"
+              :height="320"
+              format="webp"
               class="w-full h-full object-cover transition-opacity duration-300"
               :class="imageLoaded ? 'opacity-100' : 'opacity-0'"
               @load="imageLoaded = true"
@@ -267,10 +270,14 @@
           class="group"
         >
           <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-2">
-            <img
+            <NuxtImg
               v-if="otherAlbumCovers[otherAlbum.id]"
               :src="otherAlbumCovers[otherAlbum.id]"
               :alt="otherAlbum.title"
+              :width="192"
+              :height="192"
+              format="webp"
+              loading="lazy"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <div v-else class="w-full h-full flex items-center justify-center">
@@ -362,15 +369,22 @@
 </template>
 
 <script setup lang="ts">
-import type { Album, Track, TrackCredit } from '~/composables/useAlbum'
-import type { PlayerTrack } from '~/composables/usePlayer'
+import { storeToRefs } from 'pinia'
+import type { Album, Track, TrackCredit } from '~/stores/album'
+import type { PlayerTrack } from '~/stores/player'
 
 const route = useRoute()
-const { getAlbumBySlug, getAlbumBySlugForOwner, getBandAlbums, getCachedCoverUrl, getCreditsForTracks, getStreamUrl } = useAlbum()
-const { getBandBySlug } = useBand()
-const { playAlbum, playTrack: playerPlayTrack, currentTrack, isPlaying, isLoading: playerLoading } = usePlayer()
-const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = useLibrary()
-const { isAdmin } = useUserProfile()
+const albumStore = useAlbumStore()
+const { getAlbumBySlug, getAlbumBySlugForOwner, getBandAlbums, getCachedCoverUrl, getCreditsForTracks, getStreamUrl } = albumStore
+const bandStore = useBandStore()
+const { getBandBySlug } = bandStore
+const playerStore = usePlayerStore()
+const { currentTrack, isPlaying, isLoading: playerLoading } = storeToRefs(playerStore)
+const { playAlbum, playTrack: playerPlayTrack } = playerStore
+const libraryStore = useLibraryStore()
+const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = libraryStore
+const userProfileStore = useUserProfileStore()
+const { isAdmin } = storeToRefs(userProfileStore)
 const user = useSupabaseUser()
 
 const otherAlbums = ref<Album[]>([])

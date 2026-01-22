@@ -87,15 +87,17 @@
 </template>
 
 <script setup lang="ts">
-import type { Band } from '~/composables/useBand'
+import type { Band } from '~/stores/band'
 
 definePageMeta({
   middleware: 'auth',
 })
 
 const route = useRoute()
-const { getUserBands, getBandById } = useBand()
-const { createAlbum, createTrack, updateTrack, updateAlbum, deleteTrack, getUploadUrl, setTrackCredits, getStreamUrl, getAlbumById, getCreditsForTracks } = useAlbum()
+const bandStore = useBandStore()
+const { getUserBands, getBandById } = bandStore
+const albumStore = useAlbumStore()
+const { createAlbum, createTrack, updateTrack, updateAlbum, deleteTrack, getUploadUrl, setTrackCredits, getStreamUrl, getAlbumById, getCreditsForTracks } = albumStore
 const { state, toast, uploadFileWithProgress, uploadProcessedCover, getAudioDuration, resetWizard, loadAlbumForEdit } = useUploadWizard()
 const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 const user = useSupabaseUser()

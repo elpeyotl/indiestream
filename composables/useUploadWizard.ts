@@ -1,8 +1,8 @@
 // Shared state and utilities for the upload wizard
 // Uses useState to persist data across step navigation
 
-import type { Band } from '~/composables/useBand'
-import type { Album, Track } from '~/composables/useAlbum'
+import type { Band } from '~/stores/band'
+import type { Album, Track } from '~/stores/album'
 
 // Form interface for track credits in the upload wizard (different from DB TrackCredit)
 export interface TrackCreditForm {

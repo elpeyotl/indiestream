@@ -1,8 +1,8 @@
-// Subscription management composable
-// Using global state so subscription status is shared across all components
+// Subscription store using plain Pinia
 import type { Database } from '~/types/database'
 
-interface SubscriptionData {
+// Types
+export interface SubscriptionData {
   status: string
   plan: string
   current_period_end: string | null
@@ -10,94 +10,50 @@ interface SubscriptionData {
   stripe_subscription_id: string | null
 }
 
-interface FreeTierData {
+export interface FreeTierData {
   playsUsed: number
   playsRemaining: number
   resetsAt: string | null
 }
 
-// Cache configuration
-const SUBSCRIPTION_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+// Cache TTL: 5 minutes
+const CACHE_TTL = 5 * 60 * 1000
 
-export const useSubscription = () => {
+export const useSubscriptionStore = defineStore('subscription', () => {
   const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()
+
+  // Computed user ID
+  const userId = computed(() => user.value?.id || null)
 
   // Use useState for SSR-safe shared state
   const subscription = useState<SubscriptionData | null>('subscription', () => null)
   const freeTierStatus = useState<FreeTierData | null>('freeTierStatus', () => null)
   const loading = useState<boolean>('subscriptionLoading', () => false)
   const error = useState<string>('subscriptionError', () => '')
-  // Track last fetch time to prevent redundant calls
-  const lastFetchTime = useState<number>('subscriptionLastFetch', () => 0)
-  const lastUserId = useState<string | null>('subscriptionLastUserId', () => null)
 
-  // Check if user has an active subscription (must have a Stripe subscription ID)
-  const isSubscribed = computed(() => {
-    if (!subscription.value) return false
-    if (!subscription.value.stripe_subscription_id) return false
-    return ['active', 'trialing'].includes(subscription.value.status)
-  })
+  // Cache timestamps (client-only)
+  let subscriptionFetchedAt = 0
+  let freeTierFetchedAt = 0
 
-  // Check if user is on free tier
-  const isFree = computed(() => {
-    return !isSubscribed.value
-  })
+  // Check if cache is stale
+  const isSubscriptionStale = () => Date.now() - subscriptionFetchedAt > CACHE_TTL
+  const isFreeTierStale = () => Date.now() - freeTierFetchedAt > CACHE_TTL
 
-  // Check if user can play full tracks (subscribed OR has free plays remaining)
-  const canPlayFullTracks = computed(() => {
-    if (isSubscribed.value) return true
-    if (!freeTierStatus.value) return false
-    return freeTierStatus.value.playsRemaining > 0
-  })
-
-  // Free plays remaining (0 if subscribed since they have unlimited)
-  const freePlaysRemaining = computed(() => {
-    if (isSubscribed.value) return Infinity
-    return freeTierStatus.value?.playsRemaining ?? 5
-  })
-
-  // Check if we should skip fetching (already have fresh data)
-  const shouldSkipFetch = () => {
-    if (!user.value) return false
-    // Skip if we have data for this user and it's still fresh
-    if (
-      lastUserId.value === user.value.id &&
-      subscription.value !== null &&
-      Date.now() - lastFetchTime.value < SUBSCRIPTION_CACHE_TTL
-    ) {
-      return true
-    }
-    return false
-  }
-
-  // Fetch subscription status
-  const fetchSubscription = async (force = false) => {
-    if (!user.value) {
+  // Fetch subscription data from Supabase
+  const fetchSubscriptionData = async (force = false) => {
+    if (import.meta.server) return
+    if (!userId.value) {
       subscription.value = null
-      freeTierStatus.value = null
-      lastUserId.value = null
       return
     }
-
-    // Skip fetch if we already have fresh data for this user
-    if (!force && shouldSkipFetch()) {
-      return
-    }
-
-    // Prevent concurrent fetches
-    if (loading.value) {
-      return
-    }
-
-    loading.value = true
-    error.value = ''
+    if (!force && !isSubscriptionStale() && subscription.value !== null) return
 
     try {
       const { data, error: fetchError } = await supabase
         .from('subscriptions')
         .select('status, plan, current_period_end, cancel_at_period_end, stripe_subscription_id')
-        .eq('user_id', user.value.id)
+        .eq('user_id', userId.value)
         .single()
 
       if (fetchError && fetchError.code !== 'PGRST116') {
@@ -105,34 +61,36 @@ export const useSubscription = () => {
         throw fetchError
       }
 
-      subscription.value = data
-      lastFetchTime.value = Date.now()
-      lastUserId.value = user.value.id
+      subscription.value = data as SubscriptionData | null
+      subscriptionFetchedAt = Date.now()
     } catch (e: any) {
       console.error('Error fetching subscription:', e)
-      error.value = e.message
-    } finally {
-      loading.value = false
+      error.value = e.message || 'Failed to fetch subscription'
     }
-
-    // Also fetch free tier status
-    await fetchFreeTierStatus()
   }
 
-  // Fetch free tier status
-  const fetchFreeTierStatus = async () => {
-    if (!user.value) {
+  // Fetch free tier status from API
+  const fetchFreeTierData = async (force = false) => {
+    if (import.meta.server) return
+    if (!userId.value) {
       freeTierStatus.value = null
       return
     }
+    if (!force && !isFreeTierStale() && freeTierStatus.value !== null) return
 
     try {
-      const data = await $fetch('/api/free-tier/status')
+      const data = await $fetch<{
+        playsUsed: number
+        playsRemaining: number
+        resetsAt: string | null
+      }>('/api/free-tier/status')
+
       freeTierStatus.value = {
         playsUsed: data.playsUsed,
         playsRemaining: data.playsRemaining,
         resetsAt: data.resetsAt,
       }
+      freeTierFetchedAt = Date.now()
     } catch (e) {
       console.error('Error fetching free tier status:', e)
       // Default to 5 plays remaining if we can't fetch
@@ -142,6 +100,76 @@ export const useSubscription = () => {
         resetsAt: null,
       }
     }
+  }
+
+  // Fetch subscription when user logs in, clear when logged out
+  watch(userId, async (newUserId, oldUserId) => {
+    if (!newUserId) {
+      // User logged out - clear state
+      subscription.value = null
+      freeTierStatus.value = null
+      subscriptionFetchedAt = 0
+      freeTierFetchedAt = 0
+    } else if (newUserId && !oldUserId) {
+      // User just logged in - fetch subscription data
+      await Promise.all([
+        fetchSubscriptionData(true),
+        fetchFreeTierData(true),
+      ])
+    }
+  }, { immediate: true })
+
+  // Computed properties
+  const isSubscribed = computed(() => {
+    if (!subscription.value) return false
+    if (!subscription.value.stripe_subscription_id) return false
+    return ['active', 'trialing'].includes(subscription.value.status)
+  })
+
+  const isFree = computed(() => {
+    return !isSubscribed.value
+  })
+
+  const canPlayFullTracks = computed(() => {
+    if (isSubscribed.value) return true
+    if (!freeTierStatus.value) return false
+    return freeTierStatus.value.playsRemaining > 0
+  })
+
+  const freePlaysRemaining = computed(() => {
+    if (isSubscribed.value) return Infinity
+    return freeTierStatus.value?.playsRemaining ?? 5
+  })
+
+  // Fetch subscription (backward compatible API)
+  const fetchSubscription = async (force = false) => {
+    if (!user.value) {
+      subscription.value = null
+      freeTierStatus.value = null
+      return
+    }
+
+    loading.value = true
+    error.value = ''
+
+    try {
+      await Promise.all([
+        fetchSubscriptionData(force),
+        fetchFreeTierData(force),
+      ])
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Fetch free tier status (backward compatible API)
+  const fetchFreeTierStatus = async () => {
+    if (!user.value) {
+      freeTierStatus.value = null
+      return
+    }
+
+    await fetchFreeTierData(true)
   }
 
   // Use a free play (decrements counter locally)
@@ -204,31 +232,24 @@ export const useSubscription = () => {
     }
   }
 
-  // Watch for user changes - only run on client side to avoid SSR auth issues
-  if (import.meta.client) {
-    watch(user, (newUser) => {
-      if (newUser) {
-        fetchSubscription()
-      } else {
-        subscription.value = null
-        freeTierStatus.value = null
-      }
-    }, { immediate: true })
-  }
-
   return {
+    // State
     subscription,
     freeTierStatus,
     loading,
     error,
+
+    // Computed
     isSubscribed,
     isFree,
     canPlayFullTracks,
     freePlaysRemaining,
+
+    // Actions
     fetchSubscription,
     fetchFreeTierStatus,
     useFreePlays,
     startCheckout,
     openCustomerPortal,
   }
-}
+})

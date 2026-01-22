@@ -5,13 +5,15 @@
       :class="rounded ? 'rounded-xl' : 'rounded-lg'"
     >
       <div class="absolute inset-0">
-        <img
+        <NuxtImg
           v-if="artist.avatar_url"
-          v-fade-image
           :src="artist.avatar_url"
           :alt="artist.name"
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          :width="large ? 320 : 192"
+          :height="large ? 320 : 192"
+          format="webp"
           loading="lazy"
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div
           v-else
@@ -67,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Band } from '~/composables/useBand'
+import type { Band } from '~/stores/band'
 
 defineProps<{
   artist: Band

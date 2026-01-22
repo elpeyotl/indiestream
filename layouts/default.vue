@@ -535,9 +535,10 @@
 
 <script setup lang="ts">
 import { useBreakpoints, breakpointsTailwind } from "@vueuse/core";
+import { storeToRefs } from "pinia";
 import BokehBackground from "~/components/backgrounds/BokehBackground.vue";
 import { APP_VERSION } from "~/utils/version";
-import type { Notification } from "~/composables/useNotifications";
+import type { Notification } from "~/stores/notifications";
 
 // Global pull-to-refresh setup (listeners live here, pages register callbacks)
 const { pullDistance, isRefreshing, threshold } = useGlobalPullToRefresh();
@@ -555,14 +556,14 @@ const notificationsOpen = ref(false);
 const user = useSupabaseUser();
 const client = useSupabaseClient();
 const { signOut } = useAuth();
-const { audioData } = usePlayer();
+const playerStore = usePlayerStore();
+const { audioData } = storeToRefs(playerStore);
 const toast = useToast();
 
-// Notifications
+// Notifications (Pinia store)
+const notificationsStore = useNotificationsStore()
+const { notifications, unreadCount, loading: notificationsLoading } = storeToRefs(notificationsStore)
 const {
-  notifications,
-  unreadCount,
-  loading: notificationsLoading,
   fetchUnreadCount,
   fetchNotifications,
   markAsRead,
@@ -573,7 +574,7 @@ const {
   formatTime,
   subscribeToRealtime,
   unsubscribeFromRealtime,
-} = useNotifications();
+} = notificationsStore
 
 // Fetch unread count on mount and when user changes, subscribe to realtime
 // Only run on client-side to avoid SSR auth session issues
@@ -607,8 +608,9 @@ const handleNotificationClick = (notification: Notification) => {
   }
 };
 
-// Admin state with realtime updates (global composable)
-const { adminCounts, totalPendingCount, isAdmin } = useAdminCounts();
+// Admin state with realtime updates (Pinia store)
+const adminCountsStore = useAdminCountsStore()
+const { adminCounts, totalPendingCount, isAdmin } = storeToRefs(adminCountsStore)
 
 const displayName = computed(() => {
   if (!user.value) return "";

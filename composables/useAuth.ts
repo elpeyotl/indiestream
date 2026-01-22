@@ -35,8 +35,8 @@ export const useAuth = () => {
     if (error) throw error
 
     // Clear user profile on logout
-    const { clearOwnProfile } = useUserProfile()
-    clearOwnProfile()
+    const userProfileStore = useUserProfileStore()
+    userProfileStore.clearOwnProfile()
 
     navigateTo('/')
   }

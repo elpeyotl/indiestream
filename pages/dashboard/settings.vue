@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+
 definePageMeta({
   middleware: 'auth'
 })
 
-const { ownProfile: profile, fetchOwnProfile, updateProfile, uploadAvatar } = useUserProfile()
+const userProfileStore = useUserProfileStore()
+const { ownProfile: profile } = storeToRefs(userProfileStore)
+const { fetchOwnProfile, updateProfile, uploadAvatar } = userProfileStore
 const toast = useToast()
 
 // Form state

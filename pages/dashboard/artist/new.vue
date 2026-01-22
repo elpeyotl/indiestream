@@ -321,7 +321,8 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { createBand, isSlugAvailable, generateSlug } = useBand()
+const bandStore = useBandStore()
+const { createBand, isSlugAvailable, generateSlug } = bandStore
 const router = useRouter()
 const toast = useToast()
 
@@ -465,8 +466,7 @@ const handleSubmit = async () => {
       })
 
       // Update the band with the avatar key
-      const { updateBand } = useBand()
-      await updateBand(band.id, { avatar_key: key })
+      await bandStore.updateBand(band.id, { avatar_key: key })
     } catch (uploadError) {
       console.error('Avatar upload failed:', uploadError)
       // Don't fail the whole creation, just show a warning

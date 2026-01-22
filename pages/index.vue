@@ -239,8 +239,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Band } from '~/composables/useBand'
-import type { Album } from '~/composables/useAlbum'
+import type { Band } from '~/stores/band'
+import type { Album } from '~/stores/album'
 
 // Redirect authenticated users to discover page (handled by middleware)
 definePageMeta({
@@ -248,7 +248,8 @@ definePageMeta({
 })
 
 const client = useSupabaseClient()
-const { getStreamUrl } = useAlbum()
+const albumStore = useAlbumStore()
+const { getStreamUrl } = albumStore
 const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 
 const newReleases = ref<Album[]>([])

@@ -233,7 +233,8 @@
 </template>
 
 <script setup lang="ts">
-const { getStreamUrl } = useAlbum()
+const albumStore = useAlbumStore()
+const { getStreamUrl } = albumStore
 
 interface ArtistBreakdown {
   bandId: string

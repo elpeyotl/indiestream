@@ -243,7 +243,8 @@
 
 <script setup lang="ts">
 const user = useSupabaseUser()
-const { isSubscribed, startCheckout, loading } = useSubscription()
+const subscriptionStore = useSubscriptionStore()
+const { isSubscribed, startCheckout, loading } = subscriptionStore
 const toast = useToast()
 
 useHead({

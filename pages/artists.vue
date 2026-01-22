@@ -99,11 +99,13 @@
 </template>
 
 <script setup lang="ts">
-import type { Band } from '~/composables/useBand'
+import type { Band } from '~/stores/band'
 
 const client = useSupabaseClient()
-const { getCachedCoverUrl } = useAlbum()
-const { setQueue } = usePlayer()
+const albumStore = useAlbumStore()
+const { getCachedCoverUrl } = albumStore
+const playerStore = usePlayerStore()
+const { setQueue } = playerStore
 
 const loadingMore = ref(false)
 const loadingPlayId = ref<string | null>(null)

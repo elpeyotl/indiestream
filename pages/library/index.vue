@@ -542,34 +542,32 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import type {
   SavedAlbum,
   LikedTrack,
   FollowedArtist,
-} from '~/composables/useLibrary'
-import type { PlayerTrack } from '~/composables/usePlayer'
-import type { RecentlyPlayedTrack } from '~/composables/useRecentActivity'
+} from '~/stores/library'
+import type { PlayerTrack } from '~/stores/player'
+import type { RecentlyPlayedTrack } from '~/stores/recentActivity'
 
 definePageMeta({
   middleware: 'auth',
 })
 
-const { getStreamUrl, getCachedCoverUrl } = useAlbum()
-const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } =
-  useLibrary()
-const {
-  playTrackFromLibrary,
-  playPlaylist,
-  isLoading: playerLoading,
-  setQueue,
-} = usePlayer()
-const {
-  playlists: userPlaylists,
-  fetchPlaylists,
-  createPlaylist,
-  getPlaylist,
-} = usePlaylist()
-const { fetchRecentlyPlayed, recentlyPlayed } = useRecentActivity()
+const albumStore = useAlbumStore()
+const { getStreamUrl, getCachedCoverUrl } = albumStore
+const libraryStore = useLibraryStore()
+const { getSavedAlbums, getLikedTracks, getFollowedArtists, unlikeTrack } = libraryStore
+const playerStore = usePlayerStore()
+const { isLoading: playerLoading } = storeToRefs(playerStore)
+const { playTrackFromLibrary, playPlaylist, setQueue } = playerStore
+const playlistStore = usePlaylistStore()
+const { playlists: userPlaylists } = storeToRefs(playlistStore)
+const { fetchPlaylists, createPlaylist, getPlaylist } = playlistStore
+const recentActivityStore = useRecentActivityStore()
+const { recentlyPlayed } = storeToRefs(recentActivityStore)
+const { fetchRecentlyPlayed } = recentActivityStore
 const route = useRoute()
 const loadingHistory = ref(false)
 const activeTab = ref(0)

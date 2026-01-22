@@ -44,7 +44,11 @@ useHead({
 })
 
 // Refresh subscription status with retry (webhook may not have processed yet)
-const { fetchSubscription, isSubscribed } = useSubscription()
+import { storeToRefs } from 'pinia'
+
+const subscriptionStore = useSubscriptionStore()
+const { isSubscribed } = storeToRefs(subscriptionStore)
+const { fetchSubscription } = subscriptionStore
 
 const syncAndFetch = async () => {
   // First try to sync from Stripe (in case webhook didn't fire)

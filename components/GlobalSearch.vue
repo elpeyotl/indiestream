@@ -257,8 +257,10 @@
 
 <script setup lang="ts">
 const client = useSupabaseClient()
-const { getStreamUrl } = useAlbum()
-const { recentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } = useRecentActivity()
+const albumStore = useAlbumStore()
+const { getStreamUrl } = albumStore
+const recentActivityStore = useRecentActivityStore()
+const { recentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } = recentActivityStore
 
 const isOpen = ref(false)
 const query = ref('')

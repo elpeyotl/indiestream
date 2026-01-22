@@ -1,7 +1,8 @@
-// Composable for managing in-app notifications
+// Notifications store using plain Pinia with realtime updates
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import type { Database } from '~/types/database'
 
+// Types
 export interface Notification {
   id: string
   user_id: string
@@ -16,7 +17,7 @@ export interface Notification {
 // Keep realtime channel as module-level (not reactive, client-only)
 let realtimeChannel: RealtimeChannel | null = null
 
-export const useNotifications = () => {
+export const useNotificationsStore = defineStore('notifications', () => {
   const user = useSupabaseUser()
   const client = useSupabaseClient<Database>()
 
@@ -226,9 +227,9 @@ export const useNotifications = () => {
   }
 
   return {
-    notifications: readonly(notifications),
-    unreadCount: readonly(unreadCount),
-    loading: readonly(loading),
+    notifications,
+    unreadCount,
+    loading,
     fetchUnreadCount,
     fetchNotifications,
     markAsRead,
@@ -240,4 +241,4 @@ export const useNotifications = () => {
     subscribeToRealtime,
     unsubscribeFromRealtime,
   }
-}
+})

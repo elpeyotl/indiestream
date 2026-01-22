@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Band } from '~/composables/useBand'
+import type { Band } from '~/stores/band'
 
 defineProps<{
   bands: Band[]

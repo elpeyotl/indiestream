@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.20.0] - 2026-01-22
+
+### Changed
+- **Pinia Store Migration**: Migrated all composables to Pinia stores with SWR pattern
+  - Deleted 12 composables: useAlbum, usePlayer, usePlaylist, useLibrary, useBand, useUserProfile, useSubscription, useNotifications, useAdminCounts, useStripeConnect, useRecentActivity, useBackgroundEffect
+  - New stores in `stores/` directory with `useState` for SSR-safe shared state
+  - Stale-while-revalidate caching with background revalidation
+  - Proper `storeToRefs` usage for reactive state extraction
+
+### Added
+- **@nuxt/image Integration**: Optimized image loading across the app
+  - IPX provider with WebP format conversion
+  - Presets for album covers (320x320) and avatars (96x96)
+  - Applied to: UserAvatar, PlaylistCover, ArtistCard, AudioPlayer, artist/album pages, discover, genres, charts
+
+### Fixed
+- **SSR Audit**: Corrected `server: false` settings across all pages
+  - Removed incorrect `server: false` from public pages (discover, genres, playlist)
+  - Added `server: false` to auth-required dashboard pages
+  - Converted client-only fetches to `useLazyAsyncData` where appropriate
+- **storeToRefs Patterns**: Fixed reactivity issues from incorrect store destructuring
+  - AudioPlayer: `freePlaysRemaining`, `isSubscribed` now use `storeToRefs`
+  - Library page: `recentlyPlayed` now uses `storeToRefs`
+- **Readonly Warnings**: Removed `readonly()` wrappers from store returns that conflicted with Pinia hydration
+  - Fixed in: notifications, adminCounts, recentActivity stores
+- **Genres Page 500 Error**: Fixed `loadAvatars` function hoisting issue causing SSR crash
+- **Subscription Loading**: Fixed race condition where subscription data wasn't loaded on login
+  - Added `immediate: true` watch to auto-fetch on user login
+  - Player now awaits subscription fetch before checking play allowance
+
 ## [0.19.0] - 2026-01-20
 
 ### Added

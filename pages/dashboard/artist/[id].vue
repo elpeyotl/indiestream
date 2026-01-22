@@ -225,8 +225,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Band } from '~/composables/useBand'
-import type { Album } from '~/composables/useAlbum'
+import type { Band } from '~/stores/band'
+import type { Album } from '~/stores/album'
 import { useArtistDashboard } from '~/composables/useArtistDashboard'
 import { useArtistRealtime } from '~/composables/useArtistRealtime'
 
@@ -237,8 +237,10 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const { toast, formatNumber } = useArtistDashboard()
-const { getBandById, deleteBand } = useBand()
-const { getBandAlbums, getStreamUrl, deleteAlbum } = useAlbum()
+const bandStore = useBandStore()
+const { getBandById, deleteBand } = bandStore
+const albumStore = useAlbumStore()
+const { getBandAlbums, getStreamUrl, deleteAlbum } = albumStore
 const { subscribeToAll, subscribeToAlbumTracks } = useArtistRealtime()
 
 // Mutable state for albums (can be updated by realtime)

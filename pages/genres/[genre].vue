@@ -30,13 +30,15 @@
         >
           <div class="relative w-full pb-[100%] rounded-xl overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-all group-hover:ring-2 group-hover:ring-violet-500/50">
             <div class="absolute inset-0">
-              <img
+              <NuxtImg
                 v-if="artist.avatar_url"
-                v-fade-image
                 :src="artist.avatar_url"
                 :alt="artist.name"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                :width="192"
+                :height="192"
+                format="webp"
                 loading="lazy"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div
                 v-else
@@ -75,14 +77,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Band } from '~/composables/useBand'
+import type { Band } from '~/stores/band'
 
 const route = useRoute()
 const client = useSupabaseClient()
-const { getStreamUrl } = useAlbum()
-
-const loading = ref(true)
-const artists = ref<Band[]>([])
+const albumStore = useAlbumStore()
+const { getCachedCoverUrl } = albumStore
 
 const genreSlug = computed(() => route.params.genre as string)
 
@@ -121,8 +121,10 @@ const formatNumber = (num: number): string => {
   return num.toString()
 }
 
-const loadArtists = async () => {
-  try {
+// Fetch artists using useLazyAsyncData for SSR
+const { data: artists, pending: loading } = await useLazyAsyncData(
+  `genre-${route.params.genre}`,
+  async () => {
     // Query bands that have this genre (case-insensitive search)
     const { data, error } = await client
       .from('bands')
@@ -140,26 +142,23 @@ const loadArtists = async () => {
       )
     })
 
-    // Load avatar URLs
-    for (const artist of filteredArtists) {
-      if (artist.avatar_key) {
-        try {
-          artist.avatar_url = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar:', e)
+    // Load avatar URLs in parallel (using cached helper)
+    await Promise.all(
+      filteredArtists.map(async (artist) => {
+        if (artist.avatar_key) {
+          const url = await getCachedCoverUrl(artist.avatar_key)
+          if (url) artist.avatar_url = url
         }
-      }
-    }
+      })
+    )
 
-    artists.value = filteredArtists as Band[]
-  } catch (e) {
-    console.error('Failed to load artists:', e)
-  } finally {
-    loading.value = false
+    return filteredArtists as Band[]
+  },
+  {
+    default: () => [] as Band[],
+    watch: [() => route.params.genre],
   }
-}
-
-onMounted(loadArtists)
+)
 
 // Update page title
 useHead({

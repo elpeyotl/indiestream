@@ -421,7 +421,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Album } from '~/composables/useAlbum'
+import type { Album } from '~/stores/album'
 
 export interface EditableTrack {
   id: string

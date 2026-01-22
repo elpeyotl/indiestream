@@ -124,7 +124,11 @@ const emit = defineEmits<{
 
 const user = useSupabaseUser()
 const toast = useToast()
-const { playlists, fetchPlaylists, createPlaylist, addTrack } = usePlaylist()
+import { storeToRefs } from 'pinia'
+
+const playlistStore = usePlaylistStore()
+const { playlists } = storeToRefs(playlistStore)
+const { fetchPlaylists, createPlaylist, addTrack } = playlistStore
 
 const showCreateModal = ref(false)
 const newPlaylistTitle = ref('')

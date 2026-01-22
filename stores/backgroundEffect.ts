@@ -1,6 +1,7 @@
-// Background effect preference composable
-import { ref } from 'vue'
+// Background effect store using Pinia
+// Manages user's background effect preference with localStorage persistence
 
+// Types
 export type BackgroundEffect =
   | 'none'
   | 'particles'
@@ -34,41 +35,47 @@ export const backgroundOptions: BackgroundOption[] = [
 
 const STORAGE_KEY = 'fairstream-background-effect'
 
-// Module-level ref for truly global state that works across Teleports
-// This is client-side only state (localStorage preference), so useState is not needed
-const currentEffect = ref<BackgroundEffect>('particles')
-let initialized = false
+export const useBackgroundEffectStore = defineStore('backgroundEffect', () => {
+  // Use useState for SSR-safe shared state
+  const currentEffect = useState<BackgroundEffect>('backgroundEffect', () => 'particles')
+  const initialized = useState<boolean>('backgroundEffectInitialized', () => false)
 
-export const useBackgroundEffect = () => {
-
-  // Load from localStorage on first use (client-side only, once)
+  // Load from localStorage on first use (client-side only)
   const loadPreference = () => {
     if (import.meta.server) return
-    if (initialized) return
+    if (initialized.value) return
 
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved && backgroundOptions.some(o => o.value === saved)) {
-      currentEffect.value = saved as BackgroundEffect
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved && backgroundOptions.some(o => o.value === saved)) {
+        currentEffect.value = saved as BackgroundEffect
+      }
+    } catch (e) {
+      console.error('Failed to load background preference:', e)
     }
-    initialized = true
+    initialized.value = true
   }
 
   // Save preference
   const setEffect = (effect: BackgroundEffect) => {
     currentEffect.value = effect
-    if (!import.meta.server) {
-      localStorage.setItem(STORAGE_KEY, effect)
+    if (import.meta.client) {
+      try {
+        localStorage.setItem(STORAGE_KEY, effect)
+      } catch (e) {
+        console.error('Failed to save background preference:', e)
+      }
     }
   }
 
-  // Initialize on first mount only
-  onMounted(() => {
+  // Initialize on client side
+  if (import.meta.client) {
     loadPreference()
-  })
+  }
 
   return {
     currentEffect,
     setEffect,
     backgroundOptions,
   }
-}
+})

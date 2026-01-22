@@ -1,5 +1,6 @@
-// Composable for managing recent activity (recently played, recent searches)
+// Recent activity store using plain Pinia
 
+// Types
 export interface RecentlyPlayedTrack {
   id: string
   title: string
@@ -19,22 +20,54 @@ export interface RecentSearch {
   timestamp: number
 }
 
+// Constants
 const RECENT_SEARCHES_KEY = 'fairstream_recent_searches'
 const MAX_RECENT_SEARCHES = 5
 
-export const useRecentActivity = () => {
+// Cache TTL: 1 minute (data changes frequently)
+const CACHE_TTL = 60 * 1000
+
+export const useRecentActivityStore = defineStore('recentActivity', () => {
   const user = useSupabaseUser()
-  const { getCachedCoverUrl } = useAlbum()
+  // Lazy access to avoid cross-request pollution on SSR
+  const getAlbumStore = () => useAlbumStore()
+
+  // Computed user ID
+  const userId = computed(() => user.value?.id || null)
+
+  // Cache timestamp
+  let recentlyPlayedFetchedAt = 0
+
+  // Check if cache is stale
+  const isRecentlyPlayedStale = () => Date.now() - recentlyPlayedFetchedAt > CACHE_TTL
 
   // ===== RECENTLY PLAYED =====
+  // Use useState for SSR-safe shared state
+  const recentlyPlayed = useState<RecentlyPlayedTrack[]>('recentlyPlayed', () => [])
+  const loadingRecentlyPlayed = useState<boolean>('loadingRecentlyPlayed', () => false)
 
-  const recentlyPlayed = ref<RecentlyPlayedTrack[]>([])
-  const loadingRecentlyPlayed = ref(false)
+  // Clear state when user logs out
+  watch(
+    userId,
+    (newUserId) => {
+      if (!newUserId) {
+        recentlyPlayed.value = []
+        recentlyPlayedFetchedAt = 0
+      }
+    }
+  )
 
-  const fetchRecentlyPlayed = async (limit = 10): Promise<RecentlyPlayedTrack[]> => {
+  // Fetch recently played
+  const fetchRecentlyPlayed = async (limit = 10, forceRefresh = false): Promise<RecentlyPlayedTrack[]> => {
+    if (import.meta.server) return []
     if (!user.value) {
       recentlyPlayed.value = []
       return []
+    }
+
+    // Check cache (only for default limit)
+    if (limit === 10 && !forceRefresh && !isRecentlyPlayedStale() && recentlyPlayed.value.length > 0) {
+      return recentlyPlayed.value
     }
 
     loadingRecentlyPlayed.value = true
@@ -43,7 +76,8 @@ export const useRecentActivity = () => {
         query: { limit },
       })
 
-      // Load cover URLs (using cache)
+      // Load cover URLs (using cache from album store)
+      const { getCachedCoverUrl } = getAlbumStore()
       for (const track of data) {
         if (track.coverKey && !track.coverUrl) {
           const url = await getCachedCoverUrl(track.coverKey)
@@ -52,22 +86,25 @@ export const useRecentActivity = () => {
       }
 
       recentlyPlayed.value = data
+      if (limit === 10) {
+        recentlyPlayedFetchedAt = Date.now()
+      }
       return data
     } catch (e) {
       console.error('Failed to fetch recently played:', e)
-      return []
+      return recentlyPlayed.value
     } finally {
       loadingRecentlyPlayed.value = false
     }
   }
 
   // ===== RECENT SEARCHES =====
-
-  const recentSearches = ref<RecentSearch[]>([])
+  // Use useState for SSR-safe shared state
+  const recentSearches = useState<RecentSearch[]>('recentSearches', () => [])
 
   // Load recent searches from localStorage
   const loadRecentSearches = () => {
-    if (typeof window === 'undefined') return
+    if (!import.meta.client) return
 
     try {
       const stored = localStorage.getItem(RECENT_SEARCHES_KEY)
@@ -82,7 +119,7 @@ export const useRecentActivity = () => {
 
   // Save recent searches to localStorage
   const saveRecentSearches = () => {
-    if (typeof window === 'undefined') return
+    if (!import.meta.client) return
 
     try {
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recentSearches.value))
@@ -142,15 +179,15 @@ export const useRecentActivity = () => {
 
   return {
     // Recently played
-    recentlyPlayed: readonly(recentlyPlayed),
-    loadingRecentlyPlayed: readonly(loadingRecentlyPlayed),
+    recentlyPlayed,
+    loadingRecentlyPlayed,
     fetchRecentlyPlayed,
 
     // Recent searches
-    recentSearches: readonly(recentSearches),
+    recentSearches,
     addRecentSearch,
     removeRecentSearch,
     clearRecentSearches,
     getRecentSearches,
   }
-}
+})

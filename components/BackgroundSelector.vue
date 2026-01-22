@@ -52,9 +52,12 @@
 </template>
 
 <script setup lang="ts">
-import type { BackgroundEffect } from '~/composables/useBackgroundEffect'
+import { storeToRefs } from 'pinia'
+import { type BackgroundEffect, backgroundOptions } from '~/stores/backgroundEffect'
 
-const { currentEffect, setEffect, backgroundOptions } = useBackgroundEffect()
+const backgroundEffectStore = useBackgroundEffectStore()
+const { currentEffect } = storeToRefs(backgroundEffectStore)
+const { setEffect } = backgroundEffectStore
 
 const isOpen = ref(false)
 const focusedIndex = ref(-1)
