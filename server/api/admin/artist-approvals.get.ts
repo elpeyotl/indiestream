@@ -72,8 +72,8 @@ export default defineEventHandler(async (event) => {
       let avatar_url = null
       if (band.avatar_key) {
         try {
-          const { getSignedUrl } = await import('~/server/utils/r2')
-          avatar_url = await getSignedUrl(band.avatar_key)
+          const { getDownloadUrl } = await import('~/server/utils/r2')
+          avatar_url = await getDownloadUrl(band.avatar_key)
         } catch (e) {
           console.error('Failed to get avatar URL for band:', band.id, e)
         }

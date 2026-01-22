@@ -214,7 +214,7 @@ export default defineEventHandler(async (event) => {
     const uploadUrl = await getUploadUrl(key, contentType)
     const response = await fetch(uploadUrl, {
       method: 'PUT',
-      body: data,
+      body: data as any,
       headers: { 'Content-Type': contentType },
     })
     if (!response.ok) {
