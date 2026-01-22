@@ -8,7 +8,7 @@ export default defineAppConfig({
   // Brand Identity
   brand: {
     name: 'Fairtune',
-    tagline: 'Stream Fair. Support Direct.',
+    tagline: '70% to artists. No pool. No mystery.',
     domain: 'fairtune.fm',
     url: 'https://fairtune.fm',
   },
@@ -75,10 +75,14 @@ export default defineAppConfig({
 
   // Platform Configuration
   platform: {
-    // Revenue distribution
-    platformFeePercentage: 15, // 15% platform fee
-    artistSharePercentage: 85, // 85% to artists
-    minimumPayoutCents: 1000,  // $10 minimum payout threshold
+    // Revenue distribution ($9.99/month)
+    // 70% ($6.99) to artists - split by listening time
+    // 15% ($1.50) to royalties - PROs (ASCAP, BMI, GEMA, SUISA, etc.)
+    // 15% ($1.50) platform costs - servers, bandwidth, team
+    platformFeePercentage: 15,    // 15% platform costs
+    royaltySharePercentage: 15,   // 15% to royalty societies (PROs)
+    artistSharePercentage: 70,    // 70% direct to artists
+    minimumPayoutCents: 1000,     // $10 minimum payout threshold
 
     // Subscription tiers (prices in cents)
     subscriptionTiers: {

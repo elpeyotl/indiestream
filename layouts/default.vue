@@ -21,13 +21,13 @@
         <div class="flex items-center justify-between">
           <!-- Back Button or Logo -->
           <div class="flex items-center gap-4">
-            <BackButton class="md:hidden" />
+            <BackButton class="lg:hidden" />
             <!-- Logo -->
             <AppLogo />
           </div>
 
           <!-- Navigation -->
-          <nav class="hidden md:flex items-center gap-6">
+          <nav class="hidden lg:flex items-center gap-6">
             <!-- Logged-in navigation -->
             <template v-if="user">
               <NuxtLink
@@ -117,7 +117,7 @@
           <!-- Auth / User Menu -->
           <div class="flex items-center gap-3">
             <!-- Global Search - Hidden on mobile (search is in bottom nav) -->
-            <GlobalSearch class="hidden md:block" />
+            <GlobalSearch class="hidden lg:block" />
 
             <!-- Logged Out -->
             <template v-if="!user">
@@ -390,7 +390,7 @@
 
     <!-- Main Content -->
     <!-- pb-40 on mobile for bottom nav + player, pb-24 on desktop for player only -->
-    <main class="pb-40 md:pb-24">
+    <main class="pb-40 lg:pb-24">
       <slot />
     </main>
 
@@ -406,7 +406,7 @@
     <!-- Footer - Hidden on mobile for logged-in users -->
     <footer
       class="mt-20 border-t border-zinc-800 bg-zinc-950"
-      :class="{ 'hidden md:block': user }"
+      :class="{ 'hidden lg:block': user }"
     >
       <div class="container mx-auto px-4 py-12">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -531,7 +531,7 @@ const { pullDistance, isRefreshing, threshold } = useGlobalPullToRefresh();
 
 // Responsive breakpoint detection
 const breakpoints = useBreakpoints(breakpointsTailwind);
-const isMobile = breakpoints.smaller("md");
+const isMobile = breakpoints.smaller("lg");
 
 // User menu state
 const userMenuOpen = ref(false);

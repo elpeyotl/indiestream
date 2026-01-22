@@ -2,9 +2,9 @@
   <div class="container mx-auto px-4 py-12">
     <!-- Header -->
     <div class="text-center mb-12">
-      <h1 class="text-4xl font-bold text-zinc-100 mb-4">Simple, Fair Pricing</h1>
+      <h1 class="text-4xl font-bold text-zinc-100 mb-4">$9.99. That's it.</h1>
       <p class="text-xl text-zinc-400 max-w-2xl mx-auto">
-        <span class="text-teal-400 font-semibold">85% of your subscription supports music rights</span> - the highest in streaming.
+        <span class="text-teal-400 font-semibold">70% to artists. 15% to royalties. 15% keeps us running.</span>
       </p>
     </div>
 
@@ -52,7 +52,7 @@
       <!-- Listener Tier -->
       <div class="bg-gradient-to-b from-violet-900/50 to-zinc-900 rounded-2xl p-8 border-2 border-violet-500 relative">
         <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-          <UBadge color="violet" size="sm">Most Popular</UBadge>
+          <UBadge color="violet" size="sm">The only plan</UBadge>
         </div>
         <div class="mb-6">
           <h3 class="text-lg font-semibold text-violet-400 mb-2">Listener</h3>
@@ -62,28 +62,28 @@
           </div>
         </div>
         <p class="text-zinc-400 mb-6">
-          Unlimited streaming. Support artists directly.
+          Everything. No tiers. No upsells.
         </p>
         <ul class="space-y-3 mb-8">
           <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
-            Unlimited full tracks
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
+            Unlimited streaming
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
             High quality audio
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
-            Listening history
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
+            See where your money goes
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
-            Support artists directly
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
+            70% to artists you listen to
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
-            No ads, ever
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
+            No ads. No algorithm. No pool.
           </li>
         </ul>
         <UButton
@@ -103,68 +103,69 @@
           <h3 class="text-lg font-semibold text-fuchsia-400 mb-2">Artist</h3>
           <div class="flex items-baseline gap-1">
             <span class="text-4xl font-bold text-zinc-100">Free</span>
+            <span class="text-zinc-500">forever</span>
           </div>
         </div>
         <p class="text-zinc-400 mb-6">
-          Upload your music and earn from streams.
+          Upload. Get paid. That's it.
         </p>
         <ul class="space-y-3 mb-8">
           <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
             Unlimited uploads
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
-            Keep 70% of revenue
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
+            70% of your fans' money
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
-            Detailed analytics
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
+            Transparent stats
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
-            Artist profile page
-          </li>
-          <li class="flex items-center gap-2 text-zinc-300">
-            <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
             Monthly payouts
+          </li>
+          <li class="flex items-center gap-2 text-zinc-300">
+            <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
+            You keep your rights
           </li>
         </ul>
         <UButton color="fuchsia" variant="outline" block size="lg" to="/dashboard/artist/new">
-          Create Artist Profile
+          Start uploading
         </UButton>
       </div>
     </div>
 
     <!-- How Payment Works -->
     <div class="max-w-4xl mx-auto mb-16">
-      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">How Your Money Supports Artists</h2>
+      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">Where your $9.99 goes</h2>
       <div class="grid md:grid-cols-3 gap-8">
         <div class="text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
-            <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-violet-400" />
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-teal-500/20 flex items-center justify-center">
+            <span class="text-xl font-bold text-teal-400">$6.99</span>
           </div>
-          <h3 class="font-semibold text-zinc-100 mb-2">You Listen</h3>
+          <h3 class="font-semibold text-zinc-100 mb-2">70% to artists</h3>
           <p class="text-zinc-400 text-sm">
-            Stream your favorite artists as much as you want with your subscription.
+            Split between the artists you actually listened to. Your money, your artists.
+          </p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
+            <span class="text-xl font-bold text-violet-400">$1.50</span>
+          </div>
+          <h3 class="font-semibold text-zinc-100 mb-2">15% to royalties</h3>
+          <p class="text-zinc-400 text-sm">
+            To PROs (ASCAP, BMI, GEMA, SUISA). Songwriters get paid.
           </p>
         </div>
         <div class="text-center">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-fuchsia-500/20 flex items-center justify-center">
-            <UIcon name="i-heroicons-chart-pie" class="w-8 h-8 text-fuchsia-400" />
+            <span class="text-xl font-bold text-fuchsia-400">$1.50</span>
           </div>
-          <h3 class="font-semibold text-zinc-100 mb-2">We Calculate</h3>
+          <h3 class="font-semibold text-zinc-100 mb-2">15% platform</h3>
           <p class="text-zinc-400 text-sm">
-            Your subscription is split based on who you actually listened to.
-          </p>
-        </div>
-        <div class="text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
-            <UIcon name="i-heroicons-banknotes" class="w-8 h-8 text-green-400" />
-          </div>
-          <h3 class="font-semibold text-zinc-100 mb-2">85% to Music Rights</h3>
-          <p class="text-zinc-400 text-sm">
-            70% direct to artists + 15% to royalty societies. Only 15% platform fee.
+            Servers, bandwidth, payment processing. No investors. Just costs.
           </p>
         </div>
       </div>
@@ -172,60 +173,55 @@
 
     <!-- Comparison -->
     <div class="max-w-3xl mx-auto mb-16">
-      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">Why Fairtune?</h2>
+      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">The difference</h2>
       <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
         <table class="w-full">
           <thead>
             <tr class="border-b border-zinc-800">
               <th class="text-left p-4 text-zinc-400 font-medium"></th>
               <th class="text-center p-4 text-violet-400 font-semibold">Fairtune</th>
-              <th class="text-center p-4 text-zinc-500 font-medium">Others</th>
+              <th class="text-center p-4 text-zinc-500 font-medium">Big streaming</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-zinc-800">
             <tr>
-              <td class="p-4 text-zinc-300">To music rights</td>
-              <td class="p-4 text-center text-green-400 font-semibold">85%</td>
-              <td class="p-4 text-center text-zinc-500">~70%</td>
-            </tr>
-            <tr>
               <td class="p-4 text-zinc-300">Direct to artist</td>
-              <td class="p-4 text-center text-green-400 font-semibold">70%</td>
-              <td class="p-4 text-center text-zinc-500">~30%</td>
+              <td class="p-4 text-center text-teal-400 font-semibold">70%</td>
+              <td class="p-4 text-center text-zinc-500">~30% (after labels)</td>
             </tr>
             <tr>
               <td class="p-4 text-zinc-300">Your money goes to</td>
-              <td class="p-4 text-center text-green-400 font-semibold">Artists you listen to</td>
-              <td class="p-4 text-center text-zinc-500">Royalty pool</td>
+              <td class="p-4 text-center text-teal-400 font-semibold">Artists you listen to</td>
+              <td class="p-4 text-center text-zinc-500">A pool (mostly Drake)</td>
             </tr>
             <tr>
-              <td class="p-4 text-zinc-300">Transparent payouts</td>
+              <td class="p-4 text-zinc-300">See where it goes</td>
               <td class="p-4 text-center">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500 mx-auto" />
+                <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500 mx-auto" />
               </td>
               <td class="p-4 text-center">
                 <UIcon name="i-heroicons-x-mark" class="w-5 h-5 text-zinc-600 mx-auto" />
               </td>
             </tr>
             <tr>
-              <td class="p-4 text-zinc-300">Independent artists focus</td>
+              <td class="p-4 text-zinc-300">Independent only</td>
               <td class="p-4 text-center">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500 mx-auto" />
+                <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500 mx-auto" />
               </td>
               <td class="p-4 text-center">
                 <UIcon name="i-heroicons-x-mark" class="w-5 h-5 text-zinc-600 mx-auto" />
               </td>
             </tr>
             <tr>
-              <td class="p-4 text-zinc-300">Every stream generates royalties</td>
+              <td class="p-4 text-zinc-300">Royalties on every stream</td>
               <td class="p-4 text-center">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500 mx-auto" />
+                <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500 mx-auto" />
               </td>
               <td class="p-4 text-center text-zinc-500">Only paid streams</td>
             </tr>
             <tr>
-              <td class="p-4 text-zinc-300">Free streaming loophole</td>
-              <td class="p-4 text-center text-green-400 font-semibold">None</td>
+              <td class="p-4 text-zinc-300">Free tier loophole</td>
+              <td class="p-4 text-center text-teal-400 font-semibold">No free tier</td>
               <td class="p-4 text-center text-zinc-500">Unlimited free plays</td>
             </tr>
           </tbody>
@@ -250,7 +246,7 @@ const toast = useToast()
 useHead({
   title: 'Pricing | Fairtune',
   meta: [
-    { name: 'description', content: 'Simple, fair pricing. Your subscription goes directly to the artists you listen to.' },
+    { name: 'description', content: '$9.99/month. 70% to artists. 15% to royalties. 15% platform. We show you every cent.' },
   ],
 })
 

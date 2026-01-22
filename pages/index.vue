@@ -7,19 +7,14 @@
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/20 via-transparent to-transparent" />
 
       <div class="relative container mx-auto px-4 py-24 md:py-32 text-center">
-        <!-- Badge -->
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-8">
-          <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-          Fair streaming for independent artists
+        <!-- Logo with tagline -->
+        <div class="flex justify-center mb-10">
+          <img src="/logo-text.svg" alt="Fairtune - Heavy Riffs. Fair Pay. No Bullshit." class="h-24 md:h-32" />
         </div>
 
-        <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-          Stream Fair. <br class="md:hidden" />
-          <span class="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">Support Direct.</span>
-        </h1>
         <p class="text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
-          The streaming platform where your subscription directly supports the artists you listen to.
-          <span class="text-zinc-300">See exactly where your money goes.</span>
+          Like Bandcamp, but you can stream. 70% goes to the artists you actually listen to.
+          <span class="text-zinc-300">We show you every cent.</span>
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <UButton size="xl" color="violet" to="/register">
@@ -36,16 +31,16 @@
         <!-- Stats -->
         <div class="flex flex-wrap justify-center gap-8 md:gap-16 mt-16 pt-8 border-t border-zinc-800/50">
           <div class="text-center">
-            <div class="text-3xl font-bold text-teal-400">85%</div>
-            <div class="text-sm text-zinc-500">To Music Rights</div>
-          </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-violet-400">70%</div>
+            <div class="text-3xl font-bold text-teal-400">70%</div>
             <div class="text-sm text-zinc-500">Direct to Artists</div>
           </div>
           <div class="text-center">
+            <div class="text-3xl font-bold text-violet-400">15%</div>
+            <div class="text-sm text-zinc-500">To Royalties</div>
+          </div>
+          <div class="text-center">
             <div class="text-3xl font-bold text-fuchsia-400">15%</div>
-            <div class="text-sm text-zinc-500">Platform Fee</div>
+            <div class="text-sm text-zinc-500">Keeps Us Running</div>
           </div>
         </div>
       </div>
@@ -54,8 +49,8 @@
     <!-- Features Section -->
     <section class="container mx-auto px-4 py-24">
       <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">Why Fairtune?</h2>
-        <p class="text-zinc-400 max-w-xl mx-auto">A streaming platform built on transparency and fair artist compensation.</p>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">How it actually works</h2>
+        <p class="text-zinc-400 max-w-xl mx-auto">No pools. No mystery math. Your $9.99 goes to the artists you listen to.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -63,9 +58,9 @@
           <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center mb-6">
             <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-white" />
           </div>
-          <h3 class="text-xl font-semibold mb-3 text-zinc-100">Fair Revenue Distribution</h3>
+          <h3 class="text-xl font-semibold mb-3 text-zinc-100">Your money, your artists</h3>
           <p class="text-zinc-400">
-            Artists earn based on your listening time. The more you listen, the more they earn. No pool-based dilution.
+            Listen to one band all month? They get your money. Not Drake. Not a pool. Just the artist you chose.
           </p>
         </div>
 
@@ -73,9 +68,9 @@
           <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center mb-6">
             <UIcon name="i-heroicons-eye" class="w-6 h-6 text-white" />
           </div>
-          <h3 class="text-xl font-semibold mb-3 text-zinc-100">Total Transparency</h3>
+          <h3 class="text-xl font-semibold mb-3 text-zinc-100">We show you everything</h3>
           <p class="text-zinc-400">
-            See exactly how your subscription is distributed. Know which artists you supported and by how much.
+            Every month you see exactly where your money went. Artist by artist, dollar by dollar. No secrets.
           </p>
         </div>
 
@@ -83,9 +78,9 @@
           <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 flex items-center justify-center mb-6">
             <UIcon name="i-heroicons-musical-note" class="w-6 h-6 text-white" />
           </div>
-          <h3 class="text-xl font-semibold mb-3 text-zinc-100">Quality Curation</h3>
+          <h3 class="text-xl font-semibold mb-3 text-zinc-100">Independent only</h3>
           <p class="text-zinc-400">
-            Every release is reviewed by real humans. No algorithm gaming, just great independent music.
+            No major labels. No algorithm-bait playlists. Just artists who own their music and fans who give a shit.
           </p>
         </div>
       </div>
@@ -95,8 +90,8 @@
     <section class="container mx-auto px-4 py-24">
       <div class="max-w-4xl mx-auto">
         <div class="text-center mb-16">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">How Your Money Flows</h2>
-          <p class="text-zinc-400">Unlike other platforms, we show you exactly where every cent goes.</p>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4">Where your $9.99 goes</h2>
+          <p class="text-zinc-400">Every month. No exceptions. No mystery.</p>
         </div>
 
         <div class="relative">
@@ -105,32 +100,32 @@
 
           <div class="space-y-8">
             <div class="flex gap-6 items-start">
-              <div class="w-16 h-16 rounded-full bg-violet-500/20 border-2 border-violet-500 flex items-center justify-center shrink-0 relative z-10">
-                <span class="text-violet-400 font-bold">1</span>
+              <div class="w-16 h-16 rounded-full bg-teal-500/20 border-2 border-teal-500 flex items-center justify-center shrink-0 relative z-10">
+                <span class="text-teal-400 font-bold">$6.99</span>
               </div>
               <div class="pt-3">
-                <h3 class="text-xl font-semibold mb-2">You Subscribe</h3>
-                <p class="text-zinc-400">Choose a plan that works for you. Monthly or yearly.</p>
+                <h3 class="text-xl font-semibold mb-2">70% to artists</h3>
+                <p class="text-zinc-400">Split between the artists you actually listened to. Play one band all month? They get all of it.</p>
+              </div>
+            </div>
+
+            <div class="flex gap-6 items-start">
+              <div class="w-16 h-16 rounded-full bg-violet-500/20 border-2 border-violet-500 flex items-center justify-center shrink-0 relative z-10">
+                <span class="text-violet-400 font-bold">$1.50</span>
+              </div>
+              <div class="pt-3">
+                <h3 class="text-xl font-semibold mb-2">15% to royalties</h3>
+                <p class="text-zinc-400">Songwriters get paid. PROs like ASCAP, BMI, GEMA, and SUISA make sure the people who wrote the music get their cut.</p>
               </div>
             </div>
 
             <div class="flex gap-6 items-start">
               <div class="w-16 h-16 rounded-full bg-fuchsia-500/20 border-2 border-fuchsia-500 flex items-center justify-center shrink-0 relative z-10">
-                <span class="text-fuchsia-400 font-bold">2</span>
+                <span class="text-fuchsia-400 font-bold">$1.50</span>
               </div>
               <div class="pt-3">
-                <h3 class="text-xl font-semibold mb-2">You Listen</h3>
-                <p class="text-zinc-400">Stream unlimited music. We track your listening time per artist.</p>
-              </div>
-            </div>
-
-            <div class="flex gap-6 items-start">
-              <div class="w-16 h-16 rounded-full bg-teal-500/20 border-2 border-teal-500 flex items-center justify-center shrink-0 relative z-10">
-                <span class="text-teal-400 font-bold">3</span>
-              </div>
-              <div class="pt-3">
-                <h3 class="text-xl font-semibold mb-2">Artists Get Paid</h3>
-                <p class="text-zinc-400">Your subscription is split proportionally to the artists you actually listened to. 70% goes directly to them, 15% to royalty societies.</p>
+                <h3 class="text-xl font-semibold mb-2">15% keeps us running</h3>
+                <p class="text-zinc-400">Servers, bandwidth, payment processing, and a small team. No investors. No VC money. Just costs.</p>
               </div>
             </div>
           </div>
@@ -225,12 +220,12 @@
       <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-12 md:p-16 text-center">
         <div class="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
         <div class="relative">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to stream fair?</h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to put your money where your ears are?</h2>
           <p class="text-violet-100 max-w-xl mx-auto mb-8">
-            Join thousands of music fans who are supporting independent artists the right way.
+            $9.99/month. 70% to artists. You'll see exactly where it goes.
           </p>
           <UButton size="xl" color="white" to="/register">
-            Get Started Free
+            Start Listening
           </UButton>
         </div>
       </div>

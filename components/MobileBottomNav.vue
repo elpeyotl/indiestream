@@ -1,7 +1,7 @@
 <template>
   <nav
     v-if="user"
-    class="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-zinc-950/80 backdrop-blur-lg border-t border-zinc-800"
+    class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-zinc-950/80 backdrop-blur-lg border-t border-zinc-800"
     :style="{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }"
   >
     <div class="flex items-center justify-around px-2 pt-2">

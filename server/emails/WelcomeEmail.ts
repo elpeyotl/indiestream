@@ -13,7 +13,7 @@ export const getWelcomeEmailTemplate = ({
 
   const content = `
     <mj-text align="center" font-size="28px" font-weight="700" color="#f4f4f5" padding-bottom="24px">
-      Welcome to Fairtune!
+      Welcome to Fairtune
     </mj-text>
 
     <mj-text>
@@ -21,33 +21,33 @@ export const getWelcomeEmailTemplate = ({
     </mj-text>
 
     <mj-text>
-      Thanks for joining Fairtune! You're now part of a community that supports independent artists directly.
+      You're in. Here's how your money works on Fairtune.
     </mj-text>
 
     <mj-text padding="20px 24px" background-color="#1e1b4b" border-radius="12px" border-left="4px solid #8b5cf6" color="#c4b5fd">
-      When you stream on Fairtune, <span class="highlight"><strong>70% goes directly to artists</strong></span> - that's 2x more than other platforms.
+      <strong class="highlight">70% to artists.</strong> Split between whoever you actually listen to. No pool. No mystery.
     </mj-text>
 
     <mj-divider />
 
     <mj-text font-size="18px" font-weight="600" color="#f4f4f5" padding-bottom="16px">
-      What makes Fairtune different?
+      Where your $9.99 goes
     </mj-text>
 
     <mj-text font-size="14px" line-height="22px" padding-bottom="8px">
-      <strong class="highlight">Fair Pay:</strong> 70% of your subscription goes to artists
+      <strong class="highlight">$6.99 (70%)</strong> to the artists you listen to
     </mj-text>
     <mj-text font-size="14px" line-height="22px" padding-bottom="8px">
-      <strong class="highlight">Direct Support:</strong> Your streams directly fund the artists you love
+      <strong class="highlight">$1.50 (15%)</strong> to royalties (PROs like ASCAP, BMI, GEMA)
     </mj-text>
     <mj-text font-size="14px" line-height="22px" padding-bottom="8px">
-      <strong class="highlight">Independent Music:</strong> Discover artists you won't find on mainstream platforms
+      <strong class="highlight">$1.50 (15%)</strong> keeps us running (servers, bandwidth, team)
     </mj-text>
     <mj-text font-size="14px" line-height="22px" padding-bottom="24px">
-      <strong class="highlight">No Middlemen:</strong> Artists upload directly and keep their rights
+      Every month, you'll see exactly where your money went. Cent by cent.
     </mj-text>
 
-    ${primaryButton('Start Discovering Music', `${appUrl}/discover`)}
+    ${primaryButton('Start listening', `${appUrl}/discover`)}
 
     <mj-text font-size="13px" color="#71717a" padding-top="24px">
       Questions? Reply to this email or visit our <a href="${appUrl}/help">Help Center</a>.

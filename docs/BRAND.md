@@ -3,8 +3,8 @@
 ## Platform Identity
 
 **Name:** Fairtune
-**Tagline:** "Stream Fair. Support Direct."
-**Mission:** Create a streaming economy where independent artists are paid fairly and fans know exactly where their money goes.
+**Tagline:** "70% to artists. No pool. No mystery."
+**Mission:** A streaming platform where your money goes to the artists you actually listen to. No pool. No mystery math. You see every cent.
 
 ## Target Audience
 
@@ -116,63 +116,71 @@ background: linear-gradient(to bottom, #8B5CF6, #D946EF, #2DD4BF);
 ## Brand Voice & Tone
 
 ### Overall Tone
-Confident, creative, forward-thinking. We're building the future of fair streaming, and we're proud of it.
+Direct, honest, anti-corporate. For people who actually give a shit about music. No startup speak. No hyperbole.
 
 **Balance:**
-- 65% Professional / 35% Casual
-- 75% Accessible / 25% Technical
-- 55% Serious / 45% Playful
-- 75% Bold / 25% Humble
+- Honest over polished
+- Direct over diplomatic
+- Show don't tell
+- Specifics over vague claims
 
 ### Voice Examples
 
 **Do Say:**
-- "You listened. They earned. See exactly how."
-- "85% to artists. 100% transparent. 0 hidden fees."
-- "Your favorite artists earned $4.23 from you this month."
-- "Stream fair. Support direct."
-- "The future of music streaming is transparent."
+- "70% to artists. 15% to royalties. 15% keeps us running."
+- "$6.99 of your $9.99 goes to the artists you listen to."
+- "No pool. No mystery math. You see every cent."
+- "Like Bandcamp, but you can stream."
+- "No investors. No VC money. Just costs."
+- "Listen to one band all month? They get your money. Not Drake."
 
 **Don't Say:**
-- "We're disrupting the music industry!" (too startup-speak)
-- "Support creators, fam!" (too casual)
-- "Our proprietary revenue algorithm..." (too technical)
-- "Other platforms are evil" (don't attack, differentiate)
+- "85% to artists" (incorrect - it's 70% artists + 15% royalties)
+- "We're disrupting the music industry!" (startup speak)
+- "Revolutionary streaming platform" (hyperbole)
+- "AI-powered" or "AI-curated" (we use humans)
+- "The future of music" (vague)
+- "Support creators, fam!" (cringe)
 
 ---
 
 ## Core Brand Values
 
-1. **Fair Play** - Artists earn proportionally for every listen (85% revenue share)
-2. **Radical Transparency** - Show exactly where subscription money goes
-3. **Artist-First** - Decisions prioritize independent creator wellbeing
-4. **Quality Over Quantity** - Human-curated, not algorithm-gamed
-5. **Direct Connection** - Fans choose which artists to support
+1. **70% to artists** - No pool. Split by listening time. Your fans' money goes to you.
+2. **No secrets** - Artists see where revenue comes from. Fans see where money goes. Every cent.
+3. **Independent only** - No major labels. No algorithm-bait. Artists who own their music.
+4. **Human curation** - Real people review releases. No gaming the algorithm.
+5. **No exit strategy** - No VC money. No investors to please. Aiming for non-profit/NGO status.
 
 ---
 
 ## Key Stats (Use in Marketing)
 
-- **85%** - Revenue share to artists
-- **100%** - Transparency (you see where every cent goes)
-- **0** - Hidden fees
+- **70%** - Direct to artists (from your listening)
+- **15%** - To royalties (PROs - ASCAP, BMI, GEMA, SUISA)
+- **15%** - Platform costs (servers, bandwidth, team)
+- **$6.99** - Artist share from your $9.99/month
+- **$1.50** - Royalty share
+- **$1.50** - Platform share
+
+**NEVER say "85% to artists"** - that's incorrect. The split is 70/15/15.
 
 ---
 
 ## Positioning
 
-**For indie music fans** who want their subscription to matter,
-**Fairtune** is the streaming platform that **shows you exactly how your money supports the artists you love** —
-unlike Spotify where payments are hidden and artists earn fractions of pennies.
+**For vinyl collectors, show-goers, and people who give a shit about music.**
+
+Fairtune is like Bandcamp, but you can stream. 70% goes to the artists you actually listen to. No pool. No mystery. You see every cent.
 
 ### vs. Competitors
 
-| Platform | Their Model | Our Advantage |
-|----------|-------------|---------------|
-| **Spotify** | Opaque pool payouts (~$0.003/stream) | Transparent per-user distribution, 85% to artists |
-| **Bandcamp** | Purchase-based, no streaming | Subscription convenience + Bandcamp-level support |
-| **SoundCloud** | Complex monetization | Cleaner UX, simpler artist payments |
-| **Tidal** | Hi-fi focus, artist ownership | True indie focus, radical pay transparency |
+| Platform | Their Model | Our Difference |
+|----------|-------------|----------------|
+| **Spotify** | Pool payouts, Drake gets your money | Your money goes to who you listen to |
+| **Bandcamp** | Purchase-based, no streaming | Same spirit, but you can stream |
+| **Apple Music** | Opaque, pool model | Transparent, per-listener model |
+| **Tidal** | Hi-fi focus, pool model | Independent only, you see the math |
 
 ---
 
