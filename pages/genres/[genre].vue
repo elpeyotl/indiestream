@@ -2,10 +2,10 @@
   <div class="container mx-auto px-4 py-8">
     <!-- Hero Banner -->
     <div class="relative h-48 md:h-64 lg:h-80 overflow-hidden -mx-4 -mt-8">
-      <!-- Banner Image (random artist avatar) -->
+      <!-- Banner Image (random artist avatar) with blur filter -->
       <div
         v-if="bannerUrl"
-        class="absolute inset-0 bg-cover bg-center scale-105"
+        class="absolute inset-0 bg-cover bg-center scale-110 blur-md"
         :style="{ backgroundImage: `url(${bannerUrl})` }"
       />
       <!-- Fallback: Gradient based on genre name -->
