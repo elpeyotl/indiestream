@@ -271,7 +271,7 @@
             </p>
             <!-- Mobile stats (shown below name on small screens) -->
             <div class="flex items-center gap-3 text-xs text-zinc-400 sm:hidden mt-0.5">
-              <span>{{ formatNumber(band.total_streams) }} streams</span>
+              <span>{{ formatNumber(band.total_streams ?? 0) }} streams</span>
               <span>&middot;</span>
               <span>${{ ((band.total_earnings_cents ?? 0) / 100).toFixed(2) }}</span>
             </div>
@@ -280,7 +280,7 @@
           <!-- Stats (desktop) -->
           <div class="hidden sm:flex items-center gap-6 text-sm">
             <div class="text-center">
-              <p class="text-zinc-100 font-semibold">{{ formatNumber(band.total_streams) }}</p>
+              <p class="text-zinc-100 font-semibold">{{ formatNumber(band.total_streams ?? 0) }}</p>
               <p class="text-zinc-500">Streams</p>
             </div>
             <div class="text-center">
@@ -510,7 +510,7 @@ const { data: distribution, pending: impactLoading, refresh: refreshDistribution
 const syncSubscription = async () => {
   syncing.value = true
   try {
-    const result = await $fetch('/api/subscription/sync', { method: 'POST' })
+    const result = await $fetch<{ synced: boolean; status?: string; subscriptionId?: string; message?: string }>('/api/subscription/sync', { method: 'POST' })
     if (result.synced) {
       toast.add({
         title: 'Subscription synced',
