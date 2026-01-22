@@ -3,15 +3,15 @@ import { test, expect } from '@playwright/test'
 test.describe('Genre Browsing', () => {
   test('genres index page loads', async ({ page }) => {
     await page.goto('/genres')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
-    // Page should have genres heading
-    await expect(page.getByRole('heading', { name: /genres|browse by genre/i })).toBeVisible()
+    // Page should have genres heading (h1)
+    await expect(page.getByRole('heading', { name: /genres|browse by genre/i }).first()).toBeVisible()
   })
 
   test('genre cards are displayed', async ({ page }) => {
     await page.goto('/genres')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     // Should show genre cards with links
     const genreLinks = page.locator('a[href^="/genres/"]')
@@ -26,7 +26,7 @@ test.describe('Genre Browsing', () => {
 
   test('clicking genre navigates to genre page', async ({ page }) => {
     await page.goto('/genres')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     const genreLinks = page.locator('a[href^="/genres/"]')
     const count = await genreLinks.count()
@@ -36,7 +36,7 @@ test.describe('Genre Browsing', () => {
       const href = await firstGenre.getAttribute('href')
 
       await firstGenre.click()
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Should be on genre detail page
       if (href) {
@@ -53,7 +53,7 @@ test.describe('Genre Browsing', () => {
     await page.goto('/genres/rock')
 
     // If genre exists, should show content
-    const response = await page.waitForLoadState('networkidle')
+    const response = await page.waitForLoadState('domcontentloaded')
 
     // Check if page loaded (might 404 if genre doesn't exist in test db)
     const heading = page.getByRole('heading').first()
@@ -74,7 +74,7 @@ test.describe('Genre Browsing', () => {
 
   test('genre page has back navigation', async ({ page }) => {
     await page.goto('/genres')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     const genreLinks = page.locator('a[href^="/genres/"]')
     const count = await genreLinks.count()
@@ -82,7 +82,7 @@ test.describe('Genre Browsing', () => {
     if (count > 0) {
       // Navigate to genre
       await genreLinks.first().click()
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Should be able to go back to genres index
       const backLink = page.locator('a[href="/genres"]')
