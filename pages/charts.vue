@@ -422,7 +422,7 @@ const playAlbum = async (album: any) => {
           id: fullAlbum.id,
           title: fullAlbum.title,
           slug: fullAlbum.slug,
-          band: fullAlbum.band,
+          band: fullAlbum.band!,
         },
       }))
 

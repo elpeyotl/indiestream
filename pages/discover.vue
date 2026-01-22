@@ -469,10 +469,10 @@ onMounted(() => {
 
 // Play a recently played track
 const playRecentTrack = (track: RecentlyPlayedTrack) => {
-  const playableTracks = recentlyPlayed.value.filter(t => t.audioKey)
+  const playableTracks = recentlyPlayed.filter((t: RecentlyPlayedTrack) => t.audioKey)
   if (playableTracks.length === 0) return
 
-  const queue = playableTracks.map(t => ({
+  const queue = playableTracks.map((t: RecentlyPlayedTrack) => ({
     id: t.id,
     title: t.title,
     artist: t.artistName,
@@ -484,7 +484,7 @@ const playRecentTrack = (track: RecentlyPlayedTrack) => {
     audioKey: t.audioKey!,
   }))
 
-  const trackIndex = queue.findIndex(t => t.id === track.id)
+  const trackIndex = queue.findIndex((t: any) => t.id === track.id)
   setQueue(queue, trackIndex >= 0 ? trackIndex : 0)
 }
 

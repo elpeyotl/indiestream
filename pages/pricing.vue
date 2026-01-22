@@ -259,7 +259,7 @@ const handleSubscribe = async () => {
     return
   }
 
-  if (isSubscribed.value) {
+  if (isSubscribed) {
     toast.add({
       title: 'Already subscribed',
       description: 'You already have an active subscription.',
