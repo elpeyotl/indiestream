@@ -8,37 +8,65 @@
       <p class="text-zinc-400 mt-1">Here's what's happening with your music</p>
     </div>
 
-    <!-- My Impact Hero Card Skeleton -->
-    <UCard
-      v-if="isSubscribed && impactLoading"
-      class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
-    >
-      <div class="flex items-center justify-between mb-4">
-        <USkeleton class="h-7 w-32" />
-        <USkeleton class="h-6 w-6 rounded" />
-      </div>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-        <div>
-          <USkeleton class="h-8 w-20 mb-1" />
-          <USkeleton class="h-4 w-28" />
-        </div>
-        <div>
-          <USkeleton class="h-8 w-12 mb-1" />
-          <USkeleton class="h-4 w-28" />
-        </div>
-        <div class="col-span-2 md:col-span-1">
-          <USkeleton class="h-8 w-16 mb-1" />
-          <USkeleton class="h-4 w-20" />
-        </div>
-      </div>
-      <USkeleton class="h-10 w-full rounded-md" />
-    </UCard>
+    <!-- My Impact Hero Card -->
+    <ClientOnly>
+      <template #fallback>
+        <UCard
+          class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <USkeleton class="h-7 w-32" />
+            <USkeleton class="h-6 w-6 rounded" />
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <USkeleton class="h-8 w-20 mb-1" />
+              <USkeleton class="h-4 w-28" />
+            </div>
+            <div>
+              <USkeleton class="h-8 w-12 mb-1" />
+              <USkeleton class="h-4 w-28" />
+            </div>
+            <div class="col-span-2 md:col-span-1">
+              <USkeleton class="h-8 w-16 mb-1" />
+              <USkeleton class="h-4 w-20" />
+            </div>
+          </div>
+          <USkeleton class="h-10 w-full rounded-md" />
+        </UCard>
+      </template>
 
-    <!-- My Impact Hero Card (Subscribers Only) -->
-    <UCard
-      v-else-if="isSubscribed"
-      class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
-    >
+      <!-- My Impact Hero Card Skeleton -->
+      <UCard
+        v-if="isSubscribed && impactLoading"
+        class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <USkeleton class="h-7 w-32" />
+          <USkeleton class="h-6 w-6 rounded" />
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <USkeleton class="h-8 w-20 mb-1" />
+            <USkeleton class="h-4 w-28" />
+          </div>
+          <div>
+            <USkeleton class="h-8 w-12 mb-1" />
+            <USkeleton class="h-4 w-28" />
+          </div>
+          <div class="col-span-2 md:col-span-1">
+            <USkeleton class="h-8 w-16 mb-1" />
+            <USkeleton class="h-4 w-20" />
+          </div>
+        </div>
+        <USkeleton class="h-10 w-full rounded-md" />
+      </UCard>
+
+      <!-- My Impact Hero Card (Subscribers Only) -->
+      <UCard
+        v-else-if="isSubscribed"
+        class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
+      >
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-zinc-100">Your Impact</h2>
         <UIcon name="i-heroicons-chart-bar" class="w-6 h-6 text-violet-400" />
@@ -73,41 +101,74 @@
       <UButton to="/dashboard/stats" color="violet" block>
         View Your Stats
       </UButton>
-    </UCard>
-
-    <!-- Stats Grid Skeleton -->
-    <div v-if="statsPending" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <UCard class="bg-zinc-900/50 border-zinc-800">
-        <div class="flex items-center gap-4">
-          <USkeleton class="w-12 h-12 rounded-xl" />
-          <div>
-            <USkeleton class="h-4 w-24 mb-2" />
-            <USkeleton class="h-8 w-16" />
-          </div>
-        </div>
       </UCard>
-      <UCard class="bg-zinc-900/50 border-zinc-800">
-        <div class="flex items-center gap-4">
-          <USkeleton class="w-12 h-12 rounded-xl" />
-          <div>
-            <USkeleton class="h-4 w-24 mb-2" />
-            <USkeleton class="h-8 w-16" />
-          </div>
-        </div>
-      </UCard>
-      <UCard class="bg-zinc-900/50 border-zinc-800">
-        <div class="flex items-center gap-4">
-          <USkeleton class="w-12 h-12 rounded-xl" />
-          <div>
-            <USkeleton class="h-4 w-24 mb-2" />
-            <USkeleton class="h-8 w-16" />
-          </div>
-        </div>
-      </UCard>
-    </div>
+    </ClientOnly>
 
     <!-- Stats Grid -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <ClientOnly>
+      <template #fallback>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <UCard class="bg-zinc-900/50 border-zinc-800">
+            <div class="flex items-center gap-4">
+              <USkeleton class="w-12 h-12 rounded-xl" />
+              <div>
+                <USkeleton class="h-4 w-24 mb-2" />
+                <USkeleton class="h-8 w-16" />
+              </div>
+            </div>
+          </UCard>
+          <UCard class="bg-zinc-900/50 border-zinc-800">
+            <div class="flex items-center gap-4">
+              <USkeleton class="w-12 h-12 rounded-xl" />
+              <div>
+                <USkeleton class="h-4 w-24 mb-2" />
+                <USkeleton class="h-8 w-16" />
+              </div>
+            </div>
+          </UCard>
+          <UCard class="bg-zinc-900/50 border-zinc-800">
+            <div class="flex items-center gap-4">
+              <USkeleton class="w-12 h-12 rounded-xl" />
+              <div>
+                <USkeleton class="h-4 w-24 mb-2" />
+                <USkeleton class="h-8 w-16" />
+              </div>
+            </div>
+          </UCard>
+        </div>
+      </template>
+
+      <div v-if="statsPending" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <UCard class="bg-zinc-900/50 border-zinc-800">
+          <div class="flex items-center gap-4">
+            <USkeleton class="w-12 h-12 rounded-xl" />
+            <div>
+              <USkeleton class="h-4 w-24 mb-2" />
+              <USkeleton class="h-8 w-16" />
+            </div>
+          </div>
+        </UCard>
+        <UCard class="bg-zinc-900/50 border-zinc-800">
+          <div class="flex items-center gap-4">
+            <USkeleton class="w-12 h-12 rounded-xl" />
+            <div>
+              <USkeleton class="h-4 w-24 mb-2" />
+              <USkeleton class="h-8 w-16" />
+            </div>
+          </div>
+        </UCard>
+        <UCard class="bg-zinc-900/50 border-zinc-800">
+          <div class="flex items-center gap-4">
+            <USkeleton class="w-12 h-12 rounded-xl" />
+            <div>
+              <USkeleton class="h-4 w-24 mb-2" />
+              <USkeleton class="h-8 w-16" />
+            </div>
+          </div>
+        </UCard>
+      </div>
+
+      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <NuxtLink to="/dashboard/stats" class="block">
         <UCard class="bg-zinc-900/50 border-zinc-800 hover:border-violet-500/50 transition-colors">
           <div class="flex items-center gap-4">
@@ -149,56 +210,102 @@
           </div>
         </UCard>
       </NuxtLink>
-    </div>
+      </div>
+    </ClientOnly>
 
     <!-- Free tier upgrade prompt for empty stats -->
-    <div v-if="!isSubscribed && !statsPending && (listeningStats?.totalStreams ?? 0) === 0" class="mb-8">
-      <UCard class="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/30">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center shrink-0">
-            <UIcon name="i-heroicons-chart-bar" class="w-6 h-6 text-violet-400" />
+    <ClientOnly>
+      <div v-if="!isSubscribed && !statsPending && (listeningStats?.totalStreams ?? 0) === 0" class="mb-8">
+        <UCard class="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/30">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center shrink-0">
+              <UIcon name="i-heroicons-chart-bar" class="w-6 h-6 text-violet-400" />
+            </div>
+            <div class="flex-1">
+              <p class="text-zinc-100 font-medium">Track your listening journey</p>
+              <p class="text-zinc-400 text-sm">Subscribe to see your stats, support artists directly, and unlock unlimited streaming.</p>
+            </div>
+            <UButton color="violet" to="/pricing">
+              Upgrade
+            </UButton>
           </div>
-          <div class="flex-1">
-            <p class="text-zinc-100 font-medium">Track your listening journey</p>
-            <p class="text-zinc-400 text-sm">Subscribe to see your stats, support artists directly, and unlock unlimited streaming.</p>
-          </div>
-          <UButton color="violet" to="/pricing">
-            Upgrade
-          </UButton>
-        </div>
-      </UCard>
-    </div>
+        </UCard>
+      </div>
+    </ClientOnly>
 
     <!-- Artist Section -->
-    <UCard class="bg-zinc-900/50 border-zinc-800 mb-8">
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-zinc-100">Your Artist Profiles</h2>
-          <div class="flex items-center gap-2">
-            <UButton
-              color="gray"
-              variant="ghost"
-              size="sm"
-              to="/dashboard/bulk-upload"
-            >
-              <UIcon name="i-heroicons-arrow-up-tray" class="w-4 h-4 mr-1" />
-              Bulk Upload
-            </UButton>
-            <UButton
-              v-if="bands && bands.length > 0"
-              color="violet"
-              variant="soft"
-              size="sm"
-              to="/dashboard/artist/new"
-            >
-              <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
-              New Artist
-            </UButton>
+    <ClientOnly>
+      <template #fallback>
+        <UCard class="bg-zinc-900/50 border-zinc-800 mb-8">
+          <template #header>
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold text-zinc-100">Your Artist Profiles</h2>
+              <div class="flex items-center gap-2">
+                <UButton
+                  color="gray"
+                  variant="ghost"
+                  size="sm"
+                  to="/dashboard/bulk-upload"
+                >
+                  <UIcon name="i-heroicons-arrow-up-tray" class="w-4 h-4 mr-1" />
+                  Bulk Upload
+                </UButton>
+              </div>
+            </div>
+          </template>
+
+          <div class="space-y-4">
+            <div v-for="i in 2" :key="i" class="flex items-center gap-4 p-4 rounded-lg bg-zinc-800/50">
+              <USkeleton class="w-14 h-14 rounded-lg shrink-0" />
+              <div class="flex-1 min-w-0">
+                <USkeleton class="h-5 w-32 mb-2" />
+                <USkeleton class="h-4 w-40 hidden sm:block" />
+              </div>
+              <div class="hidden sm:flex items-center gap-6">
+                <div class="text-center">
+                  <USkeleton class="h-5 w-12 mb-1 mx-auto" />
+                  <USkeleton class="h-4 w-14" />
+                </div>
+                <div class="text-center">
+                  <USkeleton class="h-5 w-14 mb-1 mx-auto" />
+                  <USkeleton class="h-4 w-16" />
+                </div>
+              </div>
+              <USkeleton class="w-5 h-5 rounded" />
+            </div>
           </div>
-        </div>
+        </UCard>
       </template>
 
-      <!-- Loading Skeleton -->
+      <UCard class="bg-zinc-900/50 border-zinc-800 mb-8">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-zinc-100">Your Artist Profiles</h2>
+            <div class="flex items-center gap-2">
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="sm"
+                to="/dashboard/bulk-upload"
+              >
+                <UIcon name="i-heroicons-arrow-up-tray" class="w-4 h-4 mr-1" />
+                Bulk Upload
+              </UButton>
+              <UButton
+                v-if="bands && bands.length > 0"
+                color="violet"
+                variant="soft"
+                size="sm"
+                to="/dashboard/artist/new"
+              >
+                <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
+                New Artist
+              </UButton>
+            </div>
+          </div>
+        </template>
+
+        <!-- Loading Skeleton -->
       <div v-if="bandsPending" class="space-y-4">
         <div v-for="i in 2" :key="i" class="flex items-center gap-4 p-4 rounded-lg bg-zinc-800/50">
           <USkeleton class="w-14 h-14 rounded-lg shrink-0" />
@@ -293,21 +400,44 @@
           <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 text-zinc-500" />
         </NuxtLink>
       </div>
-    </UCard>
+      </UCard>
+    </ClientOnly>
 
     <!-- Subscription Status -->
-    <UCard class="bg-zinc-900/50 border-zinc-800 mb-8">
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-zinc-100">Your Subscription</h2>
-          <UBadge
-            :color="isSubscribed ? 'green' : 'gray'"
-            variant="soft"
-          >
-            {{ subscriptionBadge }}
-          </UBadge>
-        </div>
+    <ClientOnly>
+      <template #fallback>
+        <UCard class="bg-zinc-900/50 border-zinc-800 mb-8">
+          <template #header>
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold text-zinc-100">Your Subscription</h2>
+              <USkeleton class="h-6 w-16 rounded-full" />
+            </div>
+          </template>
+
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <USkeleton class="h-5 w-24 mb-2" />
+                <USkeleton class="h-4 w-40" />
+              </div>
+              <USkeleton class="h-9 w-32 rounded-md" />
+            </div>
+          </div>
+        </UCard>
       </template>
+
+      <UCard class="bg-zinc-900/50 border-zinc-800 mb-8">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-zinc-100">Your Subscription</h2>
+            <UBadge
+              :color="isSubscribed ? 'green' : 'gray'"
+              variant="soft"
+            >
+              {{ subscriptionBadge }}
+            </UBadge>
+          </div>
+        </template>
 
       <!-- Subscribed State -->
       <div v-if="isSubscribed" class="space-y-4">
@@ -389,7 +519,8 @@
           Upgrade to listen to unlimited full tracks and support artists directly with your subscription.
         </p>
       </div>
-    </UCard>
+      </UCard>
+    </ClientOnly>
 
     <!-- Quick Actions -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
