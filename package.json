@@ -45,6 +45,7 @@
     "@nuxtjs/supabase": "^1.4.0",
     "@nuxtjs/tailwindcss": "6.12.1",
     "@playwright/test": "^1.57.0",
+    "@types/mjml": "^4.7.4",
     "@types/node": "^22.7.5",
     "@vite-pwa/nuxt": "^1.1.0",
     "@vitest/ui": "^4.0.17",
