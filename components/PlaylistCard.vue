@@ -128,7 +128,7 @@ const role = computed(() => props.playlist.role)
 const ownerName = computed(() => props.playlist.owner?.display_name)
 const collaboratorNames = computed(() => {
   const collabs = props.playlist.collaborators || []
-  return collabs.map(c => c.display_name).filter(Boolean)
+  return collabs.map(c => c.display_name).filter((name): name is string => Boolean(name))
 })
 const byLine = computed(() => {
   const names: string[] = []

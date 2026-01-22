@@ -44,7 +44,7 @@
 
       <!-- Clear error button for non-404 errors -->
       <div v-if="!is404" class="mt-6">
-        <UButton color="gray" variant="ghost" size="sm" @click="clearError">
+        <UButton color="gray" variant="ghost" size="sm" @click="handleClearError">
           <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 mr-1" />
           Try Again
         </UButton>
@@ -74,7 +74,7 @@ const goBack = () => {
   }
 }
 
-const clearError = () => {
+const handleClearError = () => {
   clearError({ redirect: '/' })
 }
 
