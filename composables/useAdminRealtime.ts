@@ -40,7 +40,7 @@ export const useAdminRealtime = () => {
       channelConfig.filter = filter
     }
 
-    const channel = client
+    const channel: RealtimeChannel = client
       .channel(channelName)
       .on(
         'postgres_changes',

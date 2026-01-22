@@ -88,7 +88,7 @@ const chartOptions: ChartOptions<'line'> = {
       borderWidth: 1,
       padding: 12,
       callbacks: {
-        label: (context) => `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`,
+        label: (context) => `${context.dataset.label}: $${context.parsed.y?.toFixed(2) ?? '0.00'}`,
       },
     },
   },

@@ -363,7 +363,7 @@ export const useUploadWizard = () => {
       albumForm: {
         title: album.title,
         description: album.description || '',
-        release_type: album.release_type,
+        release_type: album.release_type === 'compilation' ? 'album' : album.release_type,
         release_date: album.release_date || '',
         label_name: album.label_name || '',
         p_line: album.p_line || '',

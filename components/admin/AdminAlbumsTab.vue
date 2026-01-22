@@ -165,7 +165,7 @@
     <!-- Edit Album Modal (using shared component) -->
     <AlbumEditModal
       v-model="showEditAlbumModal"
-      :album="albumToEdit"
+      :album="albumToEdit as any"
       :tracks="editAlbumTracks"
       :cover-url="editAlbumCoverUrl"
       :band-name="albumToEdit?.band?.name || ''"
@@ -319,8 +319,8 @@ const openEditAlbumModal = async (album: AdminAlbum) => {
 
   // Fetch full album with tracks
   try {
-    const data = await $fetch(`/api/admin/albums/${album.id}`)
-    const fullAlbum = data.album as AdminAlbum
+    const data = await $fetch<{ album: AdminAlbum }>(`/api/admin/albums/${album.id}`)
+    const fullAlbum = data.album
 
     // Convert tracks to editable format
     editAlbumTracks.value = (fullAlbum.tracks || []).map(t => ({
