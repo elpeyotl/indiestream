@@ -31,16 +31,16 @@
       <div class="flex items-center gap-4 mb-6 p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
         <div
           class="w-12 h-12 rounded-lg overflow-hidden shrink-0"
-          :style="{ background: `linear-gradient(135deg, ${state.selectedBand.theme_color} 0%, #c026d3 100%)` }"
+          :style="{ background: `linear-gradient(135deg, ${state.selectedBand!.theme_color} 0%, #c026d3 100%)` }"
         >
-          <img v-if="state.selectedBand.avatar_url" :src="state.selectedBand.avatar_url" :alt="state.selectedBand.name" class="w-full h-full object-cover" />
+          <img v-if="state.selectedBand!.avatar_url" :src="state.selectedBand!.avatar_url" :alt="state.selectedBand!.name" class="w-full h-full object-cover" />
           <div v-else class="w-full h-full flex items-center justify-center">
-            <span class="text-lg font-bold text-white">{{ state.selectedBand.name.charAt(0).toUpperCase() }}</span>
+            <span class="text-lg font-bold text-white">{{ state.selectedBand!.name.charAt(0).toUpperCase() }}</span>
           </div>
         </div>
         <div class="flex-1">
           <p class="text-sm text-zinc-400">Uploading as</p>
-          <h3 class="font-semibold text-zinc-100">{{ state.selectedBand.name }}</h3>
+          <h3 class="font-semibold text-zinc-100">{{ state.selectedBand!.name }}</h3>
         </div>
         <UButton color="gray" variant="ghost" size="sm" @click="state.selectedBand = null">
           Change
@@ -50,7 +50,7 @@
       <!-- Step 1: Album Info -->
       <UploadAlbumDetailsStep
         v-if="state.step === 1"
-        :band-name="state.selectedBand.name"
+        :band-name="state.selectedBand!.name"
         @continue="state.step = 2"
       />
 
@@ -169,7 +169,7 @@ const { pending: editLoading } = await useLazyAsyncData(
     const credits = trackIds.length > 0 ? await getCreditsForTracks(trackIds) : {}
 
     // Load into wizard state
-    await loadAlbumForEdit(album, band, coverUrl, credits)
+    await loadAlbumForEdit(album, band, coverUrl, credits as any)
 
     return { album, band }
   },
@@ -390,18 +390,22 @@ const startUpload = async () => {
           // Update credits
           if (track.credits.length > 0) {
             const validCredits = track.credits.filter(c => c.name.trim())
-            await setTrackCredits(track.id, validCredits)
+            await setTrackCredits(track.id, validCredits as any)
           }
         } else if (track.file) {
           // New track - create and upload
           track.uploading = true
 
           try {
+            // Get duration first
+            const duration = await getAudioDuration(track.file)
+
             const dbTrack = await createTrack({
               album_id: album.id,
               band_id: state.value.selectedBand!.id,
               title: track.title,
               track_number: i + 1,
+              duration_seconds: Math.round(duration),
               isrc: track.isrc || undefined,
               iswc: track.iswc || undefined,
               is_cover: track.is_cover,
@@ -414,7 +418,7 @@ const startUpload = async () => {
             if (track.credits.length > 0) {
               const validCredits = track.credits.filter(c => c.name.trim())
               if (validCredits.length > 0) {
-                await setTrackCredits(dbTrack.id, validCredits)
+                await setTrackCredits(dbTrack.id, validCredits as any)
               }
             }
 
@@ -432,7 +436,6 @@ const startUpload = async () => {
               track.progress = progress
             })
 
-            const duration = await getAudioDuration(track.file)
             // Get file extension for original format
             const ext = track.file.name.split('.').pop()?.toLowerCase() || 'flac'
             await updateTrack(dbTrack.id, {
@@ -440,7 +443,6 @@ const startUpload = async () => {
               original_audio_key: key, // Store as original lossless
               original_format: ext,
               transcoding_status: 'pending', // Will be transcoded by worker
-              duration_seconds: Math.round(duration),
             })
 
             track.id = dbTrack.id
@@ -515,11 +517,15 @@ const startUpload = async () => {
         track.uploading = true
 
         try {
+          // Get duration first
+          const duration = await getAudioDuration(track.file)
+
           const dbTrack = await createTrack({
             album_id: album.id,
             band_id: state.value.selectedBand!.id,
             title: track.title,
             track_number: i + 1,
+            duration_seconds: Math.round(duration),
             isrc: track.isrc || undefined,
             iswc: track.iswc || undefined,
             is_cover: track.is_cover,
@@ -532,7 +538,7 @@ const startUpload = async () => {
           if (track.credits.length > 0) {
             const validCredits = track.credits.filter(c => c.name.trim())
             if (validCredits.length > 0) {
-              await setTrackCredits(dbTrack.id, validCredits)
+              await setTrackCredits(dbTrack.id, validCredits as any)
             }
           }
 
@@ -550,7 +556,6 @@ const startUpload = async () => {
             track.progress = progress
           })
 
-          const duration = await getAudioDuration(track.file)
           // Get file extension for original format
           const ext = track.file.name.split('.').pop()?.toLowerCase() || 'flac'
           await updateTrack(dbTrack.id, {
@@ -558,7 +563,6 @@ const startUpload = async () => {
             original_audio_key: key, // Store as original lossless
             original_format: ext,
             transcoding_status: 'pending', // Will be transcoded by worker
-            duration_seconds: Math.round(duration),
           })
 
           track.uploaded = true
