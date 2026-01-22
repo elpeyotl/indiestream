@@ -201,10 +201,10 @@ export const useAlbumStore = defineStore('album', () => {
         data.tracks = filterTracks(data.tracks)
         if (data.tracks.length === 0) return null
       }
-      data.tracks.sort((a: Track, b: Track) => a.track_number - b.track_number)
+      data.tracks.sort((a: any, b: any) => a.track_number - b.track_number)
     }
 
-    return data
+    return data as Album
   }
 
   const fetchAlbumById = async (albumId: string, filterModeration: boolean): Promise<Album | null> => {
@@ -226,10 +226,10 @@ export const useAlbumStore = defineStore('album', () => {
         data.tracks = filterTracks(data.tracks)
         if (data.tracks.length === 0) return null
       }
-      data.tracks.sort((a: Track, b: Track) => a.track_number - b.track_number)
+      data.tracks.sort((a: any, b: any) => a.track_number - b.track_number)
     }
 
-    return data
+    return data as Album
   }
 
   const fetchBandAlbums = async (bandId: string, includeUnpublished: boolean, filterModeration: boolean): Promise<Album[]> => {
@@ -247,7 +247,7 @@ export const useAlbumStore = defineStore('album', () => {
 
     if (error) throw error
 
-    let result: Album[] = data || []
+    let result: Album[] = (data || []) as Album[]
 
     if (filterModeration && data) {
       const { filterTracks, filterAlbums, loadModerationSetting } = useModerationFilter()
@@ -257,7 +257,7 @@ export const useAlbumStore = defineStore('album', () => {
           album.tracks = filterTracks(album.tracks)
         }
       }
-      result = filterAlbums(data)
+      result = filterAlbums(data) as Album[]
     }
 
     return result
@@ -438,10 +438,10 @@ export const useAlbumStore = defineStore('album', () => {
     }
 
     if (data?.tracks) {
-      data.tracks.sort((a: Track, b: Track) => a.track_number - b.track_number)
+      data.tracks.sort((a: any, b: any) => a.track_number - b.track_number)
     }
 
-    return data
+    return data as Album
   }
 
   // ===== MUTATIONS =====
@@ -547,7 +547,7 @@ export const useAlbumStore = defineStore('album', () => {
       .single()
 
     if (error) throw error
-    return data
+    return data as Track
   }
 
   // Update track
@@ -562,7 +562,7 @@ export const useAlbumStore = defineStore('album', () => {
       .single()
 
     if (error) throw error
-    return data
+    return data as Track
   }
 
   // Delete track
