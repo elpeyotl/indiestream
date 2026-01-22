@@ -49,6 +49,12 @@ export default defineEventHandler(async (event) => {
 
       const subscription = subscriptions.data[0] as any
 
+      // Validate required date fields
+      const periodEnd = subscription.trial_end || subscription.current_period_end
+      if (!subscription.current_period_start || !periodEnd) {
+        throw new Error('Missing required subscription date fields')
+      }
+
       // Update the database
       const { error: upsertError } = await supabase
         .from('subscriptions')
@@ -59,7 +65,7 @@ export default defineEventHandler(async (event) => {
           status: subscription.status,
           plan: 'listener',
           current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date((subscription.trial_end || subscription.current_period_end) * 1000).toISOString(),
+          current_period_end: new Date(periodEnd * 1000).toISOString(),
           cancel_at_period_end: subscription.cancel_at_period_end,
         }, { onConflict: 'user_id' })
 
@@ -88,6 +94,12 @@ export default defineEventHandler(async (event) => {
 
     const subscription = subscriptions.data[0] as any
 
+    // Validate required date fields
+    const periodEnd = subscription.trial_end || subscription.current_period_end
+    if (!subscription.current_period_start || !periodEnd) {
+      throw new Error('Missing required subscription date fields')
+    }
+
     // Update the database
     const { error: updateError } = await supabase
       .from('subscriptions')
@@ -95,7 +107,7 @@ export default defineEventHandler(async (event) => {
         stripe_subscription_id: subscription.id,
         status: subscription.status,
         current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date((subscription.trial_end || subscription.current_period_end) * 1000).toISOString(),
+        current_period_end: new Date(periodEnd * 1000).toISOString(),
         cancel_at_period_end: subscription.cancel_at_period_end,
       })
       .eq('user_id', user.id)
