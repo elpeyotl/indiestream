@@ -13,7 +13,7 @@
       </div>
 
       <!-- Heading -->
-      <h1 class="text-4xl md:text-5xl font-bold text-zinc-100 mb-4">
+      <h1 class="text-2xl md:text-3xl font-bold text-zinc-100 mb-4">
         Something Amazing is Coming
       </h1>
 

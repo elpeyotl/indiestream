@@ -1,15 +1,13 @@
 <template>
   <NuxtLink v-if="to" :to="to" class="flex items-center group">
     <!-- Mobile: Icon only -->
-    <NuxtImg src="/logo.png" alt="Fairtune" :class="[iconSizeClass, 'lg:hidden']" />
+    <img src="/logo.png" alt="Fairtune" :class="[iconSizeClass, 'lg:hidden']" />
     <!-- Desktop: Logo with tagline -->
     <img src="/logo-text.svg" alt="Fairtune - Heavy Riffs. Fair Pay. No Bullshit." :class="[textLogoSizeClass, 'hidden lg:block']" />
   </NuxtLink>
   <div v-else class="flex items-center group">
-    <!-- Mobile: Icon only -->
-    <NuxtImg src="/logo.png" alt="Fairtune" :class="[iconSizeClass, 'lg:hidden']" />
-    <!-- Desktop: Logo with tagline -->
-    <img src="/logo-text.svg" alt="Fairtune - Heavy Riffs. Fair Pay. No Bullshit." :class="[textLogoSizeClass, 'hidden lg:block']" />
+    <!-- Logo with tagline (always visible) -->
+    <img src="/logo-text.svg" alt="Fairtune - Heavy Riffs. Fair Pay. No Bullshit." :class="textLogoSizeClass" />
   </div>
 </template>
 
