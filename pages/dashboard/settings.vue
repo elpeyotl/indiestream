@@ -233,7 +233,7 @@ const handleSubmit = async () => {
             id="bio"
             v-model="form.bio"
             placeholder="Tell us about yourself..."
-            rows="4"
+            :rows="4"
             maxlength="280"
           />
           <p

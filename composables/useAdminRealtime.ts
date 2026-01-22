@@ -66,7 +66,7 @@ export const useAdminRealtime = () => {
     return () => {
       const chan = channels.value.get(channelName)
       if (chan) {
-        client.removeChannel(chan)
+        client.removeChannel(chan as RealtimeChannel)
         channels.value.delete(channelName)
       }
     }
@@ -86,7 +86,7 @@ export const useAdminRealtime = () => {
   // Cleanup all channels on unmount
   onUnmounted(() => {
     channels.value.forEach((channel) => {
-      client.removeChannel(channel)
+      client.removeChannel(channel as RealtimeChannel)
     })
     channels.value.clear()
   })
