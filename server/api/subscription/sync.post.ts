@@ -49,10 +49,22 @@ export default defineEventHandler(async (event) => {
 
       const subscription = subscriptions.data[0] as any
 
-      // Validate required date fields
+      // Handle date fields (trialing subscriptions use trial_start/trial_end)
+      const periodStart = subscription.current_period_start || subscription.trial_start
       const periodEnd = subscription.trial_end || subscription.current_period_end
-      if (!subscription.current_period_start || !periodEnd) {
-        throw new Error('Missing required subscription date fields')
+
+      if (!periodStart || !periodEnd) {
+        console.warn('Subscription missing date fields:', {
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          hasStart: !!periodStart,
+          hasEnd: !!periodEnd,
+        })
+        return {
+          synced: false,
+          message: 'Subscription missing required date fields',
+          status: subscription.status,
+        }
       }
 
       // Update the database
@@ -64,7 +76,7 @@ export default defineEventHandler(async (event) => {
           stripe_subscription_id: subscription.id,
           status: subscription.status,
           plan: 'listener',
-          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+          current_period_start: new Date(periodStart * 1000).toISOString(),
           current_period_end: new Date(periodEnd * 1000).toISOString(),
           cancel_at_period_end: subscription.cancel_at_period_end,
         }, { onConflict: 'user_id' })
@@ -94,10 +106,22 @@ export default defineEventHandler(async (event) => {
 
     const subscription = subscriptions.data[0] as any
 
-    // Validate required date fields
+    // Handle date fields (trialing subscriptions use trial_start/trial_end)
+    const periodStart = subscription.current_period_start || subscription.trial_start
     const periodEnd = subscription.trial_end || subscription.current_period_end
-    if (!subscription.current_period_start || !periodEnd) {
-      throw new Error('Missing required subscription date fields')
+
+    if (!periodStart || !periodEnd) {
+      console.warn('Subscription missing date fields:', {
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        hasStart: !!periodStart,
+        hasEnd: !!periodEnd,
+      })
+      return {
+        synced: false,
+        message: 'Subscription missing required date fields',
+        status: subscription.status,
+      }
     }
 
     // Update the database
@@ -106,7 +130,7 @@ export default defineEventHandler(async (event) => {
       .update({
         stripe_subscription_id: subscription.id,
         status: subscription.status,
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+        current_period_start: new Date(periodStart * 1000).toISOString(),
         current_period_end: new Date(periodEnd * 1000).toISOString(),
         cancel_at_period_end: subscription.cancel_at_period_end,
       })
