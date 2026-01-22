@@ -443,6 +443,22 @@ export const useBandStore = defineStore('band', () => {
     }
   })
 
+  // Resolve avatar URLs for multiple bands in parallel
+  const resolveAvatarUrls = async <T extends { avatar_key?: string | null; avatar_url?: string | null }>(
+    bands: T[]
+  ): Promise<T[]> => {
+    await Promise.all(
+      bands.map(async (band) => {
+        if (band.avatar_key) {
+          // Always resolve from avatar_key when present (generates fresh signed URL)
+          const url = await resolveImageUrl(band.avatar_key)
+          if (url) band.avatar_url = url
+        }
+      })
+    )
+    return bands
+  }
+
   return {
     // State
     userBands,
@@ -459,6 +475,7 @@ export const useBandStore = defineStore('band', () => {
     isSlugAvailable,
     generateSlug,
     getCachedImageUrl,
+    resolveAvatarUrls,
     invalidateBandCache,
 
     // Mutations

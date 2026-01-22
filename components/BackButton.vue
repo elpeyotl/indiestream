@@ -8,6 +8,7 @@ const hideOnRoutes = [
   '/discover',
   '/library',
   '/artists',
+  '/search',
   '/dashboard',
   '/dashboard/settings',
   '/dashboard/stats',

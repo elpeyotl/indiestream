@@ -32,13 +32,17 @@
       </NuxtLink>
 
       <!-- 3. Search -->
-      <button
-        @click="openSearch"
-        class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 active:scale-95 text-zinc-400 hover:text-zinc-100"
+      <NuxtLink
+        to="/search"
+        class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 active:scale-95"
+        :class="isActive('/search') ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
       >
-        <UIcon name="i-heroicons-magnifying-glass" class="w-6 h-6" />
+        <UIcon
+          :name="isActive('/search') ? 'i-heroicons-magnifying-glass-solid' : 'i-heroicons-magnifying-glass'"
+          class="w-6 h-6"
+        />
         <span class="text-xs font-medium">Search</span>
-      </button>
+      </NuxtLink>
 
       <!-- 5. Library -->
       <NuxtLink
@@ -62,15 +66,6 @@ const route = useRoute()
 
 const isActive = (path: string): boolean => {
   return route.path === path || route.path.startsWith(path + '/')
-}
-
-const openSearch = () => {
-  const event = new KeyboardEvent('keydown', {
-    key: 'k',
-    metaKey: true,
-    bubbles: true,
-  })
-  document.dispatchEvent(event)
 }
 </script>
 

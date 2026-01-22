@@ -431,7 +431,7 @@ definePageMeta({
 const user = useSupabaseUser()
 const client = useSupabaseClient<Database>()
 const bandStore = useBandStore()
-const { getUserBands } = bandStore
+const { getUserBands, resolveAvatarUrls } = bandStore
 const albumStore = useAlbumStore()
 const { getStreamUrl } = albumStore
 const subscriptionStore = useSubscriptionStore()
@@ -453,18 +453,7 @@ const { data: bands, pending: bandsPending } = await useLazyAsyncData(
   'dashboard-bands',
   async () => {
     const bandsData = await getUserBands()
-
-    // Load fresh avatar URLs from keys
-    for (const band of bandsData) {
-      if (band.avatar_key) {
-        try {
-          band.avatar_url = await getStreamUrl(band.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar for band:', band.id, e)
-        }
-      }
-    }
-
+    await resolveAvatarUrls(bandsData)
     return bandsData
   },
   {

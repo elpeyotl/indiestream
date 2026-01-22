@@ -274,6 +274,8 @@ interface FeaturedPlaylist {
 const client = useSupabaseClient<Database>()
 const albumStore = useAlbumStore()
 const { getCachedCoverUrl, getAlbumById } = albumStore
+const bandStore = useBandStore()
+const { resolveAvatarUrls } = bandStore
 const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 const recentActivityStore = useRecentActivityStore()
 const { fetchRecentlyPlayed, recentlyPlayed, loadingRecentlyPlayed } = recentActivityStore
@@ -401,15 +403,7 @@ const { data: featuredArtists, pending: loadingFeatured, refresh: refreshFeature
     if (error) throw error
 
     const artists = (data || []) as any[]
-    await Promise.all(
-      artists.map(async (artist) => {
-        if (artist.avatar_key) {
-          const url = await getCachedCoverUrl(artist.avatar_key)
-          if (url) artist.avatar_url = url
-        }
-      })
-    )
-
+    await resolveAvatarUrls(artists)
     return artists as Band[]
   }
 )
@@ -428,15 +422,7 @@ const { data: allArtistsData, pending: loadingAllArtists, refresh: refreshAllArt
     if (error) throw error
 
     const artists = (data || []) as any[]
-    await Promise.all(
-      artists.map(async (artist) => {
-        if (artist.avatar_key) {
-          const url = await getCachedCoverUrl(artist.avatar_key)
-          if (url) artist.avatar_url = url
-        }
-      })
-    )
-
+    await resolveAvatarUrls(artists)
     return {
       artists: artists as Band[],
       hasMore: artists.length === pageSize,
@@ -656,15 +642,7 @@ const loadMoreArtists = async () => {
     if (error) throw error
 
     const artists = (data || []) as any[]
-    await Promise.all(
-      artists.map(async (artist) => {
-        if (artist.avatar_key) {
-          const url = await getCachedCoverUrl(artist.avatar_key)
-          if (url) artist.avatar_url = url
-        }
-      })
-    )
-
+    await resolveAvatarUrls(artists)
     allArtists.value = [...allArtists.value, ...artists as Band[]]
     hasMoreArtists.value = artists.length === pageSize
   } catch (e) {

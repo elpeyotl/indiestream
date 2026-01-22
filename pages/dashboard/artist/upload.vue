@@ -95,7 +95,7 @@ definePageMeta({
 
 const route = useRoute()
 const bandStore = useBandStore()
-const { getUserBands, getBandById } = bandStore
+const { getUserBands, getBandById, resolveAvatarUrls } = bandStore
 const albumStore = useAlbumStore()
 const { createAlbum, createTrack, updateTrack, updateAlbum, deleteTrack, getUploadUrl, setTrackCredits, getStreamUrl, getAlbumById, getCreditsForTracks } = albumStore
 const { state, toast, uploadFileWithProgress, uploadProcessedCover, getAudioDuration, resetWizard, loadAlbumForEdit } = useUploadWizard()
@@ -118,16 +118,7 @@ const { data: bands, pending: bandsLoading } = await useLazyAsyncData(
     if (editAlbumId.value) return []
 
     const loadedBands = await getUserBands()
-    // Load avatar URLs from keys
-    for (const band of loadedBands) {
-      if (band.avatar_key) {
-        try {
-          band.avatar_url = await getStreamUrl(band.avatar_key)
-        } catch (e) {
-          console.error('Failed to load avatar for band:', band.name, e)
-        }
-      }
-    }
+    await resolveAvatarUrls(loadedBands)
     // Only show active bands (pending/suspended can't upload)
     return loadedBands.filter(b => b.status === 'active')
   },
@@ -161,13 +152,7 @@ const { pending: editLoading } = await useLazyAsyncData(
     }
 
     // Load band avatar
-    if (band.avatar_key) {
-      try {
-        band.avatar_url = await getStreamUrl(band.avatar_key)
-      } catch (e) {
-        console.error('Failed to load avatar:', e)
-      }
-    }
+    await resolveAvatarUrls([band])
 
     // Load cover URL
     let coverUrl: string | null = null

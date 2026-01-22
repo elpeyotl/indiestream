@@ -245,6 +245,8 @@ definePageMeta({
 const client = useSupabaseClient()
 const albumStore = useAlbumStore()
 const { getStreamUrl } = albumStore
+const bandStore = useBandStore()
+const { resolveAvatarUrls } = bandStore
 const { moderationEnabled, loadModerationSetting } = useModerationFilter()
 
 const newReleases = ref<Album[]>([])
@@ -332,18 +334,8 @@ const loadFeaturedArtists = async () => {
 
     if (error) throw error
 
-    // Load avatar URLs from keys (or use direct URL if no key)
     const artists = (data || []) as any[]
-    for (const artist of artists) {
-      if (artist.avatar_key) {
-        try {
-          artist.avatar_url = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          // Skip failed avatars
-        }
-      }
-      // avatar_url from DB is used as fallback if no avatar_key
-    }
+    await resolveAvatarUrls(artists)
     featuredArtists.value = artists as Band[]
   } catch (e) {
     console.error('Failed to load artists:', e)

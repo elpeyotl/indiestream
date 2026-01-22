@@ -46,11 +46,11 @@
                   v-for="artist in results.artists"
                   :key="artist.id"
                   :to="`/${artist.slug}`"
-                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                  class="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-800 transition-colors"
                   @click="saveAndClose"
                 >
                   <div
-                    class="w-10 h-10 rounded-lg overflow-hidden shrink-0"
+                    class="w-12 h-12 rounded-full overflow-hidden shrink-0"
                     :style="{ background: `linear-gradient(135deg, ${artist.theme_color || '#8B5CF6'} 0%, #c026d3 100%)` }"
                   >
                     <img
@@ -60,13 +60,14 @@
                       class="w-full h-full object-cover"
                     />
                     <div v-else class="w-full h-full flex items-center justify-center">
-                      <span class="text-sm font-bold text-white">{{ artist.name.charAt(0) }}</span>
+                      <span class="text-lg font-bold text-white">{{ artist.name.charAt(0) }}</span>
                     </div>
                   </div>
                   <div class="flex-1 min-w-0">
                     <p class="font-medium text-zinc-100 truncate">{{ artist.name }}</p>
-                    <p class="text-xs text-zinc-500">Artist</p>
+                    <p class="text-sm text-zinc-500">Artist</p>
                   </div>
+                  <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 text-zinc-600" />
                 </NuxtLink>
               </div>
             </div>
@@ -79,10 +80,10 @@
                   v-for="album in results.albums"
                   :key="album.id"
                   :to="`/${album.band?.slug}/${album.slug}`"
-                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                  class="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-800 transition-colors"
                   @click="saveAndClose"
                 >
-                  <div class="w-10 h-10 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
+                  <div class="w-12 h-12 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
                     <img
                       v-if="album.cover_url"
                       :src="album.cover_url"
@@ -90,13 +91,14 @@
                       class="w-full h-full object-cover"
                     />
                     <div v-else class="w-full h-full flex items-center justify-center">
-                      <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-zinc-600" />
+                      <UIcon name="i-heroicons-musical-note" class="w-6 h-6 text-zinc-600" />
                     </div>
                   </div>
                   <div class="flex-1 min-w-0">
                     <p class="font-medium text-zinc-100 truncate">{{ album.title }}</p>
-                    <p class="text-xs text-zinc-500">{{ album.band?.name }} · Album</p>
+                    <p class="text-sm text-zinc-500 truncate">{{ album.band?.name }}</p>
                   </div>
+                  <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 text-zinc-600" />
                 </NuxtLink>
               </div>
             </div>
@@ -109,10 +111,10 @@
                   v-for="track in results.tracks"
                   :key="track.id"
                   :to="`/${track.band_slug}/${track.album_slug}`"
-                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                  class="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-800 transition-colors"
                   @click="saveAndClose"
                 >
-                  <div class="w-10 h-10 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
+                  <div class="w-12 h-12 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
                     <img
                       v-if="track.cover_url"
                       :src="track.cover_url"
@@ -120,13 +122,14 @@
                       class="w-full h-full object-cover"
                     />
                     <div v-else class="w-full h-full flex items-center justify-center">
-                      <UIcon name="i-heroicons-musical-note" class="w-5 h-5 text-zinc-600" />
+                      <UIcon name="i-heroicons-musical-note" class="w-6 h-6 text-zinc-600" />
                     </div>
                   </div>
                   <div class="flex-1 min-w-0">
                     <p class="font-medium text-zinc-100 truncate">{{ track.title }}</p>
-                    <p class="text-xs text-zinc-500">{{ track.band_name }} · {{ track.album_title }}</p>
+                    <p class="text-sm text-zinc-500 truncate">{{ track.band_name }} · {{ track.album_title }}</p>
                   </div>
+                  <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 text-zinc-600" />
                 </NuxtLink>
               </div>
             </div>
@@ -139,11 +142,11 @@
                   v-for="playlist in results.playlists"
                   :key="playlist.id"
                   :to="`/playlist/${playlist.id}`"
-                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                  class="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-800 transition-colors"
                   @click="saveAndClose"
                 >
                   <!-- Mini playlist cover mosaic -->
-                  <div class="w-10 h-10 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
+                  <div class="w-12 h-12 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
                     <!-- 4 covers: 2x2 grid -->
                     <div v-if="playlist.covers?.length >= 4" class="grid grid-cols-2 h-full w-full">
                       <img
@@ -176,21 +179,22 @@
                       v-else
                       class="w-full h-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center"
                     >
-                      <UIcon name="i-heroicons-queue-list" class="w-5 h-5 text-white/80" />
+                      <UIcon name="i-heroicons-queue-list" class="w-6 h-6 text-white/80" />
                     </div>
                   </div>
                   <div class="flex-1 min-w-0">
                     <p class="font-medium text-zinc-100 truncate">{{ playlist.title }}</p>
-                    <p class="text-xs text-zinc-500">{{ playlist.track_count }} tracks · {{ playlist.owner_name || 'Unknown' }}</p>
+                    <p class="text-sm text-zinc-500">{{ playlist.track_count }} tracks · {{ playlist.owner_name || 'Unknown' }}</p>
                   </div>
+                  <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 text-zinc-600" />
                 </NuxtLink>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Recent Searches & Quick Links (when no query) -->
-        <div v-else class="mt-4 space-y-4">
+        <!-- Empty State (when no query) -->
+        <div v-else class="mt-4 space-y-4 max-h-96 overflow-y-auto">
           <!-- Recent Searches -->
           <div v-if="recentSearches.length > 0">
             <div class="flex items-center justify-between mb-2">
@@ -219,6 +223,96 @@
                 </button>
               </div>
             </div>
+          </div>
+
+          <!-- Trending Artists -->
+          <div v-if="trendingArtists.length > 0">
+            <h3 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Trending Artists</h3>
+            <div class="grid grid-cols-3 gap-3">
+              <NuxtLink
+                v-for="artist in trendingArtists"
+                :key="artist.id"
+                :to="`/${artist.slug}`"
+                class="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors"
+                @click="closeSearch"
+              >
+                <div
+                  class="w-16 h-16 rounded-full overflow-hidden shrink-0"
+                  :style="{ background: `linear-gradient(135deg, ${artist.theme_color || '#8B5CF6'} 0%, #c026d3 100%)` }"
+                >
+                  <img
+                    v-if="artist.avatar_url"
+                    :src="artist.avatar_url"
+                    :alt="artist.name"
+                    class="w-full h-full object-cover"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center">
+                    <span class="text-xl font-bold text-white">{{ artist.name.charAt(0) }}</span>
+                  </div>
+                </div>
+                <span class="text-sm text-zinc-300 truncate w-full text-center">{{ artist.name }}</span>
+              </NuxtLink>
+            </div>
+          </div>
+
+          <!-- Loading skeleton for trending -->
+          <div v-else-if="loadingTrending">
+            <h3 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Trending Artists</h3>
+            <div class="grid grid-cols-3 gap-3">
+              <div v-for="i in 6" :key="i" class="flex flex-col items-center gap-2 p-2">
+                <div class="w-16 h-16 rounded-full bg-zinc-800 animate-pulse" />
+                <div class="h-4 w-12 bg-zinc-800 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Featured Playlist -->
+          <div v-if="featuredPlaylist">
+            <h3 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Featured Playlist</h3>
+            <NuxtLink
+              :to="`/playlist/${featuredPlaylist.id}`"
+              class="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 transition-colors"
+              @click="closeSearch"
+            >
+              <!-- Playlist cover mosaic -->
+              <div class="w-14 h-14 rounded-lg bg-zinc-800 overflow-hidden shrink-0">
+                <div v-if="playlistCovers.length >= 4" class="grid grid-cols-2 h-full w-full">
+                  <img
+                    v-for="(cover, index) in playlistCovers.slice(0, 4)"
+                    :key="index"
+                    :src="cover"
+                    :alt="`Cover ${index + 1}`"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div v-else-if="playlistCovers.length >= 2" class="grid grid-cols-2 h-full w-full">
+                  <img
+                    v-for="(cover, index) in playlistCovers.slice(0, 2)"
+                    :key="index"
+                    :src="cover"
+                    :alt="`Cover ${index + 1}`"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <img
+                  v-else-if="playlistCovers.length === 1"
+                  :src="playlistCovers[0]"
+                  :alt="featuredPlaylist.title"
+                  class="w-full h-full object-cover"
+                />
+                <div
+                  v-else
+                  class="w-full h-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center"
+                >
+                  <UIcon name="i-heroicons-queue-list" class="w-7 h-7 text-white/80" />
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-zinc-100 truncate">{{ featuredPlaylist.title }}</p>
+                <p class="text-sm text-zinc-500">{{ featuredPlaylist.track_count }} tracks</p>
+              </div>
+              <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 text-zinc-600" />
+            </NuxtLink>
           </div>
 
           <!-- Quick Links -->
@@ -256,42 +350,34 @@
 </template>
 
 <script setup lang="ts">
-const client = useSupabaseClient()
-const albumStore = useAlbumStore()
-const { getStreamUrl } = albumStore
 const recentActivityStore = useRecentActivityStore()
 const { recentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } = recentActivityStore
 
+// Use shared search composable
+const {
+  query,
+  searching,
+  results,
+  hasResults,
+  trendingArtists,
+  featuredPlaylist,
+  playlistCovers,
+  loadingTrending,
+  performSearch,
+  debouncedSearch,
+  clearSearch,
+  loadEmptyStateContent,
+} = useSearch()
+
+// Modal state
 const isOpen = ref(false)
-const query = ref('')
-const searching = ref(false)
 const searchInput = ref<HTMLInputElement | null>(null)
-
-interface SearchResults {
-  artists: any[]
-  albums: any[]
-  tracks: any[]
-  playlists: any[]
-}
-
-const results = ref<SearchResults>({
-  artists: [],
-  albums: [],
-  tracks: [],
-  playlists: [],
-})
-
-const hasResults = computed(() => {
-  return results.value.artists.length > 0 ||
-         results.value.albums.length > 0 ||
-         results.value.tracks.length > 0 ||
-         results.value.playlists.length > 0
-})
 
 const openSearch = () => {
   isOpen.value = true
-  query.value = ''
-  results.value = { artists: [], albums: [], tracks: [], playlists: [] }
+  clearSearch()
+  // Load empty state content when opening
+  loadEmptyStateContent()
 }
 
 const closeSearch = () => {
@@ -325,213 +411,4 @@ onMounted(() => {
     window.removeEventListener('keydown', handleKeydown)
   })
 })
-
-// Debounced search
-let searchTimeout: NodeJS.Timeout | null = null
-const debouncedSearch = () => {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    performSearch()
-  }, 300)
-}
-
-const performSearch = async () => {
-  if (!query.value.trim()) {
-    results.value = { artists: [], albums: [], tracks: [], playlists: [] }
-    return
-  }
-
-  searching.value = true
-
-  try {
-    // Search artists (only active/approved)
-    const { data: artists } = await client
-      .from('bands')
-      .select('id, name, slug, theme_color, avatar_key')
-      .eq('status', 'active')
-      .ilike('name', `%${query.value}%`)
-      .limit(5)
-
-    // Search albums
-    const { data: albums } = await client
-      .from('albums')
-      .select(`
-        id,
-        title,
-        slug,
-        cover_key,
-        cover_url,
-        band:bands!inner (
-          id,
-          name,
-          slug
-        )
-      `)
-      .eq('is_published', true)
-      .ilike('title', `%${query.value}%`)
-      .limit(5)
-
-    // Search tracks - check moderation setting
-    const { moderationEnabled, loadModerationSetting } = useModerationFilter()
-    await loadModerationSetting()
-
-    let tracksQuery = client
-      .from('tracks')
-      .select(`
-        id,
-        title,
-        moderation_status,
-        albums!inner (
-          slug,
-          title,
-          cover_key,
-          is_published,
-          bands!inner (
-            name,
-            slug
-          )
-        )
-      `)
-      .eq('albums.is_published', true)
-      .ilike('title', `%${query.value}%`)
-
-    // Filter by moderation status if enabled
-    if (moderationEnabled.value) {
-      tracksQuery = tracksQuery.eq('moderation_status', 'approved')
-    }
-
-    const { data: tracks } = await tracksQuery.limit(5)
-
-    // Search public playlists
-    const { data: playlists } = await client
-      .from('playlists')
-      .select(`
-        id,
-        title,
-        track_count,
-        cover_key,
-        owner_id
-      `)
-      .eq('is_public', true)
-      .ilike('title', `%${query.value}%`)
-      .limit(5)
-
-    // Get owner info for playlists
-    const ownerIds = [...new Set((playlists || []).map(p => p.owner_id).filter(Boolean))]
-    const { data: owners } = ownerIds.length > 0
-      ? await client
-          .from('profiles')
-          .select('id, display_name')
-          .in('id', ownerIds)
-      : { data: [] }
-    const ownerMap = new Map((owners || []).map((o: any) => [o.id, o.display_name]))
-
-    // Process artists with avatar URLs
-    const processedArtists = []
-    for (const artist of (artists || [])) {
-      const processed: any = {
-        ...artist,
-        avatar_url: null,
-      }
-      if (artist.avatar_key) {
-        try {
-          processed.avatar_url = await getStreamUrl(artist.avatar_key)
-        } catch (e) {
-          // Skip avatar URL
-        }
-      }
-      processedArtists.push(processed)
-    }
-    results.value.artists = processedArtists
-
-    // Process albums with cover URLs
-    const processedAlbums = []
-    for (const album of (albums || [])) {
-      const processed: any = {
-        ...album,
-        band: Array.isArray(album.band) ? album.band[0] : album.band,
-        cover_url: album.cover_url || null,
-      }
-      if (album.cover_key) {
-        try {
-          processed.cover_url = await getStreamUrl(album.cover_key)
-        } catch (e) {
-          // Skip - use cover_url from DB as fallback
-        }
-      }
-      processedAlbums.push(processed)
-    }
-    results.value.albums = processedAlbums
-
-    // Process tracks with cover URLs
-    const processedTracks = []
-    for (const track of (tracks || [])) {
-      const processed: any = {
-        id: track.id,
-        title: track.title,
-        album_slug: track.albums?.slug,
-        album_title: track.albums?.title,
-        band_name: track.albums?.bands?.name,
-        band_slug: track.albums?.bands?.slug,
-        cover_url: null,
-      }
-      if (track.albums?.cover_key) {
-        try {
-          processed.cover_url = await getStreamUrl(track.albums.cover_key)
-        } catch (e) {
-          // Skip cover URL
-        }
-      }
-      processedTracks.push(processed)
-    }
-    results.value.tracks = processedTracks
-
-    // Process playlists with cover URLs from tracks
-    const processedPlaylists = []
-    for (const playlist of (playlists || [])) {
-      // Fetch first 4 track covers for playlist mosaic
-      const { data: playlistTracks } = await client
-        .from('playlist_tracks')
-        .select(`
-          track:tracks!track_id (
-            album:albums!album_id (
-              cover_key
-            )
-          )
-        `)
-        .eq('playlist_id', playlist.id)
-        .order('position', { ascending: true })
-        .limit(4)
-
-      // Get unique cover URLs
-      const covers: string[] = []
-      for (const pt of (playlistTracks || [])) {
-        const coverKey = (pt.track as any)?.album?.cover_key
-        if (coverKey && covers.length < 4) {
-          try {
-            const url = await getStreamUrl(coverKey)
-            if (url && !covers.includes(url)) {
-              covers.push(url)
-            }
-          } catch (e) {
-            // Skip this cover
-          }
-        }
-      }
-
-      processedPlaylists.push({
-        id: playlist.id,
-        title: playlist.title,
-        track_count: playlist.track_count,
-        owner_name: ownerMap.get(playlist.owner_id) || null,
-        covers, // Array of cover URLs for mosaic
-      })
-    }
-    results.value.playlists = processedPlaylists
-  } catch (e) {
-    console.error('Search failed:', e)
-  } finally {
-    searching.value = false
-  }
-}
 </script>

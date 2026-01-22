@@ -104,6 +104,8 @@ import type { Band } from '~/stores/band'
 const client = useSupabaseClient()
 const albumStore = useAlbumStore()
 const { getCachedCoverUrl } = albumStore
+const bandStore = useBandStore()
+const { resolveAvatarUrls } = bandStore
 const playerStore = usePlayerStore()
 const { setQueue } = playerStore
 
@@ -309,15 +311,8 @@ const loadArtists = async (reset = false) => {
 
     if (queryError) throw queryError
 
-    // Load avatar URLs from keys (using cache)
     const newArtists = (data || []) as any[]
-    for (const artist of newArtists) {
-      if (artist.avatar_key) {
-        const url = await getCachedCoverUrl(artist.avatar_key)
-        if (url) artist.avatar_url = url
-      }
-      // avatar_url from DB is used as fallback if no avatar_key
-    }
+    await resolveAvatarUrls(newArtists)
     artists.value = reset ? (newArtists as Band[]) : [...artists.value, ...(newArtists as Band[])]
     hasMore.value = newArtists.length === pageSize
   } catch (e) {
