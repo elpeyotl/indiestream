@@ -16,9 +16,6 @@ export interface FreeTierData {
   resetsAt: string | null
 }
 
-// Cache TTL: 5 minutes
-const CACHE_TTL = 5 * 60 * 1000
-
 export const useSubscriptionStore = defineStore('subscription', () => {
   const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()
@@ -32,22 +29,13 @@ export const useSubscriptionStore = defineStore('subscription', () => {
   const loading = useState<boolean>('subscriptionLoading', () => false)
   const error = useState<string>('subscriptionError', () => '')
 
-  // Cache timestamps (client-only)
-  let subscriptionFetchedAt = 0
-  let freeTierFetchedAt = 0
-
-  // Check if cache is stale
-  const isSubscriptionStale = () => Date.now() - subscriptionFetchedAt > CACHE_TTL
-  const isFreeTierStale = () => Date.now() - freeTierFetchedAt > CACHE_TTL
-
   // Fetch subscription data from Supabase
-  const fetchSubscriptionData = async (force = false) => {
+  const fetchSubscriptionData = async () => {
     if (import.meta.server) return
     if (!userId.value) {
       subscription.value = null
       return
     }
-    if (!force && !isSubscriptionStale() && subscription.value !== null) return
 
     try {
       const { data, error: fetchError } = await supabase
@@ -62,7 +50,6 @@ export const useSubscriptionStore = defineStore('subscription', () => {
       }
 
       subscription.value = data as SubscriptionData | null
-      subscriptionFetchedAt = Date.now()
     } catch (e: any) {
       console.error('Error fetching subscription:', e)
       error.value = e.message || 'Failed to fetch subscription'
@@ -70,13 +57,12 @@ export const useSubscriptionStore = defineStore('subscription', () => {
   }
 
   // Fetch free tier status from API
-  const fetchFreeTierData = async (force = false) => {
+  const fetchFreeTierData = async () => {
     if (import.meta.server) return
     if (!userId.value) {
       freeTierStatus.value = null
       return
     }
-    if (!force && !isFreeTierStale() && freeTierStatus.value !== null) return
 
     try {
       const data = await $fetch<{
@@ -90,7 +76,6 @@ export const useSubscriptionStore = defineStore('subscription', () => {
         playsRemaining: data.playsRemaining,
         resetsAt: data.resetsAt,
       }
-      freeTierFetchedAt = Date.now()
     } catch (e) {
       console.error('Error fetching free tier status:', e)
       // Default to 5 plays remaining if we can't fetch
@@ -108,13 +93,11 @@ export const useSubscriptionStore = defineStore('subscription', () => {
       // User logged out - clear state
       subscription.value = null
       freeTierStatus.value = null
-      subscriptionFetchedAt = 0
-      freeTierFetchedAt = 0
     } else if (newUserId && !oldUserId) {
       // User just logged in - fetch subscription data
       await Promise.all([
-        fetchSubscriptionData(true),
-        fetchFreeTierData(true),
+        fetchSubscriptionData(),
+        fetchFreeTierData(),
       ])
     }
   }, { immediate: true })
@@ -141,8 +124,13 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     return freeTierStatus.value?.playsRemaining ?? 5
   })
 
-  // Fetch subscription (backward compatible API)
-  const fetchSubscription = async (force = false) => {
+  // Directly set subscription data (used after sync or webhook)
+  const setSubscription = (data: SubscriptionData) => {
+    subscription.value = data
+  }
+
+  // Fetch subscription
+  const fetchSubscription = async () => {
     if (!user.value) {
       subscription.value = null
       freeTierStatus.value = null
@@ -154,8 +142,8 @@ export const useSubscriptionStore = defineStore('subscription', () => {
 
     try {
       await Promise.all([
-        fetchSubscriptionData(force),
-        fetchFreeTierData(force),
+        fetchSubscriptionData(),
+        fetchFreeTierData(),
       ])
     } finally {
       loading.value = false
@@ -246,6 +234,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     freePlaysRemaining,
 
     // Actions
+    setSubscription,
     fetchSubscription,
     fetchFreeTierStatus,
     useFreePlays,

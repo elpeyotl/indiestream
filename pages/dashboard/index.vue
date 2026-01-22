@@ -554,6 +554,7 @@
 <script setup lang="ts">
 import type { Database } from '~/types/database'
 import type { Band } from '~/stores/band'
+import type { SubscriptionData } from '~/stores/subscription'
 
 definePageMeta({
   middleware: 'auth',
@@ -567,7 +568,7 @@ const albumStore = useAlbumStore()
 const { getStreamUrl } = albumStore
 const subscriptionStore = useSubscriptionStore()
 const { subscription, isSubscribed, freeTierStatus, loading: subscriptionLoading } = storeToRefs(subscriptionStore)
-const { openCustomerPortal, fetchSubscription } = subscriptionStore
+const { openCustomerPortal, setSubscription, fetchSubscription, fetchFreeTierStatus } = subscriptionStore
 
 // Impact distribution interface
 interface ImpactDistribution {
@@ -641,15 +642,23 @@ const { data: distribution, pending: impactLoading, refresh: refreshDistribution
 const syncSubscription = async () => {
   syncing.value = true
   try {
-    const result = await $fetch<{ synced: boolean; status?: string; subscriptionId?: string; message?: string }>('/api/subscription/sync', { method: 'POST' })
-    if (result.synced) {
+    const result = await $fetch<{
+      synced: boolean
+      subscription?: SubscriptionData
+      message?: string
+    }>('/api/subscription/sync', { method: 'POST' })
+
+    if (result.synced && result.subscription) {
+      // Update store directly with the synced data
+      setSubscription(result.subscription)
+      // Also refresh free tier status
+      await fetchFreeTierStatus()
+
       toast.add({
         title: 'Subscription synced',
-        description: `Status: ${result.status}`,
+        description: `Status: ${result.subscription.status}`,
         color: 'green',
       })
-      // Refetch subscription to update UI
-      await fetchSubscription()
     } else {
       toast.add({
         title: 'Sync failed',

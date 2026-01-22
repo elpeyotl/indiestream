@@ -86,10 +86,16 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 500, statusMessage: 'Failed to sync subscription' })
       }
 
+      // Return the full subscription data so the client can update the store directly
       return {
         synced: true,
-        status: subscription.status,
-        subscriptionId: subscription.id,
+        subscription: {
+          status: subscription.status,
+          plan: 'listener',
+          current_period_end: new Date(periodEnd * 1000).toISOString(),
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          stripe_subscription_id: subscription.id,
+        },
       }
     }
 
@@ -141,10 +147,16 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Failed to update subscription' })
     }
 
+    // Return the full subscription data so the client can update the store directly
     return {
       synced: true,
-      status: subscription.status,
-      subscriptionId: subscription.id,
+      subscription: {
+        status: subscription.status,
+        plan: 'listener',
+        current_period_end: new Date(periodEnd * 1000).toISOString(),
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        stripe_subscription_id: subscription.id,
+      },
     }
   } catch (error: any) {
     console.error('Sync subscription error:', error)
