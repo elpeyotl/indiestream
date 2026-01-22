@@ -157,7 +157,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
       return
     }
 
-    await fetchFreeTierData(true)
+    await fetchFreeTierData()
   }
 
   // Use a free play (decrements counter locally)
