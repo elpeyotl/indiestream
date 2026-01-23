@@ -1,6 +1,6 @@
 // Audit logging utility for admin actions
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '~/types/database'
+import type { Database, Json } from '~/types/database'
 
 export interface AuditLogEntry {
   adminId: string
@@ -37,18 +37,16 @@ export async function createAuditLog(
   client: SupabaseClient<Database>,
   entry: AuditLogEntry
 ): Promise<void> {
-  // Note: Uses 'as any' because admin_audit_logs types are generated after migration is applied
-  // TODO: Remove 'as any' after running: npx supabase gen types typescript --local > types/database.ts
-  const { error } = await (client as any).from('admin_audit_logs').insert({
+  const { error } = await client.from('admin_audit_logs').insert({
     admin_id: entry.adminId,
     action: entry.action,
     entity_type: entry.entityType,
     entity_id: entry.entityId || null,
     entity_name: entry.entityName || null,
     summary: entry.summary,
-    old_value: entry.oldValue || null,
-    new_value: entry.newValue || null,
-    metadata: entry.metadata || null,
+    old_value: (entry.oldValue || null) as Json,
+    new_value: (entry.newValue || null) as Json,
+    metadata: (entry.metadata || null) as Json,
   })
 
   if (error) {

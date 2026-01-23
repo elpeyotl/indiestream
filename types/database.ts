@@ -12,8 +12,83 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          entity_id: string | null
+          entity_name: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          new_value: Json | null
+          old_value: Json | null
+          summary: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          old_value?: Json | null
+          summary: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          old_value?: Json | null
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       albums: {
         Row: {
           band_id: string
@@ -554,6 +629,44 @@ export type Database = {
           {
             foreignKeyName: "favorites_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_genres: {
+        Row: {
+          created_at: string | null
+          featured_at: string | null
+          featured_by: string | null
+          genre_name: string
+          genre_slug: string
+          id: string
+          position: number
+        }
+        Insert: {
+          created_at?: string | null
+          featured_at?: string | null
+          featured_by?: string | null
+          genre_name: string
+          genre_slug: string
+          id?: string
+          position?: number
+        }
+        Update: {
+          created_at?: string | null
+          featured_at?: string | null
+          featured_by?: string | null
+          genre_name?: string
+          genre_slug?: string
+          id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_genres_featured_by_fkey"
+            columns: ["featured_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1894,6 +2007,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       moderation_status: [
@@ -1917,51 +2033,23 @@ export const Constants = {
   },
 } as const
 
-// ============================================================================
-// Convenience Type Aliases
-// ============================================================================
-
-// Table row types (what you get from SELECT)
+// Custom type aliases for convenience
 export type Album = Database['public']['Tables']['albums']['Row']
-export type Band = Database['public']['Tables']['bands']['Row']
-export type Track = Database['public']['Tables']['tracks']['Row']
-export type Profile = Database['public']['Tables']['profiles']['Row']
-export type Playlist = Database['public']['Tables']['playlists']['Row']
-export type PlaylistTrack = Database['public']['Tables']['playlist_tracks']['Row']
-export type PlaylistCollaborator = Database['public']['Tables']['playlist_collaborators']['Row']
-export type Subscription = Database['public']['Tables']['subscriptions']['Row']
-export type Follow = Database['public']['Tables']['follows']['Row']
-export type LikedTrack = Database['public']['Tables']['liked_tracks']['Row']
-export type SavedAlbum = Database['public']['Tables']['saved_albums']['Row']
-export type ListeningHistory = Database['public']['Tables']['listening_history']['Row']
-export type StreamEvent = Database['public']['Tables']['stream_events']['Row']
-export type Notification = Database['public']['Tables']['notifications']['Row']
-export type TrackCredit = Database['public']['Tables']['track_credits']['Row']
-export type ModerationQueueItem = Database['public']['Tables']['moderation_queue']['Row']
-export type ArtistBalance = Database['public']['Tables']['artist_balances']['Row']
-export type ArtistEarning = Database['public']['Tables']['artist_earnings']['Row']
-export type Payout = Database['public']['Tables']['payouts']['Row']
-export type ImpactShare = Database['public']['Tables']['impact_shares']['Row']
-export type TranscodingQueueItem = Database['public']['Tables']['transcoding_queue']['Row']
-
-// Insert types (what you pass to INSERT)
 export type AlbumInsert = Database['public']['Tables']['albums']['Insert']
-export type BandInsert = Database['public']['Tables']['bands']['Insert']
-export type TrackInsert = Database['public']['Tables']['tracks']['Insert']
-export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
-export type PlaylistInsert = Database['public']['Tables']['playlists']['Insert']
-export type PlaylistTrackInsert = Database['public']['Tables']['playlist_tracks']['Insert']
-
-// Update types (what you pass to UPDATE)
 export type AlbumUpdate = Database['public']['Tables']['albums']['Update']
-export type BandUpdate = Database['public']['Tables']['bands']['Update']
-export type TrackUpdate = Database['public']['Tables']['tracks']['Update']
-export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
-export type PlaylistUpdate = Database['public']['Tables']['playlists']['Update']
 
-// Enum types
-export type ModerationStatus = Database['public']['Enums']['moderation_status']
-export type ReleaseType = Database['public']['Enums']['release_type']
-export type SubscriptionStatus = Database['public']['Enums']['subscription_status']
-export type SubscriptionTier = Database['public']['Enums']['subscription_tier']
-export type UserRole = Database['public']['Enums']['user_role']
+export type Band = Database['public']['Tables']['bands']['Row']
+export type BandInsert = Database['public']['Tables']['bands']['Insert']
+export type BandUpdate = Database['public']['Tables']['bands']['Update']
+
+export type Track = Database['public']['Tables']['tracks']['Row']
+export type TrackInsert = Database['public']['Tables']['tracks']['Insert']
+export type TrackUpdate = Database['public']['Tables']['tracks']['Update']
+
+export type TrackCredit = Database['public']['Tables']['track_credits']['Row']
+export type TrackCreditInsert = Database['public']['Tables']['track_credits']['Insert']
+export type TrackCreditUpdate = Database['public']['Tables']['track_credits']['Update']
+
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
+export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']

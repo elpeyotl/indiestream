@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.22.0] - 2026-01-23
+
+### Added
+- **Admin Audit Logging System**: Track all admin actions with full change history
+  - New `admin_audit_logs` database table with RLS policies
+  - Logs: timestamp, admin user, action type, entity, old/new values, metadata
+  - Audit Logs tab in admin dashboard with search, filters, and pagination
+  - Expandable rows showing before/after JSON diff
+  - Instrumented endpoints: track moderation (approve/reject/revision), band management (suspend/verify/feature/delete), album management (publish/unpublish/delete), track deletion
+
 ## [0.21.2] - 2026-01-23
 
 ### Fixed

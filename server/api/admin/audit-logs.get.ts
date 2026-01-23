@@ -36,8 +36,7 @@ export default defineEventHandler(async (event) => {
   const search = query.search as string
 
   // Build query
-  // Note: Uses 'as any' because admin_audit_logs types are generated after migration is applied
-  let dbQuery = (client as any)
+  let dbQuery = client
     .from('admin_audit_logs')
     .select(
       `
