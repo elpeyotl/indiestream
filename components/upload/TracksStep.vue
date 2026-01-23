@@ -63,6 +63,7 @@
         @update:isrc="track.isrc = $event"
         @update:iswc="track.iswc = $event"
         @update:is_cover="track.is_cover = $event"
+        @update:lyrics_language="track.lyrics_language = $event"
         @toggle-credits="track.showCredits = !track.showCredits"
         @add-credit="addCredit(index)"
         @remove-credit="removeCredit(index, $event)"
@@ -100,6 +101,22 @@
         <p class="text-sm text-red-400">
           <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
           All tracks require at least one Composer or Composer & Author credit.
+        </p>
+      </div>
+
+      <!-- Language Warning -->
+      <div v-if="!allTracksHaveLyricsLanguage" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+        <p class="text-sm text-red-400">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
+          All tracks require a Lyrics Language selection.
+        </p>
+      </div>
+
+      <!-- Author Credits Warning -->
+      <div v-if="allTracksHaveLyricsLanguage && !allTracksHaveValidAuthorCredits" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+        <p class="text-sm text-red-400">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
+          Tracks with lyrics require an Author credit. Instrumental tracks cannot have Author credits.
         </p>
       </div>
 
@@ -239,6 +256,29 @@ const allTracksHaveComposer = computed(() => {
   )
 })
 
+const allTracksHaveLyricsLanguage = computed(() => {
+  return state.value.tracks.length > 0 && state.value.tracks.every(t => !!t.lyrics_language)
+})
+
+// Check if all tracks have valid author credits based on language
+const allTracksHaveValidAuthorCredits = computed(() => {
+  return state.value.tracks.length > 0 && state.value.tracks.every(t => {
+    const hasAuthor = t.credits.some(c =>
+      (c.role === 'author' || c.role === 'composer_author') && c.name.trim()
+    )
+    // Instrumental: no author allowed
+    if (t.lyrics_language === 'instrumental') {
+      return !hasAuthor
+    }
+    // Non-instrumental: must have author
+    if (t.lyrics_language && t.lyrics_language !== 'instrumental') {
+      return hasAuthor
+    }
+    // No language selected yet - let language validation catch this
+    return true
+  })
+})
+
 const allCheckboxesChecked = computed(() => {
   return state.value.rightsConfirmed &&
     state.value.falseInfoUnderstood &&
@@ -250,6 +290,8 @@ const canPublish = computed(() => {
   return state.value.tracks.length > 0 &&
     allTracksHaveIsrc.value &&
     allTracksHaveComposer.value &&
+    allTracksHaveLyricsLanguage.value &&
+    allTracksHaveValidAuthorCredits.value &&
     allCheckboxesChecked.value
 })
 
@@ -276,6 +318,31 @@ const validationErrors = computed(() => {
   if (state.value.tracks.length > 0 && !allTracksHaveComposer.value) {
     const count = state.value.tracks.filter(t => !t.credits.some(c => (c.role === 'composer' || c.role === 'composer_author') && c.name.trim())).length
     errors.push(`${count} track${count > 1 ? 's' : ''} missing Composer credit`)
+  }
+
+  if (state.value.tracks.length > 0 && !allTracksHaveLyricsLanguage.value) {
+    const count = state.value.tracks.filter(t => !t.lyrics_language).length
+    errors.push(`${count} track${count > 1 ? 's' : ''} missing Lyrics Language`)
+  }
+
+  if (state.value.tracks.length > 0 && !allTracksHaveValidAuthorCredits.value) {
+    // Check for instrumental tracks with author
+    const instrumentalWithAuthor = state.value.tracks.filter(t => {
+      if (t.lyrics_language !== 'instrumental') return false
+      return t.credits.some(c => (c.role === 'author' || c.role === 'composer_author') && c.name.trim())
+    }).length
+    if (instrumentalWithAuthor > 0) {
+      errors.push(`${instrumentalWithAuthor} instrumental track${instrumentalWithAuthor > 1 ? 's have' : ' has'} Author credits (not allowed)`)
+    }
+
+    // Check for non-instrumental tracks missing author
+    const nonInstrumentalMissingAuthor = state.value.tracks.filter(t => {
+      if (!t.lyrics_language || t.lyrics_language === 'instrumental') return false
+      return !t.credits.some(c => (c.role === 'author' || c.role === 'composer_author') && c.name.trim())
+    }).length
+    if (nonInstrumentalMissingAuthor > 0) {
+      errors.push(`${nonInstrumentalMissingAuthor} track${nonInstrumentalMissingAuthor > 1 ? 's' : ''} with lyrics missing Author credit`)
+    }
   }
 
   if (!state.value.rightsConfirmed) {

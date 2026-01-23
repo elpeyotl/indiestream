@@ -197,13 +197,35 @@
         </p>
       </div>
 
+      <!-- Lyrics Language -->
+      <div>
+        <label class="block text-sm font-medium mb-1" :class="showErrors && !track.lyrics_language ? 'text-red-400' : 'text-zinc-300'">
+          Lyrics Language <span class="text-red-400">*</span>
+          <span v-if="showErrors && !track.lyrics_language" class="text-red-400 font-normal ml-2">— Required</span>
+        </label>
+        <USelect
+          :model-value="track.lyrics_language"
+          :options="lyricsLanguages"
+          size="sm"
+          class="w-full"
+          :color="showErrors && !track.lyrics_language ? 'red' : undefined"
+          @update:model-value="$emit('update:lyrics_language', $event)"
+        />
+        <p v-if="track.lyrics_language === 'instrumental'" class="text-xs text-zinc-500 mt-1">
+          Instrumental tracks cannot have Author credits (only Composer and other roles).
+        </p>
+        <p v-else-if="track.lyrics_language && track.lyrics_language !== 'instrumental'" class="text-xs text-zinc-500 mt-1">
+          Non-instrumental tracks require at least one Author or Composer & Author credit.
+        </p>
+      </div>
+
       <!-- Credits -->
       <div>
         <div class="flex items-center justify-between mb-2">
-          <label class="text-sm font-medium" :class="showErrors && !hasComposerCredit ? 'text-red-400' : 'text-zinc-300'">
+          <label class="text-sm font-medium" :class="showErrors && !hasValidCredits ? 'text-red-400' : 'text-zinc-300'">
             Credits
             <span class="text-red-400">*</span>
-            <span v-if="showErrors && !hasComposerCredit" class="text-red-400 font-normal ml-2">— Composer required</span>
+            <span v-if="showErrors && !hasValidCredits" class="text-red-400 font-normal ml-2">{{ creditsErrorMessage }}</span>
           </label>
           <UButton
             color="gray"
@@ -216,10 +238,12 @@
           </UButton>
         </div>
 
-        <!-- Error hint when credits are hidden but missing -->
-        <div v-if="showErrors && !hasComposerCredit && !track.showCredits" class="mb-2 p-2 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-400">
+        <!-- Error hint when credits are hidden but invalid -->
+        <div v-if="showErrors && !hasValidCredits && !track.showCredits" class="mb-2 p-2 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-400">
           <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4 inline mr-1" />
-          Click "Show" to add a Composer credit
+          <span v-if="!hasComposerCredit">Click "Show" to add a Composer credit</span>
+          <span v-else-if="hasInvalidAuthorForInstrumental">Click "Show" to remove Author credits (not allowed for instrumental)</span>
+          <span v-else-if="isMissingAuthorForNonInstrumental">Click "Show" to add an Author or Composer & Author credit</span>
         </div>
 
         <div v-if="track.showCredits" class="space-y-2">
@@ -324,6 +348,7 @@ const emit = defineEmits<{
   'update:isrc': [value: string]
   'update:iswc': [value: string]
   'update:is_cover': [value: boolean]
+  'update:lyrics_language': [value: string]
   'toggle-credits': []
   'add-credit': []
   'remove-credit': [index: number]
@@ -338,7 +363,7 @@ const emit = defineEmits<{
   'release-isrc': []
 }>()
 
-const { formatFileSize, creditRoles } = useUploadWizard()
+const { formatFileSize, creditRoles, lyricsLanguages } = useUploadWizard()
 
 // Format duration in seconds to mm:ss
 const formatDuration = (seconds: number): string => {
@@ -376,10 +401,51 @@ const hasComposerCredit = computed(() => {
   )
 })
 
+// Check if track has an author credit (author or composer_author)
+const hasAuthorCredit = computed(() => {
+  return props.track.credits.some(c =>
+    (c.role === 'author' || c.role === 'composer_author') && c.name.trim()
+  )
+})
+
+// Check if instrumental track has author credits (not allowed)
+const hasInvalidAuthorForInstrumental = computed(() => {
+  if (props.track.lyrics_language !== 'instrumental') return false
+  return props.track.credits.some(c =>
+    (c.role === 'author' || c.role === 'composer_author') && c.name.trim()
+  )
+})
+
+// Check if non-instrumental track is missing author credit (required)
+const isMissingAuthorForNonInstrumental = computed(() => {
+  if (!props.track.lyrics_language || props.track.lyrics_language === 'instrumental') return false
+  return !hasAuthorCredit.value
+})
+
+// Check if track has valid credits based on language
+const hasValidCredits = computed(() => {
+  // Must have composer
+  if (!hasComposerCredit.value) return false
+  // Instrumental: no author allowed
+  if (hasInvalidAuthorForInstrumental.value) return false
+  // Non-instrumental: must have author
+  if (isMissingAuthorForNonInstrumental.value) return false
+  return true
+})
+
+// Get the credits error message
+const creditsErrorMessage = computed(() => {
+  if (!hasComposerCredit.value) return '— Composer required'
+  if (hasInvalidAuthorForInstrumental.value) return '— Author not allowed for instrumental'
+  if (isMissingAuthorForNonInstrumental.value) return '— Author required for lyrics'
+  return ''
+})
+
 // Check if track has validation errors
 const hasErrors = computed(() => {
   const hasIsrc = !!props.track.isrc
   const isrcValid = isValidIsrc(props.track.isrc || '')
-  return !hasIsrc || !isrcValid || !hasComposerCredit.value
+  const hasLanguage = !!props.track.lyrics_language
+  return !hasIsrc || !isrcValid || !hasLanguage || !hasValidCredits.value
 })
 </script>

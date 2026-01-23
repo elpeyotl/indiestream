@@ -26,6 +26,7 @@ export interface TrackUpload {
   spotify_track_id: string
   musicbrainz_work_id: string
   credits: TrackCreditForm[]
+  lyrics_language: string // 'instrumental' or ISO 639-1 language code
   // Platform ISRC
   isrc_platform_assigned: boolean
   generatingIsrc: boolean
@@ -123,6 +124,32 @@ export const useUploadWizard = () => {
     { value: 'label', label: 'Label' },
   ]
 
+  // Lyrics language options (ISO 639-1 codes + instrumental)
+  const lyricsLanguages = [
+    { value: '', label: 'Select language...' },
+    { value: 'instrumental', label: 'Instrumental (no lyrics)' },
+    { value: 'en', label: 'English' },
+    { value: 'de', label: 'German (Deutsch)' },
+    { value: 'fr', label: 'French (Français)' },
+    { value: 'es', label: 'Spanish (Español)' },
+    { value: 'it', label: 'Italian (Italiano)' },
+    { value: 'pt', label: 'Portuguese (Português)' },
+    { value: 'nl', label: 'Dutch (Nederlands)' },
+    { value: 'pl', label: 'Polish (Polski)' },
+    { value: 'ru', label: 'Russian (Русский)' },
+    { value: 'ja', label: 'Japanese (日本語)' },
+    { value: 'ko', label: 'Korean (한국어)' },
+    { value: 'zh', label: 'Chinese (中文)' },
+    { value: 'ar', label: 'Arabic (العربية)' },
+    { value: 'hi', label: 'Hindi (हिन्दी)' },
+    { value: 'sv', label: 'Swedish (Svenska)' },
+    { value: 'no', label: 'Norwegian (Norsk)' },
+    { value: 'da', label: 'Danish (Dansk)' },
+    { value: 'fi', label: 'Finnish (Suomi)' },
+    { value: 'tr', label: 'Turkish (Türkçe)' },
+    { value: 'other', label: 'Other' },
+  ]
+
   const releaseTypes = [
     { value: 'album', label: 'Album' },
     { value: 'ep', label: 'EP' },
@@ -217,6 +244,7 @@ export const useUploadWizard = () => {
       spotify_track_id: '',
       musicbrainz_work_id: '',
       credits: [],
+      lyrics_language: '',
       isrc_platform_assigned: false,
       generatingIsrc: false,
       showCredits: false,
@@ -346,6 +374,7 @@ export const useUploadWizard = () => {
           name: c.name,
           ipi_number: c.ipi_number || '',
         })),
+        lyrics_language: (track as any).lyrics_language || '',
         isrc_platform_assigned: track.isrc_platform_assigned || false,
         generatingIsrc: false,
         showCredits: credits.length > 0,
@@ -395,6 +424,7 @@ export const useUploadWizard = () => {
     // Constants
     toast,
     creditRoles,
+    lyricsLanguages,
     releaseTypes,
     // Utilities
     formatFileSize,
