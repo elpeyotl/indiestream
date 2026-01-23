@@ -78,7 +78,7 @@
       <div v-if="hasMore" class="mt-4 text-center">
         <UButton
           color="gray"
-          variant="outline"
+          variant="ghost"
           size="sm"
           :loading="loadingMore"
           @click="loadMore"

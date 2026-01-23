@@ -204,7 +204,7 @@
             </UButton>
             <UButton
               color="violet"
-              variant="outline"
+              variant="ghost"
               :loading="processingAllPayouts"
               :disabled="eligibleSummary.eligibleCount === 0 || processingSelectedPayouts"
               @click="processPayouts"

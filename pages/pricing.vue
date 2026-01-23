@@ -44,7 +44,7 @@
             Listening history
           </li>
         </ul>
-        <UButton color="gray" variant="outline" block size="lg" to="/register">
+        <UButton color="gray" variant="ghost" block size="lg" to="/register">
           Get Started
         </UButton>
       </div>
@@ -131,7 +131,7 @@
             You keep your rights
           </li>
         </ul>
-        <UButton color="fuchsia" variant="outline" block size="lg" to="/dashboard/artist/new">
+        <UButton color="fuchsia" variant="ghost" block size="lg" to="/dashboard/artist/new">
           Start uploading
         </UButton>
       </div>

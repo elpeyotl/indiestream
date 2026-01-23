@@ -88,7 +88,7 @@
         <div class="flex gap-3">
           <UButton
             color="gray"
-            variant="outline"
+            variant="ghost"
             size="lg"
             :disabled="processing"
             @click="cancelPayment"

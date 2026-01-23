@@ -77,7 +77,7 @@
             </UButton>
             <UButton
               color="gray"
-              variant="outline"
+              variant="ghost"
               size="lg"
               :loading="downloadingFlac"
               @click="downloadAlbum('flac')"

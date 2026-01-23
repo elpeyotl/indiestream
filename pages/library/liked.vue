@@ -43,7 +43,7 @@
             <UButton
               v-if="tracks.length > 0"
               color="gray"
-              variant="outline"
+              variant="ghost"
               @click="shufflePlay"
             >
               <UIcon name="i-heroicons-arrows-right-left" class="w-4 h-4 mr-1" />

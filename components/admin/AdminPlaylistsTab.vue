@@ -166,7 +166,7 @@
         <div class="flex gap-2">
           <UButton
             color="gray"
-            variant="outline"
+            variant="ghost"
             size="sm"
             :disabled="playlistsPage === 0"
             @click="loadPlaylists(playlistsPage - 1)"
@@ -175,7 +175,7 @@
           </UButton>
           <UButton
             color="gray"
-            variant="outline"
+            variant="ghost"
             size="sm"
             :disabled="(playlistsPage + 1) * playlistsLimit >= playlistsTotal"
             @click="loadPlaylists(playlistsPage + 1)"

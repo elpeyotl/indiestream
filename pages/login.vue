@@ -74,7 +74,7 @@
 
           <UButton
             color="white"
-            variant="outline"
+            variant="ghost"
             size="lg"
             block
             :loading="googleLoading"

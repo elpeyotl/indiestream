@@ -44,7 +44,7 @@
               />
               <UButton
                 color="gray"
-                variant="outline"
+                variant="ghost"
                 :disabled="loading"
                 @click="avatarInput?.click()"
               >

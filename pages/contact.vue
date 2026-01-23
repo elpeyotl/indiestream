@@ -104,7 +104,7 @@
       <!-- FAQ Link -->
       <div class="text-center mt-12">
         <p class="text-zinc-400 mb-4">Looking for quick answers?</p>
-        <UButton color="gray" variant="outline" to="/pricing#faq">
+        <UButton color="gray" variant="ghost" to="/pricing#faq">
           View FAQ
         </UButton>
       </div>

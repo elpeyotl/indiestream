@@ -41,7 +41,7 @@
         <UButton
           v-if="distribution && distribution.subscriptionStatus !== 'inactive'"
           color="violet"
-          variant="outline"
+          variant="ghost"
           @click="showShareModal = true">
           <UIcon name="i-heroicons-share" class="w-4 h-4" />
           Share

@@ -231,11 +231,11 @@ Fairtune is like Bandcamp, but you can stream. 70% goes to the artists you actua
 /* Primary Button (Nuxt UI) */
 <UButton color="violet">Primary Action</UButton>
 
-/* Secondary/Outline Button */
-<UButton color="gray" variant="outline">Secondary Action</UButton>
+/* Secondary Button */
+<UButton color="gray" variant="ghost">Secondary Action</UButton>
 
-/* Ghost Button */
-<UButton color="gray" variant="ghost">Tertiary Action</UButton>
+/* Solid Secondary Button */
+<UButton color="gray">Tertiary Action</UButton>
 ```
 
 ### Cards

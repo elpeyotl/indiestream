@@ -20,7 +20,7 @@
               </p>
             </div>
           </div>
-          <UButton color="violet" variant="outline" to="/dashboard/earnings">
+          <UButton color="violet" variant="ghost" to="/dashboard/earnings">
             <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 mr-1" />
             View All Earnings
           </UButton>

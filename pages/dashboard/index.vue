@@ -460,7 +460,7 @@
             </UButton>
             <UButton
               color="gray"
-              variant="outline"
+              variant="ghost"
               :loading="subscriptionLoading"
               @click="openCustomerPortal"
             >
@@ -487,7 +487,7 @@
             <UButton
               v-if="subscription?.status === 'active' && !subscription?.stripe_subscription_id"
               color="gray"
-              variant="outline"
+              variant="ghost"
               size="sm"
               :loading="syncing"
               @click="syncSubscription"
@@ -531,7 +531,7 @@
         <p class="text-zinc-400 mb-4">
           Find new artists and albums to add to your collection.
         </p>
-        <UButton color="violet" variant="outline" to="/discover">
+        <UButton color="violet" variant="ghost" to="/discover">
           Browse Artists
         </UButton>
       </UCard>
@@ -543,7 +543,7 @@
         <p class="text-zinc-400 mb-4">
           View and manage your saved tracks and albums.
         </p>
-        <UButton color="violet" variant="outline" to="/dashboard/favorites">
+        <UButton color="violet" variant="ghost" to="/dashboard/favorites">
           View Favorites
         </UButton>
       </UCard>

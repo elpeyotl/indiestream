@@ -27,10 +27,10 @@
         <UButton color="violet" :to="viewUrl">
           View Release
         </UButton>
-        <UButton v-if="!isEditMode" color="gray" variant="outline" @click="$emit('reset')">
+        <UButton v-if="!isEditMode" color="gray" variant="ghost" @click="$emit('reset')">
           Upload Another
         </UButton>
-        <UButton v-else color="gray" variant="outline" to="/dashboard">
+        <UButton v-else color="gray" variant="ghost" to="/dashboard">
           Back to Dashboard
         </UButton>
       </div>

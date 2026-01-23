@@ -198,7 +198,7 @@
         <UButton color="violet" size="lg" to="/register">
           Start listening
         </UButton>
-        <UButton color="fuchsia" variant="outline" size="lg" to="/dashboard/artist/new">
+        <UButton color="fuchsia" variant="ghost" size="lg" to="/dashboard/artist/new">
           Upload music
         </UButton>
       </div>

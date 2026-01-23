@@ -246,7 +246,7 @@
             <div v-if="selectedDmca.status === 'pending'" class="flex gap-2">
               <UButton
                 color="blue"
-                variant="outline"
+                variant="ghost"
                 :loading="dmcaUpdating"
                 @click="updateDmcaStatus('processing')"
               >
@@ -255,7 +255,7 @@
               </UButton>
               <UButton
                 color="gray"
-                variant="outline"
+                variant="ghost"
                 :loading="dmcaUpdating"
                 @click="updateDmcaStatus('rejected')"
               >
@@ -274,7 +274,7 @@
               </UButton>
               <UButton
                 color="gray"
-                variant="outline"
+                variant="ghost"
                 :loading="dmcaUpdating"
                 @click="updateDmcaStatus('rejected')"
               >
@@ -285,7 +285,7 @@
             <div v-else-if="selectedDmca.status === 'content_removed'" class="flex gap-2">
               <UButton
                 color="green"
-                variant="outline"
+                variant="ghost"
                 :loading="dmcaUpdating"
                 @click="updateDmcaStatus('resolved')"
               >

@@ -30,7 +30,7 @@
         <h1 class="text-2xl font-bold text-zinc-100 mb-2">Confirmation failed</h1>
         <p class="text-zinc-400 mb-6">{{ errorMessage || 'The confirmation link may be expired or invalid.' }}</p>
         <div class="space-x-3">
-          <UButton color="gray" variant="outline" to="/login">
+          <UButton color="gray" variant="ghost" to="/login">
             Sign in
           </UButton>
           <UButton color="violet" to="/register">

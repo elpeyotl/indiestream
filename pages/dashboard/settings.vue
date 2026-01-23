@@ -197,7 +197,7 @@ const handleSubmit = async () => {
               />
               <UButton
                 type="button"
-                variant="outline"
+                variant="ghost"
                 :loading="avatarUploading"
                 @click="handleAvatarClick"
               >

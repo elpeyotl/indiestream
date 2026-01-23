@@ -218,7 +218,7 @@
               </div>
               <UButton
                 color="gray"
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 :to="`/${selectedReport.track.album.band.slug}/${selectedReport.track.album.slug}`"
                 target="_blank"
@@ -297,7 +297,7 @@
             <div v-if="selectedReport.status === 'pending'" class="flex gap-2">
               <UButton
                 color="blue"
-                variant="outline"
+                variant="ghost"
                 @click="updateReportStatus(selectedReport.id, 'investigating'); reportDetailOpen = false"
               >
                 <UIcon name="i-heroicons-magnifying-glass" class="w-4 h-4 mr-1" />
@@ -305,7 +305,7 @@
               </UButton>
               <UButton
                 color="gray"
-                variant="outline"
+                variant="ghost"
                 @click="updateReportStatus(selectedReport.id, 'dismissed'); reportDetailOpen = false"
               >
                 Dismiss
@@ -322,7 +322,7 @@
               </UButton>
               <UButton
                 color="green"
-                variant="outline"
+                variant="ghost"
                 @click="updateReportStatus(selectedReport.id, 'resolved'); reportDetailOpen = false"
               >
                 <UIcon name="i-heroicons-check-circle" class="w-4 h-4 mr-1" />
@@ -330,7 +330,7 @@
               </UButton>
               <UButton
                 color="gray"
-                variant="outline"
+                variant="ghost"
                 @click="updateReportStatus(selectedReport.id, 'dismissed'); reportDetailOpen = false"
               >
                 Dismiss

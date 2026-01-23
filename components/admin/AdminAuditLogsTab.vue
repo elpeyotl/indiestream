@@ -38,7 +38,7 @@
 
       <!-- Date Range -->
       <UPopover>
-        <UButton color="gray" variant="outline" icon="i-heroicons-calendar">
+        <UButton color="gray" variant="ghost" icon="i-heroicons-calendar">
           {{ dateRangeLabel }}
         </UButton>
         <template #panel>

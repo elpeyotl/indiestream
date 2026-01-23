@@ -58,7 +58,7 @@
             <UButton
               v-if="playlist.role === 'owner'"
               color="gray"
-              variant="outline"
+              variant="ghost"
               @click="showEditModal = true"
             >
               <UIcon name="i-heroicons-pencil" class="w-4 h-4 mr-1" />

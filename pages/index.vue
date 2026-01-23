@@ -23,7 +23,7 @@
               <UIcon name="i-heroicons-arrow-right-20-solid" />
             </template>
           </UButton>
-          <UButton size="xl" color="gray" variant="outline" to="/pricing">
+          <UButton size="xl" color="gray" variant="ghost" to="/pricing">
             See Pricing
           </UButton>
         </div>
@@ -140,7 +140,7 @@
           <h2 class="text-3xl md:text-4xl font-bold mb-2">Fresh Releases</h2>
           <p class="text-zinc-400">The latest music from independent artists</p>
         </div>
-        <UButton color="violet" variant="outline" to="/discover">
+        <UButton color="violet" variant="ghost" to="/discover">
           View All
           <template #trailing>
             <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
@@ -165,7 +165,7 @@
           <h2 class="text-3xl md:text-4xl font-bold mb-2">Featured Artists</h2>
           <p class="text-zinc-400">Discover talented independent musicians</p>
         </div>
-        <UButton color="violet" variant="outline" to="/discover">
+        <UButton color="violet" variant="ghost" to="/discover">
           Discover More
           <template #trailing>
             <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />

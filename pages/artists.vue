@@ -86,7 +86,7 @@
       <div v-if="hasMore && artists.length > 0" class="mt-12 text-center">
         <UButton
           color="gray"
-          variant="outline"
+          variant="ghost"
           size="lg"
           :loading="loadingMore"
           @click="loadMore"

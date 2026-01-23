@@ -130,7 +130,7 @@
             <UButton
               v-if="!track.isrc && !track.isrc_platform_assigned"
               color="violet"
-              variant="outline"
+              variant="ghost"
               size="sm"
               :loading="track.generatingIsrc"
               @click="$emit('generate-isrc')"
@@ -140,7 +140,7 @@
             </UButton>
             <UButton
               color="gray"
-              variant="outline"
+              variant="ghost"
               size="sm"
               :loading="track.fetchingIsrc"
               @click="$emit('open-deezer')"
@@ -183,7 +183,7 @@
           />
           <UButton
             color="gray"
-            variant="outline"
+            variant="ghost"
             size="sm"
             :loading="track.fetchingIswc"
             @click="$emit('search-musicbrainz')"

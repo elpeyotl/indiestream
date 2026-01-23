@@ -121,14 +121,14 @@
           <UButton
             @click="shareToTwitter"
             color="gray"
-            variant="outline"
+            variant="ghost"
             size="sm">
             <UIcon name="i-heroicons-share" class="w-4 h-4" /> Twitter
           </UButton>
           <UButton
             @click="shareToFacebook"
             color="gray"
-            variant="outline"
+            variant="ghost"
             size="sm">
             <UIcon name="i-heroicons-share" class="w-4 h-4" /> Facebook
           </UButton>

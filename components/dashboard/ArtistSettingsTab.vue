@@ -34,7 +34,7 @@
             />
             <UButton
               color="gray"
-              variant="outline"
+              variant="ghost"
               :loading="uploadingBanner"
               :disabled="saving"
               @click="bannerInput?.click()"
@@ -81,7 +81,7 @@
             />
             <UButton
               color="gray"
-              variant="outline"
+              variant="ghost"
               :loading="uploadingAvatar"
               :disabled="saving"
               @click="avatarInput?.click()"

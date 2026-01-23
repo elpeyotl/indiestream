@@ -150,7 +150,7 @@
             <UButton
               v-if="!isAdmin"
               color="violet"
-              variant="outline"
+              variant="ghost"
               size="xs"
               :disabled="saving"
               @click="$emit('add-track')"
@@ -370,7 +370,7 @@
                   <div class="flex gap-2">
                     <UButton
                       color="gray"
-                      variant="outline"
+                      variant="ghost"
                       size="xs"
                       class="flex-1"
                       :disabled="saving"
@@ -382,7 +382,7 @@
                     <UButton
                       v-if="canCopyCredits(index)"
                       color="gray"
-                      variant="outline"
+                      variant="ghost"
                       size="xs"
                       :disabled="saving"
                       @click="copyCredits(index)"
@@ -393,7 +393,7 @@
                     <UButton
                       v-if="copiedCredits && copiedCredits.length > 0"
                       color="violet"
-                      variant="outline"
+                      variant="ghost"
                       size="xs"
                       :disabled="saving"
                       @click="pasteCredits(index)"

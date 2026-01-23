@@ -189,7 +189,7 @@
 
         <!-- Load More -->
         <div v-if="hasMoreArtists" class="mt-8 text-center">
-          <UButton color="gray" variant="outline" :loading="loadingMore" @click="loadMoreArtists">
+          <UButton color="gray" variant="ghost" :loading="loadingMore" @click="loadMoreArtists">
             Load More Artists
           </UButton>
         </div>
