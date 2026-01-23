@@ -3,7 +3,14 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import { S3Client, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import JSZip from 'jszip'
+import sharp from 'sharp'
 import { getUploadUrl } from '~/server/utils/r2'
+
+// Image size configurations (same as process-image.post.ts)
+const IMAGE_SIZES = {
+  avatar: { width: 400, height: 400 },
+  cover: { width: 600, height: 600 },
+} as const
 
 interface ParsedArtist {
   name: string
@@ -223,6 +230,18 @@ export default defineEventHandler(async (event) => {
     return key
   }
 
+  // Helper function to process and resize images
+  const processImage = async (data: Buffer, type: 'avatar' | 'cover'): Promise<Buffer> => {
+    const { width, height } = IMAGE_SIZES[type]
+    return sharp(data)
+      .resize(width, height, {
+        fit: 'cover',
+        position: 'center',
+      })
+      .jpeg({ quality: 90 })
+      .toBuffer()
+  }
+
   // Generate unique slug if needed
   const generateUniqueSlug = async (baseSlug: string): Promise<string> => {
     let slug = baseSlug
@@ -256,8 +275,10 @@ export default defineEventHandler(async (event) => {
         if (artist.avatarPath) {
           const avatarData = await getZipFile(artist.avatarPath)
           if (avatarData) {
+            // Process and resize avatar image
+            const processedAvatar = await processImage(avatarData, 'avatar')
             avatarKey = `avatars/${artistSlug}/avatar.jpg`
-            await uploadToR2(avatarKey, avatarData, getContentType(artist.avatarPath))
+            await uploadToR2(avatarKey, processedAvatar, 'image/jpeg')
           }
         }
 
@@ -295,8 +316,10 @@ export default defineEventHandler(async (event) => {
           if (album.coverPath) {
             const coverData = await getZipFile(album.coverPath)
             if (coverData) {
+              // Process and resize cover image
+              const processedCover = await processImage(coverData, 'cover')
               coverKey = `covers/${bandId}/${albumSlug}/cover.jpg`
-              await uploadToR2(coverKey, coverData, getContentType(album.coverPath))
+              await uploadToR2(coverKey, processedCover, 'image/jpeg')
             }
           }
 
