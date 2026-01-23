@@ -40,9 +40,11 @@ export const getPayoutSuccessEmailTemplate = ({
       Great news! We've just processed your payout.
     </mj-text>
 
-    <mj-text align="center" padding="24px" background-color="#09090b" border-radius="12px">
-      <span style="color: #71717a; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Amount</span><br/>
-      <span style="color: #22c55e; font-size: 36px; font-weight: 700;">${formattedAmount}</span>
+    <mj-text align="center" padding="0">
+      <div style="padding: 24px; background-color: #09090b; border-radius: 12px; text-align: center;">
+        <span style="color: #71717a; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Amount</span><br/>
+        <span style="color: #22c55e; font-size: 36px; font-weight: 700;">${formattedAmount}</span>
+      </div>
     </mj-text>
 
     <mj-divider />

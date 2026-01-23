@@ -24,8 +24,10 @@ export const getWelcomeEmailTemplate = ({
       You're in. Here's how your money works on Fairtune.
     </mj-text>
 
-    <mj-text padding="20px 24px" background-color="#1e1b4b" border-radius="12px" border-left="4px solid #8b5cf6" color="#c4b5fd">
-      <strong class="highlight">70% to artists.</strong> Split between whoever you actually listen to. No pool. No mystery.
+    <mj-text padding="0">
+      <div style="padding: 20px 24px; background-color: #1e1b4b; border-radius: 12px; border-left: 4px solid #8b5cf6; color: #c4b5fd;">
+        <strong class="highlight">70% to artists.</strong> Split between whoever you actually listen to. No pool. No mystery.
+      </div>
     </mj-text>
 
     <mj-divider />

@@ -31,11 +31,13 @@ export const getSubscriptionConfirmedEmailTemplate = ({
       Your subscription is active. Unlimited streaming, every artist on the platform.
     </mj-text>
 
-    <mj-text padding="20px 24px" background-color="#09090b" border-radius="12px">
-      <span style="color: #71717a; font-size: 14px;">Amount</span><br/>
-      <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${formattedAmount}/month</span><br/><br/>
-      <span style="color: #71717a; font-size: 14px;">Next billing date</span><br/>
-      <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${periodEnd}</span>
+    <mj-text padding="0">
+      <div style="padding: 20px 24px; background-color: #09090b; border-radius: 12px;">
+        <span style="color: #71717a; font-size: 14px;">Amount</span><br/>
+        <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${formattedAmount}/month</span><br/><br/>
+        <span style="color: #71717a; font-size: 14px;">Next billing date</span><br/>
+        <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${periodEnd}</span>
+      </div>
     </mj-text>
 
     <mj-divider />

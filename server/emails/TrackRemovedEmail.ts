@@ -37,8 +37,10 @@ export const getTrackRemovedEmailTemplate = ({
     <mj-text font-size="14px" font-weight="600" color="#f4f4f5" padding-bottom="8px">
       Additional Details:
     </mj-text>
-    <mj-text padding="12px 16px" background-color="#292524" border-radius="8px" border-left="3px solid #71717a" color="#a1a1aa" font-size="14px" line-height="22px">
-      ${details}
+    <mj-text padding="0" font-size="14px" line-height="22px">
+      <div style="padding: 12px 16px; background-color: #292524; border-radius: 8px; border-left: 3px solid #71717a; color: #a1a1aa;">
+        ${details}
+      </div>
     </mj-text>
     <mj-divider />
   ` : ''
@@ -61,8 +63,10 @@ export const getTrackRemovedEmailTemplate = ({
     <mj-text font-size="14px" font-weight="600" color="#f4f4f5" padding-bottom="8px">
       Reason for Removal:
     </mj-text>
-    <mj-text padding="12px 16px" background-color="#292524" border-radius="8px" border-left="3px solid #ef4444" color="#fca5a5" font-size="14px" line-height="22px">
-      ${getReasonText(reason)}
+    <mj-text padding="0" font-size="14px" line-height="22px">
+      <div style="padding: 12px 16px; background-color: #292524; border-radius: 8px; border-left: 3px solid #ef4444; color: #fca5a5;">
+        ${getReasonText(reason)}
+      </div>
     </mj-text>
 
     ${detailsSection}

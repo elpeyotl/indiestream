@@ -18,8 +18,10 @@ export const getArtistRejectedEmailTemplate = ({
     <mj-text font-size="14px" font-weight="600" color="#f4f4f5" padding-bottom="8px">
       Reason:
     </mj-text>
-    <mj-text padding="12px 16px" background-color="#292524" border-radius="8px" border-left="3px solid #fbbf24" color="#fbbf24" font-size="14px" line-height="22px">
-      ${reason}
+    <mj-text padding="0" font-size="14px" line-height="22px">
+      <div style="padding: 12px 16px; background-color: #292524; border-radius: 8px; border-left: 3px solid #fbbf24; color: #fbbf24;">
+        ${reason}
+      </div>
     </mj-text>
     <mj-divider />
   ` : ''

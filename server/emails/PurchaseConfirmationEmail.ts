@@ -33,13 +33,15 @@ export const getPurchaseConfirmationEmailTemplate = ({
       You now own <strong>${albumTitle}</strong> by <strong>${artistName}</strong>. Download it anytime in high-quality FLAC or AAC format.
     </mj-text>
 
-    <mj-text padding="20px 24px" background-color="#09090b" border-radius="12px">
-      <span style="color: #71717a; font-size: 14px;">Album</span><br/>
-      <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${albumTitle}</span><br/><br/>
-      <span style="color: #71717a; font-size: 14px;">Artist</span><br/>
-      <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${artistName}</span><br/><br/>
-      <span style="color: #71717a; font-size: 14px;">Amount paid</span><br/>
-      <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${formattedAmount}</span>
+    <mj-text padding="0">
+      <div style="padding: 20px 24px; background-color: #09090b; border-radius: 12px;">
+        <span style="color: #71717a; font-size: 14px;">Album</span><br/>
+        <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${albumTitle}</span><br/><br/>
+        <span style="color: #71717a; font-size: 14px;">Artist</span><br/>
+        <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${artistName}</span><br/><br/>
+        <span style="color: #71717a; font-size: 14px;">Amount paid</span><br/>
+        <span style="color: #f4f4f5; font-size: 14px; font-weight: 600;">${formattedAmount}</span>
+      </div>
     </mj-text>
 
     <mj-divider />

@@ -30,8 +30,10 @@ export const getPaymentFailedEmailTemplate = ({
       We couldn't process your payment of <span class="highlight"><strong>${formattedAmount}</strong></span> for your Fairtune subscription.
     </mj-text>
 
-    <mj-text padding="16px 20px" background-color="#292524" border-radius="8px" border-left="4px solid #f59e0b" color="#fbbf24" font-size="14px" line-height="22px">
-      Your subscription access may be interrupted if payment isn't resolved soon.
+    <mj-text padding="0" font-size="14px" line-height="22px">
+      <div style="padding: 16px 20px; background-color: #292524; border-radius: 8px; border-left: 4px solid #f59e0b; color: #fbbf24;">
+        Your subscription access may be interrupted if payment isn't resolved soon.
+      </div>
     </mj-text>
 
     <mj-divider />

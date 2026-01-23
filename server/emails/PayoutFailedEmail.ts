@@ -29,9 +29,11 @@ export const getPayoutFailedEmailTemplate = ({
       We attempted to process your payout of <span class="highlight"><strong>${formattedAmount}</strong></span>, but unfortunately it didn't go through.
     </mj-text>
 
-    <mj-text padding="16px" background-color="#292524" border-radius="8px" border-left="3px solid #ef4444">
-      <span style="color: #ef4444; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Error Details:</span><br/>
-      <span style="color: #fca5a5; font-family: monospace; font-size: 14px;">${errorMessage}</span>
+    <mj-text padding="0">
+      <div style="padding: 16px; background-color: #292524; border-radius: 8px; border-left: 3px solid #ef4444;">
+        <span style="color: #ef4444; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Error Details:</span><br/>
+        <span style="color: #fca5a5; font-family: monospace; font-size: 14px;">${errorMessage}</span>
+      </div>
     </mj-text>
 
     <mj-divider />
