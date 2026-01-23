@@ -31,6 +31,34 @@
     <div class="container mx-auto px-4 py-4 pb-40">
       <!-- Empty State (no query) -->
       <template v-if="!query.trim()">
+        <!-- Browse Quick Links -->
+        <section class="mb-8">
+          <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">Browse</h2>
+          <div class="grid grid-cols-3 gap-3">
+            <NuxtLink
+              to="/charts"
+              class="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/30 hover:border-amber-500/50 transition-all active:scale-95"
+            >
+              <UIcon name="i-heroicons-chart-bar" class="w-7 h-7 text-amber-400" />
+              <span class="text-sm font-medium text-zinc-200">Charts</span>
+            </NuxtLink>
+            <NuxtLink
+              to="/genres"
+              class="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-600/20 border border-violet-500/30 hover:border-violet-500/50 transition-all active:scale-95"
+            >
+              <UIcon name="i-heroicons-musical-note" class="w-7 h-7 text-violet-400" />
+              <span class="text-sm font-medium text-zinc-200">Genres</span>
+            </NuxtLink>
+            <NuxtLink
+              to="/artists"
+              class="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-500/30 hover:border-emerald-500/50 transition-all active:scale-95"
+            >
+              <UIcon name="i-heroicons-user-group" class="w-7 h-7 text-emerald-400" />
+              <span class="text-sm font-medium text-zinc-200">Artists</span>
+            </NuxtLink>
+          </div>
+        </section>
+
         <!-- Recent Searches -->
         <section v-if="recentSearches.length > 0" class="mb-8">
           <div class="flex items-center justify-between mb-3">
