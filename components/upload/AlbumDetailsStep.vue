@@ -103,7 +103,7 @@
 
       <!-- Purchase Settings -->
       <UFormGroup label="Album Purchases" hint="Optional - let fans buy and download this album">
-        <PurchaseSettingsForm
+        <UploadPurchaseSettingsForm
           :model-value="{
             purchasable: state.albumForm.purchasable,
             price_cents: state.albumForm.price_cents,
