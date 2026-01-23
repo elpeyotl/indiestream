@@ -1,4 +1,4 @@
-// Script to reset a user's subscription for testing
+// Script to reset a user's subscription and purchases for testing
 // Usage: npx tsx scripts/reset-subscription.ts <email>
 
 import Stripe from 'stripe'
@@ -73,7 +73,33 @@ async function resetSubscription() {
     console.log('No subscription found in Supabase')
   }
 
-  // 3. Find and cancel Stripe subscriptions
+  // 3. Delete purchases from Supabase
+  const { data: purchases } = await supabase
+    .from('purchases')
+    .select('id, album_id, amount_cents, status')
+    .eq('user_id', profile.id)
+
+  if (purchases && purchases.length > 0) {
+    console.log(`Found ${purchases.length} purchase(s) in Supabase`)
+    for (const purchase of purchases) {
+      console.log(`  - Album ${purchase.album_id}: $${(purchase.amount_cents / 100).toFixed(2)} (${purchase.status})`)
+    }
+
+    const { error: deletePurchasesError } = await supabase
+      .from('purchases')
+      .delete()
+      .eq('user_id', profile.id)
+
+    if (deletePurchasesError) {
+      console.error('Failed to delete purchases from Supabase:', deletePurchasesError.message)
+    } else {
+      console.log(`✓ Deleted ${purchases.length} purchase(s) from Supabase`)
+    }
+  } else {
+    console.log('No purchases found in Supabase')
+  }
+
+  // 4. Find and cancel Stripe subscriptions
   const customers = await stripe.customers.list({
     email: email,
     limit: 1,
@@ -106,7 +132,7 @@ async function resetSubscription() {
     console.log('No Stripe customer found for this email')
   }
 
-  console.log('\n✓ Done! User can now test subscription flow.\n')
+  console.log('\n✓ Done! User can now test subscription and purchase flows.\n')
 }
 
 resetSubscription().catch(console.error)

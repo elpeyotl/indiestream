@@ -75,6 +75,14 @@
               :class="imageLoaded ? 'opacity-100' : 'opacity-0'"
               @load="imageLoaded = true"
             />
+            <!-- Owned Badge -->
+            <div
+              v-if="purchaseStatus?.owned"
+              class="absolute top-3 right-3 bg-green-500/90 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg"
+            >
+              <UIcon name="i-heroicons-check-circle" class="w-4 h-4" />
+              Owned
+            </div>
           </div>
         </div>
 
