@@ -42,13 +42,13 @@ export const useSubscriptionStore = defineStore('subscription', () => {
         .from('subscriptions')
         .select('status, plan, current_period_end, cancel_at_period_end, stripe_subscription_id')
         .eq('user_id', userId.value)
-        .single()
+        .maybeSingle()
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        // PGRST116 = no rows found, which is fine for new users
+      if (fetchError) {
         throw fetchError
       }
 
+      // data is null if no subscription exists - that's fine for non-subscribed users
       subscription.value = data as SubscriptionData | null
     } catch (e: any) {
       console.error('Error fetching subscription:', e)
