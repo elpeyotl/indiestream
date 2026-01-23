@@ -522,6 +522,16 @@
       </UCard>
     </ClientOnly>
 
+    <!-- Artist Boost (Subscribers Only) -->
+    <ClientOnly>
+      <BoostCard
+        v-if="isSubscribed"
+        :boost="boostData"
+        class="mb-8"
+        @refresh="refreshBoost"
+      />
+    </ClientOnly>
+
     <!-- Quick Actions -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <UCard class="bg-zinc-900/50 border-zinc-800">
@@ -638,6 +648,30 @@ const { data: distribution, pending: impactLoading, refresh: refreshDistribution
     server: false,
   }
 )
+
+// Fetch boost status for subscribers
+interface BoostStatus {
+  boost: {
+    amount_cents: number
+    status: string
+    current_period_end: string | null
+  } | null
+}
+
+const { data: boostResponse, refresh: refreshBoost } = await useLazyAsyncData<BoostStatus | null>(
+  'dashboard-boost',
+  async () => {
+    if (!isSubscribed.value) return null
+    return await $fetch<BoostStatus>('/api/boost/status')
+  },
+  {
+    default: () => null,
+    watch: [isSubscribed],
+    server: false,
+  }
+)
+
+const boostData = computed(() => boostResponse.value?.boost || null)
 
 const syncSubscription = async () => {
   syncing.value = true

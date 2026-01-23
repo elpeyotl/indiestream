@@ -153,6 +153,13 @@
               />
               {{ isFollowing ? 'Following' : 'Follow' }}
             </UButton>
+            <!-- Tip Button -->
+            <TipButton
+              v-if="!isOwner"
+              :band="{ id: band.id, name: band.name, slug: band.slug }"
+              :avatar-url="band.avatar_url"
+              size="lg"
+            />
             <!-- Social Links -->
             <div v-if="hasAnySocialLink || band.website" class="flex gap-1">
               <UButton

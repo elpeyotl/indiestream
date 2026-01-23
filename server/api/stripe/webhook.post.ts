@@ -47,6 +47,65 @@ export default defineEventHandler(async (event) => {
     switch (stripeEvent.type) {
       case 'checkout.session.completed': {
         const session = stripeEvent.data.object as Stripe.Checkout.Session
+
+        // Handle artist tips
+        if (session.metadata?.type === 'artist_tip') {
+          const tipId = session.metadata.tip_id
+          const bandId = session.metadata.band_id
+          const bandName = session.metadata.band_name
+
+          console.log('Artist tip completed:', { tipId, bandId, sessionId: session.id })
+
+          // Calculate net amount (after Stripe fees ~2.9% + $0.30)
+          const grossAmount = session.amount_total || 0
+          const stripeFee = Math.ceil(grossAmount * 0.029 + 30) // Estimate
+          const netAmount = Math.max(0, grossAmount - stripeFee)
+
+          // Update tip status to completed
+          const { error: tipError } = await supabase
+            .from('artist_tips')
+            .update({
+              status: 'completed',
+              net_amount_cents: netAmount,
+              stripe_payment_intent_id: session.payment_intent as string,
+              tipper_email: session.customer_details?.email || null,
+            })
+            .eq('id', tipId)
+
+          if (tipError) {
+            console.error('Failed to update tip status:', tipError)
+          } else {
+            console.log('Tip marked as completed:', { tipId, grossAmount, netAmount })
+
+            // Credit artist balance with net amount
+            // Get the band owner to credit their balance
+            const { data: band } = await supabase
+              .from('bands')
+              .select('owner_id')
+              .eq('id', bandId)
+              .single()
+
+            if (band?.owner_id) {
+              // Upsert artist balance
+              const { data: existingBalance } = await supabase
+                .from('artist_balances')
+                .select('pending_cents')
+                .eq('user_id', band.owner_id)
+                .single()
+
+              const newPending = (existingBalance?.pending_cents || 0) + netAmount
+
+              await supabase.from('artist_balances').upsert({
+                user_id: band.owner_id,
+                pending_cents: newPending,
+              }, { onConflict: 'user_id' })
+
+              console.log('Artist balance credited:', { ownerId: band.owner_id, netAmount })
+            }
+          }
+          break
+        }
+
         const userId = session.metadata?.supabase_user_id
         const customerId = session.customer as string
         const subscriptionId = session.subscription as string
@@ -123,6 +182,32 @@ export default defineEventHandler(async (event) => {
         const subscription = stripeEvent.data.object as any
         const isCreated = stripeEvent.type === 'customer.subscription.created'
 
+        // Check if this is an Artist Boost subscription
+        if (subscription.metadata?.type === 'artist_boost') {
+          const userId = subscription.metadata.supabase_user_id
+          if (userId) {
+            // Get the price amount from the subscription item
+            const amountCents = subscription.items?.data?.[0]?.price?.unit_amount || 0
+
+            await supabase.from('artist_boosts').upsert({
+              user_id: userId,
+              stripe_subscription_id: subscription.id,
+              amount_cents: amountCents,
+              status: subscription.status,
+              current_period_start: toISOString(subscription.current_period_start),
+              current_period_end: toISOString(subscription.current_period_end),
+            }, { onConflict: 'user_id' })
+
+            console.log('Artist boost updated:', {
+              userId,
+              status: subscription.status,
+              amountCents,
+            })
+          }
+          break
+        }
+
+        // Regular subscription handling
         // Try to get userId from metadata first, otherwise look up by subscription ID
         let userId = subscription.metadata?.supabase_user_id
 
@@ -208,7 +293,19 @@ export default defineEventHandler(async (event) => {
       case 'customer.subscription.deleted': {
         const subscription = stripeEvent.data.object as Stripe.Subscription
 
-        // Update by subscription ID since metadata may not be available
+        // Check if this is an Artist Boost subscription
+        const subMetadata = (subscription as any).metadata
+        if (subMetadata?.type === 'artist_boost') {
+          await supabase
+            .from('artist_boosts')
+            .update({ status: 'canceled' })
+            .eq('stripe_subscription_id', subscription.id)
+
+          console.log('Artist boost canceled:', subscription.id)
+          break
+        }
+
+        // Regular subscription deletion
         await supabase
           .from('subscriptions')
           .update({ status: 'canceled' })
