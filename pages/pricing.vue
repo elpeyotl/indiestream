@@ -234,13 +234,19 @@
       <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">Frequently Asked Questions</h2>
       <UAccordion :items="faqItems" />
     </div>
+
+    <!-- Subscription Modal -->
+    <SubscriptionModal
+      v-model="showSubscriptionModal"
+      :price-id="LISTENER_PRICE_ID"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 const user = useSupabaseUser()
 const subscriptionStore = useSubscriptionStore()
-const { isSubscribed, startCheckout, loading } = subscriptionStore
+const { isSubscribed, loading } = subscriptionStore
 const toast = useToast()
 
 useHead({
@@ -253,7 +259,10 @@ useHead({
 // Stripe Price ID for Listener plan ($9.99/month)
 const LISTENER_PRICE_ID = 'price_1SolWZDpO91TMxctZrzuoJ0v'
 
-const handleSubscribe = async () => {
+// Modal state
+const showSubscriptionModal = ref(false)
+
+const handleSubscribe = () => {
   if (!user.value) {
     navigateTo('/register')
     return
@@ -268,7 +277,8 @@ const handleSubscribe = async () => {
     return
   }
 
-  await startCheckout(LISTENER_PRICE_ID)
+  // Open inline subscription modal
+  showSubscriptionModal.value = true
 }
 
 const faqItems = [

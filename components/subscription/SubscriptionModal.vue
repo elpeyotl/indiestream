@@ -2,63 +2,57 @@
   <USlideover v-model="isOpen" :ui="{ width: 'max-w-md' }">
     <div class="p-6">
       <!-- Header -->
-      <div class="flex items-start gap-4 mb-6">
-        <!-- Album Cover -->
-        <div class="w-20 h-20 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
-          <NuxtImg
-            v-if="coverUrl"
-            :src="coverUrl"
-            :alt="album.title"
-            :width="80"
-            :height="80"
-            format="webp"
-            class="w-full h-full object-cover"
-          />
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
+          <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-violet-400" />
         </div>
-        <div class="min-w-0">
-          <h3 class="text-lg font-semibold text-zinc-100 truncate">{{ album.title }}</h3>
-          <p class="text-sm text-zinc-400 truncate">{{ artistName }}</p>
-          <UBadge color="green" variant="subtle" size="xs" class="mt-2">
-            85% to artist
-          </UBadge>
-        </div>
+        <h3 class="text-xl font-semibold text-zinc-100">Start your subscription</h3>
+        <p class="text-sm text-zinc-400 mt-1">Unlimited streaming, 85% to artists</p>
       </div>
 
-      <!-- Price Display -->
+      <!-- Plan Summary -->
       <div v-if="!showPaymentForm" class="mb-6">
-        <div v-if="album.pay_what_you_want" class="space-y-3">
-          <p class="text-sm text-zinc-400">
-            Name your price (minimum {{ formatPrice(minimumPrice) }})
-          </p>
-          <div class="flex items-center gap-2">
-            <span class="text-zinc-400">CHF</span>
-            <UInput
-              v-model="customPrice"
-              type="number"
-              :min="minimumPrice / 100"
-              step="0.50"
-              size="lg"
-              class="w-32"
-              :ui="{ base: 'text-xl font-bold text-center' }"
-            />
+        <div class="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-zinc-300 font-medium">Listener Plan</span>
+            <UBadge color="violet" variant="subtle" size="xs">7-day free trial</UBadge>
           </div>
-        </div>
-        <div v-else class="text-center">
-          <div class="text-3xl font-bold text-zinc-100">
-            {{ formatPrice(album.price_cents || 0) }}
+          <div class="flex items-baseline gap-1">
+            <span class="text-3xl font-bold text-zinc-100">$9.99</span>
+            <span class="text-zinc-500">/month</span>
           </div>
+          <p class="text-sm text-zinc-500 mt-2">after trial ends</p>
         </div>
+
+        <!-- Features -->
+        <ul class="mt-4 space-y-2">
+          <li class="flex items-center gap-2 text-sm text-zinc-300">
+            <UIcon name="i-heroicons-check" class="w-4 h-4 text-teal-500 shrink-0" />
+            Unlimited streaming
+          </li>
+          <li class="flex items-center gap-2 text-sm text-zinc-300">
+            <UIcon name="i-heroicons-check" class="w-4 h-4 text-teal-500 shrink-0" />
+            High quality audio
+          </li>
+          <li class="flex items-center gap-2 text-sm text-zinc-300">
+            <UIcon name="i-heroicons-check" class="w-4 h-4 text-teal-500 shrink-0" />
+            85% goes directly to artists
+          </li>
+          <li class="flex items-center gap-2 text-sm text-zinc-300">
+            <UIcon name="i-heroicons-check" class="w-4 h-4 text-teal-500 shrink-0" />
+            Cancel anytime
+          </li>
+        </ul>
       </div>
 
-      <!-- Purchase Button (initial state) -->
+      <!-- Continue Button (initial state) -->
       <UButton
         v-if="!showPaymentForm"
         color="violet"
         size="lg"
         block
         :loading="loading"
-        :disabled="!canPurchase"
-        @click="initiatePurchase"
+        @click="initiateSubscription"
       >
         <UIcon name="i-heroicons-credit-card" class="w-5 h-5 mr-2" />
         Continue to Payment
@@ -67,10 +61,13 @@
       <!-- Stripe Payment Form -->
       <div v-if="showPaymentForm" class="space-y-4">
         <div class="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
-          <span class="text-sm text-zinc-400">Total</span>
-          <span class="text-lg font-semibold text-zinc-100">
-            {{ formatPrice(purchaseAmount) }}
-          </span>
+          <div>
+            <span class="text-sm text-zinc-400">7-day free trial, then</span>
+            <p class="text-lg font-semibold text-zinc-100">$9.99/month</p>
+          </div>
+          <UBadge color="green" variant="subtle">
+            Free for 7 days
+          </UBadge>
         </div>
 
         <!-- Stripe Elements Container -->
@@ -104,14 +101,14 @@
             @click="confirmPayment"
           >
             <UIcon name="i-heroicons-lock-closed" class="w-4 h-4 mr-2" />
-            Pay {{ formatPrice(purchaseAmount) }}
+            Start Free Trial
           </UButton>
         </div>
 
         <!-- Security Note -->
         <p class="text-xs text-zinc-500 text-center">
           <UIcon name="i-heroicons-shield-check" class="w-3 h-3 inline mr-1" />
-          Secure payment powered by Stripe
+          Secure payment powered by Stripe. Cancel anytime.
         </p>
       </div>
 
@@ -134,15 +131,7 @@
 import { loadStripe, type Stripe, type StripeElements, type StripePaymentElement, type StripePaymentElementChangeEvent } from '@stripe/stripe-js'
 
 interface Props {
-  album: {
-    id: string
-    title: string
-    price_cents: number | null
-    pay_what_you_want: boolean | null
-    minimum_price_cents: number | null
-  }
-  artistName: string
-  coverUrl?: string | null
+  priceId: string
 }
 
 const props = defineProps<Props>()
@@ -150,11 +139,11 @@ const props = defineProps<Props>()
 const isOpen = defineModel<boolean>({ default: false })
 
 const emit = defineEmits<{
-  (e: 'purchased'): void
+  (e: 'subscribed'): void
 }>()
 
 const config = useRuntimeConfig()
-const purchaseStore = usePurchaseStore()
+const subscriptionStore = useSubscriptionStore()
 const user = useSupabaseUser()
 
 // State
@@ -163,8 +152,7 @@ const loading = ref(false)
 const processing = ref(false)
 const paymentReady = ref(false)
 const errorMessage = ref('')
-const customPrice = ref('')
-const purchaseAmount = ref(0)
+const subscriptionId = ref<string | null>(null)
 
 // Stripe refs
 const paymentElementRef = ref<HTMLElement | null>(null)
@@ -172,32 +160,9 @@ let stripe: Stripe | null = null
 let elements: StripeElements | null = null
 let paymentElement: StripePaymentElement | null = null
 
-// Computed
-const minimumPrice = computed(() => {
-  if (props.album.pay_what_you_want) {
-    return props.album.minimum_price_cents || 100
-  }
-  return props.album.price_cents || 0
-})
-
-const canPurchase = computed(() => {
-  if (!user.value) return false
-
-  if (props.album.pay_what_you_want) {
-    const price = parseFloat(customPrice.value) * 100
-    return price >= minimumPrice.value
-  }
-
-  return (props.album.price_cents || 0) >= 100
-})
-
-// Initialize custom price with minimum when opening
+// Reset state when modal closes
 watch(isOpen, (open) => {
-  if (open && props.album.pay_what_you_want) {
-    customPrice.value = (minimumPrice.value / 100).toFixed(2)
-  }
   if (!open) {
-    // Reset state when closing
     resetState()
   }
 })
@@ -206,6 +171,7 @@ const resetState = () => {
   showPaymentForm.value = false
   paymentReady.value = false
   errorMessage.value = ''
+  subscriptionId.value = null
   if (paymentElement) {
     paymentElement.destroy()
     paymentElement = null
@@ -214,13 +180,8 @@ const resetState = () => {
   stripe = null
 }
 
-// Format price for display
-const formatPrice = (cents: number): string => {
-  return `CHF ${(cents / 100).toFixed(2)}`
-}
-
-// Initialize Stripe and create PaymentIntent
-const initiatePurchase = async () => {
+// Initialize Stripe and create subscription
+const initiateSubscription = async () => {
   if (!user.value) {
     isOpen.value = false
     navigateTo('/login')
@@ -231,19 +192,17 @@ const initiatePurchase = async () => {
   errorMessage.value = ''
 
   try {
-    // Calculate amount
-    let amountCents: number | undefined
-    if (props.album.pay_what_you_want) {
-      amountCents = Math.round(parseFloat(customPrice.value) * 100)
-    }
+    // Create incomplete subscription
+    const { clientSecret, subscriptionId: subId } = await $fetch<{
+      subscriptionId: string
+      clientSecret: string
+      trialEnd: number | null
+    }>('/api/stripe/create-subscription', {
+      method: 'POST',
+      body: { priceId: props.priceId },
+    })
 
-    // Create PaymentIntent
-    const { clientSecret, amount } = await purchaseStore.createPurchase(
-      props.album.id,
-      amountCents
-    )
-
-    purchaseAmount.value = amount
+    subscriptionId.value = subId
 
     // Load Stripe
     stripe = await loadStripe(config.public.stripePublishableKey)
@@ -290,8 +249,8 @@ const initiatePurchase = async () => {
       })
     }
   } catch (error: any) {
-    console.error('Failed to initiate purchase:', error)
-    errorMessage.value = error.data?.message || error.message || 'Failed to start purchase'
+    console.error('Failed to initiate subscription:', error)
+    errorMessage.value = error.data?.message || error.message || 'Failed to start subscription'
   } finally {
     loading.value = false
   }
@@ -308,21 +267,21 @@ const confirmPayment = async () => {
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}${window.location.pathname}?purchased=true`,
+        return_url: `${window.location.origin}/subscription/success`,
       },
       redirect: 'if_required',
     })
 
     if (error) {
       errorMessage.value = error.message || 'Payment failed'
-    } else if (paymentIntent?.status === 'succeeded') {
-      // Payment successful
-      purchaseStore.markPurchaseComplete(props.album.id)
+    } else if (paymentIntent?.status === 'succeeded' || paymentIntent?.status === 'requires_capture') {
+      // Payment successful or trial started
       isOpen.value = false
-      emit('purchased')
+      emit('subscribed')
 
-      // Redirect to success page
-      navigateTo(`/purchase/success?album=${props.album.id}`)
+      // Refresh subscription status and redirect to success page
+      await subscriptionStore.fetchSubscription()
+      navigateTo('/subscription/success')
     }
   } catch (error: any) {
     console.error('Payment error:', error)
@@ -332,7 +291,7 @@ const confirmPayment = async () => {
   }
 }
 
-// Cancel payment (go back to price view)
+// Cancel payment (go back to plan view)
 const cancelPayment = () => {
   if (paymentElement) {
     paymentElement.destroy()
