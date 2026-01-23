@@ -67,6 +67,10 @@
       <template #pro-export>
         <AdminProExportTab />
       </template>
+
+      <template #audit-logs>
+        <AdminAuditLogsTab />
+      </template>
     </PillTabs>
   </div>
 </template>
@@ -96,6 +100,7 @@ const tabSlotToIndex: Record<string, number> = {
   'revenue': 10,
   'payouts': 11,
   'pro-export': 12,
+  'audit-logs': 13,
 }
 
 // Initialize tab from URL query param immediately
@@ -160,6 +165,7 @@ const tabs = computed(() => [
   { label: 'Revenue', slot: 'revenue', icon: 'i-heroicons-currency-dollar' },
   { label: 'Payouts', slot: 'payouts', icon: 'i-heroicons-banknotes' },
   { label: 'PRO Export', slot: 'pro-export', icon: 'i-heroicons-document-arrow-down' },
+  { label: 'Audit Logs', slot: 'audit-logs', icon: 'i-heroicons-clipboard-document-list' },
 ])
 
 // Placeholder for refreshing stats when data changes

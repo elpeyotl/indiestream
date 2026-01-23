@@ -1,5 +1,6 @@
 // PATCH /api/admin/bands/[id] - Update band (admin can edit everything)
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { createAuditLog, extractBandSnapshot } from '~/server/utils/auditLog'
 
 export default defineEventHandler(async (event) => {
   // Verify admin access
@@ -27,6 +28,17 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
+
+  // Get existing band for audit log
+  const { data: existingBand } = await client
+    .from('bands')
+    .select('*')
+    .eq('id', bandId)
+    .single()
+
+  if (!existingBand) {
+    throw createError({ statusCode: 404, statusMessage: 'Band not found' })
+  }
 
   // Build update object from allowed fields
   const updates: any = {}
@@ -112,6 +124,46 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update band:', error)
     throw createError({ statusCode: 500, statusMessage: error.message })
   }
+
+  // Determine action and summary for audit log
+  let action = 'band.update'
+  let summary = `Updated band "${updatedBand.name}"`
+
+  if (body.status === 'suspended' && existingBand.status !== 'suspended') {
+    action = 'band.suspend'
+    summary = `Suspended band "${updatedBand.name}"`
+  } else if (body.status === 'active' && existingBand.status === 'suspended') {
+    action = 'band.unsuspend'
+    summary = `Unsuspended band "${updatedBand.name}"`
+  } else if (body.status === 'removed' && existingBand.status !== 'removed') {
+    action = 'band.remove'
+    summary = `Removed band "${updatedBand.name}"`
+  } else if (body.is_verified === true && !existingBand.is_verified) {
+    action = 'band.verify'
+    summary = `Verified band "${updatedBand.name}"`
+  } else if (body.is_verified === false && existingBand.is_verified) {
+    action = 'band.unverify'
+    summary = `Removed verification from band "${updatedBand.name}"`
+  } else if (body.is_featured === true && !existingBand.is_featured) {
+    action = 'band.feature'
+    summary = `Featured band "${updatedBand.name}"`
+  } else if (body.is_featured === false && existingBand.is_featured) {
+    action = 'band.unfeature'
+    summary = `Unfeatured band "${updatedBand.name}"`
+  }
+
+  // Create audit log
+  await createAuditLog(client, {
+    adminId: user.id,
+    action,
+    entityType: 'band',
+    entityId: bandId,
+    entityName: updatedBand.name,
+    summary,
+    oldValue: extractBandSnapshot(existingBand),
+    newValue: extractBandSnapshot(updatedBand),
+    metadata: body.suspension_reason ? { suspension_reason: body.suspension_reason } : undefined,
+  })
 
   return {
     success: true,

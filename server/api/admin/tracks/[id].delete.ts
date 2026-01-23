@@ -2,6 +2,7 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import { deleteFromR2 } from '~/server/utils/r2'
 import { sendTrackRemovedEmail } from '~/server/utils/email'
+import { createAuditLog, extractTrackSnapshot } from '~/server/utils/auditLog'
 
 export default defineEventHandler(async (event) => {
   // Verify admin access
@@ -33,14 +34,11 @@ export default defineEventHandler(async (event) => {
   const reason = query.reason as 'copyright' | 'ai_generated' | 'inappropriate' | 'other' | undefined
   const details = query.details as string | undefined
 
-  // Get track info with album and band details for email
+  // Get track info with album and band details for email and audit log
   const { data: track } = await client
     .from('tracks')
     .select(`
-      id,
-      title,
-      audio_key,
-      album_id,
+      *,
       album:albums!inner(
         id,
         title,
@@ -58,6 +56,9 @@ export default defineEventHandler(async (event) => {
   if (!track) {
     throw createError({ statusCode: 404, statusMessage: 'Track not found' })
   }
+
+  const albumTitle = (track.album as any).title
+  const bandName = (track.album as any).band.name
 
   // Get artist email for notification
   const { data: ownerProfile } = await client
@@ -121,7 +122,23 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: 'Failed to delete track' })
   }
 
-  console.log(`Admin ${user.id} deleted track: ${track.title} (${trackId})`)
+  // Create audit log
+  await createAuditLog(client, {
+    adminId: user.id,
+    action: 'track.delete',
+    entityType: 'track',
+    entityId: trackId,
+    entityName: track.title,
+    summary: `Deleted track "${track.title}" from album "${albumTitle}" by "${bandName}"`,
+    oldValue: extractTrackSnapshot(track),
+    newValue: null,
+    metadata: {
+      album_title: albumTitle,
+      band_name: bandName,
+      removal_reason: reason,
+      removal_details: details,
+    },
+  })
 
   // Send email notification to artist
   if (ownerProfile?.email && reason) {
@@ -130,8 +147,8 @@ export default defineEventHandler(async (event) => {
         to: ownerProfile.email,
         artistName: ownerProfile.display_name || 'Artist',
         trackTitle: track.title,
-        albumTitle: (track.album as any).title,
-        bandName: (track.album as any).band.name,
+        albumTitle,
+        bandName,
         reason,
         details,
       })

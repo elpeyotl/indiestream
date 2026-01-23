@@ -449,3 +449,48 @@ export const monthOptions = [
   { label: 'November', value: 10 },
   { label: 'December', value: 11 },
 ]
+
+// Audit Log Types
+export interface AdminAuditLog {
+  id: string
+  admin_id: string
+  created_at: string
+  action: string
+  entity_type: string
+  entity_id: string | null
+  entity_name: string | null
+  summary: string
+  old_value: Record<string, unknown> | null
+  new_value: Record<string, unknown> | null
+  metadata: Record<string, unknown> | null
+  admin?: {
+    id: string
+    email: string
+    display_name: string | null
+  }
+}
+
+export const auditEntityTypeOptions = [
+  { label: 'All Types', value: 'all' },
+  { label: 'Bands', value: 'band' },
+  { label: 'Albums', value: 'album' },
+  { label: 'Tracks', value: 'track' },
+  { label: 'Users', value: 'user' },
+  { label: 'Reports', value: 'report' },
+  { label: 'DMCA', value: 'dmca' },
+  { label: 'Settings', value: 'settings' },
+  { label: 'Featured Genres', value: 'featured_genre' },
+  { label: 'Playlists', value: 'playlist' },
+]
+
+export const auditActionOptions = [
+  { label: 'All Actions', value: 'all' },
+  { label: 'Approve', value: 'approve' },
+  { label: 'Reject', value: 'reject' },
+  { label: 'Delete', value: 'delete' },
+  { label: 'Update', value: 'update' },
+  { label: 'Suspend', value: 'suspend' },
+  { label: 'Feature', value: 'feature' },
+  { label: 'Verify', value: 'verify' },
+  { label: 'Publish', value: 'publish' },
+]

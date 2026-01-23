@@ -1,5 +1,6 @@
 // PATCH /api/admin/albums/[id] - Update album (admin can edit everything)
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { createAuditLog, extractAlbumSnapshot } from '~/server/utils/auditLog'
 
 export default defineEventHandler(async (event) => {
   // Verify admin access
@@ -27,6 +28,17 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
+
+  // Get existing album for audit log
+  const { data: existingAlbum } = await client
+    .from('albums')
+    .select('*, band:bands!band_id(name)')
+    .eq('id', albumId)
+    .single()
+
+  if (!existingAlbum) {
+    throw createError({ statusCode: 404, statusMessage: 'Album not found' })
+  }
 
   // Build album update object from allowed fields
   const albumUpdates: Record<string, unknown> = {}
@@ -136,6 +148,30 @@ export default defineEventHandler(async (event) => {
     `)
     .eq('album_id', albumId)
     .order('track_number', { ascending: true })
+
+  // Determine action and create audit log
+  let action = 'album.update'
+  let summary = `Updated album "${updatedAlbum.title}"`
+  const bandName = (existingAlbum.band as { name: string } | null)?.name || 'Unknown'
+
+  if (body.is_published === true && !existingAlbum.is_published) {
+    action = 'album.publish'
+    summary = `Published album "${updatedAlbum.title}" from band "${bandName}"`
+  } else if (body.is_published === false && existingAlbum.is_published) {
+    action = 'album.unpublish'
+    summary = `Unpublished album "${updatedAlbum.title}" from band "${bandName}"`
+  }
+
+  await createAuditLog(client, {
+    adminId: user.id,
+    action,
+    entityType: 'album',
+    entityId: albumId,
+    entityName: updatedAlbum.title,
+    summary,
+    oldValue: extractAlbumSnapshot(existingAlbum),
+    newValue: extractAlbumSnapshot(updatedAlbum),
+  })
 
   return {
     success: true,

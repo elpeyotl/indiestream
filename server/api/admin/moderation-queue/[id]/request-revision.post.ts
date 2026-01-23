@@ -1,5 +1,6 @@
 // POST /api/admin/moderation-queue/[id]/request-revision - Request revision
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { createAuditLog } from '~/server/utils/auditLog'
 
 export default defineEventHandler(async (event) => {
   // Verify admin access
@@ -40,7 +41,8 @@ export default defineEventHandler(async (event) => {
       track_id,
       submitted_by,
       band_id,
-      track:tracks!track_id(title)
+      track:tracks!track_id(title, moderation_status, moderation_notes),
+      band:bands!band_id(name)
     `)
     .eq('id', queueId)
     .single()
@@ -48,6 +50,9 @@ export default defineEventHandler(async (event) => {
   if (!queueItem) {
     throw createError({ statusCode: 404, statusMessage: 'Queue item not found' })
   }
+
+  const track = queueItem.track as { title: string; moderation_status: string; moderation_notes: string | null } | null
+  const band = queueItem.band as { name: string } | null
 
   // Call request_track_revision function
   const { error } = await client.rpc('request_track_revision', {
@@ -60,9 +65,28 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: error.message })
   }
 
+  // Create audit log
+  await createAuditLog(client, {
+    adminId: user.id,
+    action: 'track.request_revision',
+    entityType: 'track',
+    entityId: queueItem.track_id,
+    entityName: track?.title || 'Unknown Track',
+    summary: `Requested revision for track "${track?.title || 'Unknown'}" from band "${band?.name || 'Unknown'}"`,
+    oldValue: {
+      moderation_status: track?.moderation_status || 'pending',
+      moderation_notes: track?.moderation_notes,
+    },
+    newValue: {
+      moderation_status: 'revision_requested',
+      moderation_notes: notes,
+    },
+    metadata: { revision_notes: notes },
+  })
+
   // Create notification for the artist
   if (queueItem.submitted_by) {
-    const trackTitle = (queueItem.track as any)?.title || 'Your track'
+    const trackTitle = track?.title || 'Your track'
     await client.from('notifications').insert({
       user_id: queueItem.submitted_by,
       type: 'track_revision',

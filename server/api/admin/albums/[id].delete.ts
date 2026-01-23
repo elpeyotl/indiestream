@@ -1,5 +1,6 @@
 // DELETE /api/admin/albums/[id] - Delete album and associated data
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { createAuditLog, extractAlbumSnapshot } from '~/server/utils/auditLog'
 
 export default defineEventHandler(async (event) => {
   // Verify admin access
@@ -26,16 +27,18 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Album ID required' })
   }
 
-  // Get album info first for logging
+  // Get album info first for logging and audit
   const { data: album } = await client
     .from('albums')
-    .select('id, title, band_id')
+    .select('*, band:bands!band_id(name)')
     .eq('id', albumId)
     .single()
 
   if (!album) {
     throw createError({ statusCode: 404, statusMessage: 'Album not found' })
   }
+
+  const bandName = (album.band as { name: string } | null)?.name || 'Unknown'
 
   // Delete track credits first (foreign key constraint)
   const { data: tracks } = await client
@@ -79,7 +82,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: 'Failed to delete album' })
   }
 
-  console.log(`Admin ${user.id} deleted album: ${album.title} (${albumId})`)
+  // Create audit log
+  await createAuditLog(client, {
+    adminId: user.id,
+    action: 'album.delete',
+    entityType: 'album',
+    entityId: albumId,
+    entityName: album.title,
+    summary: `Deleted album "${album.title}" from band "${bandName}" (${tracks?.length || 0} tracks)`,
+    oldValue: extractAlbumSnapshot(album),
+    newValue: null,
+    metadata: {
+      band_name: bandName,
+      track_count: tracks?.length || 0,
+    },
+  })
 
   return {
     success: true,
