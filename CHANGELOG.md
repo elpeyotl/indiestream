@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.23.0] - 2026-01-23
+
+### Added
+- **Homepage Redesign ("Your Scene")**:
+  - New hero section with impact stats (earnings, artists supported, hours listened)
+  - "New From Your Artists" section showing releases from followed artists
+  - "Continue Listening" section with recently played albums
+  - "Fresh This Week" chronological new releases (no algorithm)
+  - "Featured Albums" admin-curated section with editorial blurb
+  - "Featured Artists" section
+  - "Curated Playlists" section
+  - "Browse Genres" section with featured genre cards
+- **Featured Albums System**:
+  - New `featured_albums` database table with RLS policies
+  - Admin tab for managing featured albums with drag-and-drop reordering
+  - Album search by title or artist name in admin
+  - Customizable editorial blurb stored in platform_settings
+  - API endpoints: GET/POST featured albums, DELETE by ID, PATCH reorder
+- **New Pages**:
+  - `/new-releases` - All recent releases with pagination
+  - `/playlists` - Public playlists with All/Curated filter
+  - `/library/following` - Followed artists and their new releases
+- **FeaturedGenreCard Component**: Reusable genre card with image/gradient background
+
+### Fixed
+- **Hydration Mismatch**: Fixed SSR hydration issues on discover page by deferring cover URL loading to `onMounted`
+- **User-dependent Data**: Added `server: false` for impact stats and feed fetches to ensure user session availability
+- **Album Search**: Admin search now finds albums by artist name in addition to title
+
 ## [0.22.0] - 2026-01-23
 
 ### Added

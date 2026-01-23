@@ -1,208 +1,292 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-zinc-100 mb-2">Discover</h1>
-      <p class="text-zinc-400">Find your next favorite artist</p>
-    </div>
+  <div class="container mx-auto px-4 py-6 max-w-7xl">
+    <!-- Hero Impact Section -->
+    <HomeHeroImpact
+      :is-logged-in="!!user"
+      :is-subscribed="isSubscribed"
+      :stats="impactStats"
+      :loading="impactLoading"
+    />
 
-    <!-- New Releases Section (loads independently) -->
+    <!-- New From Your Artists -->
+    <section
+      v-if="user && (newFromArtistsLoading || newFromArtists.length > 0)"
+      class="mb-12"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100">
+          New From Your Artists
+        </h2>
+        <NuxtLink
+          to="/library/following"
+          class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
+        >
+          See all
+          <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+        </NuxtLink>
+      </div>
+      <HomeScrollRow v-if="newFromArtistsLoading">
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <USkeleton class="aspect-square rounded-lg mb-3" />
+          <USkeleton class="h-4 w-3/4 mb-2" />
+          <USkeleton class="h-3 w-1/2" />
+        </div>
+      </HomeScrollRow>
+      <HomeScrollRow v-else>
+        <div
+          v-for="album in newFromArtists"
+          :key="album.id"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <AlbumCard
+            :album="album"
+            :cover-url="albumCovers[album.id]"
+            :loading="loadingPlayId === album.id"
+            @play="playAlbum"
+          />
+          <p v-if="album.created_at" class="text-xs text-zinc-500 mt-1">
+            {{ formatTimeAgo(album.created_at) }}
+          </p>
+        </div>
+      </HomeScrollRow>
+    </section>
+
+    <!-- Continue Listening -->
+    <section
+      v-if="user && (recentActivityLoading || uniqueRecentAlbums.length > 0)"
+      class="mb-12"
+    >
+      <div class="mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100">Continue Listening</h2>
+      </div>
+      <HomeScrollRow v-if="recentActivityLoading">
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <USkeleton class="aspect-square rounded-lg mb-3" />
+          <USkeleton class="h-4 w-3/4 mb-2" />
+          <USkeleton class="h-3 w-1/2" />
+        </div>
+      </HomeScrollRow>
+      <HomeScrollRow v-else>
+        <div
+          v-for="album in uniqueRecentAlbums"
+          :key="album.slug"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <AlbumCard
+            :album="album"
+            :cover-url="album.coverUrl"
+            @play="() => navigateTo(`/${album.band?.slug}/${album.slug}`)"
+          />
+        </div>
+      </HomeScrollRow>
+    </section>
+
+    <!-- Fresh This Week -->
     <section class="mb-12">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100">New Releases</h2>
-      </div>
-      <!-- Loading skeleton -->
-      <div v-if="loadingReleases" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        <div v-for="i in 5" :key="`release-${i}`" class="space-y-2">
-          <div class="w-full pb-[100%] relative">
-            <div class="absolute inset-0 rounded-lg skeleton"></div>
-          </div>
-          <div class="h-5 skeleton w-full"></div>
-          <div class="h-4 skeleton w-2/3"></div>
+        <div>
+          <h2 class="text-xl font-semibold text-zinc-100">Fresh This Week</h2>
+          <p class="text-sm text-zinc-500">
+            New arrivals, chronological. No algorithm.
+          </p>
         </div>
+        <NuxtLink
+          to="/new-releases"
+          class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
+        >
+          See all
+          <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+        </NuxtLink>
       </div>
-      <!-- Content -->
-      <div v-else-if="newReleases.length > 0" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        <AlbumCard
-          v-for="album in newReleases"
+      <HomeScrollRow v-if="freshReleasesLoading">
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <USkeleton class="aspect-square rounded-lg mb-3" />
+          <USkeleton class="h-4 w-3/4 mb-2" />
+          <USkeleton class="h-3 w-1/2" />
+        </div>
+      </HomeScrollRow>
+      <HomeScrollRow v-else>
+        <div
+          v-for="album in freshReleases"
           :key="album.id"
-          :album="album"
-          :cover-url="albumCovers[album.id]"
-          :loading="loadingPlayId === album.id"
-          @play="playAlbum"
-        />
-      </div>
-    </section>
-
-    <!-- Featured Playlists Section (loads independently) -->
-    <section v-if="loadingPlaylists || featuredPlaylists.length > 0" class="mb-12">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
-          <UIcon name="i-heroicons-star" class="w-5 h-5 text-violet-400" />
-          Featured Playlists
-        </h2>
-      </div>
-      <!-- Loading skeleton -->
-      <div v-if="loadingPlaylists" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        <div v-for="i in 5" :key="`playlist-${i}`" class="space-y-2">
-          <div class="w-full pb-[100%] relative">
-            <div class="absolute inset-0 rounded-lg skeleton"></div>
-          </div>
-          <div class="h-5 skeleton w-3/4"></div>
-          <div class="h-4 skeleton w-1/2"></div>
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <AlbumCard
+            :album="album"
+            :cover-url="albumCovers[album.id]"
+            :loading="loadingPlayId === album.id"
+            @play="playAlbum"
+          />
         </div>
-      </div>
-      <!-- Content -->
-      <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        <PlaylistCard
-          v-for="playlist in featuredPlaylists"
-          :key="playlist.id"
-          :playlist="playlist"
-          :covers="playlistCovers[playlist.id] || []"
-          :loading="loadingPlayId === playlist.id"
-          icon="i-heroicons-queue-list"
-          @play="playFeaturedPlaylist"
-        />
-      </div>
+      </HomeScrollRow>
     </section>
 
-    <!-- Featured Artists Section (loads independently) -->
-    <section v-if="loadingFeatured || (featuredArtists && featuredArtists.length > 0)" class="mb-12">
-      <div class="flex items-center justify-between mb-4">
+    <!-- Featured Albums (admin-curated) -->
+    <section
+      v-if="featuredAlbumsLoading || featuredAlbums.length > 0"
+      class="mb-12"
+    >
+      <div class="mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100">Featured Albums</h2>
+        <p class="text-sm text-zinc-500">
+          {{ featuredAlbumsBlurb }}
+        </p>
+      </div>
+      <HomeScrollRow v-if="featuredAlbumsLoading">
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <USkeleton class="aspect-square rounded-lg mb-3" />
+          <USkeleton class="h-4 w-3/4 mb-2" />
+          <USkeleton class="h-3 w-1/2" />
+        </div>
+      </HomeScrollRow>
+      <HomeScrollRow v-else>
+        <div
+          v-for="album in featuredAlbums"
+          :key="album.id"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <AlbumCard
+            :album="album"
+            :cover-url="albumCovers[album.id]"
+            :loading="loadingPlayId === album.id"
+            @play="playAlbum"
+          />
+        </div>
+      </HomeScrollRow>
+    </section>
+
+    <!-- Featured Artists -->
+    <section
+      v-if="featuredArtistsLoading || featuredArtists.length > 0"
+      class="mb-12"
+    >
+      <div class="mb-4">
         <h2 class="text-xl font-semibold text-zinc-100">Featured Artists</h2>
       </div>
-      <!-- Loading skeleton -->
-      <div v-if="loadingFeatured" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <div v-for="i in 6" :key="`featured-${i}`" class="space-y-2">
-          <div class="w-full pb-[100%] relative">
-            <div class="absolute inset-0 rounded-full skeleton"></div>
-          </div>
-          <div class="h-5 skeleton w-3/4 mx-auto"></div>
-          <div class="h-4 skeleton w-1/2 mx-auto"></div>
+      <HomeScrollRow v-if="featuredArtistsLoading">
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <USkeleton class="aspect-square rounded-full mb-2" />
+          <USkeleton class="h-4 w-3/4 mb-2" />
         </div>
-      </div>
-      <!-- Content -->
-      <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <ArtistCard
+      </HomeScrollRow>
+      <HomeScrollRow v-else>
+        <div
           v-for="artist in featuredArtists"
           :key="artist.id"
-          :artist="artist"
-          :loading="loadingPlayId === artist.id"
-          @play="playArtist"
-        />
-      </div>
-    </section>
-
-    <!-- Recently Played Section (for logged-in users, loads independently) -->
-    <section v-if="user && (loadingRecentlyPlayed || recentlyPlayed.length > 0)" class="mb-12">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
-          <UIcon name="i-heroicons-clock" class="w-5 h-5 text-violet-400" />
-          Recently Played
-        </h2>
-        <NuxtLink to="/library?tab=history" class="text-sm text-violet-400 hover:text-violet-300">
-          View All
-        </NuxtLink>
-      </div>
-      <!-- Loading skeleton -->
-      <div v-if="loadingRecentlyPlayed" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        <div v-for="i in 5" :key="`recent-${i}`" class="space-y-2">
-          <div class="w-full pb-[100%] relative">
-            <div class="absolute inset-0 rounded-lg skeleton"></div>
-          </div>
-          <div class="h-5 skeleton w-full"></div>
-          <div class="h-4 skeleton w-2/3"></div>
-        </div>
-      </div>
-      <!-- Content -->
-      <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        <div
-          v-for="track in recentlyPlayed.slice(0, 5)"
-          :key="track.id"
-          class="group card-interactive cursor-pointer"
-          @click="playRecentTrack(track)"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
         >
-          <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
-            <div class="absolute inset-0">
-              <NuxtImg
-                v-if="track.coverUrl"
-                :src="track.coverUrl"
-                :alt="track.title"
-                :width="256"
-                :height="256"
-                format="webp"
-                loading="lazy"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div v-else class="w-full h-full flex items-center justify-center">
-                <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
-              </div>
-            </div>
-            <!-- Play overlay -->
-            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div class="w-12 h-12 rounded-full bg-violet-500 flex items-center justify-center">
-                <UIcon name="i-heroicons-play" class="w-6 h-6 text-white ml-0.5" />
-              </div>
-            </div>
-          </div>
-          <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ track.title }}</p>
-          <NuxtLink
-            :to="`/${track.artistSlug}`"
-            class="text-sm text-zinc-400 truncate block hover:text-violet-400"
-            @click.stop
-          >
-            {{ track.artistName }}
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
-
-    <!-- All Artists Section (loads independently) -->
-    <section class="mb-12">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100">All Artists</h2>
-        <NuxtLink to="/artists" class="text-sm text-violet-400 hover:text-violet-300">
-          View All
-        </NuxtLink>
-      </div>
-      <!-- Loading skeleton -->
-      <div v-if="loadingAllArtists" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <div v-for="i in 6" :key="`artist-${i}`" class="space-y-2">
-          <div class="w-full pb-[100%] relative">
-            <div class="absolute inset-0 rounded-full skeleton"></div>
-          </div>
-          <div class="h-5 skeleton w-3/4 mx-auto"></div>
-          <div class="h-4 skeleton w-1/2 mx-auto"></div>
-        </div>
-      </div>
-      <!-- Content -->
-      <template v-else>
-        <div v-if="allArtists.length > 0" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           <ArtistCard
-            v-for="artist in allArtists"
-            :key="artist.id"
             :artist="artist"
             :loading="loadingPlayId === artist.id"
+            rounded
             @play="playArtist"
           />
         </div>
-
-        <!-- Load More -->
-        <div v-if="hasMoreArtists" class="mt-8 text-center">
-          <UButton color="gray" variant="ghost" :loading="loadingMore" @click="loadMoreArtists">
-            Load More Artists
-          </UButton>
-        </div>
-      </template>
+      </HomeScrollRow>
     </section>
 
-    <!-- Empty State (only show when all main sections are loaded and empty) -->
-    <div
-      v-if="!loadingReleases && !loadingAllArtists && allArtists.length === 0 && newReleases.length === 0"
-      class="text-center py-20"
+    <!-- Curated Playlists -->
+    <section
+      v-if="curatedPlaylistsLoading || curatedPlaylists.length > 0"
+      class="mb-12"
     >
-      <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center">
-        <UIcon name="i-heroicons-musical-note" class="w-10 h-10 text-violet-400" />
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
+          <UIcon name="i-heroicons-star" class="w-5 h-5 text-amber-400" />
+          Curated Playlists
+        </h2>
+        <NuxtLink
+          to="/playlists"
+          class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
+        >
+          See all
+          <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+        </NuxtLink>
+      </div>
+      <HomeScrollRow v-if="curatedPlaylistsLoading">
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <USkeleton class="aspect-square rounded-lg mb-3" />
+          <USkeleton class="h-4 w-3/4 mb-2" />
+          <USkeleton class="h-3 w-1/2" />
+        </div>
+      </HomeScrollRow>
+      <HomeScrollRow v-else>
+        <div
+          v-for="playlist in curatedPlaylists"
+          :key="playlist.id"
+          class="w-40 flex-shrink-0 snap-start md:w-auto"
+        >
+          <PlaylistCard
+            :playlist="playlist"
+            :covers="playlistCovers[playlist.id] || []"
+            :loading="loadingPlayId === playlist.id"
+            @play="playPlaylist"
+          />
+        </div>
+      </HomeScrollRow>
+    </section>
+
+    <!-- Browse Genres -->
+    <section class="mb-12">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-zinc-100">Browse Genres</h2>
+        <NuxtLink
+          to="/genres"
+          class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
+        >
+          See all
+          <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+        </NuxtLink>
+      </div>
+      <div
+        v-if="featuredGenresLoading"
+        class="grid grid-cols-2 sm:grid-cols-3 gap-4"
+      >
+        <USkeleton v-for="i in 6" :key="i" class="h-40 rounded-xl" />
+      </div>
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <FeaturedGenreCard
+          v-for="genre in featuredGenres"
+          :key="genre.slug"
+          :genre="genre"
+          :avatar-url="genreAvatars[genre.slug]"
+        />
+      </div>
+    </section>
+
+    <!-- Empty State -->
+    <div v-if="showEmptyState" class="text-center py-20">
+      <div
+        class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center"
+      >
+        <UIcon
+          name="i-heroicons-musical-note"
+          class="w-10 h-10 text-violet-400"
+        />
       </div>
       <h2 class="text-2xl font-bold text-zinc-100 mb-2">No Music Yet</h2>
       <p class="text-zinc-400 mb-6">Be the first to upload your music!</p>
@@ -216,415 +300,411 @@
 <script setup lang="ts">
 import type { Database } from '~/types/database'
 import type { Band } from '~/stores/band'
-import type { Album } from '~/stores/album'
 import type { RecentlyPlayedTrack } from '~/stores/recentActivity'
 
-interface FeaturedPlaylist {
+interface Album {
   id: string
   title: string
-  description: string | null
+  slug: string
+  cover_key?: string | null
+  cover_url?: string | null
+  release_type?: string
+  created_at?: string
+  band?: {
+    id?: string
+    name: string
+    slug: string
+  }
+}
+
+interface Playlist {
+  id: string
+  title: string
+  description?: string | null
+  cover_key?: string | null
   track_count: number
-  cover_key: string | null
-  is_curated: boolean
-  owner: {
-    id: string
-    display_name: string | null
-  } | null
-  previewTracks: Array<{
-    id: string
-    album: { cover_key: string | null }
-  }>
+  is_curated?: boolean
+  owner?: { id: string; display_name?: string | null }
+  previewTracks?: Array<{ album?: { cover_key?: string | null } | null }>
+}
+
+interface FeaturedGenre {
+  slug: string
+  name: string
+  artistCount?: number
+  avatarKeys?: string[]
+}
+
+interface ImpactStats {
+  monthlyEarnings: number
+  artistsSupported: number
+  hoursListened: number
+  streamCount: number
+}
+
+interface ImpactResponse {
+  isLoggedIn: boolean
+  isSubscribed: boolean
+  stats: ImpactStats | null
 }
 
 const client = useSupabaseClient<Database>()
-const albumStore = useAlbumStore()
-const { getCachedCoverUrl, getAlbumById } = albumStore
+const user = useSupabaseUser()
+const subscriptionStore = useSubscriptionStore()
+const { isSubscribed } = storeToRefs(subscriptionStore)
+const recentActivityStore = useRecentActivityStore()
+const { recentlyPlayed, loadingRecentlyPlayed: recentActivityLoading } =
+  storeToRefs(recentActivityStore)
+const { fetchRecentlyPlayed } = recentActivityStore
 const bandStore = useBandStore()
 const { resolveAvatarUrls } = bandStore
-const { moderationEnabled, loadModerationSetting } = useModerationFilter()
-const recentActivityStore = useRecentActivityStore()
-const { fetchRecentlyPlayed, recentlyPlayed, loadingRecentlyPlayed } = recentActivityStore
-const user = useSupabaseUser()
+const albumStore = useAlbumStore()
+const { getCachedCoverUrl, getAlbumById } = albumStore
 const playerStore = usePlayerStore()
-const { setQueue, playPlaylist } = playerStore
 
 const loadingPlayId = ref<string | null>(null)
-const loadingMore = ref(false)
-const artistPage = ref(0)
-const pageSize = 12
+const albumCovers = ref<Record<string, string>>({})
+const playlistCovers = ref<Record<string, string[]>>({})
+const genreAvatars = ref<Record<string, string>>({})
 
-// New Releases - using useLazyAsyncData
-const { data: releasesData, pending: loadingReleases, refresh: refreshReleases } = await useLazyAsyncData(
-  'discover-releases',
-  async () => {
-    await loadModerationSetting()
+// Deduplicate recently played by album
+const uniqueRecentAlbums = computed(() => {
+  const seen = new Set<string>()
+  const albums: Array<{
+    id: string
+    title: string
+    slug: string
+    band?: { name: string; slug: string }
+    coverUrl?: string | null
+  }> = []
 
-    const { data, error } = await client
-      .from('albums')
-      .select(`
-        id,
-        title,
-        slug,
-        release_type,
-        release_date,
-        cover_key,
-        cover_url,
-        band_id,
-        band:bands!inner (
-          id,
-          name,
-          slug
-        ),
-        tracks (
-          id,
-          moderation_status
-        )
-      `)
-      .eq('is_published', true)
-      .order('created_at', { ascending: false })
-      .limit(20)
-
-    if (error) throw error
-
-    let albums = (data || []).map(album => ({
-      ...album,
-      band: Array.isArray(album.band) ? album.band[0] : album.band,
-    }))
-
-    if (moderationEnabled.value) {
-      albums = albums.filter(album => {
-        if (!album.tracks || album.tracks.length === 0) return false
-        return album.tracks.some((track: any) => track.moderation_status === 'approved')
+  for (const track of recentlyPlayed.value as RecentlyPlayedTrack[]) {
+    const key = `${track.artistSlug}/${track.albumSlug}`
+    if (!seen.has(key) && track.albumSlug && track.albumTitle) {
+      seen.add(key)
+      albums.push({
+        id: track.id, // Use track id as placeholder
+        title: track.albumTitle,
+        slug: track.albumSlug,
+        band: { name: track.artistName, slug: track.artistSlug },
+        coverUrl: track.coverUrl,
       })
     }
-
-    const releasesResult = albums.slice(0, 10) as Album[]
-    const covers: Record<string, string> = {}
-
-    await Promise.all(
-      releasesResult.map(async (album) => {
-        if (album.cover_key) {
-          const url = await getCachedCoverUrl(album.cover_key)
-          if (url) covers[album.id] = url
-        } else if (album.cover_url) {
-          covers[album.id] = album.cover_url
-        }
-      })
-    )
-
-    return { albums: releasesResult, covers }
   }
-)
-
-const newReleases = computed(() => releasesData.value?.albums || [])
-const albumCovers = computed(() => releasesData.value?.covers || {})
-
-// Featured Playlists - using useLazyAsyncData
-const { data: playlistsData, pending: loadingPlaylists, refresh: refreshPlaylists } = await useLazyAsyncData(
-  'discover-playlists',
-  async () => {
-    const data = await $fetch<{ playlists: FeaturedPlaylist[] }>('/api/playlists/featured')
-    const covers: Record<string, string[]> = {}
-
-    await Promise.all(
-      data.playlists.map(async (playlist) => {
-        const playlistCovers: string[] = []
-        const seen = new Set<string>()
-
-        for (const track of playlist.previewTracks || []) {
-          if (track.album?.cover_key && !seen.has(track.album.cover_key)) {
-            seen.add(track.album.cover_key)
-            const url = await getCachedCoverUrl(track.album.cover_key)
-            if (url) {
-              playlistCovers.push(url)
-              if (playlistCovers.length >= 4) break
-            }
-          }
-        }
-
-        covers[playlist.id] = playlistCovers
-      })
-    )
-
-    return { playlists: data.playlists, covers }
-  }
-)
-
-const featuredPlaylists = computed(() => playlistsData.value?.playlists || [])
-const playlistCovers = computed(() => playlistsData.value?.covers || {})
-
-// Featured Artists - using useLazyAsyncData
-const { data: featuredArtists, pending: loadingFeatured, refresh: refreshFeatured } = await useLazyAsyncData(
-  'discover-featured',
-  async () => {
-    const { data, error } = await client
-      .from('bands')
-      .select('id, name, slug, theme_color, total_streams, is_verified, avatar_key, avatar_url')
-      .eq('status', 'active')
-      .eq('is_verified', true)
-      .order('total_streams', { ascending: false })
-      .limit(6)
-
-    if (error) throw error
-
-    const artists = (data || []) as any[]
-    await resolveAvatarUrls(artists)
-    return artists as Band[]
-  }
-)
-
-// All Artists - using useLazyAsyncData (first page only)
-const { data: allArtistsData, pending: loadingAllArtists, refresh: refreshAllArtists } = await useLazyAsyncData(
-  'discover-all-artists',
-  async () => {
-    const { data, error } = await client
-      .from('bands')
-      .select('id, name, slug, theme_color, total_streams, avatar_key, avatar_url')
-      .eq('status', 'active')
-      .order('total_streams', { ascending: false })
-      .range(0, pageSize - 1)
-
-    if (error) throw error
-
-    const artists = (data || []) as any[]
-    await resolveAvatarUrls(artists)
-    return {
-      artists: artists as Band[],
-      hasMore: artists.length === pageSize,
-    }
-  }
-)
-
-// Mutable list for pagination (starts with initial data)
-const allArtists = ref<Band[]>([])
-const hasMoreArtists = ref(false)
-
-// Sync initial data when it loads
-watch(allArtistsData, (data) => {
-  if (data && allArtists.value.length === 0) {
-    allArtists.value = data.artists
-    hasMoreArtists.value = data.hasMore
-  }
-}, { immediate: true })
-
-// Load recently played for logged-in users
-const loadRecentlyPlayed = async () => {
-  if (user.value) {
-    await fetchRecentlyPlayed(10)
-  }
-}
-
-// Refresh all sections
-const refreshAll = async () => {
-  artistPage.value = 0
-  allArtists.value = []
-  await Promise.all([
-    refreshReleases(),
-    refreshPlaylists(),
-    refreshFeatured(),
-    refreshAllArtists(),
-    loadRecentlyPlayed(),
-  ])
-}
-
-// Initial load for recently played
-onMounted(() => {
-  loadRecentlyPlayed()
+  return albums.slice(0, 6)
 })
 
-// Play a recently played track
-const playRecentTrack = (track: RecentlyPlayedTrack) => {
-  const playableTracks = recentlyPlayed.filter((t: RecentlyPlayedTrack) => t.audioKey)
-  if (playableTracks.length === 0) return
+// === DATA FETCHING ===
 
-  const queue = playableTracks.map((t: RecentlyPlayedTrack) => ({
-    id: t.id,
-    title: t.title,
-    artist: t.artistName,
-    artistSlug: t.artistSlug,
-    albumTitle: t.albumTitle,
-    albumSlug: t.albumSlug,
-    coverUrl: t.coverUrl || null,
-    duration: t.duration,
-    audioKey: t.audioKey!,
-  }))
+// 1. Impact Stats (client-only to ensure user session is available)
+const { data: impactData, pending: impactLoading } = await useLazyAsyncData(
+  'home-impact',
+  async (): Promise<ImpactResponse> => {
+    if (!user.value)
+      return { isLoggedIn: false, isSubscribed: false, stats: null }
+    try {
+      return await $fetch<ImpactResponse>('/api/user/impact')
+    } catch {
+      return { isLoggedIn: true, isSubscribed: false, stats: null }
+    }
+  },
+  { watch: [user], server: false },
+)
+const impactStats = computed(() => impactData.value?.stats || null)
 
-  const trackIndex = queue.findIndex((t: any) => t.id === track.id)
-  setQueue(queue, trackIndex >= 0 ? trackIndex : 0)
+// 2. New From Your Artists (client-only to ensure user session is available)
+const { data: newFromArtistsData, pending: newFromArtistsLoading } =
+  await useLazyAsyncData(
+    'home-new-from-artists',
+    async () => {
+      if (!user.value) return []
+      try {
+        const result = await $fetch<{ albums: Album[] }>(
+          '/api/user/feed/new-releases',
+        )
+        return result.albums || []
+      } catch {
+        return []
+      }
+    },
+    { watch: [user], server: false },
+  )
+const newFromArtists = computed(() => newFromArtistsData.value || [])
+
+// 3. Fresh This Week
+const { data: freshReleasesData, pending: freshReleasesLoading } =
+  await useLazyAsyncData('home-fresh-releases', async () => {
+    try {
+      const result = await $fetch<{ albums: Album[] }>('/api/releases/recent')
+      return result.albums || []
+    } catch {
+      return []
+    }
+  })
+const freshReleases = computed(() => freshReleasesData.value || [])
+
+// 4. Featured Albums
+const { data: featuredAlbumsData, pending: featuredAlbumsLoading } =
+  await useLazyAsyncData('home-featured-albums', async () => {
+    try {
+      const result = await $fetch<{ albums: Album[]; blurb: string | null }>(
+        '/api/albums/featured',
+      )
+      return { albums: result.albums || [], blurb: result.blurb }
+    } catch {
+      return { albums: [], blurb: null }
+    }
+  })
+const featuredAlbums = computed(() => featuredAlbumsData.value?.albums || [])
+const featuredAlbumsBlurb = computed(
+  () => featuredAlbumsData.value?.blurb || 'Hand-picked by humans, not machines.',
+)
+
+// 5. Featured Artists
+const { data: featuredArtistsData, pending: featuredArtistsLoading } =
+  await useLazyAsyncData('home-featured-artists', async () => {
+    try {
+      const { data, error } = await client
+        .from('bands')
+        .select(
+          'id, name, slug, theme_color, total_streams, is_verified, avatar_key, avatar_url',
+        )
+        .eq('status', 'active')
+        .eq('is_featured', true)
+        .order('total_streams', { ascending: false })
+        .limit(8)
+
+      if (error) return []
+      const artists = (data || []) as any[]
+      await resolveAvatarUrls(artists)
+      return artists as Band[]
+    } catch {
+      return []
+    }
+  })
+const featuredArtists = computed(() => featuredArtistsData.value || [])
+
+// 6. Curated Playlists
+const { data: curatedPlaylistsData, pending: curatedPlaylistsLoading } =
+  await useLazyAsyncData('home-curated-playlists', async () => {
+    try {
+      const result = await $fetch<{ playlists: Playlist[] }>(
+        '/api/playlists/featured',
+      )
+      return result.playlists || []
+    } catch {
+      return []
+    }
+  })
+const curatedPlaylists = computed(() => curatedPlaylistsData.value || [])
+
+// 7. Featured Genres
+const { data: featuredGenresData, pending: featuredGenresLoading } =
+  await useLazyAsyncData('home-featured-genres', async () => {
+    try {
+      const result = await $fetch<{ featuredGenres: FeaturedGenre[] }>(
+        '/api/genres/featured',
+      )
+      return result.featuredGenres || []
+    } catch {
+      return []
+    }
+  })
+const featuredGenres = computed(() => featuredGenresData.value || [])
+
+// Load cover URLs for albums
+const loadAlbumCovers = async (albums: Album[]) => {
+  for (const album of albums) {
+    if (album.cover_key && !albumCovers.value[album.id]) {
+      const url = await getCachedCoverUrl(album.cover_key)
+      if (url) albumCovers.value[album.id] = url
+    } else if (album.cover_url && !albumCovers.value[album.id]) {
+      albumCovers.value[album.id] = album.cover_url
+    }
+  }
 }
 
-// Play an album
+// Load covers when data changes (client-side only to avoid hydration mismatch)
+const loadPlaylistCovers = async (playlists: Playlist[]) => {
+  for (const playlist of playlists) {
+    if (playlistCovers.value[playlist.id]) continue
+
+    // If playlist has its own cover, use that
+    if (playlist.cover_key) {
+      const url = await getCachedCoverUrl(playlist.cover_key)
+      if (url) playlistCovers.value[playlist.id] = [url]
+      continue
+    }
+
+    // Otherwise build mosaic from preview tracks' album covers
+    if (playlist.previewTracks?.length) {
+      const coverUrls: string[] = []
+      for (const track of playlist.previewTracks) {
+        if (track.album?.cover_key) {
+          const url = await getCachedCoverUrl(track.album.cover_key)
+          if (url) coverUrls.push(url)
+        }
+      }
+      if (coverUrls.length > 0) {
+        playlistCovers.value[playlist.id] = coverUrls
+      }
+    }
+  }
+}
+
+const loadGenreAvatars = async (genres: FeaturedGenre[]) => {
+  for (const genre of genres) {
+    if (genre.avatarKeys?.length && !genreAvatars.value[genre.slug]) {
+      const url = await getCachedCoverUrl(genre.avatarKeys[0])
+      if (url) genreAvatars.value[genre.slug] = url
+    }
+  }
+}
+
+// Watch for data changes (without immediate to avoid SSR issues)
+watch([newFromArtists, freshReleases, featuredAlbums], () => {
+  loadAlbumCovers([
+    ...newFromArtists.value,
+    ...freshReleases.value,
+    ...featuredAlbums.value,
+  ])
+})
+
+watch(curatedPlaylists, (playlists) => {
+  loadPlaylistCovers(playlists)
+})
+
+watch(featuredGenres, (genres) => {
+  loadGenreAvatars(genres)
+})
+
+// Empty state
+const showEmptyState = computed(() => {
+  if (freshReleasesLoading.value || featuredArtistsLoading.value) return false
+  return freshReleases.value.length === 0 && featuredArtists.value.length === 0
+})
+
+// Play handlers
 const playAlbum = async (album: Album) => {
   if (loadingPlayId.value) return
   loadingPlayId.value = album.id
-
   try {
     const fullAlbum = await getAlbumById(album.id)
-    if (!fullAlbum?.tracks?.length) return
-
-    let coverUrl: string | null = albumCovers.value[album.id] || null
-    if (!coverUrl && fullAlbum.cover_key) {
-      coverUrl = await getCachedCoverUrl(fullAlbum.cover_key)
+    if (fullAlbum) {
+      await playerStore.playAlbum(
+        fullAlbum,
+        albumCovers.value[album.id] || null,
+        0,
+      )
     }
-
-    const playableTracks = fullAlbum.tracks
-      .filter(t => t.audio_key)
-      .map(t => ({
-        id: t.id,
-        title: t.title,
-        duration_seconds: t.duration_seconds,
-        audio_key: t.audio_key,
-        coverUrl,
-        album: {
-          id: fullAlbum.id,
-          title: fullAlbum.title,
-          slug: fullAlbum.slug,
-          band: fullAlbum.band || { id: album.band_id, name: album.band?.name || '', slug: album.band?.slug || '' },
-        },
-      }))
-
-    if (playableTracks.length > 0) {
-      await playPlaylist(playableTracks, 0)
-    }
-  } catch (e) {
-    console.error('Failed to play album:', e)
   } finally {
     loadingPlayId.value = null
   }
 }
 
-// Play a featured playlist
-const playFeaturedPlaylist = async (playlist: { id: string }) => {
-  if (loadingPlayId.value) return
-  loadingPlayId.value = playlist.id
-
-  try {
-    const data = await $fetch<{
-      id: string
-      title: string
-      playlist_tracks: Array<{
-        track: {
-          id: string
-          title: string
-          duration_seconds: number
-          audio_key: string | null
-          album: {
-            id: string
-            title: string
-            slug: string
-            cover_key: string | null
-            band: { id: string; name: string; slug: string }
-          }
-        }
-      }>
-    }>(`/api/playlists/${playlist.id}`)
-
-    if (!data?.playlist_tracks?.length) return
-
-    const playableTracks = await Promise.all(
-      data.playlist_tracks
-        .filter(item => item.track?.audio_key)
-        .map(async (item) => ({
-          id: item.track.id,
-          title: item.track.title,
-          duration_seconds: item.track.duration_seconds,
-          audio_key: item.track.audio_key,
-          coverUrl: await getCachedCoverUrl(item.track.album?.cover_key),
-          album: {
-            id: item.track.album.id,
-            title: item.track.album.title,
-            slug: item.track.album.slug,
-            band: item.track.album.band,
-          },
-        }))
-    )
-
-    if (playableTracks.length > 0) {
-      await playPlaylist(playableTracks, 0)
-    }
-  } catch (e) {
-    console.error('Failed to play playlist:', e)
-  } finally {
-    loadingPlayId.value = null
-  }
-}
-
-// Play random tracks from an artist
 const playArtist = async (artist: Band) => {
   if (loadingPlayId.value) return
   loadingPlayId.value = artist.id
-
   try {
-    const tracks = await $fetch<Array<{
-      id: string
-      title: string
-      audioKey: string
-      duration: number
-      albumTitle: string
-      albumSlug: string
-      coverKey: string | null
-    }>>(`/api/artists/${artist.id}/tracks`, {
-      query: { shuffle: 'true', limit: 20 },
-    })
-
-    if (!tracks?.length) return
-
-    const queue = await Promise.all(
-      tracks.map(async (t) => ({
+    const { tracks } = await $fetch<{ tracks: any[] }>(
+      `/api/artists/${artist.id}/tracks`,
+      {
+        query: { shuffle: true, limit: 20 },
+      },
+    )
+    if (tracks?.length) {
+      const queue = tracks.map((t: any) => ({
         id: t.id,
         title: t.title,
         artist: artist.name,
         artistSlug: artist.slug,
-        albumTitle: t.albumTitle,
-        albumSlug: t.albumSlug,
-        coverUrl: await getCachedCoverUrl(t.coverKey),
-        duration: t.duration,
-        audioKey: t.audioKey,
+        albumTitle: t.album?.title || '',
+        albumSlug: t.album?.slug || '',
+        coverUrl: artist.avatar_url || null,
+        duration: t.duration_seconds,
+        audioKey: t.audio_key,
       }))
-    )
-
-    if (queue.length > 0) {
-      await setQueue(queue, 0)
+      await playerStore.setQueue(queue, 0)
     }
-  } catch (e) {
-    console.error('Failed to play artist:', e)
   } finally {
     loadingPlayId.value = null
   }
 }
 
-const loadMoreArtists = async () => {
-  loadingMore.value = true
+const playPlaylist = async (playlist: { id: string }) => {
+  if (loadingPlayId.value) return
+  loadingPlayId.value = playlist.id
   try {
-    artistPage.value += 1
-    const { data, error } = await client
-      .from('bands')
-      .select('id, name, slug, theme_color, total_streams, avatar_key, avatar_url')
-      .eq('status', 'active')
-      .order('total_streams', { ascending: false })
-      .range(artistPage.value * pageSize, (artistPage.value + 1) * pageSize - 1)
-
-    if (error) throw error
-
-    const artists = (data || []) as any[]
-    await resolveAvatarUrls(artists)
-    allArtists.value = [...allArtists.value, ...artists as Band[]]
-    hasMoreArtists.value = artists.length === pageSize
-  } catch (e) {
-    console.error('Failed to load more artists:', e)
+    const data = await $fetch<{ playlist_tracks: any[] }>(
+      `/api/playlists/${playlist.id}`,
+    )
+    if (data.playlist_tracks?.length) {
+      const queue = data.playlist_tracks
+        .filter((pt: any) => pt.track?.audio_key)
+        .map((pt: any) => ({
+          id: pt.track.id,
+          title: pt.track.title,
+          artist: pt.track.album?.band?.name || '',
+          artistSlug: pt.track.album?.band?.slug || '',
+          albumTitle: pt.track.album?.title || '',
+          albumSlug: pt.track.album?.slug || '',
+          coverUrl: null as string | null,
+          duration: pt.track.duration_seconds,
+          audioKey: pt.track.audio_key,
+        }))
+      await playerStore.setQueue(queue, 0)
+    }
   } finally {
-    loadingMore.value = false
+    loadingPlayId.value = null
   }
 }
 
+const formatTimeAgo = (dateStr: string): string => {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 14) return '1 week ago'
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+  return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) > 1 ? 's' : ''} ago`
+}
+
+// Load recently played
+onMounted(() => {
+  if (user.value) fetchRecentlyPlayed(10)
+
+  // Load covers on client-side only (after hydration)
+  loadAlbumCovers([
+    ...newFromArtists.value,
+    ...freshReleases.value,
+    ...featuredAlbums.value,
+  ])
+  loadPlaylistCovers(curatedPlaylists.value)
+  loadGenreAvatars(featuredGenres.value)
+})
+
+watch(user, (newUser) => {
+  if (newUser) fetchRecentlyPlayed(10)
+})
+
 // Pull to refresh
-usePullToRefresh(() => refreshAll())
+usePullToRefresh(async () => {
+  if (user.value) await fetchRecentlyPlayed(10, true)
+})
 
 // SEO
 useHead({
-  title: 'Discover Music | Fairtune',
+  title: 'Your Scene | Fairtune',
   meta: [
-    { name: 'description', content: 'Discover independent artists and new music releases on Fairtune. Stream music that directly supports artists.' },
+    {
+      name: 'description',
+      content:
+        'Discover independent artists and new music releases on Fairtune. Stream music that directly supports artists.',
+    },
   ],
 })
 </script>

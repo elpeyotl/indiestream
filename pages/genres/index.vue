@@ -48,41 +48,15 @@
       <section v-if="featuredGenres.length > 0">
         <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">Featured</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <NuxtLink
+          <FeaturedGenreCard
             v-for="genre in featuredGenres"
             :key="genre.slug"
-            :to="`/genres/${genre.slug}`"
-            class="group relative h-40 rounded-xl overflow-hidden"
-          >
-            <!-- Background: Single hero image or gradient fallback -->
-            <div class="absolute inset-0">
-              <img
-                v-if="genreAvatars[genre.slug]?.[0]"
-                :src="genreAvatars[genre.slug][0]"
-                :alt="genre.name"
-                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div v-else class="h-full w-full" :style="{ background: getGenreGradient(genre.name) }" />
-            </div>
-
-            <!-- Overlay -->
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10 group-hover:from-black/70 transition-colors" />
-
-            <!-- Content -->
-            <div class="relative h-full flex flex-col justify-end p-4">
-              <h3 class="font-bold text-white text-lg drop-shadow-lg">{{ genre.name }}</h3>
-              <p class="text-white/80 text-sm drop-shadow">{{ genre.artistCount }} {{ genre.artistCount === 1 ? 'artist' : 'artists' }}</p>
-            </div>
-
-            <!-- Play button -->
-            <button
-              class="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-violet-500 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 shadow-lg hover:bg-violet-400 hover:scale-105"
-              @click.prevent.stop="playGenre(genre)"
-            >
-              <UIcon v-if="loadingPlayId === genre.slug" name="i-heroicons-arrow-path" class="w-5 h-5 text-white animate-spin" />
-              <UIcon v-else name="i-heroicons-play-solid" class="w-5 h-5 text-white ml-0.5" />
-            </button>
-          </NuxtLink>
+            :genre="genre"
+            :avatar-url="genreAvatars[genre.slug]?.[0]"
+            :loading="loadingPlayId === genre.slug"
+            show-play-button
+            @play="(g) => playGenre(g as Genre)"
+          />
         </div>
       </section>
 
@@ -237,27 +211,6 @@ watch(genres, async (newGenres) => {
 watch(searchQuery, () => {
   showAllTags.value = false
 })
-
-// Generate consistent gradient colors based on genre name
-const getGenreGradient = (name: string): string => {
-  const gradients = [
-    'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)', // violet-pink
-    'linear-gradient(135deg, #06B6D4 0%, #8B5CF6 100%)', // cyan-violet
-    'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)', // amber-red
-    'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)', // emerald-cyan
-    'linear-gradient(135deg, #EC4899 0%, #F59E0B 100%)', // pink-amber
-    'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)', // blue-violet
-    'linear-gradient(135deg, #EF4444 0%, #EC4899 100%)', // red-pink
-    'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)', // violet-cyan
-  ]
-
-  // Use hash of name to pick consistent gradient
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return gradients[Math.abs(hash) % gradients.length]
-}
 
 const playGenre = async (genre: Genre) => {
   if (loadingPlayId.value) return
