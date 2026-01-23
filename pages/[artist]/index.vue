@@ -255,35 +255,13 @@
             </div>
             <!-- Album grid -->
             <div v-else-if="albums && albums.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              <NuxtLink
+              <AlbumCard
                 v-for="album in albums"
                 :key="album.id"
-                :to="`/${band?.slug}/${album.slug}`"
-                class="group"
-              >
-                <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
-                  <NuxtImg
-                    v-if="albumCovers[album.id]"
-                    :src="albumCovers[album.id]"
-                    :alt="album.title"
-                    :width="256"
-                    :height="256"
-                    format="webp"
-                    loading="lazy"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div v-else class="w-full h-full flex items-center justify-center">
-                    <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
-                  </div>
-                </div>
-                <h3 class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
-                  {{ album.title }}
-                </h3>
-                <p class="text-sm text-zinc-400">
-                  {{ album.release_type === 'ep' ? 'EP' : album.release_type === 'single' ? 'Single' : 'Album' }}
-                  <span v-if="album.release_date"> · {{ new Date(album.release_date).getFullYear() }}</span>
-                </p>
-              </NuxtLink>
+                :album="{ ...album, band: { id: band!.id, name: band!.name, slug: band!.slug } }"
+                :cover-url="albumCovers[album.id]"
+                show-release-type
+              />
             </div>
             <!-- Empty state -->
             <div v-else class="text-center py-12">

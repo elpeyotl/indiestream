@@ -210,42 +210,12 @@
           v-else
           class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
         >
-          <NuxtLink
+          <AlbumCard
             v-for="item in albums"
             :key="item.album.id"
-            :to="`/${item.album.band.slug}/${item.album.slug}`"
-            class="group"
-          >
-            <div
-              class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow"
-            >
-              <img
-                v-if="albumCovers[item.album.id]"
-                v-fade-image
-                :src="albumCovers[item.album.id]"
-                :alt="item.album.title"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-              />
-              <div
-                v-else
-                class="w-full h-full flex items-center justify-center"
-              >
-                <UIcon
-                  name="i-heroicons-musical-note"
-                  class="w-12 h-12 text-zinc-600"
-                />
-              </div>
-            </div>
-            <h3
-              class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors"
-            >
-              {{ item.album.title }}
-            </h3>
-            <p class="text-sm text-zinc-400 truncate">
-              {{ item.album.band.name }}
-            </p>
-          </NuxtLink>
+            :album="item.album"
+            :cover-url="albumCovers[item.album.id]"
+          />
         </div>
       </template>
 
