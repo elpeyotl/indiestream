@@ -29,7 +29,7 @@ export type Album = DBAlbum & {
 }
 
 // Input types
-export type CreateAlbumInput = Pick<AlbumInsert, 'band_id' | 'title' | 'description' | 'release_type' | 'release_date' | 'upc' | 'label_name'> & {
+export type CreateAlbumInput = Pick<AlbumInsert, 'band_id' | 'title' | 'description' | 'release_type' | 'release_date' | 'upc' | 'label_name' | 'purchasable' | 'price_cents' | 'pay_what_you_want' | 'minimum_price_cents'> & {
   slug?: string
 }
 
@@ -474,6 +474,10 @@ export const useAlbumStore = defineStore('album', () => {
         release_date: input.release_date || null,
         upc: input.upc || null,
         label_name: input.label_name || null,
+        purchasable: input.purchasable || false,
+        price_cents: input.price_cents || null,
+        pay_what_you_want: input.pay_what_you_want || false,
+        minimum_price_cents: input.minimum_price_cents || null,
       })
       .select()
       .single()

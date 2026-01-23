@@ -51,6 +51,7 @@
       <UploadAlbumDetailsStep
         v-if="state.step === 1"
         :band-name="state.selectedBand!.name"
+        :stripe-connected="stripeConnected"
         @continue="state.step = 2"
       />
 
@@ -100,7 +101,12 @@ const albumStore = useAlbumStore()
 const { createAlbum, createTrack, updateTrack, updateAlbum, deleteTrack, getUploadUrl, setTrackCredits, getStreamUrl, getAlbumById, getCreditsForTracks } = albumStore
 const { state, toast, uploadFileWithProgress, uploadProcessedCover, getAudioDuration, resetWizard, loadAlbumForEdit } = useUploadWizard()
 const { moderationEnabled, loadModerationSetting } = useModerationFilter()
+const stripeConnectStore = useStripeConnectStore()
+const { fetchConnectStatus } = stripeConnectStore
 const user = useSupabaseUser()
+
+// Stripe Connect status
+const stripeConnected = ref(false)
 
 // Deezer modal
 const deezerModalOpen = ref(false)
@@ -179,9 +185,16 @@ const { pending: editLoading } = await useLazyAsyncData(
   }
 )
 
-// Load moderation setting on mount
-onMounted(() => {
+// Load moderation setting and check Stripe Connect status on mount
+onMounted(async () => {
   loadModerationSetting()
+  // Check Stripe Connect status
+  try {
+    const status = await fetchConnectStatus()
+    stripeConnected.value = status?.status === 'active'
+  } catch (e) {
+    console.error('Failed to fetch Stripe Connect status:', e)
+  }
 })
 
 // Deezer modal
@@ -349,6 +362,11 @@ const startUpload = async () => {
         release_type: state.value.albumForm.release_type,
         release_date: state.value.albumForm.release_date || undefined,
         label_name: state.value.albumForm.label_name || undefined,
+        // Purchase settings
+        purchasable: state.value.albumForm.purchasable,
+        price_cents: state.value.albumForm.price_cents,
+        pay_what_you_want: state.value.albumForm.pay_what_you_want,
+        minimum_price_cents: state.value.albumForm.minimum_price_cents,
       })
 
       // Upload new cover if provided
@@ -503,6 +521,11 @@ const startUpload = async () => {
         release_type: state.value.albumForm.release_type,
         release_date: state.value.albumForm.release_date || undefined,
         label_name: state.value.albumForm.label_name || undefined,
+        // Purchase settings
+        purchasable: state.value.albumForm.purchasable,
+        price_cents: state.value.albumForm.price_cents,
+        pay_what_you_want: state.value.albumForm.pay_what_you_want,
+        minimum_price_cents: state.value.albumForm.minimum_price_cents,
       })
 
       // Upload and process cover art

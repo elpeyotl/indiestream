@@ -47,6 +47,11 @@ export interface AlbumForm {
   label_name: string
   p_line: string
   c_line: string
+  // Purchase settings
+  purchasable: boolean
+  price_cents: number | null
+  pay_what_you_want: boolean
+  minimum_price_cents: number | null
 }
 
 // Persistent state for the upload wizard (survives step navigation)
@@ -79,6 +84,11 @@ const defaultAlbumForm = (): AlbumForm => ({
   label_name: '',
   p_line: '',
   c_line: '',
+  // Purchase settings default to disabled
+  purchasable: false,
+  price_cents: null,
+  pay_what_you_want: false,
+  minimum_price_cents: null,
 })
 
 const defaultState = (): UploadWizardState => ({
@@ -397,6 +407,11 @@ export const useUploadWizard = () => {
         label_name: album.label_name || '',
         p_line: album.p_line || '',
         c_line: album.c_line || '',
+        // Purchase settings
+        purchasable: (album as any).purchasable || false,
+        price_cents: (album as any).price_cents || null,
+        pay_what_you_want: (album as any).pay_what_you_want || false,
+        minimum_price_cents: (album as any).minimum_price_cents || null,
       },
       coverFile: null, // Will use existing cover unless changed
       coverPreview: coverUrl,

@@ -146,6 +146,10 @@
         <DashboardArtistEarningsTab :band-id="band.id" />
       </template>
 
+      <template #sales>
+        <DashboardArtistSalesTab :band-id="band.id" />
+      </template>
+
       <template #settings>
         <DashboardArtistSettingsTab
           :band="band"
@@ -330,6 +334,7 @@ const tabs = [
   { label: 'Releases', slot: 'releases', icon: 'i-heroicons-musical-note' },
   { label: 'Analytics', slot: 'analytics', icon: 'i-heroicons-chart-bar' },
   { label: 'Earnings', slot: 'earnings', icon: 'i-heroicons-banknotes' },
+  { label: 'Sales', slot: 'sales', icon: 'i-heroicons-shopping-bag' },
   { label: 'Settings', slot: 'settings', icon: 'i-heroicons-cog-6-tooth' },
 ]
 
@@ -339,7 +344,8 @@ const tabSlotToIndex: Record<string, number> = {
   'releases': 0,
   'analytics': 1,
   'earnings': 2,
-  'settings': 3,
+  'sales': 3,
+  'settings': 4,
 }
 
 watch(currentTab, (newTab) => {

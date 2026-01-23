@@ -100,8 +100,12 @@ export type Database = {
           id: string
           is_published: boolean | null
           label_name: string | null
+          minimum_price_cents: number | null
           original_content_confirmed: boolean | null
           p_line: string | null
+          pay_what_you_want: boolean | null
+          price_cents: number | null
+          purchasable: boolean | null
           release_date: string | null
           release_type: Database["public"]["Enums"]["release_type"]
           rights_confirmed: boolean | null
@@ -126,8 +130,12 @@ export type Database = {
           id?: string
           is_published?: boolean | null
           label_name?: string | null
+          minimum_price_cents?: number | null
           original_content_confirmed?: boolean | null
           p_line?: string | null
+          pay_what_you_want?: boolean | null
+          price_cents?: number | null
+          purchasable?: boolean | null
           release_date?: string | null
           release_type?: Database["public"]["Enums"]["release_type"]
           rights_confirmed?: boolean | null
@@ -152,8 +160,12 @@ export type Database = {
           id?: string
           is_published?: boolean | null
           label_name?: string | null
+          minimum_price_cents?: number | null
           original_content_confirmed?: boolean | null
           p_line?: string | null
+          pay_what_you_want?: boolean | null
+          price_cents?: number | null
+          purchasable?: boolean | null
           release_date?: string | null
           release_type?: Database["public"]["Enums"]["release_type"]
           rights_confirmed?: boolean | null
@@ -1303,6 +1315,76 @@ export type Database = {
         }
         Relationships: []
       }
+      purchases: {
+        Row: {
+          album_id: string
+          amount_cents: number
+          artist_share_cents: number
+          band_id: string
+          completed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          platform_fee_cents: number
+          status: string
+          stripe_payment_intent_id: string
+          stripe_transfer_id: string | null
+          user_id: string
+        }
+        Insert: {
+          album_id: string
+          amount_cents: number
+          artist_share_cents: number
+          band_id: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          platform_fee_cents: number
+          status?: string
+          stripe_payment_intent_id: string
+          stripe_transfer_id?: string | null
+          user_id: string
+        }
+        Update: {
+          album_id?: string
+          amount_cents?: number
+          artist_share_cents?: number
+          band_id?: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          platform_fee_cents?: number
+          status?: string
+          stripe_payment_intent_id?: string
+          stripe_transfer_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_band_id_fkey"
+            columns: ["band_id"]
+            isOneToOne: false
+            referencedRelation: "bands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       revenue_distributions: {
         Row: {
           amount_cents: number
@@ -2037,19 +2119,17 @@ export const Constants = {
 export type Album = Database['public']['Tables']['albums']['Row']
 export type AlbumInsert = Database['public']['Tables']['albums']['Insert']
 export type AlbumUpdate = Database['public']['Tables']['albums']['Update']
-
 export type Band = Database['public']['Tables']['bands']['Row']
 export type BandInsert = Database['public']['Tables']['bands']['Insert']
 export type BandUpdate = Database['public']['Tables']['bands']['Update']
-
 export type Track = Database['public']['Tables']['tracks']['Row']
 export type TrackInsert = Database['public']['Tables']['tracks']['Insert']
 export type TrackUpdate = Database['public']['Tables']['tracks']['Update']
-
 export type TrackCredit = Database['public']['Tables']['track_credits']['Row']
 export type TrackCreditInsert = Database['public']['Tables']['track_credits']['Insert']
-export type TrackCreditUpdate = Database['public']['Tables']['track_credits']['Update']
-
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
+export type Purchase = Database['public']['Tables']['purchases']['Row']
+export type PurchaseInsert = Database['public']['Tables']['purchases']['Insert']
+export type PurchaseUpdate = Database['public']['Tables']['purchases']['Update']

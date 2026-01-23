@@ -101,6 +101,20 @@
         </div>
       </UFormGroup>
 
+      <!-- Purchase Settings -->
+      <UFormGroup label="Album Purchases" hint="Optional - let fans buy and download this album">
+        <PurchaseSettingsForm
+          :model-value="{
+            purchasable: state.albumForm.purchasable,
+            price_cents: state.albumForm.price_cents,
+            pay_what_you_want: state.albumForm.pay_what_you_want,
+            minimum_price_cents: state.albumForm.minimum_price_cents,
+          }"
+          :stripe-connected="stripeConnected"
+          @update:model-value="updatePurchaseSettings"
+        />
+      </UFormGroup>
+
       <!-- Validation Summary -->
       <div v-if="showValidationSummary" class="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
         <div class="flex items-start gap-3">
@@ -132,6 +146,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   bandName: string
+  stripeConnected?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -139,6 +154,19 @@ const emit = defineEmits<{
 }>()
 
 const { state, releaseTypes, setCoverFile, clearCoverFile } = useUploadWizard()
+
+// Update purchase settings
+const updatePurchaseSettings = (settings: {
+  purchasable: boolean
+  price_cents: number | null
+  pay_what_you_want: boolean
+  minimum_price_cents: number | null
+}) => {
+  state.value.albumForm.purchasable = settings.purchasable
+  state.value.albumForm.price_cents = settings.price_cents
+  state.value.albumForm.pay_what_you_want = settings.pay_what_you_want
+  state.value.albumForm.minimum_price_cents = settings.minimum_price_cents
+}
 
 // Cover input ref
 const coverInput = ref<HTMLInputElement>()

@@ -138,6 +138,31 @@
       </div>
     </div>
 
+    <!-- Purchase / Download Section -->
+    <div v-if="album.purchasable && !isOwnerOrAdmin" class="container mx-auto px-4 pb-8">
+      <div class="max-w-md">
+        <!-- Download Panel (if owned) -->
+        <AlbumDownloadPanel
+          v-if="purchaseStatus?.owned"
+          :album-id="album.id"
+          :purchase="purchaseStatus.purchase"
+        />
+        <!-- Purchase Card (if not owned) -->
+        <AlbumPurchaseCard
+          v-else
+          :album="{
+            id: album.id,
+            title: album.title,
+            price_cents: album.price_cents,
+            pay_what_you_want: album.pay_what_you_want,
+            minimum_price_cents: album.minimum_price_cents,
+          }"
+          :owned="purchaseStatus?.owned || false"
+          @purchased="handlePurchaseComplete"
+        />
+      </div>
+    </div>
+
     <!-- Track List -->
     <div class="container mx-auto px-4 pb-12">
       <div class="bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
@@ -372,6 +397,7 @@
 import { storeToRefs } from 'pinia'
 import type { Album, Track, TrackCredit } from '~/stores/album'
 import type { PlayerTrack } from '~/stores/player'
+import type { PurchaseStatus } from '~/stores/purchase'
 
 const route = useRoute()
 const albumStore = useAlbumStore()
@@ -385,7 +411,12 @@ const libraryStore = useLibraryStore()
 const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = libraryStore
 const userProfileStore = useUserProfileStore()
 const { isAdmin } = storeToRefs(userProfileStore)
+const purchaseStore = usePurchaseStore()
+const { fetchPurchaseStatus } = purchaseStore
 const user = useSupabaseUser()
+
+// Purchase status
+const purchaseStatus = ref<PurchaseStatus | null>(null)
 
 const otherAlbums = ref<Album[]>([])
 const coverUrl = ref<string | null>(null)
@@ -653,7 +684,7 @@ const loadTrackMetadata = async (trackIds: string[]) => {
 }
 
 // Load secondary data when album data is available
-watch(albumData, (data) => {
+watch(albumData, async (data) => {
   if (data?.album && data?.band) {
     // Load secondary data in background (don't block rendering)
     loadOtherAlbums(data.band.id, data.album.id)
@@ -664,6 +695,27 @@ watch(albumData, (data) => {
       const trackIds = data.album.tracks.map(t => t.id)
       loadTrackMetadata(trackIds)
     }
+
+    // Fetch purchase status if album is purchasable and user is logged in
+    if (data.album.purchasable && user.value && !data.isOwnerOrAdmin) {
+      purchaseStatus.value = await fetchPurchaseStatus(data.album.id)
+    }
   }
 }, { immediate: true })
+
+// Handle successful purchase
+const handlePurchaseComplete = async () => {
+  if (album.value) {
+    // Refresh purchase status
+    purchaseStatus.value = await fetchPurchaseStatus(album.value.id, true)
+  }
+}
+
+// Check for purchase query param (redirected from Stripe)
+onMounted(() => {
+  if (route.query.purchased === 'true' && album.value) {
+    // Payment completed via redirect, fetch updated status
+    handlePurchaseComplete()
+  }
+})
 </script>

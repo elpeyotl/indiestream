@@ -129,6 +129,16 @@ export interface NewReleaseEmailData {
   coverUrl?: string | null
 }
 
+export interface PurchaseConfirmationEmailData {
+  to: string
+  userName: string
+  albumTitle: string
+  artistName: string
+  amount: number
+  currency: string
+  downloadUrl: string
+}
+
 // Helper to render MJML templates to HTML
 export const renderEmailTemplate = (mjmlTemplate: string): string => {
   const { html, errors } = mjml2html(mjmlTemplate)
@@ -234,6 +244,17 @@ export const sendNewReleaseEmail = async (data: NewReleaseEmailData) => {
   return sendEmail({
     to: data.to,
     subject: `New Release: ${data.albumTitle} by ${data.bandName}`,
+    html,
+  })
+}
+
+export const sendPurchaseConfirmationEmail = async (data: PurchaseConfirmationEmailData) => {
+  const { getPurchaseConfirmationEmailTemplate } = await import('../emails/PurchaseConfirmationEmail')
+  const html = renderEmailTemplate(getPurchaseConfirmationEmailTemplate(data))
+
+  return sendEmail({
+    to: data.to,
+    subject: `Your purchase: ${data.albumTitle} by ${data.artistName}`,
     html,
   })
 }

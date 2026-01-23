@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { sendWelcomeEmail, sendSubscriptionConfirmedEmail, sendPaymentFailedEmail } from '~/server/utils/email'
+import { sendWelcomeEmail, sendSubscriptionConfirmedEmail, sendPaymentFailedEmail, sendPurchaseConfirmationEmail } from '~/server/utils/email'
 
 // Helper to safely convert Unix timestamp to ISO string
 const toISOString = (timestamp: number | undefined | null): string | null => {
@@ -231,6 +231,69 @@ export default defineEventHandler(async (event) => {
                 })
               } catch (emailError) {
                 console.error('Failed to send payment failed email:', emailError)
+              }
+            }
+          }
+        }
+        break
+      }
+
+      case 'payment_intent.succeeded': {
+        const paymentIntent = stripeEvent.data.object as Stripe.PaymentIntent
+
+        // Check if this is an album purchase
+        if (paymentIntent.metadata?.type === 'album_purchase') {
+          const userId = paymentIntent.metadata.supabase_user_id
+          const albumId = paymentIntent.metadata.album_id
+          const albumTitle = paymentIntent.metadata.album_title
+          const bandName = paymentIntent.metadata.band_name
+
+          console.log('Album purchase completed:', {
+            userId,
+            albumId,
+            paymentIntentId: paymentIntent.id,
+          })
+
+          // Update purchase status to completed
+          const { error: updateError } = await supabase
+            .from('purchases')
+            .update({
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('stripe_payment_intent_id', paymentIntent.id)
+
+          if (updateError) {
+            console.error('Failed to update purchase status:', updateError)
+          } else {
+            console.log('Purchase marked as completed')
+
+            // Send purchase confirmation email
+            if (userId) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('email, display_name')
+                .eq('id', userId)
+                .single()
+
+              if (profile?.email) {
+                const amount = paymentIntent.amount / 100
+                const currency = (paymentIntent.currency || 'chf').toUpperCase()
+                const config = useRuntimeConfig()
+
+                try {
+                  await sendPurchaseConfirmationEmail({
+                    to: profile.email,
+                    userName: profile.display_name || 'Music Lover',
+                    albumTitle: albumTitle || 'Album',
+                    artistName: bandName || 'Artist',
+                    amount,
+                    currency,
+                    downloadUrl: `${config.public.appUrl}/library/purchases`,
+                  })
+                } catch (emailError) {
+                  console.error('Failed to send purchase confirmation email:', emailError)
+                }
               }
             }
           }
