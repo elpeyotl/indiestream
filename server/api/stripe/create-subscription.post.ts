@@ -76,7 +76,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Create subscription with incomplete status
-    // The subscription will be activated when payment succeeds
+    // For trials, we use pending_setup_intent to collect payment method
+    // For non-trials, we'd use latest_invoice.payment_intent
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: body.priceId }],
@@ -84,21 +85,34 @@ export default defineEventHandler(async (event) => {
       payment_settings: {
         save_default_payment_method: 'on_subscription',
       },
-      expand: ['latest_invoice.payment_intent'],
+      expand: ['pending_setup_intent', 'latest_invoice.payment_intent'],
       trial_period_days: 7,
       metadata: {
         supabase_user_id: user.id,
       },
     })
 
-    // Get the client secret from the PaymentIntent on the first invoice
-    // When expanded, latest_invoice is an Invoice object with payment_intent as PaymentIntent
-    const invoice = subscription.latest_invoice as Stripe.Invoice & {
-      payment_intent: Stripe.PaymentIntent | null
-    }
-    const paymentIntent = invoice?.payment_intent
+    // With a trial, Stripe creates a SetupIntent (not PaymentIntent) since first charge is $0
+    // Without a trial, it creates a PaymentIntent
+    let clientSecret: string | null = null
 
-    if (!paymentIntent?.client_secret) {
+    // Check for SetupIntent (trial case)
+    const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null
+    if (setupIntent?.client_secret) {
+      clientSecret = setupIntent.client_secret
+    }
+
+    // Fallback to PaymentIntent (non-trial case)
+    if (!clientSecret) {
+      const invoice = subscription.latest_invoice as Stripe.Invoice & {
+        payment_intent: Stripe.PaymentIntent | null
+      }
+      if (invoice?.payment_intent?.client_secret) {
+        clientSecret = invoice.payment_intent.client_secret
+      }
+    }
+
+    if (!clientSecret) {
       throw createError({
         statusCode: 500,
         message: 'Failed to create payment intent for subscription',
@@ -107,7 +121,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       subscriptionId: subscription.id,
-      clientSecret: paymentIntent.client_secret,
+      clientSecret,
       trialEnd: subscription.trial_end,
     }
   } catch (error: any) {

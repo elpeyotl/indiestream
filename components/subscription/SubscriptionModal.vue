@@ -153,6 +153,7 @@ const processing = ref(false)
 const paymentReady = ref(false)
 const errorMessage = ref('')
 const subscriptionId = ref<string | null>(null)
+const isSetupIntent = ref(false) // true for trials, false for immediate charges
 
 // Stripe refs
 const paymentElementRef = ref<HTMLElement | null>(null)
@@ -172,6 +173,7 @@ const resetState = () => {
   paymentReady.value = false
   errorMessage.value = ''
   subscriptionId.value = null
+  isSetupIntent.value = false
   if (paymentElement) {
     paymentElement.destroy()
     paymentElement = null
@@ -203,6 +205,10 @@ const initiateSubscription = async () => {
     })
 
     subscriptionId.value = subId
+
+    // Detect if this is a SetupIntent (for trials) or PaymentIntent
+    // SetupIntent secrets start with 'seti_', PaymentIntent secrets start with 'pi_'
+    isSetupIntent.value = clientSecret.startsWith('seti_')
 
     // Load Stripe
     stripe = await loadStripe(config.public.stripePublishableKey)
@@ -256,7 +262,7 @@ const initiateSubscription = async () => {
   }
 }
 
-// Confirm payment
+// Confirm payment or setup
 const confirmPayment = async () => {
   if (!stripe || !elements) return
 
@@ -264,24 +270,48 @@ const confirmPayment = async () => {
   errorMessage.value = ''
 
   try {
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/subscription/success`,
-      },
-      redirect: 'if_required',
-    })
+    // For trials, we use confirmSetup (SetupIntent) since first charge is $0
+    // For immediate charges, we use confirmPayment (PaymentIntent)
+    if (isSetupIntent.value) {
+      const { error, setupIntent } = await stripe.confirmSetup({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/subscription/success`,
+        },
+        redirect: 'if_required',
+      })
 
-    if (error) {
-      errorMessage.value = error.message || 'Payment failed'
-    } else if (paymentIntent?.status === 'succeeded' || paymentIntent?.status === 'requires_capture') {
-      // Payment successful or trial started
-      isOpen.value = false
-      emit('subscribed')
+      if (error) {
+        errorMessage.value = error.message || 'Setup failed'
+      } else if (setupIntent?.status === 'succeeded') {
+        // Setup successful - trial started
+        isOpen.value = false
+        emit('subscribed')
 
-      // Refresh subscription status and redirect to success page
-      await subscriptionStore.fetchSubscription()
-      navigateTo('/subscription/success')
+        // Refresh subscription status and redirect to success page
+        await subscriptionStore.fetchSubscription()
+        navigateTo('/subscription/success')
+      }
+    } else {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/subscription/success`,
+        },
+        redirect: 'if_required',
+      })
+
+      if (error) {
+        errorMessage.value = error.message || 'Payment failed'
+      } else if (paymentIntent?.status === 'succeeded' || paymentIntent?.status === 'requires_capture') {
+        // Payment successful
+        isOpen.value = false
+        emit('subscribed')
+
+        // Refresh subscription status and redirect to success page
+        await subscriptionStore.fetchSubscription()
+        navigateTo('/subscription/success')
+      }
     }
   } catch (error: any) {
     console.error('Payment error:', error)
