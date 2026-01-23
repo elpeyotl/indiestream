@@ -156,6 +156,7 @@ const emit = defineEmits<{
 const config = useRuntimeConfig()
 const purchaseStore = usePurchaseStore()
 const user = useSupabaseUser()
+const haptics = useHaptics()
 
 // State
 const showPaymentForm = ref(false)
@@ -315,8 +316,10 @@ const confirmPayment = async () => {
 
     if (error) {
       errorMessage.value = error.message || 'Payment failed'
+      haptics.error()
     } else if (paymentIntent?.status === 'succeeded') {
       // Payment successful
+      haptics.success()
       purchaseStore.markPurchaseComplete(props.album.id)
       isOpen.value = false
       emit('purchased')

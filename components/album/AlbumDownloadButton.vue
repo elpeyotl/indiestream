@@ -24,6 +24,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const purchaseStore = usePurchaseStore()
+const haptics = useHaptics()
 const { loadingDownload } = storeToRefs(purchaseStore)
 const loading = computed(() => loadingDownload.value)
 
@@ -43,6 +44,7 @@ const downloadItems = computed(() => [
 ])
 
 const downloadAlbum = async (format: 'aac' | 'flac') => {
+  haptics.light()
   try {
     const downloadData = await purchaseStore.getDownloadUrls(props.albumId, format)
 
@@ -63,8 +65,10 @@ const downloadAlbum = async (format: 'aac' | 'flac') => {
         await new Promise((resolve) => setTimeout(resolve, 500))
       }
     }
+    haptics.success()
   } catch (error) {
     console.error('Failed to download:', error)
+    haptics.error()
   }
 }
 </script>

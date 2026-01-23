@@ -127,7 +127,7 @@
             <PlayAllButton :loading="loadingPlay" @click="playAll" />
             <UButton
               :color="isAlbumSaved(album.id) ? 'violet' : 'gray'"
-              :variant="isAlbumSaved(album.id) ? 'solid' : 'outline'"
+              :variant="isAlbumSaved(album.id) ? 'solid' : 'ghost'"
               size="lg"
               :loading="savingAlbum"
               @click="handleSaveAlbum"
@@ -428,6 +428,7 @@ const { isAdmin } = storeToRefs(userProfileStore)
 const purchaseStore = usePurchaseStore()
 const { fetchPurchaseStatus } = purchaseStore
 const user = useSupabaseUser()
+const haptics = useHaptics()
 
 // Purchase status
 const purchaseStatus = ref<PurchaseStatus | null>(null)
@@ -602,12 +603,14 @@ const isTrackPlaying = (track: Track) => {
 // Library actions
 const handleSaveAlbum = async () => {
   if (!album.value) return
+  haptics.success()
   savingAlbum.value = true
   await toggleAlbumSave(album.value.id, album.value.title)
   savingAlbum.value = false
 }
 
 const handleLikeTrack = async (trackId: string) => {
+  haptics.success()
   await toggleTrackLike(trackId)
 }
 

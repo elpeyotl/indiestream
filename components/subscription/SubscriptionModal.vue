@@ -145,6 +145,7 @@ const emit = defineEmits<{
 const config = useRuntimeConfig()
 const subscriptionStore = useSubscriptionStore()
 const user = useSupabaseUser()
+const haptics = useHaptics()
 
 // State
 const showPaymentForm = ref(false)
@@ -283,8 +284,10 @@ const confirmPayment = async () => {
 
       if (error) {
         errorMessage.value = error.message || 'Setup failed'
+        haptics.error()
       } else if (setupIntent?.status === 'succeeded') {
         // Setup successful - trial started
+        haptics.success()
         isOpen.value = false
         emit('subscribed')
 
@@ -303,8 +306,10 @@ const confirmPayment = async () => {
 
       if (error) {
         errorMessage.value = error.message || 'Payment failed'
+        haptics.error()
       } else if (paymentIntent?.status === 'succeeded' || paymentIntent?.status === 'requires_capture') {
         // Payment successful
+        haptics.success()
         isOpen.value = false
         emit('subscribed')
 

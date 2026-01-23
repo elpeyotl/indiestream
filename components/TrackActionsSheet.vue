@@ -139,6 +139,7 @@ const { addNextInQueue, addToQueue } = playerStore
 const libraryStore = useLibraryStore()
 const { isTrackLiked, toggleTrackLike } = libraryStore
 const toast = useToast()
+const haptics = useHaptics()
 
 const showPlaylistPicker = ref(false)
 const showReportModal = ref(false)
@@ -150,6 +151,7 @@ const close = () => {
 }
 
 const handlePlayNext = async () => {
+  haptics.light()
   await addNextInQueue(props.track)
   toast.add({
     title: 'Playing Next',
@@ -160,6 +162,7 @@ const handlePlayNext = async () => {
 }
 
 const handleAddToQueue = async () => {
+  haptics.light()
   await addToQueue(props.track)
   toast.add({
     title: 'Added to Queue',
@@ -170,6 +173,7 @@ const handleAddToQueue = async () => {
 }
 
 const handleToggleLike = async () => {
+  haptics.success()
   await toggleTrackLike(props.track.id)
   close()
 }

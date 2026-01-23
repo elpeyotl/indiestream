@@ -22,7 +22,7 @@
               color="gray"
               variant="ghost"
               size="lg"
-              @click="isExpanded = false"
+              @click="handleExpandToggle(false)"
             >
               <UIcon name="i-heroicons-chevron-down" class="w-6 h-6" />
             </UButton>
@@ -65,7 +65,7 @@
               <NuxtLink
                 :to="`/${currentTrack.artistSlug}`"
                 class="text-lg text-violet-400 hover:text-violet-300"
-                @click="isExpanded = false"
+                @click="handleExpandToggle(false)"
               >
                 {{ currentTrack.artist }}
               </NuxtLink>
@@ -119,7 +119,7 @@
               class="w-full max-w-sm mb-6 p-4 bg-zinc-800/50 rounded-xl text-center"
             >
               <p class="text-zinc-300 mb-3">Want to hear the full track?</p>
-              <UButton color="violet" to="/register" @click="isExpanded = false">
+              <UButton color="violet" to="/register" @click="handleExpandToggle(false)">
                 Sign up for free
               </UButton>
             </div>
@@ -130,7 +130,7 @@
               class="w-full max-w-sm mb-6 p-4 bg-zinc-800/50 rounded-xl text-center"
             >
               <p class="text-zinc-300 mb-3">You've used your free tracks this month</p>
-              <UButton color="violet" to="/pricing" @click="isExpanded = false">
+              <UButton color="violet" to="/pricing" @click="handleExpandToggle(false)">
                 Subscribe for unlimited
               </UButton>
             </div>
@@ -143,7 +143,7 @@
                 variant="ghost"
                 size="lg"
                 :class="{ '!text-violet-400': shuffleEnabled }"
-                @click="toggleShuffle"
+                @click="handleShuffleClick"
               >
                 <UIcon name="i-lucide-shuffle" class="w-6 h-6" :class="{ '!text-violet-400': shuffleEnabled }" />
               </UButton>
@@ -163,7 +163,7 @@
                 size="xl"
                 class="rounded-full w-16 h-16"
                 :loading="isLoading"
-                @click="togglePlay"
+                @click="handlePlayPause"
               >
                 <UIcon
                   :name="isPlaying ? 'i-heroicons-pause-solid' : 'i-heroicons-play-solid'"
@@ -189,7 +189,7 @@
                 size="lg"
                 class="relative"
                 :class="{ '!text-violet-400': repeatMode !== 'off' }"
-                @click="cycleRepeatMode"
+                @click="handleRepeatClick"
               >
                 <UIcon name="i-heroicons-arrow-path" class="w-6 h-6" :class="{ '!text-violet-400': repeatMode !== 'off' }" />
                 <span
@@ -322,7 +322,7 @@
         <div class="container mx-auto px-4">
           <div
             class="flex items-center gap-2 sm:gap-4 h-16 md:h-20 cursor-pointer"
-            @click="isExpanded = true"
+            @click="handleExpandToggle(true)"
           >
             <!-- Track Info -->
             <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -582,6 +582,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 
+const haptics = useHaptics()
 const user = useSupabaseUser()
 const subscriptionStore = useSubscriptionStore()
 const { freePlaysRemaining, isSubscribed } = storeToRefs(subscriptionStore)
@@ -693,15 +694,32 @@ const onTouchEnd = (e: TouchEvent) => {
   }
 }
 
-// Button click handlers (set direction before navigation)
+// Button click handlers with haptic feedback
+const handlePlayPause = () => {
+  haptics.light()
+  togglePlay()
+}
+
 const handlePreviousClick = () => {
+  haptics.light()
   slideDirection.value = 'right'
   playPrevious()
 }
 
 const handleNextClick = () => {
+  haptics.light()
   slideDirection.value = 'left'
   playNext()
+}
+
+const handleShuffleClick = () => {
+  haptics.selection()
+  toggleShuffle()
+}
+
+const handleRepeatClick = () => {
+  haptics.selection()
+  cycleRepeatMode()
 }
 
 // Heart/favorite functionality
@@ -712,13 +730,20 @@ const isCurrentTrackLiked = computed(() => {
 
 const handleHeartClick = async () => {
   if (!currentTrack.value?.id) return
+  haptics.success()
   await toggleTrackLike(currentTrack.value.id)
 }
 
 const handleQueueItemClick = (index: number) => {
   if (index !== queueIndex.value) {
+    haptics.light()
     playFromQueue(index)
   }
+}
+
+const handleExpandToggle = (expand: boolean) => {
+  haptics.light()
+  isExpanded.value = expand
 }
 
 const volumeIcon = computed(() => {
