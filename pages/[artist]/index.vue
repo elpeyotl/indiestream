@@ -519,6 +519,8 @@ const loadingFollow = ref(false)
 const albumCovers = ref<Record<string, string>>({})
 
 // Fetch artist data using useLazyAsyncData
+// Note: server: false is required because RLS policies check auth.uid() which is NULL during SSR
+// Without this, pending bands (awaiting approval) won't be visible on hard reload for owners
 const { data: band, pending: loading, refresh: refreshBand } = await useLazyAsyncData(
   `artist-${route.params.artist}`,
   async () => {
@@ -531,6 +533,7 @@ const { data: band, pending: loading, refresh: refreshBand } = await useLazyAsyn
   },
   {
     watch: [() => route.params.artist],
+    server: false, // Client-only to ensure user session is available for RLS
   }
 )
 

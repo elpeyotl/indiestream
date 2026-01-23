@@ -431,6 +431,8 @@ const selectedTrack = ref<PlayerTrack | null>(null)
 const otherAlbumCovers = ref<Record<string, string>>({})
 
 // Fetch album data using useLazyAsyncData
+// Note: server: false is required because RLS policies check auth.uid() which is NULL during SSR
+// Without this, pending bands (awaiting approval) or owner-only content won't be visible on hard reload
 const { data: albumData, pending: loading, refresh: refreshAlbum } = await useLazyAsyncData(
   `album-${route.params.artist}-${route.params.album}`,
   async () => {
@@ -472,6 +474,7 @@ const { data: albumData, pending: loading, refresh: refreshAlbum } = await useLa
   },
   {
     watch: [() => route.params.artist, () => route.params.album],
+    server: false, // Client-only to ensure user session is available for RLS
   }
 )
 
