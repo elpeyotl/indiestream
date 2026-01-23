@@ -562,6 +562,10 @@ const {
   unsubscribeFromRealtime,
 } = notificationsStore
 
+// Purchases (Pinia store) - for owned album badges
+const purchaseStore = usePurchaseStore()
+const { fetchPurchases } = purchaseStore
+
 // Fetch unread count on mount and when user changes, subscribe to realtime
 // Only run on client-side to avoid SSR auth session issues
 if (import.meta.client) {
@@ -569,8 +573,11 @@ if (import.meta.client) {
     if (newUser) {
       await fetchUnreadCount();
       subscribeToRealtime();
+      // Fetch purchases for owned album badges (fire and forget)
+      fetchPurchases().catch(() => {})
     } else {
       unsubscribeFromRealtime();
+      purchaseStore.reset();
     }
   }, { immediate: true });
 }

@@ -23,49 +23,14 @@
       </div>
       <!-- Content -->
       <div v-else-if="newReleases.length > 0" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        <NuxtLink
+        <AlbumCard
           v-for="album in newReleases"
           :key="album.id"
-          :to="`/${album.band?.slug}/${album.slug}`"
-          class="group card-interactive"
-        >
-          <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl group-hover:shadow-violet-500/20 transition-all duration-300">
-            <div class="absolute inset-0">
-              <NuxtImg
-                v-if="albumCovers[album.id]"
-                :src="albumCovers[album.id]"
-                :alt="album.title"
-                :width="256"
-                :height="256"
-                format="webp"
-                loading="lazy"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div v-else class="w-full h-full flex items-center justify-center">
-                <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
-              </div>
-            </div>
-            <!-- Play button overlay -->
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-              <div class="absolute bottom-2 right-2">
-                <UButton
-                  color="violet"
-                  size="lg"
-                  :icon="loadingPlayId === album.id ? undefined : 'i-heroicons-play-solid'"
-                  :loading="loadingPlayId === album.id"
-                  :ui="{ rounded: 'rounded-full', padding: { lg: 'p-3' } }"
-                  class="shadow-lg"
-                  @click.prevent.stop="playAlbum(album)"
-                />
-              </div>
-            </div>
-          </div>
-          <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ album.title }}</p>
-          <p class="text-sm text-zinc-400 truncate">{{ album.band?.name }}</p>
-          <p class="text-xs text-zinc-500">
-            {{ album.release_type === 'ep' ? 'EP' : album.release_type === 'single' ? 'Single' : 'Album' }}
-          </p>
-        </NuxtLink>
+          :album="album"
+          :cover-url="albumCovers[album.id]"
+          :loading="loadingPlayId === album.id"
+          @play="playAlbum"
+        />
       </div>
     </section>
 
