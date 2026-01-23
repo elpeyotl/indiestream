@@ -121,6 +121,7 @@ export default defineEventHandler(async (event) => {
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const subscription = stripeEvent.data.object as any
+        const isCreated = stripeEvent.type === 'customer.subscription.created'
 
         // Try to get userId from metadata first, otherwise look up by subscription ID
         let userId = subscription.metadata?.supabase_user_id
@@ -142,7 +143,9 @@ export default defineEventHandler(async (event) => {
           await supabase.from('subscriptions').upsert({
             user_id: userId,
             stripe_subscription_id: subscription.id,
+            stripe_customer_id: subscription.customer,
             status: subscription.status,
+            plan: 'listener',
             current_period_start: toISOString(subscription.current_period_start || subscription.trial_start),
             current_period_end: toISOString(periodEnd),
             cancel_at_period_end: subscription.cancel_at_period_end,
@@ -154,6 +157,50 @@ export default defineEventHandler(async (event) => {
             cancel_at_period_end: subscription.cancel_at_period_end,
             current_period_end: toISOString(periodEnd),
           })
+
+          // Send welcome/confirmation emails for new subscriptions (trialing or active)
+          if (isCreated && (subscription.status === 'trialing' || subscription.status === 'active')) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email, display_name')
+              .eq('id', userId)
+              .single()
+
+            if (profile?.email) {
+              const periodEndDate = periodEnd
+                ? new Date(periodEnd * 1000).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : ''
+
+              const isTrial = subscription.status === 'trialing'
+
+              try {
+                // Send welcome email
+                await sendWelcomeEmail({
+                  to: profile.email,
+                  userName: profile.display_name || 'Listener',
+                  subscriptionTier: 'listener',
+                })
+
+                // Send subscription confirmation
+                await sendSubscriptionConfirmedEmail({
+                  to: profile.email,
+                  userName: profile.display_name || 'Listener',
+                  tier: isTrial ? 'Listener (7-day trial)' : 'Listener',
+                  amount: 9.99,
+                  currency: 'USD',
+                  periodEnd: periodEndDate,
+                })
+
+                console.log('Sent subscription emails to:', profile.email)
+              } catch (emailError) {
+                console.error('Failed to send subscription emails:', emailError)
+              }
+            }
+          }
         }
         break
       }
