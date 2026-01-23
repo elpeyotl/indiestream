@@ -264,7 +264,7 @@
           <div class="flex gap-2">
             <UButton
               color="gray"
-              variant="outline"
+              variant="ghost"
               size="sm"
               class="flex-1"
               @click="$emit('add-credit')"
@@ -272,26 +272,28 @@
               <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-1" />
               Add Credit
             </UButton>
-            <UButton
-              v-if="canCopyCredits"
-              color="gray"
-              variant="outline"
-              size="sm"
-              @click="$emit('copy-credits')"
-            >
-              <UIcon name="i-heroicons-clipboard-document" class="w-4 h-4 mr-1" />
-              Copy
-            </UButton>
-            <UButton
-              v-if="hasCopiedCredits"
-              color="violet"
-              variant="outline"
-              size="sm"
-              @click="$emit('paste-credits')"
-            >
-              <UIcon name="i-heroicons-clipboard-document-check" class="w-4 h-4 mr-1" />
-              Paste
-            </UButton>
+            <UTooltip v-if="canCopyCredits" text="Copy credits to paste on other tracks" :popper="{ placement: 'top' }" :ui="{ background: 'bg-zinc-800', color: 'text-zinc-200' }">
+              <UButton
+                color="gray"
+                variant="ghost"
+                size="sm"
+                @click="$emit('copy-credits')"
+              >
+                <UIcon name="i-heroicons-clipboard-document" class="w-4 h-4 mr-1" />
+                Copy Credits
+              </UButton>
+            </UTooltip>
+            <UTooltip v-if="hasCopiedCredits" text="Paste copied credits to this track" :popper="{ placement: 'top' }" :ui="{ background: 'bg-zinc-800', color: 'text-zinc-200' }">
+              <UButton
+                color="violet"
+                variant="ghost"
+                size="sm"
+                @click="$emit('paste-credits')"
+              >
+                <UIcon name="i-heroicons-clipboard-document-check" class="w-4 h-4 mr-1" />
+                Paste Credits
+              </UButton>
+            </UTooltip>
           </div>
         </div>
       </div>
