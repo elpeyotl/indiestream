@@ -166,7 +166,7 @@
                 @click="togglePlay"
               >
                 <UIcon
-                  :name="isPlaying ? 'i-heroicons-pause' : 'i-heroicons-play'"
+                  :name="isPlaying ? 'i-heroicons-pause-solid' : 'i-heroicons-play-solid'"
                   class="w-8 h-8"
                   :class="isPlaying ? 'mr-0.5' : 'ml-1.5'"
                 />
@@ -391,7 +391,7 @@
                 @click.stop="togglePlay"
               >
                 <UIcon
-                  :name="isPlaying ? 'i-heroicons-pause' : 'i-heroicons-play'"
+                  :name="isPlaying ? 'i-heroicons-pause-solid' : 'i-heroicons-play-solid'"
                   class="w-5 h-5 sm:w-6 sm:h-6"
                   :class="isPlaying ? 'ml-0.5' : 'ml-1'"
                 />
