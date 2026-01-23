@@ -187,7 +187,7 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   // Check play allowance and set up preview/free play mode
-  const checkPlayAllowance = async (trackId?: string): Promise<'full' | 'free' | 'preview' | 'own_music'> => {
+  const checkPlayAllowance = async (trackId?: string): Promise<'full' | 'free' | 'preview' | 'own_music' | 'purchased'> => {
     if (!user.value) {
       return 'preview'
     }
@@ -204,6 +204,10 @@ export const usePlayerStore = defineStore('player', () => {
         })
         if ('isOwnMusic' in result && result.isOwnMusic) {
           return 'own_music'
+        }
+        // Check if user purchased the album
+        if ('isPurchased' in result && result.isPurchased) {
+          return 'purchased'
         }
       } catch (e) {
         console.error('Failed to check track ownership:', e)
@@ -241,7 +245,8 @@ export const usePlayerStore = defineStore('player', () => {
       isPreviewMode.value = false
       isFreePlay.value = true
       getSubscriptionStore().useFreePlays()
-    } else if (playType === 'own_music') {
+    } else if (playType === 'own_music' || playType === 'purchased') {
+      // Own music and purchased albums get full access without consuming free plays
       isPreviewMode.value = false
       isFreePlay.value = false
     } else {
