@@ -129,7 +129,8 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
             id,
             name,
             slug,
-            avatar_key
+            avatar_key,
+            owner_id
           )
         )
       )
@@ -172,13 +173,20 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
   }>()
 
   let totalListeningSeconds = 0
+  let totalStreams = 0
 
   for (const listen of listeningData) {
     const band = listen.tracks.albums.bands
     const bandId = band.id
     const duration = listen.duration_seconds || 0
 
+    // Skip if this is the user's own band
+    if (band.owner_id === user.id) {
+      continue
+    }
+
     totalListeningSeconds += duration
+    totalStreams += 1
 
     if (!bandListening.has(bandId)) {
       bandListening.set(bandId, {
@@ -240,7 +248,7 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
     cmoFeeCents,
     platformFeeCents,
     totalListeningSeconds,
-    totalStreams: listeningData.length,
+    totalStreams,
     monthsSubscribed,
     artistBreakdown,
   }
