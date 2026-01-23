@@ -192,9 +192,13 @@ export const usePlayerStore = defineStore('player', () => {
       return 'preview'
     }
 
-    // Ensure subscription data is loaded before checking
+    // Only fetch subscription data if not already loaded
+    // We check freeTierStatus to avoid refetching on every track - trust local state
+    // to prevent race conditions (local decrement vs server-side 30s stream recording)
     const subStore = getSubscriptionStore()
-    await subStore.fetchSubscription()
+    if (subStore.freeTierStatus === null) {
+      await subStore.fetchSubscription()
+    }
 
     if (trackId) {
       try {
