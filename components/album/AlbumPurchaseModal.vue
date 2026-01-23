@@ -1,116 +1,133 @@
 <template>
-  <div class="bg-zinc-900/50 rounded-xl border border-zinc-800 p-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold text-zinc-100">Buy this album</h3>
-      <UBadge color="green" variant="subtle">
-        85% to artist
-      </UBadge>
-    </div>
-
-    <!-- Price Display -->
-    <div v-if="!showPaymentForm" class="mb-6">
-      <div v-if="album.pay_what_you_want" class="space-y-4">
-        <p class="text-sm text-zinc-400">
-          Name your price (minimum {{ formatPrice(minimumPrice) }})
-        </p>
-        <div class="flex items-center gap-2">
-          <span class="text-zinc-400">CHF</span>
-          <UInput
-            v-model="customPrice"
-            type="number"
-            :min="minimumPrice / 100"
-            step="0.50"
-            size="lg"
-            class="w-32"
-            :ui="{ base: 'text-xl font-bold text-center' }"
+  <USlideover v-model="isOpen" :ui="{ width: 'max-w-md' }">
+    <div class="p-6">
+      <!-- Header -->
+      <div class="flex items-start gap-4 mb-6">
+        <!-- Album Cover -->
+        <div class="w-20 h-20 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
+          <NuxtImg
+            v-if="coverUrl"
+            :src="coverUrl"
+            :alt="album.title"
+            :width="80"
+            :height="80"
+            format="webp"
+            class="w-full h-full object-cover"
           />
         </div>
-      </div>
-      <div v-else class="text-3xl font-bold text-zinc-100">
-        {{ formatPrice(album.price_cents || 0) }}
-      </div>
-    </div>
-
-    <!-- Purchase Button (initial state) -->
-    <UButton
-      v-if="!showPaymentForm"
-      color="violet"
-      size="lg"
-      block
-      :loading="loading"
-      :disabled="!canPurchase"
-      @click="initiatePurchase"
-    >
-      <UIcon name="i-heroicons-credit-card" class="w-5 h-5 mr-2" />
-      Buy Now
-    </UButton>
-
-    <!-- Stripe Payment Form -->
-    <div v-if="showPaymentForm" class="space-y-4">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-sm text-zinc-400">Total</span>
-        <span class="text-lg font-semibold text-zinc-100">
-          {{ formatPrice(purchaseAmount) }}
-        </span>
+        <div class="min-w-0">
+          <h3 class="text-lg font-semibold text-zinc-100 truncate">{{ album.title }}</h3>
+          <p class="text-sm text-zinc-400 truncate">{{ artistName }}</p>
+          <UBadge color="green" variant="subtle" size="xs" class="mt-2">
+            85% to artist
+          </UBadge>
+        </div>
       </div>
 
-      <!-- Stripe Elements Container -->
-      <div
-        ref="paymentElementRef"
-        class="p-4 bg-zinc-950 rounded-lg border border-zinc-800"
-      />
-
-      <!-- Error Message -->
-      <p v-if="errorMessage" class="text-sm text-red-400">
-        {{ errorMessage }}
-      </p>
-
-      <!-- Action Buttons -->
-      <div class="flex gap-3">
-        <UButton
-          color="gray"
-          variant="outline"
-          size="lg"
-          :disabled="processing"
-          @click="cancelPayment"
-        >
-          Cancel
-        </UButton>
-        <UButton
-          color="violet"
-          size="lg"
-          class="flex-1"
-          :loading="processing"
-          :disabled="!paymentReady"
-          @click="confirmPayment"
-        >
-          <UIcon name="i-heroicons-lock-closed" class="w-4 h-4 mr-2" />
-          Pay {{ formatPrice(purchaseAmount) }}
-        </UButton>
+      <!-- Price Display -->
+      <div v-if="!showPaymentForm" class="mb-6">
+        <div v-if="album.pay_what_you_want" class="space-y-3">
+          <p class="text-sm text-zinc-400">
+            Name your price (minimum {{ formatPrice(minimumPrice) }})
+          </p>
+          <div class="flex items-center gap-2">
+            <span class="text-zinc-400">CHF</span>
+            <UInput
+              v-model="customPrice"
+              type="number"
+              :min="minimumPrice / 100"
+              step="0.50"
+              size="lg"
+              class="w-32"
+              :ui="{ base: 'text-xl font-bold text-center' }"
+            />
+          </div>
+        </div>
+        <div v-else class="text-center">
+          <div class="text-3xl font-bold text-zinc-100">
+            {{ formatPrice(album.price_cents || 0) }}
+          </div>
+        </div>
       </div>
 
-      <!-- Security Note -->
-      <p class="text-xs text-zinc-500 text-center">
-        <UIcon name="i-heroicons-shield-check" class="w-3 h-3 inline mr-1" />
-        Secure payment powered by Stripe
-      </p>
-    </div>
-
-    <!-- Already Owned State -->
-    <div v-if="owned" class="text-center py-4">
-      <UIcon name="i-heroicons-check-circle" class="w-12 h-12 text-green-500 mx-auto mb-2" />
-      <p class="text-zinc-100 font-medium">You own this album</p>
-      <p class="text-sm text-zinc-400 mt-1">Download in FLAC or AAC format anytime</p>
-      <NuxtLink
-        to="/library/purchases"
-        class="mt-3 inline-flex items-center gap-1 text-violet-400 hover:text-violet-300 text-sm"
+      <!-- Purchase Button (initial state) -->
+      <UButton
+        v-if="!showPaymentForm"
+        color="violet"
+        size="lg"
+        block
+        :loading="loading"
+        :disabled="!canPurchase"
+        @click="initiatePurchase"
       >
-        <UIcon name="i-heroicons-arrow-down-tray" class="w-4 h-4" />
-        Go to downloads
-      </NuxtLink>
+        <UIcon name="i-heroicons-credit-card" class="w-5 h-5 mr-2" />
+        Continue to Payment
+      </UButton>
+
+      <!-- Stripe Payment Form -->
+      <div v-if="showPaymentForm" class="space-y-4">
+        <div class="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+          <span class="text-sm text-zinc-400">Total</span>
+          <span class="text-lg font-semibold text-zinc-100">
+            {{ formatPrice(purchaseAmount) }}
+          </span>
+        </div>
+
+        <!-- Stripe Elements Container -->
+        <div
+          ref="paymentElementRef"
+          class="p-4 bg-zinc-950 rounded-lg border border-zinc-800"
+        />
+
+        <!-- Error Message -->
+        <p v-if="errorMessage" class="text-sm text-red-400">
+          {{ errorMessage }}
+        </p>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3">
+          <UButton
+            color="gray"
+            variant="outline"
+            size="lg"
+            :disabled="processing"
+            @click="cancelPayment"
+          >
+            Back
+          </UButton>
+          <UButton
+            color="violet"
+            size="lg"
+            class="flex-1"
+            :loading="processing"
+            :disabled="!paymentReady"
+            @click="confirmPayment"
+          >
+            <UIcon name="i-heroicons-lock-closed" class="w-4 h-4 mr-2" />
+            Pay {{ formatPrice(purchaseAmount) }}
+          </UButton>
+        </div>
+
+        <!-- Security Note -->
+        <p class="text-xs text-zinc-500 text-center">
+          <UIcon name="i-heroicons-shield-check" class="w-3 h-3 inline mr-1" />
+          Secure payment powered by Stripe
+        </p>
+      </div>
+
+      <!-- Close button when not in payment -->
+      <UButton
+        v-if="!showPaymentForm"
+        color="gray"
+        variant="ghost"
+        block
+        class="mt-3"
+        @click="isOpen = false"
+      >
+        Cancel
+      </UButton>
     </div>
-  </div>
+  </USlideover>
 </template>
 
 <script setup lang="ts">
@@ -124,12 +141,13 @@ interface Props {
     pay_what_you_want: boolean | null
     minimum_price_cents: number | null
   }
-  owned?: boolean
+  artistName: string
+  coverUrl?: string | null
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  owned: false,
-})
+const props = defineProps<Props>()
+
+const isOpen = defineModel<boolean>({ default: false })
 
 const emit = defineEmits<{
   (e: 'purchased'): void
@@ -165,7 +183,6 @@ const minimumPrice = computed(() => {
 
 const canPurchase = computed(() => {
   if (!user.value) return false
-  if (props.owned) return false
 
   if (props.album.pay_what_you_want) {
     const price = parseFloat(customPrice.value) * 100
@@ -175,12 +192,28 @@ const canPurchase = computed(() => {
   return (props.album.price_cents || 0) >= 100
 })
 
-// Initialize custom price with minimum
-onMounted(() => {
-  if (props.album.pay_what_you_want) {
+// Initialize custom price with minimum when opening
+watch(isOpen, (open) => {
+  if (open && props.album.pay_what_you_want) {
     customPrice.value = (minimumPrice.value / 100).toFixed(2)
   }
+  if (!open) {
+    // Reset state when closing
+    resetState()
+  }
 })
+
+const resetState = () => {
+  showPaymentForm.value = false
+  paymentReady.value = false
+  errorMessage.value = ''
+  if (paymentElement) {
+    paymentElement.destroy()
+    paymentElement = null
+  }
+  elements = null
+  stripe = null
+}
 
 // Format price for display
 const formatPrice = (cents: number): string => {
@@ -190,6 +223,7 @@ const formatPrice = (cents: number): string => {
 // Initialize Stripe and create PaymentIntent
 const initiatePurchase = async () => {
   if (!user.value) {
+    isOpen.value = false
     navigateTo('/login')
     return
   }
@@ -285,20 +319,16 @@ const confirmPayment = async () => {
     } else if (paymentIntent?.status === 'succeeded') {
       // Payment successful
       purchaseStore.markPurchaseComplete(props.album.id)
-      showPaymentForm.value = false
+      isOpen.value = false
       emit('purchased')
 
-      // Show success toast with link to downloads
+      // Show success toast
       toast.add({
         title: 'Purchase successful!',
         description: 'Your album is ready to download.',
         icon: 'i-heroicons-check-circle',
         color: 'green',
         timeout: 8000,
-        actions: [{
-          label: 'Go to downloads',
-          click: () => navigateTo('/library/purchases'),
-        }],
       })
     }
   } catch (error: any) {
@@ -309,7 +339,7 @@ const confirmPayment = async () => {
   }
 }
 
-// Cancel payment
+// Cancel payment (go back to price view)
 const cancelPayment = () => {
   if (paymentElement) {
     paymentElement.destroy()

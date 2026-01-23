@@ -115,7 +115,7 @@
           </p>
 
           <!-- Actions -->
-          <div class="flex gap-3">
+          <div class="flex flex-wrap gap-3">
             <PlayAllButton :loading="loadingPlay" @click="playAll" />
             <UButton
               :color="isAlbumSaved(album.id) ? 'violet' : 'gray'"
@@ -130,36 +130,26 @@
               />
               {{ isAlbumSaved(album.id) ? 'Saved' : 'Save' }}
             </UButton>
+            <!-- Buy Button (if purchasable and not owned) -->
+            <UButton
+              v-if="album.purchasable && !isOwnerOrAdmin && !purchaseStatus?.owned"
+              color="green"
+              size="lg"
+              @click="showPurchaseModal = true"
+            >
+              <UIcon name="i-heroicons-shopping-cart" class="w-5 h-5 mr-1" />
+              Buy {{ formatPrice(album.price_cents || 0) }}
+            </UButton>
+            <!-- Download Button (if owned) -->
+            <AlbumDownloadButton
+              v-if="album.purchasable && purchaseStatus?.owned"
+              :album-id="album.id"
+            />
             <UButton color="gray" variant="ghost" size="lg">
               <UIcon name="i-heroicons-share" class="w-5 h-5" />
             </UButton>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Purchase / Download Section -->
-    <div v-if="album.purchasable && !isOwnerOrAdmin" class="container mx-auto px-4 pb-8">
-      <div class="max-w-md">
-        <!-- Download Panel (if owned) -->
-        <AlbumDownloadPanel
-          v-if="purchaseStatus?.owned"
-          :album-id="album.id"
-          :purchase="purchaseStatus.purchase"
-        />
-        <!-- Purchase Card (if not owned) -->
-        <AlbumPurchaseCard
-          v-else
-          :album="{
-            id: album.id,
-            title: album.title,
-            price_cents: album.price_cents,
-            pay_what_you_want: album.pay_what_you_want,
-            minimum_price_cents: album.minimum_price_cents,
-          }"
-          :owned="purchaseStatus?.owned || false"
-          @purchased="handlePurchaseComplete"
-        />
       </div>
     </div>
 
@@ -390,6 +380,22 @@
       v-model="showActionsSheet"
       :track="selectedTrack"
     />
+
+    <!-- Purchase Modal -->
+    <AlbumPurchaseModal
+      v-if="album?.purchasable"
+      v-model="showPurchaseModal"
+      :album="{
+        id: album.id,
+        title: album.title,
+        price_cents: album.price_cents,
+        pay_what_you_want: album.pay_what_you_want,
+        minimum_price_cents: album.minimum_price_cents,
+      }"
+      :artist-name="band?.name || ''"
+      :cover-url="coverUrl"
+      @purchased="handlePurchaseComplete"
+    />
   </div>
 </template>
 
@@ -429,6 +435,12 @@ const expandedTrack = ref<string | null>(null)
 const showActionsSheet = ref(false)
 const selectedTrack = ref<PlayerTrack | null>(null)
 const otherAlbumCovers = ref<Record<string, string>>({})
+const showPurchaseModal = ref(false)
+
+// Format price for display
+const formatPrice = (cents: number): string => {
+  return `CHF ${(cents / 100).toFixed(2)}`
+}
 
 // Fetch album data using useLazyAsyncData
 // Note: server: false is required because RLS policies check auth.uid() which is NULL during SSR
