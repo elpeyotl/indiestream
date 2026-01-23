@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.21.1] - 2026-01-23
+
+### Fixed
+- **Admin Realtime Counts**: Added 30-second polling fallback for admin counts since Supabase realtime doesn't work reliably with RLS policies across browser sessions
+- **Admin Tab Selection**: Fixed URL query param `?tab=artist-approvals` not selecting the correct tab on page load (was initializing to 0 before reading query param)
+
+### Added
+- **DMCA URL Validation**: DMCA takedown form now validates that the infringing content URL is a valid Fairtune URL (fairtune.fm, www.fairtune.fm, dev.fairtune.fm)
+
 ## [0.21.0] - 2026-01-22
 
 ### Added

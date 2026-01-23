@@ -124,15 +124,16 @@
             <!-- Infringing Content -->
             <div>
               <h3 class="text-lg font-semibold text-zinc-100 mb-4">Infringing Content</h3>
-              <UFormGroup label="URL of Infringing Content" required>
+              <UFormGroup label="URL of Infringing Content" required :error="urlError">
                 <UInput
                   v-model="form.infringing_url"
                   type="url"
                   placeholder="https://fairtune.fm/artist/album"
                   size="lg"
+                  :color="urlError ? 'red' : undefined"
                 />
                 <template #hint>
-                  The direct link to the content on Fairtune that you believe infringes your copyright
+                  <span v-if="!urlError">The direct link to the content on Fairtune that you believe infringes your copyright</span>
                 </template>
               </UFormGroup>
             </div>
@@ -281,6 +282,31 @@ const submitting = ref(false)
 const submitted = ref(false)
 const submittedId = ref('')
 
+// Validate that URL is a Fairtune URL
+const isFairtuneUrl = (url: string): boolean => {
+  if (!url.trim()) return false
+  try {
+    const parsed = new URL(url)
+    const validHosts = ['fairtune.fm', 'www.fairtune.fm', 'dev.fairtune.fm']
+    // Also allow localhost for development
+    if (import.meta.dev) {
+      validHosts.push('localhost', '127.0.0.1')
+    }
+    return validHosts.some(host => parsed.hostname === host || parsed.hostname.endsWith('.' + host))
+  } catch {
+    return false
+  }
+}
+
+const urlError = computed(() => {
+  const url = form.infringing_url.trim()
+  if (!url) return undefined
+  if (!isFairtuneUrl(url)) {
+    return 'Please enter a valid Fairtune URL (e.g., https://fairtune.fm/artist/album)'
+  }
+  return undefined
+})
+
 const canSubmit = computed(() => {
   return (
     form.claimant_name.trim() &&
@@ -288,6 +314,7 @@ const canSubmit = computed(() => {
     form.claimant_address.trim() &&
     form.copyrighted_work_description.trim() &&
     form.infringing_url.trim() &&
+    isFairtuneUrl(form.infringing_url) &&
     form.good_faith_statement &&
     form.accuracy_statement &&
     form.signature.trim()

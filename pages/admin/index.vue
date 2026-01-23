@@ -72,13 +72,14 @@
 </template>
 
 <script setup lang="ts">
+import { useAdminCountsStore } from '~/stores/adminCounts'
+
 definePageMeta({
   middleware: 'admin',
 })
 
 const route = useRoute()
-const router = useRouter()
-const currentTab = ref(0)
+const adminCountsStore = useAdminCountsStore()
 
 // Map tab query param to tab index
 const tabSlotToIndex: Record<string, number> = {
@@ -97,34 +98,32 @@ const tabSlotToIndex: Record<string, number> = {
   'pro-export': 12,
 }
 
-// Initialize tab from URL query param
-const initTabFromUrl = () => {
+// Initialize tab from URL query param immediately
+const getInitialTab = (): number => {
   const tabParam = route.query.tab as string
+  if (tabParam && tabSlotToIndex[tabParam] !== undefined) {
+    return tabSlotToIndex[tabParam]
+  }
+  return 0
+}
+
+const currentTab = ref(getInitialTab())
+
+// Use store for pending counts (has built-in realtime)
+const pendingModerationCount = computed(() => adminCountsStore.adminCounts?.moderation ?? 0)
+const pendingArtistCount = computed(() => adminCountsStore.adminCounts?.artists ?? 0)
+const pendingReportsCount = computed(() => adminCountsStore.adminCounts?.reports ?? 0)
+const pendingDmcaCount = computed(() => adminCountsStore.adminCounts?.dmca ?? 0)
+
+// Refresh counts when tabs emit updates
+const refreshPendingCounts = () => adminCountsStore.fetchCounts()
+
+// Watch for URL query param changes (e.g., browser back/forward)
+watch(() => route.query.tab, (newTab) => {
+  const tabParam = newTab as string
   if (tabParam && tabSlotToIndex[tabParam] !== undefined) {
     currentTab.value = tabSlotToIndex[tabParam]
   }
-}
-
-// Fetch pending counts using useLazyFetch
-const { data: pendingCounts, refresh: refreshPendingCounts } = await useLazyFetch<{
-  moderation: number
-  artists: number
-  reports: number
-  dmca: number
-}>('/api/admin/pending-counts', {
-  server: false,
-  default: () => ({ moderation: 0, artists: 0, reports: 0, dmca: 0 }),
-})
-
-// Computed badge counts from fetched data
-const pendingModerationCount = computed(() => pendingCounts.value?.moderation ?? 0)
-const pendingArtistCount = computed(() => pendingCounts.value?.artists ?? 0)
-const pendingReportsCount = computed(() => pendingCounts.value?.reports ?? 0)
-const pendingDmcaCount = computed(() => pendingCounts.value?.dmca ?? 0)
-
-// Init tab from URL on mount
-onMounted(() => {
-  initTabFromUrl()
 })
 
 const tabs = computed(() => [

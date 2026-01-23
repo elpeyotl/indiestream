@@ -13,6 +13,8 @@ export interface AdminCounts {
 // Client-only state (not reactive, used for realtime subscription)
 let realtimeChannel: RealtimeChannel | null = null
 let fetchDebounceTimer: ReturnType<typeof setTimeout> | null = null
+let pollingInterval: ReturnType<typeof setInterval> | null = null
+const POLLING_INTERVAL_MS = 30000 // Poll every 30 seconds as fallback
 
 export const useAdminCountsStore = defineStore('adminCounts', () => {
   const client = useSupabaseClient<Database>()
@@ -78,16 +80,42 @@ export const useAdminCountsStore = defineStore('adminCounts', () => {
       await fetchCounts()
       // Subscribe to realtime updates
       subscribeToRealtime()
+      // Start polling as fallback (realtime may not work due to RLS)
+      startPolling()
     } else {
       adminCounts.value = null
       unsubscribeRealtime()
+      stopPolling()
+    }
+  }
+
+  // Start polling as fallback for realtime
+  const startPolling = () => {
+    if (pollingInterval) return
+    console.log('[Admin Counts] Starting polling fallback')
+    pollingInterval = setInterval(() => {
+      if (isAdmin.value && !isLoading.value) {
+        fetchCounts()
+      }
+    }, POLLING_INTERVAL_MS)
+  }
+
+  // Stop polling
+  const stopPolling = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      pollingInterval = null
     }
   }
 
   // Subscribe to realtime changes for relevant tables
   const subscribeToRealtime = () => {
-    if (realtimeChannel) return // Already subscribed
+    if (realtimeChannel) {
+      console.log('[Admin Realtime] Already subscribed, skipping')
+      return
+    }
 
+    console.log('[Admin Realtime] Setting up subscription...')
     realtimeChannel = client
       .channel('admin-counts-realtime')
       // Track moderation changes - listen to all track events
@@ -141,9 +169,11 @@ export const useAdminCountsStore = defineStore('adminCounts', () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'dmca_requests' },
         (payload) => {
+          console.log('[Admin Realtime] DMCA event received:', payload.eventType)
           if (payload.eventType === 'INSERT' ||
               payload.eventType === 'DELETE' ||
               payload.old?.status !== payload.new?.status) {
+            console.log('[Admin Realtime] Triggering count refresh for DMCA change')
             debouncedFetchCounts()
           }
         }
