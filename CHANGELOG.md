@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.21.2] - 2026-01-23
+
+### Fixed
+- **Impact Share Page**: Fixed RLS issue preventing share page from loading stats (changed to service role client for public endpoint)
+- **Impact Stats Own-Band Filter**: User's own bands are now excluded from impact stats (can't "support yourself")
+
+### Added
+- **Lyrics Language Field**: Required dropdown in track upload for lyrics language selection
+  - ISO 639-1 language codes + "Instrumental" option
+  - Validation: Instrumental tracks cannot have Author credits
+  - Validation: Non-instrumental tracks require at least one Author credit
+  - Clear error messages and warnings in upload flow
+
 ## [0.21.1] - 2026-01-23
 
 ### Fixed
