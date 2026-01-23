@@ -1,5 +1,7 @@
 // Fetch shared impact data by token (public endpoint)
-import { serverSupabaseClient } from '#supabase/server'
+// Use service role client to bypass RLS since this is a public endpoint
+// that needs to read listening_history for any user (based on the share token)
+import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const token = getRouterParam(event, 'token')
@@ -7,7 +9,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Token required' })
   }
 
-  const client = await serverSupabaseClient(event)
+  const client = serverSupabaseServiceRole(event)
 
   // Get share preferences
   const { data: share, error: shareError } = await client

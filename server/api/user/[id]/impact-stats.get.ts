@@ -1,5 +1,6 @@
 // Public endpoint for user's impact stats (respects privacy setting)
-import { serverSupabaseClient } from '#supabase/server'
+// Use service role client to bypass RLS since this is a public endpoint
+import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const userId = getRouterParam(event, 'id')
@@ -7,7 +8,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'User ID required' })
   }
 
-  const client = await serverSupabaseClient(event)
+  const client = serverSupabaseServiceRole(event)
 
   // Check if user has opted in to public impact
   const { data: profile, error: profileError } = await client
@@ -64,12 +65,16 @@ export default defineEventHandler(async (event) => {
   const totalPaidCents = SUBSCRIPTION_PRICE_CENTS * monthsSubscribed
   const artistPoolCents = Math.floor(totalPaidCents * ARTIST_SHARE)
 
-  // Get listening data for all time
+  // Get listening data for all time (with band owner info to filter out own bands)
   const { data: listeningData } = await client
     .from('listening_history')
     .select(`
       duration_seconds,
-      band_id
+      band_id,
+      bands!inner (
+        id,
+        owner_id
+      )
     `)
     .eq('user_id', userId)
     .eq('is_free_play', false)
@@ -77,11 +82,15 @@ export default defineEventHandler(async (event) => {
     .gte('listened_at', periodStartStr)
     .lte('listened_at', periodEndStr)
 
-  // Calculate stats
-  const totalListeningSeconds = (listeningData || []).reduce((sum, listen) =>
+  // Filter out user's own bands and calculate stats
+  const filteredData = (listeningData || []).filter(
+    (listen: any) => listen.bands?.owner_id !== userId
+  )
+
+  const totalListeningSeconds = filteredData.reduce((sum: number, listen: any) =>
     sum + (listen.duration_seconds || 0), 0)
 
-  const uniqueArtists = new Set((listeningData || []).map(listen => listen.band_id))
+  const uniqueArtists = new Set(filteredData.map((listen: any) => listen.band_id))
 
   return {
     impactPublic: true,
@@ -89,7 +98,7 @@ export default defineEventHandler(async (event) => {
       totalEarned: artistPoolCents,
       artistsSupported: uniqueArtists.size,
       listeningTime: totalListeningSeconds,
-      streamCount: listeningData?.length || 0,
+      streamCount: filteredData.length,
       monthsSubscribed,
     },
   }
