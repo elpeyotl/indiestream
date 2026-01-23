@@ -282,8 +282,8 @@ const submitting = ref(false)
 const submitted = ref(false)
 const submittedId = ref('')
 
-// Validate that URL is a Fairtune URL
-const isFairtuneUrl = (url: string): boolean => {
+// Validate that URL is a Fairtune content URL (artist or album page)
+const isFairtuneContentUrl = (url: string): boolean => {
   if (!url.trim()) return false
   try {
     const parsed = new URL(url)
@@ -292,7 +292,27 @@ const isFairtuneUrl = (url: string): boolean => {
     if (import.meta.dev) {
       validHosts.push('localhost', '127.0.0.1')
     }
-    return validHosts.some(host => parsed.hostname === host || parsed.hostname.endsWith('.' + host))
+    const isValidHost = validHosts.some(host => parsed.hostname === host || parsed.hostname.endsWith('.' + host))
+    if (!isValidHost) return false
+
+    // Must have a path that points to content (artist or album)
+    // Valid: /artist-slug, /artist-slug/album-slug
+    // Invalid: /, /about, /contact, /dmca, /terms, /admin, etc.
+    const pathSegments = parsed.pathname.split('/').filter(Boolean)
+    if (pathSegments.length === 0) return false
+
+    // Reject known non-content routes
+    const staticRoutes = [
+      'about', 'admin', 'artists', 'auth', 'bugs', 'changelog', 'charts',
+      'coming-soon', 'confirm', 'contact', 'dashboard', 'discover', 'dmca',
+      'docs', 'for-artists', 'genres', 'impact', 'index', 'library', 'login',
+      'playlist', 'pricing', 'privacy', 'register', 'settings', 'subscribe',
+      'terms', 'user', 'api'
+    ]
+    const firstSegment = pathSegments[0].toLowerCase()
+    if (staticRoutes.includes(firstSegment)) return false
+
+    return true
   } catch {
     return false
   }
@@ -301,8 +321,8 @@ const isFairtuneUrl = (url: string): boolean => {
 const urlError = computed(() => {
   const url = form.infringing_url.trim()
   if (!url) return undefined
-  if (!isFairtuneUrl(url)) {
-    return 'Please enter a valid Fairtune URL (e.g., https://fairtune.fm/artist/album)'
+  if (!isFairtuneContentUrl(url)) {
+    return 'Please enter a valid Fairtune artist or album URL (e.g., https://fairtune.fm/artist-name or https://fairtune.fm/artist-name/album-name)'
   }
   return undefined
 })
@@ -314,7 +334,7 @@ const canSubmit = computed(() => {
     form.claimant_address.trim() &&
     form.copyrighted_work_description.trim() &&
     form.infringing_url.trim() &&
-    isFairtuneUrl(form.infringing_url) &&
+    isFairtuneContentUrl(form.infringing_url) &&
     form.good_faith_statement &&
     form.accuracy_statement &&
     form.signature.trim()
