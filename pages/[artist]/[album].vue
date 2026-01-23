@@ -433,7 +433,7 @@ const otherAlbumCovers = ref<Record<string, string>>({})
 // Fetch album data using useLazyAsyncData
 // Note: server: false is required because RLS policies check auth.uid() which is NULL during SSR
 // Without this, pending bands (awaiting approval) or owner-only content won't be visible on hard reload
-const { data: albumData, pending: loading, refresh: refreshAlbum } = await useLazyAsyncData(
+const { data: albumData, pending, status, refresh: refreshAlbum } = await useLazyAsyncData(
   `album-${route.params.artist}-${route.params.album}`,
   async () => {
     const artistSlug = route.params.artist as string
@@ -479,6 +479,8 @@ const { data: albumData, pending: loading, refresh: refreshAlbum } = await useLa
 )
 
 // Computed accessors
+// Show loading when fetch is pending OR when status is 'idle' (server: false means no SSR fetch)
+const loading = computed(() => pending.value || status.value === 'idle')
 const album = computed(() => albumData.value?.album ?? null)
 const band = computed(() => albumData.value?.band ?? null)
 const isOwnerOrAdmin = computed(() => albumData.value?.isOwnerOrAdmin ?? false)
