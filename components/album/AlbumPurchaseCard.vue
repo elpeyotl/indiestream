@@ -101,7 +101,14 @@
     <div v-if="owned" class="text-center py-4">
       <UIcon name="i-heroicons-check-circle" class="w-12 h-12 text-green-500 mx-auto mb-2" />
       <p class="text-zinc-100 font-medium">You own this album</p>
-      <p class="text-sm text-zinc-400 mt-1">Download it anytime from your library</p>
+      <p class="text-sm text-zinc-400 mt-1">Download in FLAC or AAC format anytime</p>
+      <NuxtLink
+        to="/library/purchases"
+        class="mt-3 inline-flex items-center gap-1 text-violet-400 hover:text-violet-300 text-sm"
+      >
+        <UIcon name="i-heroicons-arrow-down-tray" class="w-4 h-4" />
+        Go to downloads
+      </NuxtLink>
     </div>
   </div>
 </template>
@@ -131,6 +138,7 @@ const emit = defineEmits<{
 const config = useRuntimeConfig()
 const purchaseStore = usePurchaseStore()
 const user = useSupabaseUser()
+const toast = useToast()
 
 // State
 const showPaymentForm = ref(false)
@@ -279,6 +287,19 @@ const confirmPayment = async () => {
       purchaseStore.markPurchaseComplete(props.album.id)
       showPaymentForm.value = false
       emit('purchased')
+
+      // Show success toast with link to downloads
+      toast.add({
+        title: 'Purchase successful!',
+        description: 'Your album is ready to download.',
+        icon: 'i-heroicons-check-circle',
+        color: 'green',
+        timeout: 8000,
+        actions: [{
+          label: 'Go to downloads',
+          click: () => navigateTo('/library/purchases'),
+        }],
+      })
     }
   } catch (error: any) {
     console.error('Payment error:', error)

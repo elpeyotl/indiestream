@@ -474,6 +474,86 @@
           </div>
         </div>
       </template>
+
+      <template #purchases>
+        <!-- Loading Skeleton -->
+        <div
+          v-if="loadingPurchases && purchasedAlbums.length === 0"
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+        >
+          <div v-for="i in 5" :key="i">
+            <USkeleton class="aspect-square rounded-lg mb-3" />
+            <USkeleton class="h-5 w-3/4 mb-1" />
+            <USkeleton class="h-4 w-1/2" />
+          </div>
+        </div>
+
+        <EmptyState
+          v-else-if="purchasedAlbums.length === 0"
+          icon="i-heroicons-shopping-bag"
+          title="No purchases yet"
+          description="When you buy albums, they'll appear here. You can download them anytime in FLAC or AAC format."
+          action-label="Discover Music"
+          action-to="/discover"
+        />
+
+        <div v-else>
+          <!-- View All Link -->
+          <div class="flex justify-end mb-4">
+            <NuxtLink
+              to="/library/purchases"
+              class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
+            >
+              View all & download
+              <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+            </NuxtLink>
+          </div>
+
+          <!-- Purchases Grid -->
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <NuxtLink
+              v-for="purchase in purchasedAlbums.slice(0, 10)"
+              :key="purchase.id"
+              :to="purchase.album ? `/${purchase.album.artist?.slug}/${purchase.album.slug}` : '#'"
+              class="group"
+            >
+              <div class="relative aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
+                <img
+                  v-if="purchaseCovers[purchase.album?.id || '']"
+                  :src="purchaseCovers[purchase.album?.id || '']"
+                  :alt="purchase.album?.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+                <div
+                  v-else
+                  class="w-full h-full flex items-center justify-center"
+                >
+                  <UIcon
+                    name="i-heroicons-musical-note"
+                    class="w-12 h-12 text-zinc-600"
+                  />
+                </div>
+
+                <!-- Owned Badge -->
+                <div class="absolute top-2 right-2">
+                  <UBadge color="green" size="xs">
+                    <UIcon name="i-heroicons-check" class="w-3 h-3 mr-1" />
+                    Owned
+                  </UBadge>
+                </div>
+              </div>
+
+              <h3 class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
+                {{ purchase.album?.title || 'Unknown Album' }}
+              </h3>
+              <p class="text-sm text-zinc-400 truncate">
+                {{ purchase.album?.artist?.name || 'Unknown Artist' }}
+              </p>
+            </NuxtLink>
+          </div>
+        </div>
+      </template>
     </PillTabs>
 
     <!-- Create Playlist Modal -->
@@ -568,6 +648,9 @@ const { fetchPlaylists, createPlaylist, getPlaylist } = playlistStore
 const recentActivityStore = useRecentActivityStore()
 const { recentlyPlayed } = storeToRefs(recentActivityStore)
 const { fetchRecentlyPlayed } = recentActivityStore
+const purchaseStore = usePurchaseStore()
+const { purchasedAlbums, loadingPurchases } = storeToRefs(purchaseStore)
+const { fetchPurchases } = purchaseStore
 const route = useRoute()
 const loadingHistory = ref(false)
 const activeTab = ref(0)
@@ -576,6 +659,7 @@ const artistAvatars = ref<Record<string, string>>({})
 const albumCovers = ref<Record<string, string>>({})
 const trackCovers = ref<Record<string, string>>({})
 const playlistCovers = ref<Record<string, string[]>>({})
+const purchaseCovers = ref<Record<string, string>>({})
 const loadingPlayId = ref<string | null>(null) // Track which playlist/liked is loading
 
 // Create playlist modal
@@ -626,6 +710,11 @@ const { pending: loadingPlaylists, refresh: refreshPlaylists } =
   await useLazyAsyncData('library-playlists', () => fetchPlaylists(), {
     server: false,
   })
+
+// Purchases tab data
+await useLazyAsyncData('library-purchases', () => fetchPurchases(), {
+  server: false,
+})
 
 // Computed accessors for library data
 const artists = computed(() => artistsData.value ?? [])
@@ -683,6 +772,11 @@ const tabs = computed(() => [
     icon: 'i-heroicons-heart',
   },
   { slot: 'history', label: 'History', icon: 'i-heroicons-clock' },
+  {
+    slot: 'purchases',
+    label: `Purchased (${purchasedAlbums.value.length})`,
+    icon: 'i-heroicons-shopping-bag',
+  },
 ])
 
 const formatDuration = (seconds: number): string => {
@@ -936,6 +1030,30 @@ watch(
   userPlaylists,
   () => {
     if (userPlaylists.value?.length) loadPlaylistCovers()
+  },
+  { immediate: true },
+)
+
+// Load purchase covers
+const loadPurchaseCovers = async () => {
+  await Promise.all(
+    purchasedAlbums.value.map(async (purchase) => {
+      if (!purchase.album?.coverKey) return
+      if (purchaseCovers.value[purchase.album.id]) return
+      try {
+        const url = await getCachedCoverUrl(purchase.album.coverKey)
+        if (url) purchaseCovers.value[purchase.album.id] = url
+      } catch (e) {
+        console.error('Failed to load purchase cover:', e)
+      }
+    }),
+  )
+}
+
+watch(
+  purchasedAlbums,
+  () => {
+    if (purchasedAlbums.value?.length) loadPurchaseCovers()
   },
   { immediate: true },
 )
