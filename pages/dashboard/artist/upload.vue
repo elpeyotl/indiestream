@@ -188,6 +188,12 @@ const { pending: editLoading } = await useLazyAsyncData(
 // Load moderation setting and check Stripe Connect status on mount
 onMounted(async () => {
   loadModerationSetting()
+
+  // Reset wizard if navigating to fresh upload but state has stale edit data
+  if (!editAlbumId.value && (state.value.isEditMode || state.value.createdAlbum)) {
+    resetWizard()
+  }
+
   // Check Stripe Connect status
   try {
     const status = await fetchConnectStatus()
