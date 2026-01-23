@@ -54,7 +54,7 @@
         :loading="loading"
         @click="initiateSubscription"
       >
-        <UIcon name="i-heroicons-credit-card" class="w-5 h-5 mr-2" />
+        <UIcon v-if="!loading" name="i-heroicons-credit-card" class="w-5 h-5 mr-2" />
         Continue to Payment
       </UButton>
 
@@ -100,7 +100,7 @@
             :disabled="!paymentReady"
             @click="confirmPayment"
           >
-            <UIcon name="i-heroicons-lock-closed" class="w-4 h-4 mr-2" />
+            <UIcon v-if="!processing" name="i-heroicons-lock-closed" class="w-4 h-4 mr-2" />
             Start Free Trial
           </UButton>
         </div>
