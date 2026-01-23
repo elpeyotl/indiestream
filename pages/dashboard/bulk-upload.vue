@@ -46,34 +46,46 @@
       </div>
     </div>
 
-    <!-- Step Content -->
-    <div class="max-w-3xl mx-auto">
-      <BulkUploadTemplateStep
-        v-if="state.step === 1"
-        @next="goToStep(2)"
-      />
+    <!-- Step Content (client-only due to JSZip dependency) -->
+    <ClientOnly>
+      <div class="max-w-3xl mx-auto">
+        <BulkUploadTemplateStep
+          v-if="state.step === 1"
+          @next="goToStep(2)"
+        />
 
-      <BulkUploadZipUploadStep
-        v-else-if="state.step === 2"
-        @back="goToStep(1)"
-        @next="goToStep(3)"
-      />
+        <BulkUploadZipUploadStep
+          v-else-if="state.step === 2"
+          @back="goToStep(1)"
+          @next="goToStep(3)"
+        />
 
-      <BulkUploadValidationStep
-        v-else-if="state.step === 3"
-        @back="goToStep(2)"
-        @next="startProcessing"
-      />
+        <BulkUploadValidationStep
+          v-else-if="state.step === 3"
+          @back="goToStep(2)"
+          @next="startProcessing"
+        />
 
-      <BulkUploadProcessingStep
-        v-else-if="state.step === 4"
-        @complete="goToStep(5)"
-      />
+        <BulkUploadProcessingStep
+          v-else-if="state.step === 4"
+          @complete="goToStep(5)"
+        />
 
-      <BulkUploadResultsStep
-        v-else-if="state.step === 5"
-      />
-    </div>
+        <BulkUploadResultsStep
+          v-else-if="state.step === 5"
+        />
+      </div>
+
+      <template #fallback>
+        <div class="max-w-3xl mx-auto">
+          <UCard class="bg-zinc-900/50 border-zinc-800">
+            <div class="flex items-center justify-center py-12">
+              <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-violet-400 animate-spin" />
+            </div>
+          </UCard>
+        </div>
+      </template>
+    </ClientOnly>
   </div>
 </template>
 

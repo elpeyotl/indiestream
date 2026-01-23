@@ -5,11 +5,19 @@ import type {
   CsvValidationError,
   CsvParseResult,
 } from '~/utils/csv-parser'
+import type JSZipType from 'jszip'
 
 // Lazy load JSZip only when needed (client-side only)
-const loadJSZip = async () => {
+let JSZipModule: typeof JSZipType | null = null
+const loadJSZip = async (): Promise<typeof JSZipType> => {
+  if (JSZipModule) return JSZipModule
   const mod = await import('jszip')
-  return mod.default
+  // Handle Vite's module bundling - try different export paths
+  JSZipModule = (mod as any).default || (mod as any)
+  if (!JSZipModule?.loadAsync) {
+    throw new Error('Failed to load JSZip: loadAsync not found')
+  }
+  return JSZipModule
 }
 
 export interface BulkUploadState {

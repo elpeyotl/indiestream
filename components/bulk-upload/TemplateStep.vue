@@ -157,13 +157,8 @@
 </template>
 
 <script setup lang="ts">
+import JSZip from 'jszip'
 import { generateCsvTemplate, getExampleFilePaths } from '~/utils/csv-parser'
-
-// Lazy load JSZip only when needed (client-side only)
-const loadJSZip = async () => {
-  const mod = await import('jszip')
-  return mod.default
-}
 
 defineEmits<{
   next: []
@@ -246,7 +241,6 @@ const downloadExampleZip = async () => {
   isGenerating.value = true
 
   try {
-    const JSZip = await loadJSZip()
     const zip = new JSZip()
 
     // Add the CSV file

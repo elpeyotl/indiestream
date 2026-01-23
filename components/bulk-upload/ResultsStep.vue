@@ -142,16 +142,51 @@
 
 <script setup lang="ts">
 const { state, resetBulkUpload } = useBulkUpload()
-const config = useRuntimeConfig()
 
 const startNewImport = () => {
   resetBulkUpload()
 }
 
-// Get public URL for R2 images
+// Cache for resolved image URLs
+const imageUrls = ref<Record<string, string>>({})
+
+// Resolve image URL from R2 key using presigned URL API
+const resolveImageUrl = async (key: string): Promise<string | null> => {
+  if (!key) return null
+  if (imageUrls.value[key]) return imageUrls.value[key]
+
+  try {
+    const encodedKey = btoa(key).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+    const response = await $fetch<{ url: string }>(`/api/stream/${encodedKey}`)
+    imageUrls.value[key] = response.url
+    return response.url
+  } catch (e) {
+    console.error('Failed to get image URL:', e)
+    return null
+  }
+}
+
+// Resolve all image URLs on mount
+onMounted(async () => {
+  const keys: string[] = []
+
+  // Collect all avatar keys
+  state.value.results?.createdArtists.forEach((artist) => {
+    if (artist.avatarKey) keys.push(artist.avatarKey)
+  })
+
+  // Collect all cover keys
+  state.value.results?.createdAlbums.forEach((album) => {
+    if (album.coverKey) keys.push(album.coverKey)
+  })
+
+  // Resolve all URLs in parallel
+  await Promise.all(keys.map((key) => resolveImageUrl(key)))
+})
+
+// Get resolved URL for display
 const getImageUrl = (key: string | null | undefined): string => {
   if (!key) return ''
-  const cdnUrl = config.public.r2CdnUrl || config.public.r2PublicUrl
-  return `${cdnUrl}/${key}`
+  return imageUrls.value[key] || ''
 }
 </script>

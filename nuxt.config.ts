@@ -229,21 +229,12 @@ export default defineNuxtConfig({
     },
   },
 
-  // Vite config for jszip
+  // Vite config
   vite: {
-    optimizeDeps: {
-      include: ['jszip'],
-    },
     build: {
       rollupOptions: {
-        // Ensure jszip is bundled, not externalized
         external: [],
       },
     },
-  },
-
-  // Ensure jszip is transpiled
-  build: {
-    transpile: ['jszip'],
   },
 })
