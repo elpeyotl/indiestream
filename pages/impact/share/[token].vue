@@ -76,6 +76,28 @@
             </p>
             <p class="text-xs text-zinc-400">Streams</p>
           </div>
+
+          <!-- Tips -->
+          <div v-if="impactData.tips" class="text-center p-4 bg-gradient-to-br from-pink-500/10 to-rose-500/10 border border-pink-500/20 rounded-lg">
+            <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-pink-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-gift" class="w-5 h-5 text-pink-400" />
+            </div>
+            <p class="text-3xl font-bold text-pink-400 mb-1">
+              {{ formatCurrency(impactData.tips.totalNetCents) }}
+            </p>
+            <p class="text-xs text-zinc-400">{{ impactData.tips.tipCount }} {{ impactData.tips.tipCount === 1 ? 'Tip' : 'Tips' }}</p>
+          </div>
+
+          <!-- Purchases -->
+          <div v-if="impactData.purchases" class="text-center p-4 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-lg">
+            <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-emerald-500/20 flex items-center justify-center">
+              <UIcon name="i-heroicons-shopping-bag" class="w-5 h-5 text-emerald-400" />
+            </div>
+            <p class="text-3xl font-bold text-emerald-400 mb-1">
+              {{ formatCurrency(impactData.purchases.totalArtistShareCents) }}
+            </p>
+            <p class="text-xs text-zinc-400">{{ impactData.purchases.purchaseCount }} {{ impactData.purchases.purchaseCount === 1 ? 'Album' : 'Albums' }}</p>
+          </div>
         </div>
 
         <!-- Artist Breakdown (if enabled) -->
@@ -202,6 +224,16 @@ interface ImpactShareData {
     listeningSeconds: number
     earningsCents: number
   }>
+  tips?: {
+    totalNetCents: number
+    tipCount: number
+    artistCount: number
+  } | null
+  purchases?: {
+    totalArtistShareCents: number
+    purchaseCount: number
+    artistCount: number
+  } | null
 }
 
 // Fetch impact data using useLazyAsyncData

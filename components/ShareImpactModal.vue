@@ -77,6 +77,22 @@
               <span class="text-xs text-zinc-500">Show top 10 artists with earnings</span>
             </div>
           </label>
+
+          <label class="flex items-start gap-3 cursor-pointer hover:bg-zinc-800/30 rounded-lg p-2 -mx-2 transition-colors">
+            <UCheckbox v-model="showTips" class="mt-0.5" />
+            <div>
+              <span class="text-sm font-medium text-zinc-300 block">Tips given</span>
+              <span class="text-xs text-zinc-500">Show your tips to artists</span>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer hover:bg-zinc-800/30 rounded-lg p-2 -mx-2 transition-colors">
+            <UCheckbox v-model="showPurchases" class="mt-0.5" />
+            <div>
+              <span class="text-sm font-medium text-zinc-300 block">Album purchases</span>
+              <span class="text-xs text-zinc-500">Show your album purchases</span>
+            </div>
+          </label>
         </div>
       </div>
 
@@ -153,6 +169,8 @@ const showArtistsSupported = ref(true)
 const showListeningTime = ref(true)
 const showStreamCount = ref(true)
 const showArtistBreakdown = ref(false)
+const showTips = ref(true)
+const showPurchases = ref(true)
 
 const loading = ref(false)
 const shareUrl = ref('')
@@ -163,7 +181,9 @@ const canGenerate = computed(() => {
          showArtistsSupported.value ||
          showListeningTime.value ||
          showStreamCount.value ||
-         showArtistBreakdown.value
+         showArtistBreakdown.value ||
+         showTips.value ||
+         showPurchases.value
 })
 
 const generateShare = async () => {
@@ -180,6 +200,8 @@ const generateShare = async () => {
         showListeningTime: showListeningTime.value,
         showStreamCount: showStreamCount.value,
         showArtistBreakdown: showArtistBreakdown.value,
+        showTips: showTips.value,
+        showPurchases: showPurchases.value,
       },
     })
 

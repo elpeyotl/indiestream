@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.24.0] - 2026-01-25
+
+### Added
+- **Enhanced Impact Stats with Tips & Purchases**:
+  - Listener impact now includes tips and album purchases alongside streaming revenue
+  - Non-subscribers with tips/purchases can now see their impact stats
+  - Color-coded breakdown: Streaming (teal), Tips (pink), Purchases (emerald)
+  - Updated ImpactTab.vue with new stats cards and "Direct Support" section
+  - Dashboard and discover page heroes show personalized impact for all users with activity
+- **Artist Tips Dashboard Tab**:
+  - New Tips tab in artist dashboard showing received tips
+  - Stats cards: Total Tips Received, Number of Tips, ~97% payout rate
+  - Recent tips list with tipper name (or "Anonymous"), message, and amount
+  - Respects anonymity settings for tippers
+- **Impact Share Feature Updates**:
+  - New toggles for sharing tips and purchases in ShareImpactModal
+  - Public share page displays tips and purchases cards when enabled
+  - Combined "Total Earned by Artists" now includes all three revenue streams
+  - Database migration adds `show_tips` and `show_purchases` columns
+
+### Changed
+- Updated `/api/listener/money-distribution` to return tips and purchases data
+- Updated `/api/user/impact` to return tips/purchases for all logged-in users
+- Updated `/api/impact/share` endpoints to handle new visibility flags
+
 ## [0.23.0] - 2026-01-23
 
 ### Added

@@ -6,6 +6,7 @@
       :is-subscribed="isSubscribed"
       :stats="impactStats"
       :loading="impactLoading"
+      :has-impact="impactData?.hasImpact || false"
     />
 
     <!-- New From Your Artists -->
@@ -340,12 +341,17 @@ interface ImpactStats {
   artistsSupported: number
   hoursListened: number
   streamCount: number
+  tipsCents?: number
+  purchasesCents?: number
+  tipCount?: number
+  purchaseCount?: number
 }
 
 interface ImpactResponse {
   isLoggedIn: boolean
   isSubscribed: boolean
   stats: ImpactStats | null
+  hasImpact: boolean
 }
 
 const client = useSupabaseClient<Database>()
@@ -401,11 +407,11 @@ const { data: impactData, pending: impactLoading } = await useLazyAsyncData(
   'home-impact',
   async (): Promise<ImpactResponse> => {
     if (!user.value)
-      return { isLoggedIn: false, isSubscribed: false, stats: null }
+      return { isLoggedIn: false, isSubscribed: false, stats: null, hasImpact: false }
     try {
       return await $fetch<ImpactResponse>('/api/user/impact')
     } catch {
-      return { isLoggedIn: true, isSubscribed: false, stats: null }
+      return { isLoggedIn: true, isSubscribed: false, stats: null, hasImpact: false }
     }
   },
   { watch: [user], server: false },

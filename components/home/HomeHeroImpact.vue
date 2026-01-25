@@ -18,7 +18,39 @@
       </div>
     </div>
 
-    <!-- Free User Hero -->
+    <!-- Free User with Impact (tips/purchases) -->
+    <div v-else-if="!isSubscribed && hasImpact" class="bg-gradient-to-br from-pink-900/20 via-violet-900/20 to-emerald-900/20 rounded-2xl p-8 md:p-12">
+      <div v-if="loading" class="animate-pulse">
+        <USkeleton class="h-8 w-32 mb-4" />
+        <USkeleton class="h-12 w-64 mb-3" />
+        <USkeleton class="h-5 w-48" />
+      </div>
+      <template v-else>
+        <p class="text-zinc-400 mb-2">Hey {{ userName }}.</p>
+        <p class="text-2xl md:text-3xl font-bold text-zinc-100 mb-3">
+          You've directly supported
+          <span class="text-violet-400">{{ stats?.artistsSupported || 0 }} {{ (stats?.artistsSupported || 0) === 1 ? 'artist' : 'artists' }}</span>
+          with
+          <span class="text-pink-400">{{ formatCurrency(totalDirectSupport) }}</span>.
+        </p>
+        <p class="text-zinc-400 mb-4">
+          <template v-if="stats?.tipCount">{{ stats.tipCount }} {{ stats.tipCount === 1 ? 'tip' : 'tips' }}</template>
+          <template v-if="stats?.tipCount && stats?.purchaseCount"> · </template>
+          <template v-if="stats?.purchaseCount">{{ stats.purchaseCount }} {{ stats.purchaseCount === 1 ? 'album purchase' : 'album purchases' }}</template>
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <UButton color="violet" size="lg" to="/pricing">
+            Add Streaming Support
+          </UButton>
+          <UButton color="gray" variant="ghost" to="/dashboard/stats">
+            See your impact
+            <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 ml-1" />
+          </UButton>
+        </div>
+      </template>
+    </div>
+
+    <!-- Free User Hero (no impact yet) -->
     <div v-else-if="!isSubscribed" class="bg-gradient-to-br from-teal-900/30 to-zinc-900 rounded-2xl p-8 md:p-12">
       <h2 class="text-2xl md:text-3xl font-bold text-zinc-100 mb-3">
         Stream fair. Support direct.
@@ -51,7 +83,7 @@
         <p class="text-zinc-400 mb-6">
           {{ stats?.artistsSupported || 0 }} artists supported · {{ stats?.hoursListened || 0 }} hours listened
         </p>
-        <UButton color="gray" variant="ghost" to="/impact">
+        <UButton color="gray" variant="ghost" to="/dashboard/stats">
           See your full impact
           <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 ml-1" />
         </UButton>
@@ -66,6 +98,11 @@ interface ImpactStats {
   artistsSupported: number
   hoursListened: number
   streamCount: number
+  // New fields for tips/purchases
+  tipsCents?: number
+  purchasesCents?: number
+  tipCount?: number
+  purchaseCount?: number
 }
 
 interface Props {
@@ -73,9 +110,10 @@ interface Props {
   isSubscribed: boolean
   stats?: ImpactStats | null
   loading?: boolean
+  hasImpact?: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const userProfileStore = useUserProfileStore()
 const { ownProfile } = storeToRefs(userProfileStore)
@@ -88,4 +126,10 @@ const userName = computed(() => {
 const formatCurrency = (cents: number): string => {
   return `CHF ${(cents / 100).toFixed(2)}`
 }
+
+// Calculate total direct support (tips + purchases) for non-subscribers
+const totalDirectSupport = computed(() => {
+  if (!props.stats) return 0
+  return (props.stats.tipsCents || 0) + (props.stats.purchasesCents || 0)
+})
 </script>

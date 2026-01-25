@@ -38,7 +38,7 @@
 
       <!-- My Impact Hero Card Skeleton -->
       <UCard
-        v-if="isSubscribed && impactLoading"
+        v-if="impactLoading"
         class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
       >
         <div class="flex items-center justify-between mb-4">
@@ -62,9 +62,9 @@
         <USkeleton class="h-10 w-full rounded-md" />
       </UCard>
 
-      <!-- My Impact Hero Card (Subscribers Only) -->
+      <!-- My Impact Hero Card (for anyone with impact) -->
       <UCard
-        v-else-if="isSubscribed"
+        v-else-if="impactStats"
         class="mb-8 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20"
       >
       <div class="flex items-center justify-between mb-4">
@@ -73,7 +73,7 @@
       </div>
 
       <!-- Key stats grid -->
-      <div v-if="impactStats" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
         <div>
           <p class="text-2xl font-bold text-violet-400">
             {{ formatCurrency(impactStats.totalEarned) }}
@@ -85,17 +85,30 @@
           <p class="text-sm text-zinc-400">Artists Supported</p>
         </div>
         <div class="col-span-2 md:col-span-1">
-          <p class="text-2xl font-bold text-violet-400">
-            {{ formatCurrency(impactStats.thisMonth) }}
-          </p>
-          <p class="text-sm text-zinc-400">This Month</p>
+          <!-- Show breakdown for users with multiple support types -->
+          <div v-if="impactStats.streamingCents > 0 || impactStats.tipsCents > 0 || impactStats.purchasesCents > 0" class="space-y-1">
+            <p v-if="impactStats.streamingCents > 0" class="text-sm">
+              <span class="text-teal-400">{{ formatCurrency(impactStats.streamingCents) }}</span>
+              <span class="text-zinc-500"> streaming</span>
+            </p>
+            <p v-if="impactStats.tipsCents > 0" class="text-sm">
+              <span class="text-pink-400">{{ formatCurrency(impactStats.tipsCents) }}</span>
+              <span class="text-zinc-500"> tips</span>
+            </p>
+            <p v-if="impactStats.purchasesCents > 0" class="text-sm">
+              <span class="text-emerald-400">{{ formatCurrency(impactStats.purchasesCents) }}</span>
+              <span class="text-zinc-500"> purchases</span>
+            </p>
+          </div>
         </div>
       </div>
 
-      <!-- Empty state for new subscribers -->
-      <div v-else class="text-center py-4">
-        <UIcon name="i-heroicons-musical-note" class="w-12 h-12 mx-auto mb-2 text-zinc-600" />
-        <p class="text-zinc-400 text-sm">Start listening to see your impact!</p>
+      <!-- Subscribe CTA for non-subscribers -->
+      <div v-if="!impactStats.isSubscribed" class="mb-4 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+        <p class="text-sm text-zinc-300">
+          <UIcon name="i-heroicons-sparkles" class="w-4 h-4 text-violet-400 inline mr-1" />
+          Subscribe to support artists with every stream!
+        </p>
       </div>
 
       <UButton to="/dashboard/stats" color="violet" block>
@@ -580,11 +593,25 @@ const subscriptionStore = useSubscriptionStore()
 const { subscription, isSubscribed, freeTierStatus, loading: subscriptionLoading } = storeToRefs(subscriptionStore)
 const { openCustomerPortal, setSubscription, fetchSubscription, fetchFreeTierStatus } = subscriptionStore
 
-// Impact distribution interface
+// Impact distribution interface (extended with tips/purchases)
 interface ImpactDistribution {
   period: string
+  subscriptionStatus: 'active' | 'trialing' | 'inactive'
   artistPoolCents: number
   artistBreakdown: Array<{ bandId: string }>
+  tips: {
+    totalNetCents: number
+    tipCount: number
+  }
+  purchases: {
+    totalArtistShareCents: number
+    purchaseCount: number
+  }
+  totals: {
+    totalToArtistsCents: number
+    uniqueArtistsSupported: number
+  }
+  hasImpact: boolean
 }
 
 const syncing = ref(false)
@@ -630,13 +657,10 @@ const { data: listeningStats, pending: statsPending } = await useLazyAsyncData(
   }
 )
 
-// Fetch impact distribution for subscribers using useLazyAsyncData (auth-required, client-only)
+// Fetch impact distribution for ALL users (includes tips/purchases for non-subscribers)
 const { data: distribution, pending: impactLoading, refresh: refreshDistribution } = await useLazyAsyncData<ImpactDistribution | null>(
   'dashboard-impact',
   async () => {
-    // Only fetch if user is subscribed
-    if (!isSubscribed.value) return null
-
     const data = await $fetch<ImpactDistribution>('/api/listener/money-distribution', {
       query: { period: 'this-month' },
     })
@@ -644,7 +668,6 @@ const { data: distribution, pending: impactLoading, refresh: refreshDistribution
   },
   {
     default: () => null,
-    watch: [isSubscribed],
     server: false,
   }
 )
@@ -711,20 +734,18 @@ const syncSubscription = async () => {
   }
 }
 
-// Impact stats for hero card
+// Impact stats for hero card - now works for all users with any impact
 const impactStats = computed(() => {
-  if (!distribution.value || !isSubscribed.value) return null
-
-  // We'll use the "last-month" data if available, otherwise show 0
-  let thisMonthEarned = 0
-  if (distribution.value.period === 'last-month') {
-    thisMonthEarned = distribution.value.artistPoolCents
-  }
+  if (!distribution.value || !distribution.value.hasImpact) return null
 
   return {
-    totalEarned: distribution.value.artistPoolCents,
-    artistsSupported: distribution.value.artistBreakdown.length,
-    thisMonth: thisMonthEarned,
+    totalEarned: distribution.value.totals.totalToArtistsCents,
+    artistsSupported: distribution.value.totals.uniqueArtistsSupported,
+    // Show this month's breakdown
+    streamingCents: distribution.value.artistPoolCents,
+    tipsCents: distribution.value.tips.totalNetCents,
+    purchasesCents: distribution.value.purchases.totalArtistShareCents,
+    isSubscribed: distribution.value.subscriptionStatus !== 'inactive',
   }
 })
 

@@ -1,4 +1,5 @@
 // Listener-facing: Show where their subscription money went (all-time or last month)
+// Now includes tips and album purchases for complete impact picture
 import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
 
 interface ArtistBreakdown {
@@ -13,6 +14,32 @@ interface ArtistBreakdown {
   earningsCents: number
 }
 
+interface TipBreakdown {
+  bandId: string
+  bandName: string
+  bandSlug: string
+  avatarKey: string | null
+  avatarUrl: string | null
+  tipCount: number
+  totalGrossCents: number
+  totalNetCents: number
+}
+
+interface PurchaseBreakdown {
+  bandId: string
+  bandName: string
+  bandSlug: string
+  avatarKey: string | null
+  avatarUrl: string | null
+  albumId: string
+  albumTitle: string
+  albumSlug: string
+  coverKey: string | null
+  amountCents: number
+  artistShareCents: number
+  purchasedAt: string
+}
+
 interface MoneyDistribution {
   period: 'all-time' | 'last-month' | 'this-month'
   periodLabel: string
@@ -25,6 +52,32 @@ interface MoneyDistribution {
   totalStreams: number
   monthsSubscribed: number
   artistBreakdown: ArtistBreakdown[]
+
+  // Tips data
+  tips: {
+    totalGrossCents: number
+    totalNetCents: number
+    tipCount: number
+    artistBreakdown: TipBreakdown[]
+  }
+
+  // Purchases data
+  purchases: {
+    totalGrossCents: number
+    totalArtistShareCents: number
+    purchaseCount: number
+    breakdown: PurchaseBreakdown[]
+  }
+
+  // Combined totals across all support types
+  totals: {
+    totalToArtistsCents: number
+    totalContributionCents: number
+    uniqueArtistsSupported: number
+  }
+
+  // Whether user has any impact to show (for unsubscribed users)
+  hasImpact: boolean
 }
 
 export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
@@ -146,21 +199,64 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
     throw createError({ statusCode: 500, statusMessage: 'Failed to fetch listening data' })
   }
 
-  // If no listening data, return empty breakdown
-  if (!listeningData || listeningData.length === 0) {
-    return {
-      period,
-      periodLabel,
-      subscriptionStatus,
-      totalPaidCents,
-      artistPoolCents,
-      cmoFeeCents,
-      platformFeeCents,
-      totalListeningSeconds: 0,
-      totalStreams: 0,
-      monthsSubscribed,
-      artistBreakdown: [],
-    }
+  // Get tips for the period
+  const { data: tipsData, error: tipsError } = await client
+    .from('artist_tips')
+    .select(`
+      id,
+      amount_cents,
+      net_amount_cents,
+      band_id,
+      created_at,
+      bands!inner (
+        id,
+        name,
+        slug,
+        avatar_key,
+        owner_id
+      )
+    `)
+    .eq('tipper_id', user.id)
+    .eq('status', 'completed')
+    .gte('created_at', periodStartStr)
+    .lte('created_at', periodEndStr)
+
+  if (tipsError) {
+    console.error('Failed to fetch tips data:', tipsError)
+    // Don't throw - just continue without tips data
+  }
+
+  // Get purchases for the period
+  const { data: purchasesData, error: purchasesError } = await client
+    .from('purchases')
+    .select(`
+      id,
+      amount_cents,
+      artist_share_cents,
+      band_id,
+      completed_at,
+      albums!inner (
+        id,
+        title,
+        slug,
+        cover_key
+      ),
+      bands!inner (
+        id,
+        name,
+        slug,
+        avatar_key,
+        owner_id
+      )
+    `)
+    .eq('user_id', user.id)
+    .eq('status', 'completed')
+    .gte('completed_at', periodStartStr)
+    .lte('completed_at', periodEndStr)
+
+  if (purchasesError) {
+    console.error('Failed to fetch purchases data:', purchasesError)
+    // Don't throw - just continue without purchases data
   }
 
   // Calculate per-band listening
@@ -175,7 +271,7 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
   let totalListeningSeconds = 0
   let totalStreams = 0
 
-  for (const listen of listeningData) {
+  for (const listen of listeningData || []) {
     const band = listen.tracks.albums.bands
     const bandId = band.id
     const duration = listen.duration_seconds || 0
@@ -205,7 +301,7 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
 
   // Calculate distribution of artist pool among bands
   const artistBreakdown: ArtistBreakdown[] = []
-  let totalEarnings = 0
+  let totalStreamingEarnings = 0
 
   for (const [bandId, data] of bandListening) {
     const shareOfListening = totalListeningSeconds > 0
@@ -213,7 +309,7 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
       : 0
     const earningsCents = Math.floor(artistPoolCents * shareOfListening)
 
-    totalEarnings += earningsCents
+    totalStreamingEarnings += earningsCents
 
     artistBreakdown.push({
       bandId,
@@ -229,27 +325,168 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
   }
 
   // Handle rounding: ensure earnings sum to exactly artistPoolCents
-  if (totalEarnings < artistPoolCents && artistBreakdown.length > 0) {
+  if (totalStreamingEarnings < artistPoolCents && artistBreakdown.length > 0) {
     // Sort by earnings descending and add remainder to top artist
     artistBreakdown.sort((a, b) => b.earningsCents - a.earningsCents)
-    const remainder = artistPoolCents - totalEarnings
+    const remainder = artistPoolCents - totalStreamingEarnings
     artistBreakdown[0].earningsCents += remainder
   }
 
   // Sort by earnings descending for display
   artistBreakdown.sort((a, b) => b.earningsCents - a.earningsCents)
 
+  // Aggregate tips by band
+  const tipsByBand = new Map<string, {
+    name: string
+    slug: string
+    avatarKey: string | null
+    tipCount: number
+    totalGross: number
+    totalNet: number
+  }>()
+
+  let totalTipsGross = 0
+  let totalTipsNet = 0
+  let totalTipCount = 0
+
+  for (const tip of tipsData || []) {
+    const band = tip.bands as any
+    const bandId = band.id
+
+    // Skip if this is the user's own band
+    if (band.owner_id === user.id) {
+      continue
+    }
+
+    const grossAmount = tip.amount_cents || 0
+    const netAmount = tip.net_amount_cents || 0
+
+    totalTipsGross += grossAmount
+    totalTipsNet += netAmount
+    totalTipCount += 1
+
+    if (!tipsByBand.has(bandId)) {
+      tipsByBand.set(bandId, {
+        name: band.name,
+        slug: band.slug,
+        avatarKey: band.avatar_key,
+        tipCount: 0,
+        totalGross: 0,
+        totalNet: 0,
+      })
+    }
+
+    const bandData = tipsByBand.get(bandId)!
+    bandData.tipCount += 1
+    bandData.totalGross += grossAmount
+    bandData.totalNet += netAmount
+  }
+
+  // Build tips breakdown
+  const tipsBreakdown: TipBreakdown[] = []
+  for (const [bandId, data] of tipsByBand) {
+    tipsBreakdown.push({
+      bandId,
+      bandName: data.name,
+      bandSlug: data.slug,
+      avatarKey: data.avatarKey,
+      avatarUrl: null,
+      tipCount: data.tipCount,
+      totalGrossCents: data.totalGross,
+      totalNetCents: data.totalNet,
+    })
+  }
+
+  // Sort tips by net amount descending
+  tipsBreakdown.sort((a, b) => b.totalNetCents - a.totalNetCents)
+
+  // Aggregate purchases
+  const purchasesBreakdown: PurchaseBreakdown[] = []
+  let totalPurchasesGross = 0
+  let totalPurchasesArtistShare = 0
+
+  for (const purchase of purchasesData || []) {
+    const band = purchase.bands as any
+    const album = purchase.albums as any
+
+    // Skip if this is the user's own band
+    if (band.owner_id === user.id) {
+      continue
+    }
+
+    const grossAmount = purchase.amount_cents || 0
+    const artistShare = purchase.artist_share_cents || 0
+
+    totalPurchasesGross += grossAmount
+    totalPurchasesArtistShare += artistShare
+
+    purchasesBreakdown.push({
+      bandId: band.id,
+      bandName: band.name,
+      bandSlug: band.slug,
+      avatarKey: band.avatar_key,
+      avatarUrl: null,
+      albumId: album.id,
+      albumTitle: album.title,
+      albumSlug: album.slug,
+      coverKey: album.cover_key,
+      amountCents: grossAmount,
+      artistShareCents: artistShare,
+      purchasedAt: purchase.completed_at,
+    })
+  }
+
+  // Sort purchases by artist share descending
+  purchasesBreakdown.sort((a, b) => b.artistShareCents - a.artistShareCents)
+
+  // Calculate unique artists supported across all sources
+  const allSupportedBandIds = new Set<string>([
+    ...artistBreakdown.map(a => a.bandId),
+    ...tipsBreakdown.map(t => t.bandId),
+    ...purchasesBreakdown.map(p => p.bandId),
+  ])
+
+  // Calculate combined totals
+  const streamingArtistEarnings = isSubscribed ? artistPoolCents : 0
+  const totalToArtistsCents = streamingArtistEarnings + totalTipsNet + totalPurchasesArtistShare
+  const totalContributionCents = (isSubscribed ? totalPaidCents : 0) + totalTipsGross + totalPurchasesGross
+
+  // Determine if user has any impact to show
+  const hasImpact = totalStreams > 0 || totalTipCount > 0 || purchasesBreakdown.length > 0
+
   return {
     period,
     periodLabel,
     subscriptionStatus,
-    totalPaidCents,
-    artistPoolCents,
-    cmoFeeCents,
-    platformFeeCents,
+    totalPaidCents: isSubscribed ? totalPaidCents : 0,
+    artistPoolCents: isSubscribed ? artistPoolCents : 0,
+    cmoFeeCents: isSubscribed ? cmoFeeCents : 0,
+    platformFeeCents: isSubscribed ? platformFeeCents : 0,
     totalListeningSeconds,
     totalStreams,
-    monthsSubscribed,
+    monthsSubscribed: isSubscribed ? monthsSubscribed : 0,
     artistBreakdown,
+
+    tips: {
+      totalGrossCents: totalTipsGross,
+      totalNetCents: totalTipsNet,
+      tipCount: totalTipCount,
+      artistBreakdown: tipsBreakdown,
+    },
+
+    purchases: {
+      totalGrossCents: totalPurchasesGross,
+      totalArtistShareCents: totalPurchasesArtistShare,
+      purchaseCount: purchasesBreakdown.length,
+      breakdown: purchasesBreakdown,
+    },
+
+    totals: {
+      totalToArtistsCents,
+      totalContributionCents,
+      uniqueArtistsSupported: allSupportedBandIds.size,
+    },
+
+    hasImpact,
   }
 })

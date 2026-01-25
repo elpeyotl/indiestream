@@ -18,7 +18,9 @@ export default defineEventHandler(async (event) => {
     showArtistsSupported,
     showListeningTime,
     showStreamCount,
-    showArtistBreakdown
+    showArtistBreakdown,
+    showTips,
+    showPurchases
   } = body
 
   // Validate period
@@ -27,7 +29,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Validate at least one stat is enabled
-  if (!showTotalEarned && !showArtistsSupported && !showListeningTime && !showStreamCount && !showArtistBreakdown) {
+  if (!showTotalEarned && !showArtistsSupported && !showListeningTime && !showStreamCount && !showArtistBreakdown && !showTips && !showPurchases) {
     throw createError({ statusCode: 400, statusMessage: 'At least one stat must be enabled' })
   }
 
@@ -46,6 +48,8 @@ export default defineEventHandler(async (event) => {
       show_listening_time: showListeningTime ?? true,
       show_stream_count: showStreamCount ?? true,
       show_artist_breakdown: showArtistBreakdown ?? false,
+      show_tips: showTips ?? true,
+      show_purchases: showPurchases ?? true,
     })
     .select()
     .single()

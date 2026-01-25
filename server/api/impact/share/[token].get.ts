@@ -83,6 +83,57 @@ export default defineEventHandler(async (event) => {
   const totalPaidCents = SUBSCRIPTION_PRICE_CENTS * monthsSubscribed
   const artistPoolCents = Math.floor(totalPaidCents * ARTIST_SHARE)
 
+  // Fetch tips and purchases for the period if enabled
+  let tipsData: any[] = []
+  let purchasesData: any[] = []
+
+  if (share.show_tips) {
+    const { data: tips } = await client
+      .from('artist_tips')
+      .select(`
+        amount_cents,
+        net_amount_cents,
+        band_id,
+        bands!inner (id, name, owner_id)
+      `)
+      .eq('tipper_id', share.user_id)
+      .eq('status', 'completed')
+      .gte('created_at', periodStartStr)
+      .lte('created_at', periodEndStr)
+
+    // Filter out tips to own bands
+    tipsData = (tips || []).filter((tip: any) => tip.bands?.owner_id !== share.user_id)
+  }
+
+  if (share.show_purchases) {
+    const { data: purchases } = await client
+      .from('purchases')
+      .select(`
+        amount_cents,
+        artist_share_cents,
+        band_id,
+        albums!inner (title),
+        bands!inner (id, name, owner_id)
+      `)
+      .eq('user_id', share.user_id)
+      .eq('status', 'completed')
+      .gte('completed_at', periodStartStr)
+      .lte('completed_at', periodEndStr)
+
+    // Filter out purchases of own albums
+    purchasesData = (purchases || []).filter((p: any) => p.bands?.owner_id !== share.user_id)
+  }
+
+  // Calculate tips totals
+  const totalTipsNetCents = tipsData.reduce((sum: number, tip: any) => sum + (tip.net_amount_cents || 0), 0)
+  const tipCount = tipsData.length
+  const tipBandIds = new Set(tipsData.map((t: any) => t.band_id))
+
+  // Calculate purchases totals
+  const totalPurchasesArtistShareCents = purchasesData.reduce((sum: number, p: any) => sum + (p.artist_share_cents || 0), 0)
+  const purchaseCount = purchasesData.length
+  const purchaseBandIds = new Set(purchasesData.map((p: any) => p.band_id))
+
   // Get listening data for the period
   const { data: listeningData } = await client
     .from('listening_history')
@@ -189,6 +240,16 @@ export default defineEventHandler(async (event) => {
     .eq('id', share.user_id)
     .single()
 
+  // Calculate combined unique artists
+  const allBandIds = new Set([
+    ...Array.from(bandListening.keys()),
+    ...tipBandIds,
+    ...purchaseBandIds
+  ])
+
+  // Calculate combined total to artists
+  const totalToArtistsCents = artistPoolCents + totalTipsNetCents + totalPurchasesArtistShareCents
+
   // Filter stats based on visibility preferences
   return {
     period: share.period,
@@ -198,11 +259,21 @@ export default defineEventHandler(async (event) => {
       avatarKey: profile?.avatar_key || null,
     },
     stats: {
-      totalEarned: share.show_total_earned ? artistPoolCents : null,
-      artistsSupported: share.show_artists_supported ? artistBreakdown.length : null,
+      totalEarned: share.show_total_earned ? totalToArtistsCents : null,
+      artistsSupported: share.show_artists_supported ? allBandIds.size : null,
       listeningTime: share.show_listening_time ? totalListeningSeconds : null,
       streamCount: share.show_stream_count ? totalStreams : null,
     },
     artistBreakdown: share.show_artist_breakdown ? artistBreakdown.slice(0, 10) : [],
+    tips: share.show_tips ? {
+      totalNetCents: totalTipsNetCents,
+      tipCount,
+      artistCount: tipBandIds.size,
+    } : null,
+    purchases: share.show_purchases ? {
+      totalArtistShareCents: totalPurchasesArtistShareCents,
+      purchaseCount,
+      artistCount: purchaseBandIds.size,
+    } : null,
   }
 })
