@@ -78,29 +78,44 @@ export default defineEventHandler(async (event) => {
             console.log('Tip marked as completed:', { tipId, grossAmount, netAmount })
 
             // Credit artist balance with net amount
-            // Get the band owner to credit their balance
-            const { data: band } = await supabase
-              .from('bands')
-              .select('owner_id')
-              .eq('id', bandId)
+            // Get existing balance for this band
+            const { data: existingBalance } = await supabase
+              .from('artist_balances')
+              .select('balance_cents, lifetime_earnings_cents')
+              .eq('band_id', bandId)
               .single()
 
-            if (band?.owner_id) {
-              // Upsert artist balance
-              const { data: existingBalance } = await supabase
+            if (existingBalance) {
+              // Update existing balance
+              const { error: updateError } = await supabase
                 .from('artist_balances')
-                .select('pending_cents')
-                .eq('user_id', band.owner_id)
-                .single()
+                .update({
+                  balance_cents: existingBalance.balance_cents + netAmount,
+                  lifetime_earnings_cents: existingBalance.lifetime_earnings_cents + netAmount,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('band_id', bandId)
 
-              const newPending = (existingBalance?.pending_cents || 0) + netAmount
+              if (updateError) {
+                console.error('Failed to update artist balance:', updateError)
+              } else {
+                console.log('Artist balance credited (tip):', { bandId, netAmount })
+              }
+            } else {
+              // Create new balance record
+              const { error: insertError } = await supabase
+                .from('artist_balances')
+                .insert({
+                  band_id: bandId,
+                  balance_cents: netAmount,
+                  lifetime_earnings_cents: netAmount,
+                })
 
-              await supabase.from('artist_balances').upsert({
-                user_id: band.owner_id,
-                pending_cents: newPending,
-              }, { onConflict: 'user_id' })
-
-              console.log('Artist balance credited:', { ownerId: band.owner_id, netAmount })
+              if (insertError) {
+                console.error('Failed to create artist balance:', insertError)
+              } else {
+                console.log('Artist balance created (tip):', { bandId, netAmount })
+              }
             }
           }
           break
@@ -398,19 +413,63 @@ export default defineEventHandler(async (event) => {
             paymentIntentId: paymentIntent.id,
           })
 
-          // Update purchase status to completed
-          const { error: updateError } = await supabase
+          // Update purchase status to completed and get purchase details
+          const { data: purchase, error: updateError } = await supabase
             .from('purchases')
             .update({
               status: 'completed',
               completed_at: new Date().toISOString(),
             })
             .eq('stripe_payment_intent_id', paymentIntent.id)
+            .select('band_id, artist_share_cents')
+            .single()
 
           if (updateError) {
             console.error('Failed to update purchase status:', updateError)
           } else {
             console.log('Purchase marked as completed')
+
+            // Credit artist balance with their share
+            if (purchase?.band_id && purchase?.artist_share_cents > 0) {
+              const { data: existingBalance } = await supabase
+                .from('artist_balances')
+                .select('balance_cents, lifetime_earnings_cents')
+                .eq('band_id', purchase.band_id)
+                .single()
+
+              if (existingBalance) {
+                // Update existing balance
+                const { error: balanceError } = await supabase
+                  .from('artist_balances')
+                  .update({
+                    balance_cents: existingBalance.balance_cents + purchase.artist_share_cents,
+                    lifetime_earnings_cents: existingBalance.lifetime_earnings_cents + purchase.artist_share_cents,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('band_id', purchase.band_id)
+
+                if (balanceError) {
+                  console.error('Failed to update artist balance (purchase):', balanceError)
+                } else {
+                  console.log('Artist balance credited (purchase):', { bandId: purchase.band_id, amount: purchase.artist_share_cents })
+                }
+              } else {
+                // Create new balance record
+                const { error: insertError } = await supabase
+                  .from('artist_balances')
+                  .insert({
+                    band_id: purchase.band_id,
+                    balance_cents: purchase.artist_share_cents,
+                    lifetime_earnings_cents: purchase.artist_share_cents,
+                  })
+
+                if (insertError) {
+                  console.error('Failed to create artist balance (purchase):', insertError)
+                } else {
+                  console.log('Artist balance created (purchase):', { bandId: purchase.band_id, amount: purchase.artist_share_cents })
+                }
+              }
+            }
 
             // Send purchase confirmation email
             if (userId) {

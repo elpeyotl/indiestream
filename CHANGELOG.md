@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.24.1] - 2026-01-25
+
+### Fixed
+- **Artist Earnings from Tips & Purchases**:
+  - Fixed tip completion webhook to correctly credit `artist_balances` using `band_id` instead of incorrect `user_id`/`pending_cents` columns
+  - Added missing artist balance credit for album purchases - purchases now properly add to artist earnings
+  - Both tips and purchases now update `balance_cents` and `lifetime_earnings_cents` in artist_balances table
+
 ## [0.24.0] - 2026-01-25
 
 ### Added
