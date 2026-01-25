@@ -77,11 +77,12 @@
         <p class="text-zinc-400 mb-2">Hey {{ userName }}.</p>
         <p class="text-2xl md:text-3xl font-bold text-zinc-100 mb-3">
           This month you've put
-          <span class="text-teal-400">{{ formatCurrency(stats?.monthlyEarnings || 0) }}</span>
+          <span class="text-teal-400">{{ formatCurrency(totalSubscriberSupport) }}</span>
           directly into artists' pockets.
         </p>
         <p class="text-zinc-400 mb-6">
           {{ stats?.artistsSupported || 0 }} artists supported · {{ stats?.hoursListened || 0 }} hours listened
+          <template v-if="stats?.tipCount"> · {{ stats.tipCount }} {{ stats.tipCount === 1 ? 'tip' : 'tips' }}</template>
         </p>
         <UButton color="gray" variant="ghost" to="/dashboard/stats">
           See your full impact
@@ -131,5 +132,11 @@ const formatCurrency = (cents: number): string => {
 const totalDirectSupport = computed(() => {
   if (!props.stats) return 0
   return (props.stats.tipsCents || 0) + (props.stats.purchasesCents || 0)
+})
+
+// Calculate total support for subscribers (streaming share + tips + purchases)
+const totalSubscriberSupport = computed(() => {
+  if (!props.stats) return 0
+  return (props.stats.monthlyEarnings || 0) + (props.stats.tipsCents || 0) + (props.stats.purchasesCents || 0)
 })
 </script>
