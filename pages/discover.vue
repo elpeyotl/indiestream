@@ -14,13 +14,13 @@
       v-if="user && (newFromArtistsLoading || newFromArtists.length > 0)"
       class="mb-12"
     >
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100">
-          New From Your Artists
+      <div class="flex items-center justify-between mb-4 border-b-2 border-zinc-800 pb-3">
+        <h2 class="text-xl font-black uppercase tracking-tighter text-white">
+          NEW FROM YOUR ARTISTS
         </h2>
         <NuxtLink
           to="/library/following"
-          class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
+          class="text-sm text-fuchsia-500 hover:text-fuchsia-400 flex items-center gap-1 font-bold uppercase tracking-tight"
         >
           See all
           <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
@@ -32,9 +32,9 @@
           :key="i"
           class="w-40 flex-shrink-0 snap-start md:w-auto"
         >
-          <USkeleton class="aspect-square rounded-lg mb-3" />
-          <USkeleton class="h-4 w-3/4 mb-2" />
-          <USkeleton class="h-3 w-1/2" />
+          <div class="aspect-square bg-zinc-900 border-2 border-zinc-800 mb-3" />
+          <div class="h-4 w-3/4 bg-zinc-800 mb-2" />
+          <div class="h-3 w-1/2 bg-zinc-800" />
         </div>
       </HomeScrollRow>
       <HomeScrollRow v-else>
@@ -49,7 +49,7 @@
             :loading="loadingPlayId === album.id"
             @play="playAlbum"
           />
-          <p v-if="album.created_at" class="text-xs text-zinc-500 mt-1">
+          <p v-if="album.created_at" class="text-xs text-zinc-500 font-mono mt-1">
             {{ formatTimeAgo(album.created_at) }}
           </p>
         </div>
@@ -61,8 +61,8 @@
       v-if="user && (recentActivityLoading || uniqueRecentAlbums.length > 0)"
       class="mb-12"
     >
-      <div class="mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100">Continue Listening</h2>
+      <div class="mb-4 border-b-2 border-zinc-800 pb-3">
+        <h2 class="text-xl font-black uppercase tracking-tighter text-white">CONTINUE LISTENING</h2>
       </div>
       <HomeScrollRow v-if="recentActivityLoading">
         <div
@@ -70,9 +70,9 @@
           :key="i"
           class="w-40 flex-shrink-0 snap-start md:w-auto"
         >
-          <USkeleton class="aspect-square rounded-lg mb-3" />
-          <USkeleton class="h-4 w-3/4 mb-2" />
-          <USkeleton class="h-3 w-1/2" />
+          <div class="aspect-square bg-zinc-900 border-2 border-zinc-800 mb-3" />
+          <div class="h-4 w-3/4 bg-zinc-800 mb-2" />
+          <div class="h-3 w-1/2 bg-zinc-800" />
         </div>
       </HomeScrollRow>
       <HomeScrollRow v-else>
@@ -92,16 +92,16 @@
 
     <!-- Fresh This Week -->
     <section class="mb-12">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center justify-between mb-4 border-b-2 border-zinc-800 pb-3">
         <div>
-          <h2 class="text-xl font-semibold text-zinc-100">Fresh This Week</h2>
-          <p class="text-sm text-zinc-500">
+          <h2 class="text-xl font-black uppercase tracking-tighter text-white">FRESH THIS WEEK</h2>
+          <p class="text-sm text-zinc-500 font-mono">
             New arrivals, chronological. No algorithm.
           </p>
         </div>
         <NuxtLink
           to="/new-releases"
-          class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
+          class="text-sm text-fuchsia-500 hover:text-fuchsia-400 flex items-center gap-1 font-bold uppercase tracking-tight"
         >
           See all
           <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
@@ -113,9 +113,9 @@
           :key="i"
           class="w-40 flex-shrink-0 snap-start md:w-auto"
         >
-          <USkeleton class="aspect-square rounded-lg mb-3" />
-          <USkeleton class="h-4 w-3/4 mb-2" />
-          <USkeleton class="h-3 w-1/2" />
+          <div class="aspect-square bg-zinc-900 border-2 border-zinc-800 mb-3" />
+          <div class="h-4 w-3/4 bg-zinc-800 mb-2" />
+          <div class="h-3 w-1/2 bg-zinc-800" />
         </div>
       </HomeScrollRow>
       <HomeScrollRow v-else>
@@ -139,9 +139,9 @@
       v-if="featuredAlbumsLoading || featuredAlbums.length > 0"
       class="mb-12"
     >
-      <div class="mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100">Featured Albums</h2>
-        <p class="text-sm text-zinc-500">
+      <div class="mb-4 border-b-2 border-zinc-800 pb-3">
+        <h2 class="text-xl font-black uppercase tracking-tighter text-white">FEATURED ALBUMS</h2>
+        <p class="text-sm text-zinc-500 font-mono">
           {{ featuredAlbumsBlurb }}
         </p>
       </div>
@@ -151,9 +151,9 @@
           :key="i"
           class="w-40 flex-shrink-0 snap-start md:w-auto"
         >
-          <USkeleton class="aspect-square rounded-lg mb-3" />
-          <USkeleton class="h-4 w-3/4 mb-2" />
-          <USkeleton class="h-3 w-1/2" />
+          <div class="aspect-square bg-zinc-900 border-2 border-zinc-800 mb-3" />
+          <div class="h-4 w-3/4 bg-zinc-800 mb-2" />
+          <div class="h-3 w-1/2 bg-zinc-800" />
         </div>
       </HomeScrollRow>
       <HomeScrollRow v-else>
@@ -177,8 +177,8 @@
       v-if="featuredArtistsLoading || featuredArtists.length > 0"
       class="mb-12"
     >
-      <div class="mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100">Featured Artists</h2>
+      <div class="mb-4 border-b-2 border-zinc-800 pb-3">
+        <h2 class="text-xl font-black uppercase tracking-tighter text-white">FEATURED ARTISTS</h2>
       </div>
       <HomeScrollRow v-if="featuredArtistsLoading">
         <div
@@ -186,8 +186,8 @@
           :key="i"
           class="w-40 flex-shrink-0 snap-start md:w-auto"
         >
-          <USkeleton class="aspect-square rounded-full mb-2" />
-          <USkeleton class="h-4 w-3/4 mb-2" />
+          <div class="aspect-square bg-zinc-900 border-2 border-zinc-800 mb-2" />
+          <div class="h-4 w-3/4 bg-zinc-800 mb-2" />
         </div>
       </HomeScrollRow>
       <HomeScrollRow v-else>
@@ -211,14 +211,14 @@
       v-if="curatedPlaylistsLoading || curatedPlaylists.length > 0"
       class="mb-12"
     >
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100 flex items-center gap-2">
-          <UIcon name="i-heroicons-star" class="w-5 h-5 text-amber-400" />
-          Curated Playlists
+      <div class="flex items-center justify-between mb-4 border-b-2 border-zinc-800 pb-3">
+        <h2 class="text-xl font-black uppercase tracking-tighter text-white flex items-center gap-2">
+          <UIcon name="i-heroicons-star" class="w-5 h-5 text-fuchsia-500" />
+          CURATED PLAYLISTS
         </h2>
         <NuxtLink
           to="/playlists"
-          class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
+          class="text-sm text-fuchsia-500 hover:text-fuchsia-400 flex items-center gap-1 font-bold uppercase tracking-tight"
         >
           See all
           <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
@@ -230,9 +230,9 @@
           :key="i"
           class="w-40 flex-shrink-0 snap-start md:w-auto"
         >
-          <USkeleton class="aspect-square rounded-lg mb-3" />
-          <USkeleton class="h-4 w-3/4 mb-2" />
-          <USkeleton class="h-3 w-1/2" />
+          <div class="aspect-square bg-zinc-900 border-2 border-zinc-800 mb-3" />
+          <div class="h-4 w-3/4 bg-zinc-800 mb-2" />
+          <div class="h-3 w-1/2 bg-zinc-800" />
         </div>
       </HomeScrollRow>
       <HomeScrollRow v-else>
@@ -253,11 +253,11 @@
 
     <!-- Browse Genres -->
     <section class="mb-12">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-zinc-100">Browse Genres</h2>
+      <div class="flex items-center justify-between mb-4 border-b-2 border-zinc-800 pb-3">
+        <h2 class="text-xl font-black uppercase tracking-tighter text-white">BROWSE GENRES</h2>
         <NuxtLink
           to="/genres"
-          class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
+          class="text-sm text-fuchsia-500 hover:text-fuchsia-400 flex items-center gap-1 font-bold uppercase tracking-tight"
         >
           See all
           <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
@@ -267,7 +267,7 @@
         v-if="featuredGenresLoading"
         class="grid grid-cols-2 sm:grid-cols-3 gap-4"
       >
-        <USkeleton v-for="i in 6" :key="i" class="h-40 rounded-xl" />
+        <div v-for="i in 6" :key="i" class="h-40 bg-zinc-900 border-2 border-zinc-800" />
       </div>
       <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <FeaturedGenreCard
@@ -280,20 +280,21 @@
     </section>
 
     <!-- Empty State -->
-    <div v-if="showEmptyState" class="text-center py-20">
-      <div
-        class="w-20 h-20 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center"
-      >
+    <div v-if="showEmptyState" class="text-center py-20 bg-zinc-950 border-2 border-zinc-800">
+      <div class="w-20 h-20 mx-auto mb-6 border-2 border-fuchsia-500 flex items-center justify-center">
         <UIcon
           name="i-heroicons-musical-note"
-          class="w-10 h-10 text-violet-400"
+          class="w-10 h-10 text-fuchsia-500"
         />
       </div>
-      <h2 class="text-2xl font-bold text-zinc-100 mb-2">No Music Yet</h2>
-      <p class="text-zinc-400 mb-6">Be the first to upload your music!</p>
-      <UButton color="violet" to="/dashboard/artist/new">
+      <h2 class="text-2xl font-black uppercase tracking-tighter text-white mb-2">NO MUSIC YET</h2>
+      <p class="text-zinc-400 font-mono text-sm mb-6">Be the first to upload your music!</p>
+      <NuxtLink
+        to="/dashboard/artist/new"
+        class="inline-block px-6 py-3 bg-fuchsia-600 text-white font-bold uppercase tracking-tight rounded-none shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+      >
         Create Artist Profile
-      </UButton>
+      </NuxtLink>
     </div>
   </div>
 </template>
@@ -302,6 +303,10 @@
 import type { Database } from '~/types/database'
 import type { Band } from '~/stores/band'
 import type { RecentlyPlayedTrack } from '~/stores/recentActivity'
+
+definePageMeta({
+  layout: 'brutalist'
+})
 
 interface Album {
   id: string

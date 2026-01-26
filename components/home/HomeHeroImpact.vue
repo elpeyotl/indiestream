@@ -1,93 +1,111 @@
 <template>
   <section class="mb-12">
     <!-- Logged Out Hero -->
-    <div v-if="!isLoggedIn" class="bg-gradient-to-br from-violet-900/30 to-zinc-900 rounded-2xl p-8 md:p-12">
-      <h1 class="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">
-        Heavy Riffs. Fair Pay. No Bullshit.
+    <div v-if="!isLoggedIn" class="bg-zinc-950 border-2 border-zinc-800 p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)]">
+      <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white mb-4">
+        HEAVY RIFFS. FAIR PAY. NO BULLSHIT.
       </h1>
-      <p class="text-lg text-zinc-300 mb-6 max-w-xl">
+      <p class="text-lg text-zinc-400 font-mono mb-6 max-w-xl">
         70% to artists. 15% to royalties. The only streaming platform where your money actually goes to your artists.
       </p>
       <div class="flex flex-wrap gap-3">
-        <UButton color="violet" size="lg" to="/register">
+        <NuxtLink
+          to="/register"
+          class="px-6 py-3 bg-fuchsia-600 text-white font-bold uppercase tracking-tight shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+        >
           Sign Up
-        </UButton>
-        <UButton color="gray" variant="ghost" size="lg" to="/discover">
+        </NuxtLink>
+        <NuxtLink
+          to="/discover"
+          class="px-6 py-3 border-2 border-zinc-800 text-zinc-400 font-bold uppercase tracking-tight hover:border-fuchsia-500 hover:text-fuchsia-500 transition-colors"
+        >
           Browse Music
-        </UButton>
+        </NuxtLink>
       </div>
     </div>
 
     <!-- Free User with Impact (tips/purchases) -->
-    <div v-else-if="!isSubscribed && hasImpact" class="bg-gradient-to-br from-pink-900/20 via-violet-900/20 to-emerald-900/20 rounded-2xl p-8 md:p-12">
-      <div v-if="loading" class="animate-pulse">
-        <USkeleton class="h-8 w-32 mb-4" />
-        <USkeleton class="h-12 w-64 mb-3" />
-        <USkeleton class="h-5 w-48" />
+    <div v-else-if="!isSubscribed && hasImpact" class="bg-zinc-950 border-2 border-fuchsia-500/50 p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)]">
+      <div v-if="loading" class="animate-pulse space-y-4">
+        <div class="h-6 w-32 bg-zinc-800 border-2 border-zinc-700"></div>
+        <div class="h-10 w-64 bg-zinc-800 border-2 border-zinc-700"></div>
+        <div class="h-5 w-48 bg-zinc-800 border-2 border-zinc-700"></div>
       </div>
       <template v-else>
-        <p class="text-zinc-400 mb-2">Hey {{ userName }}.</p>
-        <p class="text-2xl md:text-3xl font-bold text-zinc-100 mb-3">
+        <p class="text-zinc-500 font-mono text-sm uppercase tracking-tight mb-2">Hey {{ userName }}.</p>
+        <p class="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white mb-3">
           You've directly supported
-          <span class="text-violet-400">{{ stats?.artistsSupported || 0 }} {{ (stats?.artistsSupported || 0) === 1 ? 'artist' : 'artists' }}</span>
+          <span class="text-fuchsia-500">{{ stats?.artistsSupported || 0 }} {{ (stats?.artistsSupported || 0) === 1 ? 'artist' : 'artists' }}</span>
           with
-          <span class="text-pink-400">{{ formatCurrency(totalDirectSupport) }}</span>.
+          <span class="text-pink-500">{{ formatCurrency(totalDirectSupport) }}</span>.
         </p>
-        <p class="text-zinc-400 mb-4">
+        <p class="text-zinc-500 font-mono text-sm mb-6">
           <template v-if="stats?.tipCount">{{ stats.tipCount }} {{ stats.tipCount === 1 ? 'tip' : 'tips' }}</template>
           <template v-if="stats?.tipCount && stats?.purchaseCount"> · </template>
           <template v-if="stats?.purchaseCount">{{ stats.purchaseCount }} {{ stats.purchaseCount === 1 ? 'album purchase' : 'album purchases' }}</template>
         </p>
         <div class="flex flex-wrap gap-3">
-          <UButton color="violet" size="lg" to="/pricing">
+          <NuxtLink
+            to="/pricing"
+            class="px-6 py-3 bg-fuchsia-600 text-white font-bold uppercase tracking-tight shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+          >
             Add Streaming Support
-          </UButton>
-          <UButton color="gray" variant="ghost" to="/dashboard/stats">
+          </NuxtLink>
+          <NuxtLink
+            to="/dashboard/stats"
+            class="px-6 py-3 border-2 border-zinc-800 text-zinc-400 font-bold uppercase tracking-tight hover:border-fuchsia-500 hover:text-fuchsia-500 transition-colors inline-flex items-center gap-2"
+          >
             See your impact
-            <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 ml-1" />
-          </UButton>
+            <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+          </NuxtLink>
         </div>
       </template>
     </div>
 
     <!-- Free User Hero (no impact yet) -->
-    <div v-else-if="!isSubscribed" class="bg-gradient-to-br from-teal-900/30 to-zinc-900 rounded-2xl p-8 md:p-12">
-      <h2 class="text-2xl md:text-3xl font-bold text-zinc-100 mb-3">
-        Stream fair. Support direct.
+    <div v-else-if="!isSubscribed" class="bg-zinc-950 border-2 border-zinc-800 p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)]">
+      <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white mb-3">
+        STREAM FAIR. SUPPORT DIRECT.
       </h2>
-      <p class="text-lg text-zinc-300 mb-2">
+      <p class="text-lg text-zinc-300 font-mono mb-2">
         CHF 9.99/month. 70% to artists.
       </p>
-      <p class="text-zinc-400 mb-6">
+      <p class="text-zinc-500 font-mono text-sm mb-6">
         See exactly where your money goes.
       </p>
-      <UButton color="violet" size="lg" to="/pricing">
+      <NuxtLink
+        to="/pricing"
+        class="inline-block px-6 py-3 bg-fuchsia-600 text-white font-bold uppercase tracking-tight shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+      >
         Subscribe
-      </UButton>
+      </NuxtLink>
     </div>
 
     <!-- Subscriber Hero -->
-    <div v-else class="bg-gradient-to-br from-violet-900/20 to-zinc-900 rounded-2xl p-8 md:p-12">
-      <div v-if="loading" class="animate-pulse">
-        <USkeleton class="h-8 w-32 mb-4" />
-        <USkeleton class="h-12 w-64 mb-3" />
-        <USkeleton class="h-5 w-48" />
+    <div v-else class="bg-zinc-950 border-2 border-fuchsia-500/50 p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)]">
+      <div v-if="loading" class="animate-pulse space-y-4">
+        <div class="h-6 w-32 bg-zinc-800 border-2 border-zinc-700"></div>
+        <div class="h-10 w-64 bg-zinc-800 border-2 border-zinc-700"></div>
+        <div class="h-5 w-48 bg-zinc-800 border-2 border-zinc-700"></div>
       </div>
       <template v-else>
-        <p class="text-zinc-400 mb-2">Hey {{ userName }}.</p>
-        <p class="text-2xl md:text-3xl font-bold text-zinc-100 mb-3">
+        <p class="text-zinc-500 font-mono text-sm uppercase tracking-tight mb-2">Hey {{ userName }}.</p>
+        <p class="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white mb-3">
           This month you've put
-          <span class="text-teal-400">{{ formatCurrency(totalSubscriberSupport) }}</span>
+          <span class="text-emerald-500">{{ formatCurrency(totalSubscriberSupport) }}</span>
           directly into artists' pockets.
         </p>
-        <p class="text-zinc-400 mb-6">
+        <p class="text-zinc-500 font-mono text-sm mb-6">
           {{ stats?.artistsSupported || 0 }} artists supported · {{ stats?.hoursListened || 0 }} hours listened
           <template v-if="stats?.tipCount"> · {{ stats.tipCount }} {{ stats.tipCount === 1 ? 'tip' : 'tips' }}</template>
         </p>
-        <UButton color="gray" variant="ghost" to="/dashboard/stats">
+        <NuxtLink
+          to="/dashboard/stats"
+          class="inline-flex items-center gap-2 px-6 py-3 border-2 border-zinc-800 text-zinc-400 font-bold uppercase tracking-tight hover:border-fuchsia-500 hover:text-fuchsia-500 transition-colors"
+        >
           See your full impact
-          <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 ml-1" />
-        </UButton>
+          <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
+        </NuxtLink>
       </template>
     </div>
   </section>

@@ -1,46 +1,47 @@
 <template>
   <div>
     <!-- Hero Section -->
-    <section class="relative overflow-hidden">
-      <!-- Background gradient -->
-      <div class="absolute inset-0 bg-gradient-to-br from-violet-950/50 via-zinc-950 to-fuchsia-950/30" />
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/20 via-transparent to-transparent" />
+    <section class="border-b-2 border-zinc-800">
+      <div class="container mx-auto px-4 py-24 md:py-32 text-center">
+        <!-- Logo -->
+        <h1 class="text-6xl md:text-8xl font-black uppercase tracking-tighter text-white mb-6">
+          FAIRTUNE
+        </h1>
+        <p class="font-mono text-fuchsia-500 text-sm mb-8">/// HEAVY RIFFS. FAIR PAY. NO BULLSHIT. ///</p>
 
-      <div class="relative container mx-auto px-4 py-24 md:py-32 text-center">
-        <!-- Logo with tagline -->
-        <div class="flex justify-center mb-10">
-          <img src="/logo-text.svg" alt="Fairtune - Heavy Riffs. Fair Pay. No Bullshit." class="h-24 md:h-32" />
-        </div>
-
-        <p class="text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
+        <p class="text-xl font-mono text-zinc-400 max-w-2xl mx-auto mb-10">
           Like Bandcamp, but you can stream. 70% goes to the artists you actually listen to.
-          <span class="text-zinc-300">We show you every cent.</span>
+          <span class="text-white font-bold">We show you every cent.</span>
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <UButton size="xl" color="violet" to="/register">
-            Start Listening Free
-            <template #trailing>
-              <UIcon name="i-heroicons-arrow-right-20-solid" />
-            </template>
-          </UButton>
-          <UButton size="xl" color="gray" variant="ghost" to="/pricing">
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          <NuxtLink
+            to="/register"
+            class="px-8 py-4 bg-fuchsia-600 text-white font-bold text-lg uppercase tracking-tight rounded-none shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[6px_6px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+          >
+            Start Listening Free →
+          </NuxtLink>
+          <NuxtLink
+            to="/pricing"
+            class="px-8 py-4 border-2 border-fuchsia-500 text-fuchsia-500 font-bold text-lg uppercase tracking-tight rounded-none hover:bg-fuchsia-500 hover:text-black transition-colors"
+          >
             See Pricing
-          </UButton>
+          </NuxtLink>
         </div>
 
         <!-- Stats -->
-        <div class="flex flex-wrap justify-center gap-8 md:gap-16 mt-16 pt-8 border-t border-zinc-800/50">
-          <div class="text-center">
-            <div class="text-3xl font-bold text-teal-400">70%</div>
-            <div class="text-sm text-zinc-500">Direct to Artists</div>
+        <div class="grid grid-cols-3 gap-4 max-w-2xl mx-auto border-2 border-zinc-800 rounded-none">
+          <div class="p-6 border-r-2 border-zinc-800">
+            <div class="text-4xl md:text-5xl font-black text-fuchsia-500 tracking-tighter">70%</div>
+            <div class="text-xs font-mono text-zinc-500 uppercase mt-1">Direct to Artists</div>
           </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-violet-400">15%</div>
-            <div class="text-sm text-zinc-500">To Royalties</div>
+          <div class="p-6 border-r-2 border-zinc-800">
+            <div class="text-4xl md:text-5xl font-black text-white tracking-tighter">15%</div>
+            <div class="text-xs font-mono text-zinc-500 uppercase mt-1">To Royalties</div>
           </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-fuchsia-400">15%</div>
-            <div class="text-sm text-zinc-500">Keeps Us Running</div>
+          <div class="p-6">
+            <div class="text-4xl md:text-5xl font-black text-fuchsia-500 tracking-tighter">15%</div>
+            <div class="text-xs font-mono text-zinc-500 uppercase mt-1">Platform</div>
           </div>
         </div>
       </div>
@@ -48,38 +49,38 @@
 
     <!-- Features Section -->
     <section class="container mx-auto px-4 py-24">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">How it actually works</h2>
-        <p class="text-zinc-400 max-w-xl mx-auto">No pools. No mystery math. Your $9.99 goes to the artists you listen to.</p>
+      <div class="text-center mb-16 border-b-2 border-zinc-800 pb-8">
+        <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white mb-4">HOW IT ACTUALLY WORKS</h2>
+        <p class="text-zinc-400 font-mono max-w-xl mx-auto">No pools. No mystery math. Your $9.99 goes to the artists you listen to.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="group p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-violet-500/50 transition-all duration-300">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center mb-6">
-            <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-white" />
+        <div class="p-8 bg-zinc-950 border-2 border-zinc-800 rounded-none shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[6px_6px_0px_0px_rgba(139,92,246,0.5)] transition-all">
+          <div class="w-12 h-12 border-2 border-fuchsia-500 flex items-center justify-center mb-6">
+            <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-fuchsia-500" />
           </div>
-          <h3 class="text-xl font-semibold mb-3 text-zinc-100">Your money, your artists</h3>
-          <p class="text-zinc-400">
+          <h3 class="text-xl font-black uppercase tracking-tight text-white mb-3">Your money, your artists</h3>
+          <p class="text-zinc-400 font-mono text-sm">
             Listen to one band all month? They get your money. Not Drake. Not a pool. Just the artist you chose.
           </p>
         </div>
 
-        <div class="group p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-violet-500/50 transition-all duration-300">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center mb-6">
-            <UIcon name="i-heroicons-eye" class="w-6 h-6 text-white" />
+        <div class="p-8 bg-zinc-950 border-2 border-zinc-800 rounded-none shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[6px_6px_0px_0px_rgba(139,92,246,0.5)] transition-all">
+          <div class="w-12 h-12 border-2 border-fuchsia-500 flex items-center justify-center mb-6">
+            <UIcon name="i-heroicons-eye" class="w-6 h-6 text-fuchsia-500" />
           </div>
-          <h3 class="text-xl font-semibold mb-3 text-zinc-100">We show you everything</h3>
-          <p class="text-zinc-400">
+          <h3 class="text-xl font-black uppercase tracking-tight text-white mb-3">We show you everything</h3>
+          <p class="text-zinc-400 font-mono text-sm">
             Every month you see exactly where your money went. Artist by artist, dollar by dollar. No secrets.
           </p>
         </div>
 
-        <div class="group p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-violet-500/50 transition-all duration-300">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 flex items-center justify-center mb-6">
-            <UIcon name="i-heroicons-musical-note" class="w-6 h-6 text-white" />
+        <div class="p-8 bg-zinc-950 border-2 border-zinc-800 rounded-none shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[6px_6px_0px_0px_rgba(139,92,246,0.5)] transition-all">
+          <div class="w-12 h-12 border-2 border-fuchsia-500 flex items-center justify-center mb-6">
+            <UIcon name="i-heroicons-musical-note" class="w-6 h-6 text-fuchsia-500" />
           </div>
-          <h3 class="text-xl font-semibold mb-3 text-zinc-100">Independent only</h3>
-          <p class="text-zinc-400">
+          <h3 class="text-xl font-black uppercase tracking-tight text-white mb-3">Independent only</h3>
+          <p class="text-zinc-400 font-mono text-sm">
             No major labels. No algorithm-bait playlists. Just artists who own their music and fans who give a shit.
           </p>
         </div>
@@ -87,46 +88,41 @@
     </section>
 
     <!-- How it works -->
-    <section class="container mx-auto px-4 py-24">
+    <section class="container mx-auto px-4 py-24 border-t-2 border-zinc-800">
       <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-16">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">Where your $9.99 goes</h2>
-          <p class="text-zinc-400">Every month. No exceptions. No mystery.</p>
+        <div class="text-center mb-16 border-b-2 border-zinc-800 pb-8">
+          <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white mb-4">WHERE YOUR $9.99 GOES</h2>
+          <p class="text-zinc-400 font-mono">Every month. No exceptions. No mystery.</p>
         </div>
 
-        <div class="relative">
-          <!-- Connection line -->
-          <div class="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-violet-500 via-fuchsia-500 to-teal-500 hidden md:block" />
-
-          <div class="space-y-8">
-            <div class="flex gap-6 items-start">
-              <div class="w-16 h-16 rounded-full bg-teal-500/20 border-2 border-teal-500 flex items-center justify-center shrink-0 relative z-10">
-                <span class="text-teal-400 font-bold">$6.99</span>
-              </div>
-              <div class="pt-3">
-                <h3 class="text-xl font-semibold mb-2">70% to artists</h3>
-                <p class="text-zinc-400">Split between the artists you actually listened to. Play one band all month? They get all of it.</p>
-              </div>
+        <div class="space-y-6">
+          <div class="flex gap-6 items-start p-6 bg-zinc-950 border-2 border-zinc-800 rounded-none shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)]">
+            <div class="w-20 h-20 border-2 border-fuchsia-500 flex items-center justify-center shrink-0">
+              <span class="text-fuchsia-500 font-black text-xl">$6.99</span>
             </div>
-
-            <div class="flex gap-6 items-start">
-              <div class="w-16 h-16 rounded-full bg-violet-500/20 border-2 border-violet-500 flex items-center justify-center shrink-0 relative z-10">
-                <span class="text-violet-400 font-bold">$1.50</span>
-              </div>
-              <div class="pt-3">
-                <h3 class="text-xl font-semibold mb-2">15% to royalties</h3>
-                <p class="text-zinc-400">Songwriters get paid. PROs like ASCAP, BMI, GEMA, and SUISA make sure the people who wrote the music get their cut.</p>
-              </div>
+            <div>
+              <h3 class="text-xl font-black uppercase tracking-tight text-white mb-2">70% TO ARTISTS</h3>
+              <p class="text-zinc-400 font-mono text-sm">Split between the artists you actually listened to. Play one band all month? They get all of it.</p>
             </div>
+          </div>
 
-            <div class="flex gap-6 items-start">
-              <div class="w-16 h-16 rounded-full bg-fuchsia-500/20 border-2 border-fuchsia-500 flex items-center justify-center shrink-0 relative z-10">
-                <span class="text-fuchsia-400 font-bold">$1.50</span>
-              </div>
-              <div class="pt-3">
-                <h3 class="text-xl font-semibold mb-2">15% keeps us running</h3>
-                <p class="text-zinc-400">Servers, bandwidth, payment processing, and a small team. No investors. No VC money. Just costs.</p>
-              </div>
+          <div class="flex gap-6 items-start p-6 bg-zinc-950 border-2 border-zinc-800 rounded-none shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)]">
+            <div class="w-20 h-20 border-2 border-zinc-600 flex items-center justify-center shrink-0">
+              <span class="text-white font-black text-xl">$1.50</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-black uppercase tracking-tight text-white mb-2">15% TO ROYALTIES</h3>
+              <p class="text-zinc-400 font-mono text-sm">Songwriters get paid. PROs like ASCAP, BMI, GEMA, and SUISA make sure the people who wrote the music get their cut.</p>
+            </div>
+          </div>
+
+          <div class="flex gap-6 items-start p-6 bg-zinc-950 border-2 border-zinc-800 rounded-none shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)]">
+            <div class="w-20 h-20 border-2 border-zinc-600 flex items-center justify-center shrink-0">
+              <span class="text-white font-black text-xl">$1.50</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-black uppercase tracking-tight text-white mb-2">15% KEEPS US RUNNING</h3>
+              <p class="text-zinc-400 font-mono text-sm">Servers, bandwidth, payment processing, and a small team. No investors. No VC money. Just costs.</p>
             </div>
           </div>
         </div>
@@ -134,43 +130,68 @@
     </section>
 
     <!-- New Releases Preview -->
-    <section v-if="newReleases.length > 0" class="container mx-auto px-4 py-24">
-      <div class="flex items-center justify-between mb-8">
+    <section v-if="newReleases.length > 0" class="container mx-auto px-4 py-24 border-t-2 border-zinc-800">
+      <div class="flex items-center justify-between mb-8 border-b-2 border-zinc-800 pb-4">
         <div>
-          <h2 class="text-3xl md:text-4xl font-bold mb-2">Fresh Releases</h2>
-          <p class="text-zinc-400">The latest music from independent artists</p>
+          <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white">FRESH RELEASES</h2>
+          <p class="text-zinc-500 font-mono text-sm">/// The latest from independent artists</p>
         </div>
-        <UButton color="violet" variant="ghost" to="/discover">
-          View All
-          <template #trailing>
-            <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
-          </template>
-        </UButton>
+        <NuxtLink
+          to="/discover"
+          class="px-4 py-2 border-2 border-fuchsia-500 text-fuchsia-500 font-bold text-sm uppercase tracking-tight rounded-none hover:bg-fuchsia-500 hover:text-black transition-colors"
+        >
+          View All →
+        </NuxtLink>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        <AlbumCard
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <NuxtLink
           v-for="album in newReleases"
           :key="album.id"
-          :album="album"
-          :cover-url="albumCovers[album.id]"
-        />
+          :to="`/${album.band?.slug}/${album.slug}`"
+          class="group"
+        >
+          <div class="border border-zinc-700 rounded-none overflow-hidden shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[6px_6px_0px_0px_rgba(139,92,246,0.5)] transition-all">
+            <div class="relative aspect-square overflow-hidden">
+              <img
+                v-if="albumCovers[album.id] || album.cover_url"
+                :src="(albumCovers[album.id] ?? album.cover_url) ?? undefined"
+                :alt="album.title"
+                class="w-full h-full object-cover grayscale contrast-125 brightness-90 sepia-[.20] group-hover:grayscale-0 group-hover:sepia-0 group-hover:contrast-100 group-hover:brightness-100 transition-all duration-300"
+              />
+              <div
+                v-else
+                class="w-full h-full bg-gradient-to-br from-fuchsia-900 to-zinc-900 flex items-center justify-center"
+              >
+                <span class="text-4xl font-black text-white/30">{{ album.title?.charAt(0) || '?' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-2">
+            <p class="font-black text-sm uppercase tracking-tight text-white truncate group-hover:text-fuchsia-500 transition-colors">
+              {{ album.title }}
+            </p>
+            <p class="font-mono text-xs text-zinc-500 truncate">
+              {{ album.band?.name }}
+            </p>
+          </div>
+        </NuxtLink>
       </div>
     </section>
 
     <!-- Featured Artists Preview -->
-    <section v-if="featuredArtists.length > 0" class="container mx-auto px-4 py-24 border-t border-zinc-800/50">
-      <div class="flex items-center justify-between mb-8">
+    <section v-if="featuredArtists.length > 0" class="container mx-auto px-4 py-24 border-t-2 border-zinc-800">
+      <div class="flex items-center justify-between mb-8 border-b-2 border-zinc-800 pb-4">
         <div>
-          <h2 class="text-3xl md:text-4xl font-bold mb-2">Featured Artists</h2>
-          <p class="text-zinc-400">Discover talented independent musicians</p>
+          <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white">FEATURED ARTISTS</h2>
+          <p class="text-zinc-500 font-mono text-sm">/// Discover independent musicians</p>
         </div>
-        <UButton color="violet" variant="ghost" to="/discover">
-          Discover More
-          <template #trailing>
-            <UIcon name="i-heroicons-arrow-right" class="w-4 h-4" />
-          </template>
-        </UButton>
+        <NuxtLink
+          to="/artists"
+          class="px-4 py-2 border-2 border-fuchsia-500 text-fuchsia-500 font-bold text-sm uppercase tracking-tight rounded-none hover:bg-fuchsia-500 hover:text-black transition-colors"
+        >
+          Discover More →
+        </NuxtLink>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -180,40 +201,49 @@
           :to="`/${artist.slug}`"
           class="group"
         >
-          <div class="relative w-full pb-[100%] rounded-lg overflow-hidden bg-zinc-800 mb-2 shadow-lg group-hover:shadow-xl transition-shadow">
-            <img
-              v-if="artist.avatar_url"
-              :src="artist.avatar_url"
-              :alt="artist.name"
-              class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            <div
-              v-else
-              class="absolute inset-0 w-full h-full flex items-center justify-center"
-              :style="{ background: `linear-gradient(135deg, ${artist.theme_color || '#8B5CF6'} 0%, #c026d3 100%)` }"
-            >
-              <span class="text-4xl font-bold text-white">{{ artist.name.charAt(0) }}</span>
+          <div class="border-2 border-zinc-800 rounded-none overflow-hidden shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[6px_6px_0px_0px_rgba(139,92,246,0.5)] transition-all">
+            <div class="relative aspect-square overflow-hidden">
+              <img
+                v-if="artist.avatar_url"
+                :src="artist.avatar_url"
+                :alt="artist.name"
+                class="w-full h-full object-cover grayscale contrast-125 brightness-90 sepia-[.20] group-hover:grayscale-0 group-hover:sepia-0 group-hover:contrast-100 group-hover:brightness-100 transition-all duration-300"
+              />
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center"
+                :style="{ background: `linear-gradient(135deg, ${artist.theme_color || '#8B5CF6'} 0%, #c026d3 100%)` }"
+              >
+                <span class="text-5xl font-black text-white/80">{{ artist.name.charAt(0) }}</span>
+              </div>
             </div>
           </div>
-          <p class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">{{ artist.name }}</p>
-          <p class="text-sm text-zinc-500">Artist</p>
+          <div class="mt-2">
+            <p class="font-black text-sm uppercase tracking-tight text-white truncate group-hover:text-fuchsia-500 transition-colors">
+              {{ artist.name }}
+            </p>
+            <p class="font-mono text-xs text-zinc-500">Artist</p>
+          </div>
         </NuxtLink>
       </div>
     </section>
 
     <!-- CTA Section -->
     <section class="container mx-auto px-4 py-24">
-      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-12 md:p-16 text-center">
-        <div class="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
-        <div class="relative">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to put your money where your ears are?</h2>
-          <p class="text-violet-100 max-w-xl mx-auto mb-8">
-            $9.99/month. 70% to artists. You'll see exactly where it goes.
-          </p>
-          <UButton size="xl" color="white" to="/register">
-            Start Listening
-          </UButton>
-        </div>
+      <div class="border-2 border-zinc-800 bg-zinc-950 p-12 md:p-16 text-center shadow-[8px_8px_0px_0px_rgba(139,92,246,0.5)]">
+        <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-4">
+          FUCK THE<br />
+          <span class="text-fuchsia-500">ALGORITHM</span>
+        </h2>
+        <p class="text-zinc-400 font-mono max-w-xl mx-auto mb-8">
+          $9.99/month. 70% to artists. You'll see exactly where it goes. No mystery pools. No payola playlists.
+        </p>
+        <NuxtLink
+          to="/register"
+          class="inline-block px-8 py-4 bg-fuchsia-600 text-white font-bold text-lg uppercase tracking-tight rounded-none shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[6px_6px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+        >
+          Start Listening →
+        </NuxtLink>
       </div>
     </section>
   </div>
@@ -223,9 +253,9 @@
 import type { Band } from '~/stores/band'
 import type { Album } from '~/stores/album'
 
-// Redirect authenticated users to discover page (handled by middleware)
 definePageMeta({
-  middleware: 'landing-redirect'
+  middleware: 'landing-redirect',
+  layout: 'brutalist'
 })
 
 const client = useSupabaseClient()
@@ -239,15 +269,8 @@ const newReleases = ref<Album[]>([])
 const featuredArtists = ref<Band[]>([])
 const albumCovers = ref<Record<string, string>>({})
 
-const formatNumber = (num: number): string => {
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
-  if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
-  return num.toString()
-}
-
 const loadNewReleases = async () => {
   try {
-    // Load moderation setting first
     await loadModerationSetting()
 
     const { data, error } = await client
@@ -270,17 +293,15 @@ const loadNewReleases = async () => {
       `)
       .eq('is_published', true)
       .order('created_at', { ascending: false })
-      .limit(15) // Fetch more since some may be filtered out
+      .limit(15)
 
     if (error) throw error
 
-    // Map and filter albums
     let albums = (data || []).map((album: any) => ({
       ...album,
       band: Array.isArray(album.band) ? album.band[0] : album.band
     }))
 
-    // Filter out albums with no approved tracks when moderation is enabled
     if (moderationEnabled.value) {
       albums = albums.filter(album => {
         if (!album.tracks || album.tracks.length === 0) return false
@@ -288,15 +309,13 @@ const loadNewReleases = async () => {
       })
     }
 
-    newReleases.value = albums.slice(0, 5) // Return max 5 after filtering
+    newReleases.value = albums.slice(0, 5)
 
-    // Load cover URLs (use cover_key if available, otherwise fall back to cover_url)
     for (const album of newReleases.value) {
       if (album.cover_key) {
         try {
           albumCovers.value[album.id] = await getStreamUrl(album.cover_key)
         } catch (e) {
-          // Fall back to cover_url if stream URL fails
           if (album.cover_url) {
             albumCovers.value[album.id] = album.cover_url
           }
@@ -328,7 +347,6 @@ const loadFeaturedArtists = async () => {
   }
 }
 
-// Fallback: Handle auth redirect if middleware didn't catch it
 onMounted(async () => {
   if (window.location.hash) {
     const hashParams = new URLSearchParams(window.location.hash.substring(1))
@@ -336,13 +354,11 @@ onMounted(async () => {
     const refreshToken = hashParams.get('refresh_token')
 
     if (accessToken && refreshToken) {
-      // Redirect to confirm page with the hash
       window.location.href = '/confirm' + window.location.hash
       return
     }
   }
 
-  // Load discover data
   await Promise.all([
     loadNewReleases(),
     loadFeaturedArtists(),

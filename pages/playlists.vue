@@ -1,33 +1,31 @@
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 border-b-2 border-zinc-800 pb-6">
       <div>
-        <h1 class="text-3xl font-bold text-zinc-100">Playlists</h1>
-        <p class="text-zinc-400 mt-1">
+        <h1 class="text-3xl font-black uppercase tracking-tighter text-white">PLAYLISTS</h1>
+        <p class="text-zinc-400 font-mono text-sm mt-1">
           Discover playlists curated by the community
         </p>
       </div>
 
       <!-- Filter -->
       <div class="flex items-center gap-2">
-        <UButton
-          :color="!showCuratedOnly ? 'violet' : 'gray'"
-          :variant="!showCuratedOnly ? 'solid' : 'ghost'"
-          size="sm"
+        <button
+          class="px-4 py-2 font-bold uppercase tracking-tight rounded-none transition-all text-sm"
+          :class="!showCuratedOnly ? 'bg-fuchsia-600 text-white shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)]' : 'border-2 border-zinc-800 text-zinc-400 hover:border-fuchsia-500'"
           @click="showCuratedOnly = false"
         >
           All
-        </UButton>
-        <UButton
-          :color="showCuratedOnly ? 'violet' : 'gray'"
-          :variant="showCuratedOnly ? 'solid' : 'ghost'"
-          size="sm"
+        </button>
+        <button
+          class="px-4 py-2 font-bold uppercase tracking-tight rounded-none transition-all text-sm flex items-center gap-1"
+          :class="showCuratedOnly ? 'bg-fuchsia-600 text-white shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)]' : 'border-2 border-zinc-800 text-zinc-400 hover:border-fuchsia-500'"
           @click="showCuratedOnly = true"
         >
-          <UIcon name="i-heroicons-star" class="w-4 h-4 mr-1" />
+          <UIcon name="i-heroicons-star" class="w-4 h-4" />
           Curated
-        </UButton>
+        </button>
       </div>
     </div>
 
@@ -37,19 +35,24 @@
       class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
     >
       <div v-for="i in 20" :key="i">
-        <USkeleton class="aspect-square rounded-lg mb-3" />
-        <USkeleton class="h-4 w-3/4 mb-2" />
-        <USkeleton class="h-3 w-1/2" />
+        <div class="aspect-square bg-zinc-900 border-2 border-zinc-800 mb-3" />
+        <div class="h-4 w-3/4 bg-zinc-800 mb-2" />
+        <div class="h-3 w-1/2 bg-zinc-800" />
       </div>
     </div>
 
     <!-- Empty State -->
-    <EmptyState
-      v-else-if="playlists.length === 0"
-      icon="i-heroicons-queue-list"
-      :title="showCuratedOnly ? 'No curated playlists yet' : 'No playlists yet'"
-      :description="showCuratedOnly ? 'Check back soon for staff-picked playlists.' : 'Be the first to create a public playlist!'"
-    />
+    <div v-else-if="playlists.length === 0" class="text-center py-20 bg-zinc-950 border-2 border-zinc-800">
+      <div class="w-16 h-16 mx-auto mb-4 border-2 border-fuchsia-500 flex items-center justify-center">
+        <UIcon name="i-heroicons-queue-list" class="w-8 h-8 text-fuchsia-500" />
+      </div>
+      <h2 class="text-xl font-black uppercase tracking-tighter text-white mb-2">
+        {{ showCuratedOnly ? 'NO CURATED PLAYLISTS YET' : 'NO PLAYLISTS YET' }}
+      </h2>
+      <p class="text-zinc-400 font-mono text-sm">
+        {{ showCuratedOnly ? 'Check back soon for staff-picked playlists.' : 'Be the first to create a public playlist!' }}
+      </p>
+    </div>
 
     <!-- Playlists Grid -->
     <div v-else>
@@ -67,20 +70,23 @@
 
       <!-- Load More -->
       <div v-if="hasMore" class="flex justify-center mt-8">
-        <UButton
-          color="gray"
-          variant="soft"
-          :loading="loadingMore"
+        <button
+          class="px-6 py-3 border-2 border-zinc-800 text-zinc-400 font-bold uppercase tracking-tight rounded-none hover:border-fuchsia-500 hover:text-fuchsia-500 transition-colors disabled:opacity-50"
+          :disabled="loadingMore"
           @click="loadMore"
         >
-          Load More
-        </UButton>
+          {{ loadingMore ? 'Loading...' : 'Load More' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  layout: 'brutalist'
+})
+
 interface Playlist {
   id: string
   title: string

@@ -1,60 +1,67 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-zinc-100 mb-2">Artists</h1>
-      <p class="text-zinc-400">Discover independent artists on Fairtune</p>
+    <div class="mb-8 border-b-2 border-zinc-800 pb-6">
+      <h1 class="text-3xl font-black uppercase tracking-tighter text-white mb-2">ARTISTS</h1>
+      <p class="text-zinc-400 font-mono text-sm">Discover independent artists on Fairtune</p>
     </div>
 
     <!-- Filters -->
     <div class="flex flex-wrap gap-4 mb-8">
       <!-- Search -->
-      <UInput
+      <input
         v-model="searchQuery"
+        type="text"
         placeholder="Search artists..."
-        icon="i-heroicons-magnifying-glass"
-        class="w-full sm:w-64"
+        class="w-full sm:w-64 px-4 py-2 bg-black border-2 border-zinc-800 text-white font-mono rounded-none focus:border-fuchsia-500 focus:outline-none transition-colors"
         @input="debouncedSearch"
       />
 
       <!-- Genre Filter -->
-      <USelectMenu
-        v-model="selectedGenre"
-        :options="genreOptions"
-        placeholder="All Genres"
-        class="w-full sm:w-48"
-        @change="loadArtists(true)"
-      />
+      <select
+        v-model="selectedGenreValue"
+        class="w-full sm:w-48 px-4 py-2 bg-black border-2 border-zinc-800 text-white font-mono rounded-none focus:border-fuchsia-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+        @change="handleGenreChange"
+      >
+        <option v-for="option in genreOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
 
       <!-- Sort -->
-      <USelectMenu
-        v-model="sortBy"
-        :options="sortOptions"
-        class="w-full sm:w-48"
-        @change="loadArtists(true)"
-      />
+      <select
+        v-model="sortByValue"
+        class="w-full sm:w-48 px-4 py-2 bg-black border-2 border-zinc-800 text-white font-mono rounded-none focus:border-fuchsia-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+        @change="handleSortChange"
+      >
+        <option v-for="option in sortOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
     </div>
 
     <!-- Loading Skeleton -->
     <div v-if="loading || isSearching" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
       <div v-for="i in 12" :key="i" class="text-center">
-        <USkeleton class="w-full aspect-square rounded-full mb-3" />
-        <USkeleton class="h-5 w-3/4 mx-auto mb-1" />
-        <USkeleton class="h-4 w-1/2 mx-auto" />
+        <div class="w-full aspect-square bg-zinc-900 border-2 border-zinc-800 mb-3" />
+        <div class="h-5 w-3/4 mx-auto bg-zinc-800 mb-1" />
+        <div class="h-4 w-1/2 mx-auto bg-zinc-800" />
       </div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error && !isSearching" class="text-center py-20">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+    <div v-else-if="error && !isSearching" class="text-center py-20 bg-zinc-950 border-2 border-zinc-800">
+      <div class="w-16 h-16 mx-auto mb-4 border-2 border-red-500 flex items-center justify-center">
         <UIcon name="i-heroicons-exclamation-circle" class="w-8 h-8 text-red-400" />
       </div>
-      <h2 class="text-xl font-semibold text-zinc-100 mb-2">Failed to Load Artists</h2>
-      <p class="text-zinc-400 mb-6">Something went wrong. Please try again.</p>
-      <UButton color="violet" @click="loadArtists(true)">
-        <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 mr-2" />
+      <h2 class="text-xl font-black uppercase tracking-tighter text-white mb-2">FAILED TO LOAD</h2>
+      <p class="text-zinc-400 font-mono text-sm mb-6">Something went wrong. Please try again.</p>
+      <button
+        class="px-6 py-3 bg-fuchsia-600 text-white font-bold uppercase tracking-tight rounded-none shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+        @click="loadArtists(true)"
+      >
         Retry
-      </UButton>
+      </button>
     </div>
 
     <template v-else>
@@ -73,26 +80,32 @@
       </div>
 
       <!-- Empty State -->
-      <EmptyState
-        v-else
-        icon="i-heroicons-user-group"
-        title="No Artists Found"
-        :description="searchQuery ? `No artists match &quot;${searchQuery}&quot;` : 'No artists available yet'"
-        :action-label="searchQuery ? 'Clear Search' : undefined"
-        @action="clearSearch"
-      />
+      <div v-else class="text-center py-20 bg-zinc-950 border-2 border-zinc-800">
+        <div class="w-16 h-16 mx-auto mb-4 border-2 border-fuchsia-500 flex items-center justify-center">
+          <UIcon name="i-heroicons-user-group" class="w-8 h-8 text-fuchsia-500" />
+        </div>
+        <h2 class="text-xl font-black uppercase tracking-tighter text-white mb-2">NO ARTISTS FOUND</h2>
+        <p class="text-zinc-400 font-mono text-sm mb-6">
+          {{ searchQuery ? `No artists match "${searchQuery}"` : 'No artists available yet' }}
+        </p>
+        <button
+          v-if="searchQuery"
+          class="px-6 py-3 border-2 border-fuchsia-500 text-fuchsia-500 font-bold uppercase tracking-tight rounded-none hover:bg-fuchsia-500 hover:text-black transition-colors"
+          @click="clearSearch"
+        >
+          Clear Search
+        </button>
+      </div>
 
       <!-- Load More -->
       <div v-if="hasMore && artists.length > 0" class="mt-12 text-center">
-        <UButton
-          color="gray"
-          variant="ghost"
-          size="lg"
-          :loading="loadingMore"
+        <button
+          class="px-6 py-3 border-2 border-zinc-800 text-zinc-400 font-bold uppercase tracking-tight rounded-none hover:border-fuchsia-500 hover:text-fuchsia-500 transition-colors disabled:opacity-50"
+          :disabled="loadingMore"
           @click="loadMore"
         >
-          Load More Artists
-        </UButton>
+          {{ loadingMore ? 'Loading...' : 'Load More Artists' }}
+        </button>
       </div>
     </template>
   </div>
@@ -100,6 +113,10 @@
 
 <script setup lang="ts">
 import type { Band } from '~/stores/band'
+
+definePageMeta({
+  layout: 'brutalist'
+})
 
 const client = useSupabaseClient()
 const albumStore = useAlbumStore()
@@ -113,8 +130,10 @@ const loadingMore = ref(false)
 const loadingPlayId = ref<string | null>(null)
 const artists = ref<Band[]>([])
 const searchQuery = ref('')
-const selectedGenre = ref<{ label: string; value: string } | undefined>(undefined)
-const sortBy = ref<{ label: string; value: string }>({ label: 'Newest', value: 'newest' })
+const selectedGenreValue = ref('')
+const selectedGenre = computed(() => genreOptions.value.find(o => o.value === selectedGenreValue.value))
+const sortByValue = ref('newest')
+const sortBy = computed(() => sortOptions.find(o => o.value === sortByValue.value) || sortOptions[0])
 const hasMore = ref(false)
 const page = ref(0)
 const pageSize = 24
@@ -122,8 +141,8 @@ const pageSize = 24
 // Check if any filters are active (search, genre, or non-default sort)
 const hasActiveFilters = computed(() => {
   return searchQuery.value.trim() !== '' ||
-    selectedGenre.value?.value ||
-    sortBy.value.value !== 'newest'
+    selectedGenreValue.value !== '' ||
+    sortByValue.value !== 'newest'
 })
 
 const sortOptions = [
@@ -134,6 +153,14 @@ const sortOptions = [
 const genreOptions = ref<{ label: string; value: string }[]>([
   { label: 'All Genres', value: '' },
 ])
+
+const handleGenreChange = () => {
+  loadArtists(true)
+}
+
+const handleSortChange = () => {
+  loadArtists(true)
+}
 
 // Fetch initial artists and genres using Nuxt's useLazyAsyncData
 const { data: initialData, pending: loading, error: fetchError } = await useLazyAsyncData(
@@ -293,14 +320,14 @@ const loadArtists = async (reset = false) => {
     }
 
     // Genre filter
-    if (selectedGenre.value?.value) {
-      query = query.contains('genres', [selectedGenre.value.value])
+    if (selectedGenreValue.value) {
+      query = query.contains('genres', [selectedGenreValue.value])
     }
 
     // Sorting
-    if (sortBy.value.value === 'newest') {
+    if (sortByValue.value === 'newest') {
       query = query.order('created_at', { ascending: false })
-    } else if (sortBy.value.value === 'name') {
+    } else if (sortByValue.value === 'name') {
       query = query.order('name', { ascending: true })
     }
 

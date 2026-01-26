@@ -1,52 +1,53 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <!-- Header + Search -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-zinc-100 mb-2">Browse by Genre</h1>
-      <p class="text-zinc-400 mb-4">Explore music across different styles and sounds</p>
-      <UInput
+    <div class="mb-8 border-b-2 border-zinc-800 pb-6">
+      <h1 class="text-3xl font-black uppercase tracking-tighter text-white mb-2">BROWSE BY GENRE</h1>
+      <p class="text-zinc-400 font-mono text-sm mb-4">Explore music across different styles and sounds</p>
+      <input
         v-model="searchQuery"
+        type="text"
         placeholder="Search genres..."
-        icon="i-heroicons-magnifying-glass"
-        size="lg"
-        :ui="{ wrapper: 'max-w-md' }"
+        class="w-full max-w-md px-4 py-2 bg-black border-2 border-zinc-800 text-white font-mono rounded-none focus:border-fuchsia-500 focus:outline-none transition-colors"
       />
     </div>
 
     <!-- Loading Skeleton -->
     <div v-if="loading" class="space-y-8">
       <div>
-        <USkeleton class="h-5 w-24 mb-3" />
+        <div class="h-5 w-24 bg-zinc-800 mb-3" />
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <USkeleton v-for="i in 6" :key="i" class="h-40 rounded-xl" />
+          <div v-for="i in 6" :key="i" class="h-40 bg-zinc-900 border-2 border-zinc-800" />
         </div>
       </div>
       <div>
-        <USkeleton class="h-5 w-24 mb-3" />
+        <div class="h-5 w-24 bg-zinc-800 mb-3" />
         <div class="flex flex-wrap gap-2">
-          <USkeleton v-for="i in 12" :key="i" class="h-8 w-24 rounded-full" />
+          <div v-for="i in 12" :key="i" class="h-8 w-24 bg-zinc-800" />
         </div>
       </div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="text-center py-20">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+    <div v-else-if="error" class="text-center py-20 bg-zinc-950 border-2 border-zinc-800">
+      <div class="w-16 h-16 mx-auto mb-4 border-2 border-red-500 flex items-center justify-center">
         <UIcon name="i-heroicons-exclamation-circle" class="w-8 h-8 text-red-400" />
       </div>
-      <h2 class="text-xl font-semibold text-zinc-100 mb-2">Failed to Load Genres</h2>
-      <p class="text-zinc-400 mb-6">Something went wrong. Please try again.</p>
-      <UButton color="violet" @click="loadGenres">
-        <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 mr-2" />
+      <h2 class="text-xl font-black uppercase tracking-tighter text-white mb-2">FAILED TO LOAD</h2>
+      <p class="text-zinc-400 font-mono text-sm mb-6">Something went wrong. Please try again.</p>
+      <button
+        class="px-6 py-3 bg-fuchsia-600 text-white font-bold uppercase tracking-tight rounded-none shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+        @click="loadGenres"
+      >
         Retry
-      </UButton>
+      </button>
     </div>
 
     <!-- Content -->
     <div v-else-if="genres.length > 0" class="space-y-8">
       <!-- Featured Section -->
       <section v-if="featuredGenres.length > 0">
-        <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">Featured</h2>
+        <h2 class="text-sm font-bold uppercase tracking-tight text-zinc-400 mb-3 border-b-2 border-zinc-800 pb-2">FEATURED</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <FeaturedGenreCard
             v-for="genre in featuredGenres"
@@ -62,13 +63,13 @@
 
       <!-- All Genres (Tag Cloud) -->
       <section v-if="regularGenres.length > 0">
-        <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">All Genres</h2>
+        <h2 class="text-sm font-bold uppercase tracking-tight text-zinc-400 mb-3 border-b-2 border-zinc-800 pb-2">ALL GENRES</h2>
         <div class="flex flex-wrap gap-2">
           <NuxtLink
             v-for="genre in visibleRegularGenres"
             :key="genre.slug"
             :to="`/genres/${genre.slug}`"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-full text-sm text-zinc-300 hover:text-zinc-100 transition-colors"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border-2 border-zinc-800 hover:border-fuchsia-500 text-sm text-zinc-300 hover:text-fuchsia-500 transition-colors font-mono"
           >
             {{ genre.name }}
             <span class="text-zinc-500">{{ genre.artistCount }}</span>
@@ -78,7 +79,7 @@
         <!-- Show All Button -->
         <button
           v-if="hasMoreTags && !showAllTags"
-          class="mt-4 text-sm text-violet-400 hover:text-violet-300 transition-colors"
+          class="mt-4 text-sm text-fuchsia-500 hover:text-fuchsia-400 transition-colors font-mono"
           @click="showAllTags = true"
         >
           Show all {{ regularGenres.length }} genres
@@ -86,23 +87,28 @@
       </section>
 
       <!-- No Results -->
-      <div v-if="searchQuery && filteredGenres.length === 0" class="text-center py-12">
+      <div v-if="searchQuery && filteredGenres.length === 0" class="text-center py-12 bg-zinc-950 border-2 border-zinc-800">
         <UIcon name="i-heroicons-magnifying-glass" class="w-12 h-12 mx-auto mb-3 text-zinc-600" />
-        <p class="text-zinc-400">No genres found for "{{ searchQuery }}"</p>
+        <p class="text-zinc-400 font-mono">No genres found for "{{ searchQuery }}"</p>
       </div>
     </div>
 
     <!-- Empty State -->
-    <EmptyState
-      v-else
-      icon="i-heroicons-musical-note"
-      title="No Genres Yet"
-      description="Artists haven't added genres to their profiles yet"
-    />
+    <div v-else class="text-center py-20 bg-zinc-950 border-2 border-zinc-800">
+      <div class="w-16 h-16 mx-auto mb-4 border-2 border-fuchsia-500 flex items-center justify-center">
+        <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-fuchsia-500" />
+      </div>
+      <h2 class="text-xl font-black uppercase tracking-tighter text-white mb-2">NO GENRES YET</h2>
+      <p class="text-zinc-400 font-mono text-sm">Artists haven't added genres to their profiles yet</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  layout: 'brutalist'
+})
+
 const albumStore = useAlbumStore()
 const { getCachedCoverUrl } = albumStore
 const playerStore = usePlayerStore()

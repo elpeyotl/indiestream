@@ -1,26 +1,25 @@
 <template>
-  <div class="min-h-screen bg-zinc-950">
+  <div class="min-h-screen">
     <!-- Sticky Search Header (below main layout header) -->
-    <div class="sticky top-[57px] z-30 bg-zinc-950/95 backdrop-blur-lg border-b border-zinc-800/50 safe-area-top">
+    <div class="sticky top-[57px] z-30 bg-black/95 backdrop-blur-lg border-b-2 border-zinc-800 safe-area-top">
       <div class="container mx-auto px-4 py-3 space-y-3">
         <!-- Back Button and Title -->
         <div class="flex items-center gap-3">
           <button
             @click="goBack"
-            class="inline-flex items-center gap-1 p-2 -ml-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 rounded-lg transition-all duration-200 active:scale-95"
+            class="inline-flex items-center gap-1 p-2 -ml-2 text-zinc-400 hover:text-fuchsia-500 transition-all"
             aria-label="Go back"
           >
             <UIcon name="i-heroicons-chevron-left" class="w-5 h-5" />
           </button>
-          <h1 class="text-lg font-semibold text-zinc-100">Search</h1>
+          <h1 class="text-lg font-black uppercase tracking-tighter text-white">SEARCH</h1>
         </div>
         <!-- Search Input -->
-        <UInput
+        <input
           v-model="query"
+          type="text"
           placeholder="Search artists, albums, tracks..."
-          size="lg"
-          icon="i-heroicons-magnifying-glass"
-          :loading="searching"
+          class="w-full px-4 py-3 bg-black border-2 border-zinc-800 text-white font-mono rounded-none focus:border-fuchsia-500 focus:outline-none transition-colors"
           autofocus
           @input="debouncedSearch"
         />
@@ -295,8 +294,12 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  layout: 'brutalist'
+})
+
 useHead({
-  title: 'Search - Fairtune',
+  title: 'Search | Fairtune',
 })
 
 const router = useRouter()

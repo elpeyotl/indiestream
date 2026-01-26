@@ -1,9 +1,9 @@
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-zinc-100">New Releases</h1>
-      <p class="text-zinc-400 mt-1">
+    <div class="mb-8 border-b-2 border-zinc-800 pb-6">
+      <h1 class="text-3xl font-black uppercase tracking-tighter text-white">NEW RELEASES</h1>
+      <p class="text-zinc-400 font-mono text-sm mt-1">
         Fresh music, chronologically. No algorithm.
       </p>
     </div>
@@ -14,19 +14,20 @@
       class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
     >
       <div v-for="i in 20" :key="i">
-        <USkeleton class="aspect-square rounded-lg mb-3" />
-        <USkeleton class="h-4 w-3/4 mb-2" />
-        <USkeleton class="h-3 w-1/2" />
+        <div class="aspect-square bg-zinc-900 border-2 border-zinc-800 mb-3" />
+        <div class="h-4 w-3/4 bg-zinc-800 mb-2" />
+        <div class="h-3 w-1/2 bg-zinc-800" />
       </div>
     </div>
 
     <!-- Empty State -->
-    <EmptyState
-      v-else-if="albums.length === 0"
-      icon="i-heroicons-musical-note"
-      title="No new releases"
-      description="Check back soon for fresh music from independent artists."
-    />
+    <div v-else-if="albums.length === 0" class="text-center py-20 bg-zinc-950 border-2 border-zinc-800">
+      <div class="w-16 h-16 mx-auto mb-4 border-2 border-fuchsia-500 flex items-center justify-center">
+        <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-fuchsia-500" />
+      </div>
+      <h2 class="text-xl font-black uppercase tracking-tighter text-white mb-2">NO NEW RELEASES</h2>
+      <p class="text-zinc-400 font-mono text-sm">Check back soon for fresh music from independent artists.</p>
+    </div>
 
     <!-- Albums Grid -->
     <div v-else>
@@ -38,7 +39,7 @@
             :loading="loadingPlayId === album.id"
             @play="playAlbum"
           />
-          <p v-if="album.created_at" class="text-xs text-zinc-500 mt-1">
+          <p v-if="album.created_at" class="text-xs text-zinc-500 font-mono mt-1">
             {{ formatTimeAgo(album.created_at) }}
           </p>
         </div>
@@ -46,20 +47,23 @@
 
       <!-- Load More -->
       <div v-if="hasMore" class="flex justify-center mt-8">
-        <UButton
-          color="gray"
-          variant="soft"
-          :loading="loadingMore"
+        <button
+          class="px-6 py-3 border-2 border-zinc-800 text-zinc-400 font-bold uppercase tracking-tight rounded-none hover:border-fuchsia-500 hover:text-fuchsia-500 transition-colors disabled:opacity-50"
+          :disabled="loadingMore"
           @click="loadMore"
         >
-          Load More
-        </UButton>
+          {{ loadingMore ? 'Loading...' : 'Load More' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  layout: 'brutalist'
+})
+
 interface Album {
   id: string
   title: string
