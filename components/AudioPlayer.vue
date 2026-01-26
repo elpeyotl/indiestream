@@ -39,7 +39,7 @@
             <!-- Album Cover with slide transition -->
             <div class="w-full max-w-[min(24rem,40vh)] relative mb-4 mt-2 shrink-0 overflow-hidden">
               <div
-                class="w-full aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl cover-slide"
+                class="w-full aspect-square overflow-hidden bg-zinc-800 shadow-2xl cover-slide border-2 border-zinc-800"
                 :class="slideClass"
               >
                 <NuxtImg
@@ -64,7 +64,7 @@
               </h2>
               <NuxtLink
                 :to="`/${currentTrack.artistSlug}`"
-                class="text-lg text-violet-400 hover:text-violet-300"
+                class="text-lg text-fuchsia-400 hover:text-fuchsia-300"
                 @click="handleExpandToggle(false)"
               >
                 {{ currentTrack.artist }}
@@ -90,17 +90,17 @@
             <!-- Progress Bar -->
             <div class="w-full max-w-sm mb-4">
               <div
-                class="h-2 bg-zinc-800 rounded-full cursor-pointer overflow-hidden relative"
+                class="h-2 bg-zinc-800 cursor-pointer overflow-hidden relative"
                 @click="onProgressClick"
               >
                 <div
-                  class="h-full bg-violet-500 rounded-full transition-all duration-100"
+                  class="h-full bg-fuchsia-500 transition-all duration-100"
                   :style="{ width: `${progress}%` }"
                 />
                 <!-- Preview limit marker -->
                 <div
                   v-if="isPreviewMode && duration > previewLimit"
-                  class="absolute top-0 bottom-0 w-0.5 bg-orange-500 rounded-full"
+                  class="absolute top-0 bottom-0 w-0.5 bg-orange-500"
                   :style="{ left: `${(previewLimit / duration) * 100}%` }"
                 />
               </div>
@@ -116,10 +116,10 @@
             <!-- Preview Ended Message (for non-logged-in users) -->
             <div
               v-if="previewEnded && !user"
-              class="w-full max-w-sm mb-6 p-4 bg-zinc-800/50 rounded-xl text-center"
+              class="w-full max-w-sm mb-6 p-4 bg-zinc-800/50 border-2 border-zinc-700 text-center"
             >
               <p class="text-zinc-300 mb-3">Want to hear the full track?</p>
-              <UButton color="violet" to="/register" @click="handleExpandToggle(false)">
+              <UButton color="fuchsia" to="/register" @click="handleExpandToggle(false)">
                 Sign up for free
               </UButton>
             </div>
@@ -127,10 +127,10 @@
             <!-- Preview Ended Message (for logged-in free users at limit) -->
             <div
               v-else-if="previewEnded && user"
-              class="w-full max-w-sm mb-6 p-4 bg-zinc-800/50 rounded-xl text-center"
+              class="w-full max-w-sm mb-6 p-4 bg-zinc-800/50 border-2 border-zinc-700 text-center"
             >
               <p class="text-zinc-300 mb-3">You've used your free tracks this month</p>
-              <UButton color="violet" to="/pricing" @click="handleExpandToggle(false)">
+              <UButton color="fuchsia" to="/pricing" @click="handleExpandToggle(false)">
                 Subscribe for unlimited
               </UButton>
             </div>
@@ -142,10 +142,10 @@
                 color="gray"
                 variant="ghost"
                 size="lg"
-                :class="{ '!text-violet-400': shuffleEnabled }"
+                :class="{ '!text-fuchsia-400': shuffleEnabled }"
                 @click="handleShuffleClick"
               >
-                <UIcon name="i-lucide-shuffle" class="w-6 h-6" :class="{ '!text-violet-400': shuffleEnabled }" />
+                <UIcon name="i-lucide-shuffle" class="w-6 h-6" :class="{ '!text-fuchsia-400': shuffleEnabled }" />
               </UButton>
 
               <UButton
@@ -159,9 +159,9 @@
               </UButton>
 
               <UButton
-                color="violet"
+                color="fuchsia"
                 size="xl"
-                class="rounded-full w-16 h-16"
+                class="w-16 h-16"
                 :loading="isLoading"
                 @click="handlePlayPause"
               >
@@ -188,13 +188,13 @@
                 variant="ghost"
                 size="lg"
                 class="relative"
-                :class="{ '!text-violet-400': repeatMode !== 'off' }"
+                :class="{ '!text-fuchsia-400': repeatMode !== 'off' }"
                 @click="handleRepeatClick"
               >
-                <UIcon name="i-heroicons-arrow-path" class="w-6 h-6" :class="{ '!text-violet-400': repeatMode !== 'off' }" />
+                <UIcon name="i-heroicons-arrow-path" class="w-6 h-6" :class="{ '!text-fuchsia-400': repeatMode !== 'off' }" />
                 <span
                   v-if="repeatMode === 'one'"
-                  class="absolute -top-0.5 -right-0.5 text-xs font-bold text-violet-400"
+                  class="absolute -top-0.5 -right-0.5 text-xs font-bold text-fuchsia-400"
                 >
                   1
                 </span>
@@ -233,7 +233,7 @@
                 max="1"
                 step="0.01"
                 :value="isMuted ? 0 : volume"
-                class="w-32 h-1 bg-zinc-700 rounded-full appearance-none cursor-pointer accent-violet-500"
+                class="w-32 h-1 bg-zinc-700 appearance-none cursor-pointer accent-fuchsia-500"
                 @input="onVolumeChange"
               />
             </div>
@@ -308,7 +308,7 @@
           @click="onProgressClick"
         >
           <div
-            class="h-full bg-violet-500 transition-all duration-100"
+            class="h-full bg-fuchsia-500 transition-all duration-100"
             :style="{ width: `${progress}%` }"
           />
           <!-- Preview limit marker -->
@@ -327,7 +327,7 @@
             <!-- Track Info -->
             <div class="flex items-center gap-3 flex-1 min-w-0">
               <!-- Cover -->
-              <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 overflow-hidden bg-zinc-800 shrink-0">
                 <NuxtImg
                   v-if="currentTrack.coverUrl"
                   :src="currentTrack.coverUrl"
@@ -365,10 +365,10 @@
                 variant="ghost"
                 size="xs"
                 class="hidden sm:flex w-10 h-10 sm:w-10 sm:h-10"
-                :class="{ '!text-violet-400': shuffleEnabled }"
+                :class="{ '!text-fuchsia-400': shuffleEnabled }"
                 @click.stop="toggleShuffle"
               >
-                <UIcon name="i-lucide-shuffle" class="w-5 h-5" :class="{ '!text-violet-400': shuffleEnabled }" />
+                <UIcon name="i-lucide-shuffle" class="w-5 h-5" :class="{ '!text-fuchsia-400': shuffleEnabled }" />
               </UButton>
 
               <!-- Previous -->
@@ -385,8 +385,8 @@
 
               <!-- Play/Pause -->
               <UButton
-                color="violet"
-                class="rounded-full w-11 h-11 sm:w-12 sm:h-12"
+                color="fuchsia"
+                class="w-11 h-11 sm:w-12 sm:h-12"
                 :loading="isLoading"
                 @click.stop="togglePlay"
               >
@@ -415,13 +415,13 @@
                 variant="ghost"
                 size="xs"
                 class="hidden sm:flex w-10 h-10 sm:w-10 sm:h-10 relative"
-                :class="{ '!text-violet-400': repeatMode !== 'off' }"
+                :class="{ '!text-fuchsia-400': repeatMode !== 'off' }"
                 @click.stop="cycleRepeatMode"
               >
-                <UIcon name="i-heroicons-arrow-path" class="w-5 h-5" :class="{ '!text-violet-400': repeatMode !== 'off' }" />
+                <UIcon name="i-heroicons-arrow-path" class="w-5 h-5" :class="{ '!text-fuchsia-400': repeatMode !== 'off' }" />
                 <span
                   v-if="repeatMode === 'one'"
-                  class="absolute -top-0.5 -right-0.5 text-[10px] font-bold text-violet-400"
+                  class="absolute -top-0.5 -right-0.5 text-[10px] font-bold text-fuchsia-400"
                 >
                   1
                 </span>
@@ -457,7 +457,7 @@
                 color="gray"
                 variant="ghost"
                 size="xs"
-                :class="{ 'text-violet-400': showQueue }"
+                :class="{ 'text-fuchsia-400': showQueue }"
                 @click.stop="showQueue = !showQueue"
               >
                 <UIcon name="i-heroicons-queue-list" class="w-5 h-5" />
@@ -479,7 +479,7 @@
                   max="1"
                   step="0.01"
                   :value="isMuted ? 0 : volume"
-                  class="w-20 h-1 bg-zinc-700 rounded-full appearance-none cursor-pointer accent-violet-500"
+                  class="w-20 h-1 bg-zinc-700 appearance-none cursor-pointer accent-fuchsia-500"
                   @input="onVolumeChange"
                 />
               </div>
@@ -492,7 +492,7 @@
               variant="ghost"
               size="xs"
               class="md:hidden w-10 h-10"
-              :class="{ 'text-violet-400': showQueue }"
+              :class="{ 'text-fuchsia-400': showQueue }"
               @click.stop="showQueue = !showQueue"
             >
               <UIcon name="i-heroicons-queue-list" class="w-5 h-5" />
@@ -531,14 +531,14 @@
             >
               <!-- Track Number / Playing Indicator -->
               <div class="w-6 text-center shrink-0">
-                <span v-if="index === queueIndex && isPlaying" class="text-violet-400">
+                <span v-if="index === queueIndex && isPlaying" class="text-fuchsia-400">
                   <UIcon name="i-heroicons-speaker-wave" class="w-4 h-4 animate-pulse" />
                 </span>
                 <span v-else class="text-xs text-zinc-500">{{ index + 1 }}</span>
               </div>
 
               <!-- Cover -->
-              <div class="w-10 h-10 rounded overflow-hidden bg-zinc-800 shrink-0">
+              <div class="w-10 h-10 overflow-hidden bg-zinc-800 shrink-0">
                 <NuxtImg
                   v-if="track.coverUrl"
                   :src="track.coverUrl"
@@ -558,7 +558,7 @@
               <div class="flex-1 min-w-0">
                 <p
                   class="text-sm font-medium truncate"
-                  :class="index === queueIndex ? 'text-violet-400' : 'text-zinc-100'"
+                  :class="index === queueIndex ? 'text-fuchsia-400' : 'text-zinc-100'"
                 >
                   {{ track.title }}
                 </p>
@@ -871,16 +871,16 @@ input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 12px;
   height: 12px;
-  background: #8b5cf6;
-  border-radius: 50%;
+  background: #d946ef;
+  border-radius: 0;
   cursor: pointer;
 }
 
 input[type="range"]::-moz-range-thumb {
   width: 12px;
   height: 12px;
-  background: #8b5cf6;
-  border-radius: 50%;
+  background: #d946ef;
+  border-radius: 0;
   cursor: pointer;
   border: none;
 }

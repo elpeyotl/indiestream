@@ -9,10 +9,10 @@
           @click="handleTabChange(index)"
           :title="tab.label"
           :class="[
-            'relative flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-95',
+            'relative flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm font-bold uppercase tracking-tight whitespace-nowrap transition-all duration-200 active:scale-95',
             modelValue === index
-              ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/25'
-              : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300'
+              ? 'bg-fuchsia-600 text-white shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)]'
+              : 'bg-zinc-900 border-2 border-zinc-800 text-zinc-400 hover:border-fuchsia-500 hover:text-fuchsia-500'
           ]"
         >
           <UIcon v-if="tab.icon" :name="tab.icon" class="w-4 h-4" />
@@ -20,7 +20,7 @@
           <span
             v-if="tab.badge"
             :class="[
-              'flex-shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium rounded-full min-w-[1.25rem]',
+              'flex-shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold min-w-[1.25rem]',
               modelValue === index
                 ? 'bg-white/20 text-white'
                 : 'bg-red-500 text-white'
