@@ -21,45 +21,43 @@
 
     <!-- Genre Info (overlapping banner) -->
     <div class="relative -mt-20 z-10 mb-6">
-      <NuxtLink to="/genres" class="inline-flex items-center gap-1 text-white/70 hover:text-white mb-4 transition-colors">
+      <NuxtLink to="/genres" class="inline-flex items-center gap-1 text-white/70 hover:text-fuchsia-500 mb-4 transition-colors font-bold uppercase tracking-tight">
         <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
         All Genres
       </NuxtLink>
-      <h1 class="text-4xl font-bold text-white mb-2">{{ displayGenre }}</h1>
-      <p class="text-white/70">{{ filteredArtists.length }} {{ filteredArtists.length === 1 ? 'artist' : 'artists' }}</p>
+      <h1 class="text-4xl font-black uppercase tracking-tighter text-white mb-2">{{ displayGenre }}</h1>
+      <p class="text-white/70 font-mono">{{ filteredArtists.length }} {{ filteredArtists.length === 1 ? 'artist' : 'artists' }}</p>
     </div>
 
     <!-- Controls: Search, Sort, Shuffle -->
-    <div class="flex flex-wrap items-center gap-3 mb-6">
+    <div class="flex flex-wrap items-center gap-3 mb-6 border-b-2 border-zinc-800 pb-6">
       <!-- Search Input -->
-      <UInput
+      <input
         v-model="searchQuery"
+        type="text"
         placeholder="Search artists..."
-        icon="i-heroicons-magnifying-glass"
-        size="sm"
-        class="w-full sm:w-64"
+        class="w-full sm:w-64 px-4 py-2 bg-black border-2 border-zinc-800 text-white font-mono text-sm focus:border-fuchsia-500 focus:outline-none transition-colors"
       />
 
       <!-- Sort Dropdown -->
-      <USelectMenu
+      <select
         v-model="sortOption"
-        :options="sortOptions"
-        value-attribute="value"
-        option-attribute="label"
-        size="sm"
-        class="w-40"
-      />
+        class="px-4 py-2 bg-black border-2 border-zinc-800 text-white font-mono text-sm focus:border-fuchsia-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+      >
+        <option v-for="option in sortOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
 
       <!-- Shuffle Play Button -->
-      <UButton
-        color="violet"
-        size="sm"
-        :loading="shuffleLoading"
+      <button
+        class="px-4 py-2 bg-fuchsia-600 text-white font-bold uppercase tracking-tight text-sm shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] transition-all inline-flex items-center gap-2 disabled:opacity-50"
+        :disabled="shuffleLoading"
         @click="playShuffled"
       >
-        <UIcon name="i-heroicons-play" class="w-4 h-4 mr-1" />
+        <UIcon name="i-heroicons-play" class="w-4 h-4" />
         Shuffle
-      </UButton>
+      </button>
     </div>
 
     <!-- Loading -->
@@ -102,6 +100,10 @@
 
 <script setup lang="ts">
 import type { Band } from '~/stores/band'
+
+definePageMeta({
+  layout: 'brutalist'
+})
 
 const route = useRoute()
 const client = useSupabaseClient()
