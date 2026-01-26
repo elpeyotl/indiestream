@@ -58,11 +58,11 @@
       <div class="flex flex-col md:flex-row gap-8">
         <!-- Cover Art -->
         <div class="w-full md:w-80 shrink-0">
-          <div class="aspect-square rounded-xl overflow-hidden shadow-2xl bg-zinc-800 relative">
+          <div class="aspect-square overflow-hidden shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] bg-zinc-800 border-2 border-zinc-800 relative">
             <!-- Skeleton placeholder until image loads -->
-            <USkeleton
+            <div
               v-if="!imageLoaded"
-              class="absolute inset-0 rounded-none"
+              class="absolute inset-0 bg-zinc-800 animate-pulse"
             />
             <NuxtImg
               v-if="coverUrl"
@@ -78,7 +78,7 @@
             <!-- Owned Badge -->
             <div
               v-if="purchaseStatus?.owned"
-              class="absolute top-3 right-3 bg-green-500/90 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg"
+              class="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold uppercase tracking-tight px-2.5 py-1 flex items-center gap-1 border-2 border-green-400"
             >
               <UIcon name="i-heroicons-check-circle" class="w-4 h-4" />
               Owned
@@ -88,22 +88,22 @@
 
         <!-- Album Info -->
         <div class="flex-1">
-          <p class="text-sm text-zinc-400 uppercase tracking-wider mb-2">
+          <p class="text-sm text-zinc-500 font-bold uppercase tracking-tight mb-2">
             {{ releaseTypeLabel }}
           </p>
-          <h1 class="text-4xl md:text-5xl font-bold text-zinc-100 mb-4">
+          <h1 class="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-4">
             {{ album.title }}
           </h1>
 
           <NuxtLink
             :to="`/${band.slug}`"
-            class="inline-flex items-center gap-2 text-lg text-violet-400 hover:text-violet-300 mb-6"
+            class="inline-flex items-center gap-2 text-lg text-fuchsia-500 hover:text-fuchsia-400 font-bold mb-6"
           >
             {{ band.name }}
             <UIcon v-if="band.is_verified" name="i-heroicons-check-badge" class="w-5 h-5" />
           </NuxtLink>
 
-          <div class="flex flex-wrap items-center gap-4 text-sm text-zinc-400 mb-6">
+          <div class="flex flex-wrap items-center gap-4 text-sm text-zinc-500 font-mono mb-6">
             <span v-if="album.release_date" class="flex items-center gap-1">
               <UIcon name="i-heroicons-calendar" class="w-4 h-4" />
               {{ formatDate(album.release_date) }}
@@ -118,44 +118,44 @@
             </span>
           </div>
 
-          <p v-if="album.description" class="text-zinc-300 mb-8 max-w-xl">
+          <p v-if="album.description" class="text-zinc-400 font-mono mb-8 max-w-xl">
             {{ album.description }}
           </p>
 
           <!-- Actions -->
           <div class="flex flex-wrap gap-3">
             <PlayAllButton :loading="loadingPlay" @click="playAll" />
-            <UButton
-              :color="isAlbumSaved(album.id) ? 'violet' : 'gray'"
-              :variant="isAlbumSaved(album.id) ? 'solid' : 'ghost'"
-              size="lg"
-              :loading="savingAlbum"
+            <button
+              class="px-6 py-3 font-bold uppercase tracking-tight transition-all inline-flex items-center gap-2"
+              :class="isAlbumSaved(album.id)
+                ? 'bg-fuchsia-600 text-white shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)]'
+                : 'border-2 border-zinc-800 text-zinc-400 hover:border-fuchsia-500 hover:text-fuchsia-500'"
+              :disabled="savingAlbum"
               @click="handleSaveAlbum"
             >
               <UIcon
                 :name="isAlbumSaved(album.id) ? 'i-heroicons-check' : 'i-heroicons-plus'"
-                class="w-5 h-5 mr-1"
+                class="w-5 h-5"
               />
               {{ isAlbumSaved(album.id) ? 'Saved' : 'Save' }}
-            </UButton>
+            </button>
             <!-- Buy Button (if purchasable and not owned) -->
-            <UButton
+            <button
               v-if="album.purchasable && !isOwnerOrAdmin && !purchaseStatus?.owned"
-              color="green"
-              size="lg"
+              class="px-6 py-3 bg-green-600 text-white font-bold uppercase tracking-tight shadow-[2px_2px_0px_0px_rgba(34,197,94,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(34,197,94,0.5)] transition-all inline-flex items-center gap-2"
               @click="showPurchaseModal = true"
             >
-              <UIcon name="i-heroicons-shopping-cart" class="w-5 h-5 mr-1" />
+              <UIcon name="i-heroicons-shopping-cart" class="w-5 h-5" />
               Buy {{ formatPrice(album.price_cents || 0) }}
-            </UButton>
+            </button>
             <!-- Download Button (if owned) -->
             <AlbumDownloadButton
               v-if="album.purchasable && purchaseStatus?.owned"
               :album-id="album.id"
             />
-            <UButton color="gray" variant="ghost" size="lg">
+            <button class="p-3 border-2 border-zinc-800 text-zinc-400 hover:border-fuchsia-500 hover:text-fuchsia-500 transition-colors">
               <UIcon name="i-heroicons-share" class="w-5 h-5" />
-            </UButton>
+            </button>
           </div>
         </div>
       </div>
@@ -163,10 +163,10 @@
 
     <!-- Track List -->
     <div class="container mx-auto px-4 pb-12">
-      <div class="bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
+      <div class="bg-zinc-950 border-2 border-zinc-800 overflow-hidden">
         <table class="w-full">
-          <thead class="border-b border-zinc-800">
-            <tr class="text-left text-sm text-zinc-400">
+          <thead class="border-b-2 border-zinc-800">
+            <tr class="text-left text-sm text-zinc-500 font-bold uppercase tracking-tight">
               <th class="px-4 py-3 w-12">#</th>
               <th class="px-4 py-3">Title</th>
               <th class="px-4 py-3 w-24 hidden sm:table-cell">Plays</th>
@@ -180,25 +180,25 @@
             <template v-for="track in album.tracks" :key="track.id">
               <tr
                 class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors cursor-pointer group"
-                :class="{ 'bg-violet-500/10': isTrackPlaying(track), 'border-b-0': expandedTrack === track.id }"
+                :class="{ 'bg-fuchsia-500/10': isTrackPlaying(track), 'border-b-0': expandedTrack === track.id }"
                 @click="playTrack(track)"
               >
                 <td class="px-4 py-4">
-                  <span v-if="loadingTrackId === track.id" class="text-violet-400">
+                  <span v-if="loadingTrackId === track.id" class="text-fuchsia-500">
                     <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
                   </span>
-                  <span v-else-if="isTrackPlaying(track)" class="text-violet-400">
+                  <span v-else-if="isTrackPlaying(track)" class="text-fuchsia-500">
                     <UIcon name="i-heroicons-speaker-wave" class="w-4 h-4 animate-pulse" />
                   </span>
                   <template v-else>
-                    <span class="text-zinc-400 group-hover:hidden">{{ track.track_number }}</span>
-                    <UIcon name="i-heroicons-play" class="w-4 h-4 text-violet-400 hidden group-hover:block" />
+                    <span class="text-zinc-500 font-mono group-hover:hidden">{{ track.track_number }}</span>
+                    <UIcon name="i-heroicons-play" class="w-4 h-4 text-fuchsia-500 hidden group-hover:block" />
                   </template>
                 </td>
                 <td class="px-4 py-4">
                   <div class="flex items-center gap-2">
                     <div>
-                      <p class="font-medium" :class="isTrackPlaying(track) ? 'text-violet-400' : 'text-zinc-100'">
+                      <p class="font-bold" :class="isTrackPlaying(track) ? 'text-fuchsia-500' : 'text-zinc-100'">
                         {{ track.title }}
                       </p>
                       <div class="flex items-center gap-1 mt-1">
@@ -219,10 +219,10 @@
                     </UButton>
                   </div>
                 </td>
-                <td class="px-4 py-4 text-zinc-400 hidden sm:table-cell">
+                <td class="px-4 py-4 text-zinc-500 font-mono hidden sm:table-cell">
                   {{ formatNumber(track.stream_count || 0) }}
                 </td>
-                <td class="px-4 py-4 text-zinc-400 text-right">
+                <td class="px-4 py-4 text-zinc-500 font-mono text-right">
                   {{ formatTrackDuration(track.duration_seconds) }}
                 </td>
                 <td class="px-4 py-4 text-right">
@@ -275,7 +275,7 @@
         </table>
 
         <!-- Rights Footer -->
-        <div v-if="album.p_line || album.c_line" class="px-4 py-3 border-t border-zinc-800 text-xs text-zinc-500">
+        <div v-if="album.p_line || album.c_line" class="px-4 py-3 border-t-2 border-zinc-800 text-xs text-zinc-500 font-mono">
           <p v-if="album.p_line">{{ album.p_line }}</p>
           <p v-if="album.c_line">{{ album.c_line }}</p>
         </div>
@@ -284,7 +284,7 @@
 
     <!-- More from Artist -->
     <div v-if="otherAlbums.length > 0" class="container mx-auto px-4 pb-12">
-      <h2 class="text-xl font-semibold text-zinc-100 mb-6">More from {{ band.name }}</h2>
+      <h2 class="text-xl font-black uppercase tracking-tighter text-white mb-6 border-b-2 border-zinc-800 pb-3">More from {{ band.name }}</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <NuxtLink
           v-for="otherAlbum in otherAlbums"
@@ -292,7 +292,7 @@
           :to="`/${band.slug}/${otherAlbum.slug}`"
           class="group"
         >
-          <div class="aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-2">
+          <div class="aspect-square overflow-hidden bg-zinc-800 border-2 border-zinc-800 group-hover:border-fuchsia-500 mb-2 transition-colors">
             <NuxtImg
               v-if="otherAlbumCovers[otherAlbum.id]"
               :src="otherAlbumCovers[otherAlbum.id]"
@@ -307,10 +307,10 @@
               <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-zinc-600" />
             </div>
           </div>
-          <p class="text-sm font-medium text-zinc-100 truncate group-hover:text-violet-400">
+          <p class="text-sm font-bold text-zinc-100 truncate group-hover:text-fuchsia-500 transition-colors">
             {{ otherAlbum.title }}
           </p>
-          <p class="text-xs text-zinc-400">
+          <p class="text-xs text-zinc-500 font-mono uppercase">
             {{ otherAlbum.release_type }}
           </p>
         </NuxtLink>
@@ -371,14 +371,17 @@
     <!-- Not Found -->
     <div v-else class="min-h-screen flex items-center justify-center">
       <div class="text-center">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-zinc-800 flex items-center justify-center">
+        <div class="w-20 h-20 mx-auto mb-6 border-2 border-zinc-800 flex items-center justify-center">
           <UIcon name="i-heroicons-musical-note" class="w-10 h-10 text-zinc-500" />
         </div>
-        <h1 class="text-2xl font-bold text-zinc-100 mb-2">Album Not Found</h1>
-        <p class="text-zinc-400 mb-6">This album doesn't exist or has been removed.</p>
-        <UButton color="violet" to="/">
+        <h1 class="text-2xl font-black uppercase tracking-tighter text-white mb-2">ALBUM NOT FOUND</h1>
+        <p class="text-zinc-400 font-mono mb-6">This album doesn't exist or has been removed.</p>
+        <NuxtLink
+          to="/"
+          class="inline-block px-6 py-3 bg-fuchsia-600 text-white font-bold uppercase tracking-tight shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+        >
           Back to Home
-        </UButton>
+        </NuxtLink>
       </div>
     </div>
 
@@ -412,6 +415,10 @@ import { storeToRefs } from 'pinia'
 import type { Album, Track, TrackCredit } from '~/stores/album'
 import type { PlayerTrack } from '~/stores/player'
 import type { PurchaseStatus } from '~/stores/purchase'
+
+definePageMeta({
+  layout: 'brutalist'
+})
 
 const route = useRoute()
 const albumStore = useAlbumStore()

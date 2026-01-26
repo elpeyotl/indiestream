@@ -67,7 +67,7 @@
       <div class="flex flex-col md:flex-row gap-6 items-start">
         <!-- Avatar -->
         <div
-          class="w-36 h-36 md:w-48 md:h-48 rounded-2xl shadow-2xl overflow-hidden shrink-0 ring-4 ring-zinc-950 relative"
+          class="w-36 h-36 md:w-48 md:h-48 shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] overflow-hidden shrink-0 border-2 border-zinc-800 relative"
           :style="{ background: `linear-gradient(135deg, ${band.theme_color} 0%, #c026d3 100%)` }"
         >
           <!-- Skeleton placeholder until image loads -->
@@ -97,11 +97,11 @@
         <!-- Info -->
         <div class="flex-1 pt-4">
           <div class="flex items-center gap-3 mb-2">
-            <h1 class="text-3xl md:text-4xl font-bold text-zinc-100">{{ band.name }}</h1>
+            <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white">{{ band.name }}</h1>
             <UIcon
               v-if="band.is_verified"
               name="i-heroicons-check-badge"
-              class="w-7 h-7 text-violet-400"
+              class="w-7 h-7 text-fuchsia-500"
             />
           </div>
 
@@ -112,7 +112,7 @@
             </span>
             <NuxtLink
               :to="`/${band.slug}?tab=followers`"
-              class="flex items-center gap-1 hover:text-violet-400 transition-colors cursor-pointer"
+              class="flex items-center gap-1 hover:text-fuchsia-500 transition-colors cursor-pointer"
               @click="fetchFollowers"
             >
               <UIcon name="i-heroicons-heart" class="w-4 h-4" />
@@ -122,37 +122,37 @@
 
           <!-- Genres -->
           <div v-if="band.genres?.length" class="flex flex-wrap gap-2 mb-4">
-            <UBadge
+            <span
               v-for="genre in band.genres"
               :key="genre"
-              color="violet"
-              variant="soft"
+              class="px-3 py-1 text-xs font-bold uppercase tracking-tight text-fuchsia-500 border-2 border-fuchsia-500/50 bg-fuchsia-500/10"
             >
               {{ genre }}
-            </UBadge>
+            </span>
           </div>
 
           <!-- Tagline -->
-          <p v-if="band.tagline" class="text-zinc-300 max-w-2xl mb-6">
+          <p v-if="band.tagline" class="text-zinc-400 font-mono max-w-2xl mb-6">
             {{ band.tagline }}
           </p>
 
           <!-- Actions -->
           <div class="flex flex-wrap gap-3 items-center">
             <PlayAllButton :loading="loadingPlayAll" @click="handlePlayAll" />
-            <UButton
-              :color="isFollowing ? 'violet' : 'gray'"
-              :variant="isFollowing ? 'solid' : 'outline'"
-              size="lg"
-              :loading="loadingFollow"
+            <button
+              class="px-6 py-3 font-bold uppercase tracking-tight transition-all inline-flex items-center gap-2"
+              :class="isFollowing
+                ? 'bg-fuchsia-600 text-white shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)]'
+                : 'border-2 border-zinc-800 text-zinc-400 hover:border-fuchsia-500 hover:text-fuchsia-500'"
+              :disabled="loadingFollow"
               @click="handleFollow"
             >
               <UIcon
                 :name="isFollowing ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'"
-                class="w-5 h-5 mr-1"
+                class="w-5 h-5"
               />
               {{ isFollowing ? 'Following' : 'Follow' }}
-            </UButton>
+            </button>
             <!-- Tip Button -->
             <TipButton
               v-if="!isOwner"
@@ -162,86 +162,70 @@
             />
             <!-- Social Links -->
             <div v-if="hasAnySocialLink || band.website" class="flex gap-1">
-              <UButton
+              <a
                 v-if="band.website"
-                color="gray"
-                variant="ghost"
-                size="lg"
-                :to="band.website"
+                :href="band.website"
                 target="_blank"
+                class="p-3 text-zinc-400 hover:text-fuchsia-500 transition-colors"
               >
                 <UIcon name="i-heroicons-globe-alt" class="w-5 h-5" />
-              </UButton>
-              <UButton
+              </a>
+              <a
                 v-if="band.instagram"
-                color="gray"
-                variant="ghost"
-                size="lg"
-                :to="formatSocialUrl(band.instagram, 'instagram')"
+                :href="formatSocialUrl(band.instagram, 'instagram')"
                 target="_blank"
+                class="p-3 text-zinc-400 hover:text-fuchsia-500 transition-colors"
               >
                 <UIcon name="i-simple-icons-instagram" class="w-5 h-5" />
-              </UButton>
-              <UButton
+              </a>
+              <a
                 v-if="band.spotify"
-                color="gray"
-                variant="ghost"
-                size="lg"
-                :to="formatSocialUrl(band.spotify, 'spotify')"
+                :href="formatSocialUrl(band.spotify, 'spotify')"
                 target="_blank"
+                class="p-3 text-zinc-400 hover:text-fuchsia-500 transition-colors"
               >
                 <UIcon name="i-simple-icons-spotify" class="w-5 h-5" />
-              </UButton>
-              <UButton
+              </a>
+              <a
                 v-if="band.youtube"
-                color="gray"
-                variant="ghost"
-                size="lg"
-                :to="formatSocialUrl(band.youtube, 'youtube')"
+                :href="formatSocialUrl(band.youtube, 'youtube')"
                 target="_blank"
+                class="p-3 text-zinc-400 hover:text-fuchsia-500 transition-colors"
               >
                 <UIcon name="i-simple-icons-youtube" class="w-5 h-5" />
-              </UButton>
-              <UButton
+              </a>
+              <a
                 v-if="band.soundcloud"
-                color="gray"
-                variant="ghost"
-                size="lg"
-                :to="formatSocialUrl(band.soundcloud, 'soundcloud')"
+                :href="formatSocialUrl(band.soundcloud, 'soundcloud')"
                 target="_blank"
+                class="p-3 text-zinc-400 hover:text-fuchsia-500 transition-colors"
               >
                 <UIcon name="i-simple-icons-soundcloud" class="w-5 h-5" />
-              </UButton>
-              <UButton
+              </a>
+              <a
                 v-if="band.bandcamp"
-                color="gray"
-                variant="ghost"
-                size="lg"
-                :to="formatSocialUrl(band.bandcamp, 'bandcamp')"
+                :href="formatSocialUrl(band.bandcamp, 'bandcamp')"
                 target="_blank"
+                class="p-3 text-zinc-400 hover:text-fuchsia-500 transition-colors"
               >
                 <UIcon name="i-simple-icons-bandcamp" class="w-5 h-5" />
-              </UButton>
-              <UButton
+              </a>
+              <a
                 v-if="band.twitter"
-                color="gray"
-                variant="ghost"
-                size="lg"
-                :to="formatSocialUrl(band.twitter, 'twitter')"
+                :href="formatSocialUrl(band.twitter, 'twitter')"
                 target="_blank"
+                class="p-3 text-zinc-400 hover:text-fuchsia-500 transition-colors"
               >
                 <UIcon name="i-simple-icons-x" class="w-5 h-5" />
-              </UButton>
-              <UButton
+              </a>
+              <a
                 v-if="band.tiktok"
-                color="gray"
-                variant="ghost"
-                size="lg"
-                :to="formatSocialUrl(band.tiktok, 'tiktok')"
+                :href="formatSocialUrl(band.tiktok, 'tiktok')"
                 target="_blank"
+                class="p-3 text-zinc-400 hover:text-fuchsia-500 transition-colors"
               >
                 <UIcon name="i-simple-icons-tiktok" class="w-5 h-5" />
-              </UButton>
+              </a>
             </div>
           </div>
         </div>
@@ -255,9 +239,9 @@
             <!-- Loading skeleton for albums -->
             <div v-if="loadingAlbums" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               <div v-for="i in 5" :key="`album-skeleton-${i}`" class="space-y-3">
-                <div class="aspect-square rounded-lg skeleton"></div>
-                <div class="h-5 skeleton w-3/4"></div>
-                <div class="h-4 skeleton w-1/2"></div>
+                <div class="aspect-square bg-zinc-800 border-2 border-zinc-700"></div>
+                <div class="h-5 bg-zinc-800 border-2 border-zinc-700 w-3/4"></div>
+                <div class="h-4 bg-zinc-800 border-2 border-zinc-700 w-1/2"></div>
               </div>
             </div>
             <!-- Album grid -->
@@ -282,18 +266,18 @@
 
         <template #about>
           <div class="max-w-2xl">
-            <h3 class="text-lg font-semibold text-zinc-100 mb-4">About {{ band.name }}</h3>
-            <p v-if="band.bio" class="text-zinc-300 whitespace-pre-line">{{ band.bio }}</p>
-            <p v-else class="text-zinc-400">No bio available.</p>
+            <h3 class="text-lg font-black uppercase tracking-tighter text-white mb-4 border-b-2 border-zinc-800 pb-3">About {{ band.name }}</h3>
+            <p v-if="band.bio" class="text-zinc-400 font-mono whitespace-pre-line">{{ band.bio }}</p>
+            <p v-else class="text-zinc-500 font-mono">No bio available.</p>
 
             <div v-if="band.location || band.website" class="mt-6 space-y-3">
-              <div v-if="band.location" class="flex items-center gap-2 text-zinc-400">
+              <div v-if="band.location" class="flex items-center gap-2 text-zinc-400 font-mono">
                 <UIcon name="i-heroicons-map-pin" class="w-5 h-5" />
                 <span>{{ band.location }}</span>
               </div>
               <div v-if="band.website" class="flex items-center gap-2">
                 <UIcon name="i-heroicons-globe-alt" class="w-5 h-5 text-zinc-400" />
-                <a :href="band.website" target="_blank" class="text-violet-400 hover:text-violet-300">
+                <a :href="band.website" target="_blank" class="text-fuchsia-500 hover:text-fuchsia-400 font-mono">
                   {{ band.website }}
                 </a>
               </div>
@@ -301,70 +285,70 @@
 
             <!-- Social Links -->
             <div v-if="hasAnySocialLink" class="mt-6">
-              <h4 class="text-sm font-semibold text-zinc-400 mb-3">Connect</h4>
+              <h4 class="text-sm font-bold uppercase tracking-tight text-zinc-500 mb-3">Connect</h4>
               <div class="flex flex-wrap gap-2">
                 <a
                   v-if="band.instagram"
                   :href="formatSocialUrl(band.instagram, 'instagram')"
                   target="_blank"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                  class="flex items-center gap-2 px-3 py-2 border-2 border-zinc-800 hover:border-fuchsia-500 text-zinc-400 hover:text-fuchsia-500 transition-colors font-mono text-sm"
                 >
                   <UIcon name="i-simple-icons-instagram" class="w-4 h-4" />
-                  <span class="text-sm">Instagram</span>
+                  <span>Instagram</span>
                 </a>
                 <a
                   v-if="band.spotify"
                   :href="formatSocialUrl(band.spotify, 'spotify')"
                   target="_blank"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                  class="flex items-center gap-2 px-3 py-2 border-2 border-zinc-800 hover:border-fuchsia-500 text-zinc-400 hover:text-fuchsia-500 transition-colors font-mono text-sm"
                 >
                   <UIcon name="i-simple-icons-spotify" class="w-4 h-4" />
-                  <span class="text-sm">Spotify</span>
+                  <span>Spotify</span>
                 </a>
                 <a
                   v-if="band.youtube"
                   :href="formatSocialUrl(band.youtube, 'youtube')"
                   target="_blank"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                  class="flex items-center gap-2 px-3 py-2 border-2 border-zinc-800 hover:border-fuchsia-500 text-zinc-400 hover:text-fuchsia-500 transition-colors font-mono text-sm"
                 >
                   <UIcon name="i-simple-icons-youtube" class="w-4 h-4" />
-                  <span class="text-sm">YouTube</span>
+                  <span>YouTube</span>
                 </a>
                 <a
                   v-if="band.soundcloud"
                   :href="formatSocialUrl(band.soundcloud, 'soundcloud')"
                   target="_blank"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                  class="flex items-center gap-2 px-3 py-2 border-2 border-zinc-800 hover:border-fuchsia-500 text-zinc-400 hover:text-fuchsia-500 transition-colors font-mono text-sm"
                 >
                   <UIcon name="i-simple-icons-soundcloud" class="w-4 h-4" />
-                  <span class="text-sm">SoundCloud</span>
+                  <span>SoundCloud</span>
                 </a>
                 <a
                   v-if="band.bandcamp"
                   :href="formatSocialUrl(band.bandcamp, 'bandcamp')"
                   target="_blank"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                  class="flex items-center gap-2 px-3 py-2 border-2 border-zinc-800 hover:border-fuchsia-500 text-zinc-400 hover:text-fuchsia-500 transition-colors font-mono text-sm"
                 >
                   <UIcon name="i-simple-icons-bandcamp" class="w-4 h-4" />
-                  <span class="text-sm">Bandcamp</span>
+                  <span>Bandcamp</span>
                 </a>
                 <a
                   v-if="band.twitter"
                   :href="formatSocialUrl(band.twitter, 'twitter')"
                   target="_blank"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                  class="flex items-center gap-2 px-3 py-2 border-2 border-zinc-800 hover:border-fuchsia-500 text-zinc-400 hover:text-fuchsia-500 transition-colors font-mono text-sm"
                 >
                   <UIcon name="i-simple-icons-x" class="w-4 h-4" />
-                  <span class="text-sm">X / Twitter</span>
+                  <span>X / Twitter</span>
                 </a>
                 <a
                   v-if="band.tiktok"
                   :href="formatSocialUrl(band.tiktok, 'tiktok')"
                   target="_blank"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                  class="flex items-center gap-2 px-3 py-2 border-2 border-zinc-800 hover:border-fuchsia-500 text-zinc-400 hover:text-fuchsia-500 transition-colors font-mono text-sm"
                 >
                   <UIcon name="i-simple-icons-tiktok" class="w-4 h-4" />
-                  <span class="text-sm">TikTok</span>
+                  <span>TikTok</span>
                 </a>
               </div>
             </div>
@@ -383,10 +367,10 @@
                 v-for="follower in followers"
                 :key="follower.id"
                 :to="`/user/${follower.id}`"
-                class="group flex flex-col items-center text-center p-4 rounded-lg hover:bg-zinc-800/50 transition-colors"
+                class="group flex flex-col items-center text-center p-4 border-2 border-zinc-800 hover:border-fuchsia-500 transition-colors"
               >
                 <!-- Avatar -->
-                <div class="w-20 h-20 rounded-full overflow-hidden mb-3 ring-2 ring-zinc-800 group-hover:ring-violet-500 transition-all">
+                <div class="w-20 h-20 overflow-hidden mb-3 border-2 border-zinc-700 group-hover:border-fuchsia-500 transition-all">
                   <NuxtImg
                     v-if="follower.avatarUrl"
                     :src="follower.avatarUrl"
@@ -399,19 +383,19 @@
                   />
                   <div
                     v-else
-                    class="w-full h-full flex items-center justify-center bg-violet-500 text-white font-semibold text-xl"
+                    class="w-full h-full flex items-center justify-center bg-fuchsia-600 text-white font-bold text-xl"
                   >
                     {{ follower.displayName ? follower.displayName.charAt(0).toUpperCase() : '?' }}
                   </div>
                 </div>
 
                 <!-- Name -->
-                <p class="font-medium text-zinc-100 truncate w-full group-hover:text-violet-400 transition-colors">
+                <p class="font-bold text-zinc-100 truncate w-full group-hover:text-fuchsia-500 transition-colors">
                   {{ follower.displayName || 'Anonymous User' }}
                 </p>
 
                 <!-- Followed date -->
-                <p class="text-xs text-zinc-500 mt-1">
+                <p class="text-xs text-zinc-500 font-mono mt-1">
                   Followed {{ new Date(follower.followedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) }}
                 </p>
               </NuxtLink>
@@ -490,14 +474,17 @@
     <!-- Not Found -->
     <div v-else class="min-h-screen flex items-center justify-center">
       <div class="text-center">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-zinc-800 flex items-center justify-center">
+        <div class="w-20 h-20 mx-auto mb-6 border-2 border-zinc-800 flex items-center justify-center">
           <UIcon name="i-heroicons-user" class="w-10 h-10 text-zinc-500" />
         </div>
-        <h1 class="text-2xl font-bold text-zinc-100 mb-2">Artist Not Found</h1>
-        <p class="text-zinc-400 mb-6">This artist profile doesn't exist or has been removed.</p>
-        <UButton color="violet" to="/">
+        <h1 class="text-2xl font-black uppercase tracking-tighter text-white mb-2">ARTIST NOT FOUND</h1>
+        <p class="text-zinc-400 font-mono mb-6">This artist profile doesn't exist or has been removed.</p>
+        <NuxtLink
+          to="/"
+          class="inline-block px-6 py-3 bg-fuchsia-600 text-white font-bold uppercase tracking-tight shadow-[2px_2px_0px_0px_rgba(139,92,246,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(139,92,246,0.5)] transition-all"
+        >
           Back to Home
-        </UButton>
+        </NuxtLink>
       </div>
     </div>
   </div>
@@ -506,6 +493,10 @@
 <script setup lang="ts">
 import type { Band } from '~/stores/band'
 import type { Album } from '~/stores/album'
+
+definePageMeta({
+  layout: 'brutalist'
+})
 
 const route = useRoute()
 const user = useSupabaseUser()
