@@ -153,7 +153,7 @@
                         v-for="(cover, index) in playlist.covers.slice(0, 4)"
                         :key="index"
                         :src="cover"
-                        :alt="`Cover ${index + 1}`"
+                        :alt="`Cover ${(index as number) + 1}`"
                         class="w-full h-full object-cover"
                       />
                     </div>
@@ -163,7 +163,7 @@
                         v-for="(cover, index) in playlist.covers.slice(0, 2)"
                         :key="index"
                         :src="cover"
-                        :alt="`Cover ${index + 1}`"
+                        :alt="`Cover ${(index as number) + 1}`"
                         class="w-full h-full object-cover"
                       />
                     </div>
@@ -281,7 +281,7 @@
                     v-for="(cover, index) in playlistCovers.slice(0, 4)"
                     :key="index"
                     :src="cover"
-                    :alt="`Cover ${index + 1}`"
+                    :alt="`Cover ${(index as number) + 1}`"
                     class="w-full h-full object-cover"
                   />
                 </div>
@@ -290,7 +290,7 @@
                     v-for="(cover, index) in playlistCovers.slice(0, 2)"
                     :key="index"
                     :src="cover"
-                    :alt="`Cover ${index + 1}`"
+                    :alt="`Cover ${(index as number) + 1}`"
                     class="w-full h-full object-cover"
                   />
                 </div>

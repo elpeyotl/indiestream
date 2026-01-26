@@ -38,11 +38,11 @@
                 Discover
               </NuxtLink>
               <NuxtLink
-                to="/charts"
+                to="/zine"
                 class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
-                <UIcon name="i-heroicons-chart-bar" class="w-4 h-4" />
-                Charts
+                <UIcon name="i-heroicons-newspaper" class="w-4 h-4" />
+                Zine
               </NuxtLink>
               <NuxtLink
                 to="/genres"
@@ -84,11 +84,11 @@
                 Discover
               </NuxtLink>
               <NuxtLink
-                to="/charts"
+                to="/zine"
                 class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
               >
-                <UIcon name="i-heroicons-chart-bar" class="w-4 h-4" />
-                Charts
+                <UIcon name="i-heroicons-newspaper" class="w-4 h-4" />
+                Zine
               </NuxtLink>
               <NuxtLink
                 to="/genres"

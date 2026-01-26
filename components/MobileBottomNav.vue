@@ -74,17 +74,17 @@
           <span class="text-xs font-medium">Discover</span>
         </NuxtLink>
 
-        <!-- 2. Charts -->
+        <!-- 2. Zine -->
         <NuxtLink
-          to="/charts"
+          to="/zine"
           class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 active:scale-95"
-          :class="isActive('/charts') ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
+          :class="isActive('/zine') ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
         >
           <UIcon
-            :name="isActive('/charts') ? 'i-heroicons-chart-bar-solid' : 'i-heroicons-chart-bar'"
+            :name="isActive('/zine') ? 'i-heroicons-newspaper-solid' : 'i-heroicons-newspaper'"
             class="w-6 h-6"
           />
-          <span class="text-xs font-medium">Charts</span>
+          <span class="text-xs font-medium">Zine</span>
         </NuxtLink>
 
         <!-- 3. Genres -->

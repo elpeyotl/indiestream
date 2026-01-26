@@ -60,6 +60,10 @@
         <AdminFeaturedAlbumsTab />
       </template>
 
+      <template #zine>
+        <AdminZineTab />
+      </template>
+
       <template #revenue>
         <AdminRevenueTab />
       </template>
@@ -102,10 +106,11 @@ const tabSlotToIndex: Record<string, number> = {
   'playlists': 8,
   'featured-genres': 9,
   'featured-albums': 10,
-  'revenue': 11,
-  'payouts': 12,
-  'pro-export': 13,
-  'audit-logs': 14,
+  'zine': 11,
+  'revenue': 12,
+  'payouts': 13,
+  'pro-export': 14,
+  'audit-logs': 15,
 }
 
 // Initialize tab from URL query param immediately
@@ -168,6 +173,7 @@ const tabs = computed(() => [
   { label: 'Playlists', slot: 'playlists', icon: 'i-heroicons-queue-list' },
   { label: 'Featured Genres', slot: 'featured-genres', icon: 'i-heroicons-tag' },
   { label: 'Featured Albums', slot: 'featured-albums', icon: 'i-heroicons-star' },
+  { label: 'Zine', slot: 'zine', icon: 'i-heroicons-newspaper' },
   { label: 'Revenue', slot: 'revenue', icon: 'i-heroicons-currency-dollar' },
   { label: 'Payouts', slot: 'payouts', icon: 'i-heroicons-banknotes' },
   { label: 'PRO Export', slot: 'pro-export', icon: 'i-heroicons-document-arrow-down' },

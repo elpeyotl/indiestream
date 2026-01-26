@@ -117,3 +117,386 @@ body {
   color: #7DD3FC;
 }
 
+/* ============================================
+   ZINE / FANZINE AESTHETIC STYLES
+   Authentic photocopied fanzine look
+   ============================================ */
+
+/* Paper background with aged texture */
+.zine-page {
+  background-color: #f5f0e6;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  color: #1a1a1a;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Scan line artifacts */
+.zine-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.01) 2px,
+    rgba(0, 0, 0, 0.01) 4px
+  );
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Slight page skew like a bad photocopy */
+.zine-skew {
+  transform: rotate(-0.3deg);
+}
+
+/* Photocopied image effect - high contrast, grainy */
+.zine-photo {
+  filter: grayscale(100%) contrast(1.3) brightness(1.1);
+  mix-blend-mode: multiply;
+  position: relative;
+}
+
+.zine-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, #000 1px, transparent 1px);
+  background-size: 3px 3px;
+  opacity: 0.15;
+  mix-blend-mode: overlay;
+}
+
+/* Cut-out photo with white border and tape */
+.zine-cutout-photo {
+  background: #fff;
+  padding: 8px 8px 24px 8px;
+  box-shadow: 2px 3px 8px rgba(0,0,0,0.2);
+  transform: rotate(var(--rotation, -2deg));
+  position: relative;
+}
+
+.zine-cutout-photo img {
+  filter: grayscale(100%) contrast(1.2);
+}
+
+/* Tape strips */
+.zine-tape {
+  position: absolute;
+  width: 60px;
+  height: 22px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 248, 220, 0.85) 0%,
+    rgba(245, 235, 190, 0.7) 100%
+  );
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.zine-tape-top {
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.zine-tape-corner {
+  top: -8px;
+  right: -8px;
+  transform: rotate(45deg);
+  width: 40px;
+}
+
+/* Typewriter text */
+.zine-typewriter {
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+}
+
+/* Hand-scrawled look - rough edges */
+.zine-handwritten {
+  font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+  transform: rotate(var(--rotation, -1deg));
+}
+
+/* Big bold headline - like cut from a magazine */
+.zine-headline {
+  font-family: 'Impact', 'Arial Black', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+  color: #000;
+}
+
+/* Ransom note style - mixed cut-out letters */
+.zine-ransom {
+  display: inline;
+}
+
+.zine-ransom-letter {
+  display: inline-block;
+  padding: 2px 4px;
+  margin: 0 1px;
+  background: var(--bg, #fff);
+  color: var(--color, #000);
+  font-family: var(--font, serif);
+  font-size: var(--size, 1em);
+  transform: rotate(var(--rotation, 0deg));
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+}
+
+/* Stamp effect - like a rubber stamp */
+.zine-stamp {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 3px solid currentColor;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 900;
+  font-family: 'Impact', sans-serif;
+  letter-spacing: 0.1em;
+  transform: rotate(var(--rotation, -5deg));
+  opacity: 0.85;
+  position: relative;
+}
+
+/* Circled text like hand-drawn */
+.zine-circled {
+  position: relative;
+  display: inline-block;
+  padding: 4px 8px;
+}
+
+.zine-circled::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid #000;
+  border-radius: 50%;
+  transform: rotate(-2deg);
+}
+
+/* Arrow pointing */
+.zine-arrow {
+  display: inline-block;
+  font-size: 1.5em;
+  transform: rotate(var(--rotation, 0deg));
+}
+
+/* Marker highlight - yellow highlighter */
+.zine-highlight {
+  background: linear-gradient(
+    180deg,
+    transparent 40%,
+    rgba(255, 255, 0, 0.5) 40%,
+    rgba(255, 255, 0, 0.5) 90%,
+    transparent 90%
+  );
+  padding: 0 4px;
+}
+
+/* Red marker underline */
+.zine-underline-red {
+  text-decoration: none;
+  border-bottom: 3px solid #c41e3a;
+  padding-bottom: 2px;
+}
+
+/* Black marker crossed out */
+.zine-crossed {
+  position: relative;
+}
+
+.zine-crossed::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 50%;
+  height: 3px;
+  background: #000;
+  transform: rotate(-3deg);
+}
+
+/* Sticker - glossy look */
+.zine-sticker {
+  display: inline-block;
+  padding: 6px 14px;
+  background: linear-gradient(180deg, var(--sticker-color, #ff6b6b) 0%, var(--sticker-color-dark, #c92a2a) 100%);
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 2px;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  transform: rotate(var(--rotation, 0deg));
+}
+
+/* Torn paper edge */
+.zine-torn {
+  position: relative;
+}
+
+.zine-torn::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(135deg, #f5f0e6 25%, transparent 25%),
+              linear-gradient(225deg, #f5f0e6 25%, transparent 25%);
+  background-size: 20px 20px;
+  transform: translateY(10px);
+}
+
+/* Coffee stain */
+.zine-coffee-stain {
+  position: relative;
+}
+
+.zine-coffee-stain::before {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(139, 90, 43, 0.1) 35%,
+    rgba(139, 90, 43, 0.15) 40%,
+    transparent 45%
+  );
+  transform: rotate(15deg);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Collage card with random rotation */
+.zine-collage {
+  transform: rotate(var(--rotation, 0deg));
+  transition: transform 0.15s ease;
+}
+
+.zine-collage:hover {
+  transform: rotate(0deg) scale(1.02);
+  z-index: 20;
+}
+
+/* Staple marks */
+.zine-staple {
+  position: relative;
+}
+
+.zine-staple::before,
+.zine-staple::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  width: 4px;
+  height: 12px;
+  background: linear-gradient(90deg, #888 0%, #ccc 50%, #888 100%);
+  border-radius: 1px;
+}
+
+.zine-staple::before {
+  top: 15px;
+}
+
+.zine-staple::after {
+  top: 35px;
+}
+
+/* Xerox artifact - dark edges */
+.zine-xerox-edge {
+  box-shadow:
+    inset 0 0 30px rgba(0,0,0,0.05),
+    inset 0 0 60px rgba(0,0,0,0.03);
+}
+
+/* Dotted halftone pattern for images */
+.zine-halftone {
+  position: relative;
+}
+
+.zine-halftone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, #000 1px, transparent 1px);
+  background-size: 4px 4px;
+  opacity: 0.1;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* Column layout like newspaper */
+.zine-columns {
+  column-count: 2;
+  column-gap: 24px;
+  column-rule: 1px solid #ccc;
+}
+
+@media (max-width: 768px) {
+  .zine-columns {
+    column-count: 1;
+  }
+}
+
+/* Pull quote */
+.zine-pullquote {
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-style: italic;
+  text-align: center;
+  padding: 16px;
+  border-top: 3px solid #000;
+  border-bottom: 3px solid #000;
+  margin: 24px 0;
+  transform: rotate(-1deg);
+}
+
+/* Page number */
+.zine-page-number {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 8px;
+  border-top: 1px solid #000;
+}
+
+/* Doodle border */
+.zine-doodle-border {
+  border: 3px solid #000;
+  border-radius: 0;
+  position: relative;
+}
+
+.zine-doodle-border::before {
+  content: '★';
+  position: absolute;
+  top: -12px;
+  left: 10px;
+  background: #f5f0e6;
+  padding: 0 4px;
+}
+
+/* X marks the spot */
+.zine-x-mark::before {
+  content: '✗';
+  font-size: 2em;
+  color: #c41e3a;
+  position: absolute;
+  top: -10px;
+  right: -10px;
+}
+
