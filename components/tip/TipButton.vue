@@ -1,13 +1,12 @@
 <template>
-  <UButton
-    :color="color"
-    :variant="variant"
-    :size="size"
+  <button
+    class="px-6 py-3 font-bold uppercase tracking-tight transition-all inline-flex items-center gap-2"
+    :class="buttonClasses"
     @click="showTipModal = true"
   >
-    <UIcon name="i-heroicons-heart" class="w-4 h-4 mr-1.5" />
+    <UIcon name="i-heroicons-heart" class="w-5 h-5" />
     Tip {{ artistName }}
-  </UButton>
+  </button>
 
   <TipModal
     v-model="showTipModal"
@@ -18,8 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ButtonColor, ButtonVariant, ButtonSize } from '#ui/types'
-
 interface Props {
   band: {
     id: string
@@ -28,18 +25,23 @@ interface Props {
   }
   artistName?: string
   avatarUrl?: string | null
-  color?: ButtonColor
-  variant?: ButtonVariant
-  size?: ButtonSize
+  size?: 'sm' | 'md' | 'lg'
+  variant?: 'solid' | 'outline'
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  color: 'pink',
-  variant: 'soft',
-  size: 'sm',
+  size: 'md',
+  variant: 'outline',
 })
 
 const artistName = computed(() => props.artistName || props.band.name)
 
 const showTipModal = ref(false)
+
+const buttonClasses = computed(() => {
+  if (props.variant === 'solid') {
+    return 'bg-pink-600 text-white shadow-[2px_2px_0px_0px_rgba(236,72,153,0.5)] hover:shadow-[4px_4px_0px_0px_rgba(236,72,153,0.5)]'
+  }
+  return 'border-2 border-pink-500/50 text-pink-500 hover:border-pink-500 hover:bg-pink-500/10'
+})
 </script>
