@@ -761,8 +761,12 @@ const fetchFollowers = async () => {
 }
 
 // Watch for tab changes to load followers when needed
-watch(() => route.query.tab, (newTab) => {
-  if (newTab === 'followers' && !followersLoaded.value && band.value) {
+// We watch selectedTabIndex (not route.query.tab) because tab switches use
+// window.history.replaceState which doesn't update Vue Router's route.query.
+// Also watch band - when navigating directly to ?tab=followers, band is null initially
+// (loaded via useLazyAsyncData with server: false), so we need to fetch once it's available.
+watch([selectedTabIndex, band], ([tabIndex]) => {
+  if (tabs[tabIndex]?.slot === 'followers' && !followersLoaded.value && band.value) {
     fetchFollowers()
   }
 }, { immediate: true })
