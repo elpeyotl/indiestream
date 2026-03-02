@@ -124,7 +124,7 @@
 
           <!-- Actions -->
           <div class="flex flex-wrap gap-3">
-            <PlayAllButton :loading="loadingPlay" @click="playAll" />
+            <PlayAllButton :loading="loadingPlay" :playing="isAlbumPlaying" @click="playAll" />
             <UButton
               :color="isAlbumSaved(album.id) ? 'violet' : 'gray'"
               :variant="isAlbumSaved(album.id) ? 'solid' : 'ghost'"
@@ -427,7 +427,7 @@ const bandStore = useBandStore()
 const { getBandBySlug } = bandStore
 const playerStore = usePlayerStore()
 const { currentTrack, isPlaying, isLoading: playerLoading } = storeToRefs(playerStore)
-const { playAlbum, playTrack: playerPlayTrack, addToQueue, addNextInQueue } = playerStore
+const { playAlbum, playTrack: playerPlayTrack, addToQueue, addNextInQueue, togglePlay } = playerStore
 const libraryStore = useLibraryStore()
 const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = libraryStore
 const userProfileStore = useUserProfileStore()
@@ -581,9 +581,20 @@ const formatNumber = (num: number): string => {
   return num.toString()
 }
 
+// Check if this album is currently playing
+const isAlbumPlaying = computed(() => {
+  if (!album.value?.tracks || !currentTrack.value) return false
+  return isPlaying.value && album.value.tracks.some(t => t.id === currentTrack.value?.id)
+})
+
 // Player actions
 const playAll = async () => {
   if (!album.value || loadingPlay.value) return
+  // Toggle pause if this album is already playing
+  if (isAlbumPlaying.value) {
+    togglePlay()
+    return
+  }
   loadingPlay.value = true
   try {
     await playAlbum(album.value, coverUrl.value, 0)

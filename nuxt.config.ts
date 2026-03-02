@@ -140,6 +140,18 @@ export default defineNuxtConfig({
     },
   },
 
+  // Icon configuration - ensure dynamically-used icons are included in the bundle
+  icon: {
+    clientBundle: {
+      icons: [
+        'heroicons:pause-solid',
+        'heroicons:play-solid',
+        'heroicons:pause',
+        'heroicons:play',
+      ],
+    },
+  },
+
   // Color mode (dark theme default)
   colorMode: {
     preference: 'dark',
