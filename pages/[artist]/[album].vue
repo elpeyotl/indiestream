@@ -153,9 +153,9 @@
               v-if="album.purchasable && purchaseStatus?.owned"
               :album-id="album.id"
             />
-            <UButton color="gray" variant="ghost" size="lg">
-              <UIcon name="i-heroicons-share" class="w-5 h-5" />
-            </UButton>
+            <UDropdown :items="albumMenuItems" :popper="{ placement: 'bottom-end' }">
+              <UButton color="gray" variant="ghost" size="lg" icon="i-heroicons-ellipsis-horizontal" title="Album actions" />
+            </UDropdown>
           </div>
         </div>
       </div>
@@ -239,7 +239,6 @@
                     <!-- Desktop: Dropdown menu -->
                     <TrackActionsMenu
                       :track="getPlayerTrack(track)"
-                      :show-on-hover="true"
                       class="hidden md:block"
                     />
                     <!-- Mobile: Opens bottom sheet -->
@@ -389,6 +388,14 @@
       :track="selectedTrack"
     />
 
+    <!-- Album Playlist Picker -->
+    <PlaylistPickerSheet
+      v-model="showAlbumPlaylistPicker"
+      :track-id="albumTrackIds"
+      :track-title="album?.title"
+      @added="showAlbumPlaylistPicker = false"
+    />
+
     <!-- Purchase Modal -->
     <AlbumPurchaseModal
       v-if="album?.purchasable"
@@ -420,7 +427,7 @@ const bandStore = useBandStore()
 const { getBandBySlug } = bandStore
 const playerStore = usePlayerStore()
 const { currentTrack, isPlaying, isLoading: playerLoading } = storeToRefs(playerStore)
-const { playAlbum, playTrack: playerPlayTrack } = playerStore
+const { playAlbum, playTrack: playerPlayTrack, addToQueue, addNextInQueue } = playerStore
 const libraryStore = useLibraryStore()
 const { isAlbumSaved, toggleAlbumSave, checkAlbumSaved, isTrackLiked, toggleTrackLike, fetchLikedTrackIds } = libraryStore
 const userProfileStore = useUserProfileStore()
@@ -429,6 +436,7 @@ const purchaseStore = usePurchaseStore()
 const { fetchPurchaseStatus } = purchaseStore
 const user = useSupabaseUser()
 const haptics = useHaptics()
+const toast = useToast()
 
 // Purchase status
 const purchaseStatus = ref<PurchaseStatus | null>(null)
@@ -445,6 +453,7 @@ const showActionsSheet = ref(false)
 const selectedTrack = ref<PlayerTrack | null>(null)
 const otherAlbumCovers = ref<Record<string, string>>({})
 const showPurchaseModal = ref(false)
+const showAlbumPlaylistPicker = ref(false)
 
 // Format price for display
 const formatPrice = (cents: number): string => {
@@ -629,6 +638,92 @@ const getPlayerTrack = (track: Track): PlayerTrack => {
     duration: track.duration_seconds,
   }
 }
+
+// All album tracks as PlayerTrack[] for album-level actions
+const albumPlayerTracks = computed(() => {
+  if (!album.value?.tracks) return []
+  return album.value.tracks.map(t => getPlayerTrack(t))
+})
+
+// Album track IDs for playlist picker
+const albumTrackIds = computed(() => {
+  if (!album.value?.tracks) return []
+  return album.value.tracks.map(t => t.id)
+})
+
+// Album-level actions
+const handleAlbumPlayNext = async () => {
+  haptics.light()
+  await addNextInQueue(albumPlayerTracks.value)
+  toast.add({
+    title: 'Playing Next',
+    description: `${album.value?.title} will play next`,
+    color: 'green',
+  })
+}
+
+const handleAlbumAddToQueue = async () => {
+  haptics.light()
+  await addToQueue(albumPlayerTracks.value)
+  toast.add({
+    title: 'Added to Queue',
+    description: `${album.value?.title} added to queue`,
+    color: 'green',
+  })
+}
+
+const handleAlbumShare = async () => {
+  const url = `${window.location.origin}/${band.value?.slug}/${album.value?.slug}`
+  const shareData = {
+    title: `${album.value?.title} by ${band.value?.name}`,
+    url,
+  }
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData)
+    } catch {
+      // User cancelled share
+    }
+  } else {
+    await navigator.clipboard.writeText(url)
+    toast.add({
+      title: 'Link Copied',
+      description: 'Album link copied to clipboard',
+      color: 'green',
+    })
+  }
+}
+
+const albumMenuItems = computed(() => [
+  [
+    {
+      label: 'Play Next',
+      icon: 'i-heroicons-forward',
+      click: handleAlbumPlayNext,
+    },
+    {
+      label: 'Add to Queue',
+      icon: 'i-heroicons-queue-list',
+      click: handleAlbumAddToQueue,
+    },
+  ],
+  [
+    {
+      label: 'Add to Playlist',
+      icon: 'i-heroicons-plus',
+      click: () => {
+        showAlbumPlaylistPicker.value = true
+      },
+    },
+  ],
+  [
+    {
+      label: 'Share',
+      icon: 'i-heroicons-share',
+      click: handleAlbumShare,
+    },
+  ],
+])
 
 // Open mobile actions sheet
 const openActionsSheet = async (track: Track) => {

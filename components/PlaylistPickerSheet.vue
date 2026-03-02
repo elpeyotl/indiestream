@@ -113,7 +113,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   modelValue: boolean
-  trackId: string
+  trackId: string | string[]
   trackTitle?: string
 }>()
 
@@ -152,6 +152,10 @@ const close = () => {
   emit('update:modelValue', false)
 }
 
+const trackIds = computed(() =>
+  Array.isArray(props.trackId) ? props.trackId : [props.trackId]
+)
+
 const handleAddToPlaylist = async (playlistId: string) => {
   if (!user.value) {
     toast.add({
@@ -162,8 +166,13 @@ const handleAddToPlaylist = async (playlistId: string) => {
     return
   }
 
-  const success = await addTrack(playlistId, props.trackId, props.trackTitle)
-  if (success) {
+  const ids = trackIds.value
+  let successCount = 0
+  for (const id of ids) {
+    const success = await addTrack(playlistId, id, ids.length === 1 ? props.trackTitle : undefined)
+    if (success) successCount++
+  }
+  if (successCount > 0) {
     emit('added', playlistId)
   }
 }
@@ -175,7 +184,10 @@ const handleCreateAndAdd = async () => {
   const playlist = await createPlaylist(newPlaylistTitle.value)
 
   if (playlist) {
-    await addTrack(playlist.id, props.trackId, props.trackTitle)
+    const ids = trackIds.value
+    for (const id of ids) {
+      await addTrack(playlist.id, id, ids.length === 1 ? props.trackTitle : undefined)
+    }
     showCreateModal.value = false
     newPlaylistTitle.value = ''
     emit('added', playlist.id)
