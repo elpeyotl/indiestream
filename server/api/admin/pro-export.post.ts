@@ -7,6 +7,11 @@ interface ExportRequest {
   endDate: string
 }
 
+interface TerritoryStats {
+  play_count: number
+  duration: number
+}
+
 interface StreamData {
   isrc: string | null
   iswc: string | null
@@ -14,10 +19,12 @@ interface StreamData {
   album_title: string
   artist_name: string
   composers: string
-  country_code: string | null
+  territory_plays: Map<string, TerritoryStats>
   play_count: number
   total_duration: number
 }
+
+const csvEscape = (val: string) => `"${val.replace(/"/g, '""')}"`
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -96,12 +103,12 @@ export default defineEventHandler(async (event) => {
     creditsByTrack.set(credit.track_id, existing)
   }
 
-  // Aggregate by track + country
+  // Aggregate by track (one row per song)
   const aggregated = new Map<string, StreamData>()
 
   for (const stream of streams || []) {
     const track = stream.tracks as any
-    const key = `${stream.track_id}:${stream.country_code || 'UNKNOWN'}`
+    const key = stream.track_id
 
     if (!aggregated.has(key)) {
       const composers = creditsByTrack.get(stream.track_id)?.join('; ') || 'N/A'
@@ -112,7 +119,7 @@ export default defineEventHandler(async (event) => {
         album_title: track.albums?.title || 'Unknown Album',
         artist_name: track.albums?.bands?.name || 'Unknown Artist',
         composers,
-        country_code: stream.country_code || null,
+        territory_plays: new Map(),
         play_count: 0,
         total_duration: 0,
       })
@@ -121,37 +128,55 @@ export default defineEventHandler(async (event) => {
     const entry = aggregated.get(key)!
     entry.play_count += 1
     entry.total_duration += stream.duration_seconds || 0
+
+    // Track per-territory stats
+    const territory = stream.country_code || 'UNKNOWN'
+    const territoryEntry = entry.territory_plays.get(territory) || { play_count: 0, duration: 0 }
+    territoryEntry.play_count += 1
+    territoryEntry.duration += stream.duration_seconds || 0
+    entry.territory_plays.set(territory, territoryEntry)
   }
 
   const streamData = Array.from(aggregated.values()).sort((a, b) => b.play_count - a.play_count)
 
   // Calculate totals
+  const allTerritories = new Set<string>()
+  for (const s of streamData) {
+    for (const t of s.territory_plays.keys()) allTerritories.add(t)
+  }
   const totals = {
     playCount: streamData.reduce((sum, s) => sum + s.play_count, 0),
     durationSeconds: streamData.reduce((sum, s) => sum + s.total_duration, 0),
-    territories: new Set(streamData.map(s => s.country_code).filter(Boolean)).size,
+    territories: allTerritories.size,
     uniqueTracks: new Set(streamData.map(s => s.isrc || s.track_title)).size,
     uniqueArtists: new Set(streamData.map(s => s.artist_name)).size,
   }
 
   // CSV format for SUISA
+  const headers = ['ISRC', 'ISWC', 'Track Title', 'Album', 'Artist', 'Composer(s)', 'Play Count', 'Duration (sec)', 'Territories', 'Period Start', 'Period End']
   const csvRows = [
-    ['ISRC', 'ISWC', 'Track Title', 'Album', 'Artist', 'Composer(s)', 'Play Count', 'Duration (sec)', 'Territory', 'Period Start', 'Period End'].join(','),
+    headers.map(csvEscape).join(','),
   ]
 
   for (const stream of streamData) {
+    // Format territory breakdown as "CH:45;DE:120;AT:30"
+    const territories = Array.from(stream.territory_plays.entries())
+      .sort((a, b) => b[1].play_count - a[1].play_count)
+      .map(([code, stats]) => `${code}:${stats.play_count}`)
+      .join(';')
+
     csvRows.push([
-      stream.isrc || 'N/A',
-      stream.iswc || 'N/A',
-      `"${stream.track_title.replace(/"/g, '""')}"`,
-      `"${stream.album_title.replace(/"/g, '""')}"`,
-      `"${stream.artist_name.replace(/"/g, '""')}"`,
-      `"${stream.composers.replace(/"/g, '""')}"`,
-      stream.play_count.toString(),
-      stream.total_duration.toString(),
-      stream.country_code || 'UNKNOWN',
-      startDate,
-      endDate,
+      csvEscape(stream.isrc || 'N/A'),
+      csvEscape(stream.iswc || 'N/A'),
+      csvEscape(stream.track_title),
+      csvEscape(stream.album_title),
+      csvEscape(stream.artist_name),
+      csvEscape(stream.composers),
+      csvEscape(stream.play_count.toString()),
+      csvEscape(stream.total_duration.toString()),
+      csvEscape(territories),
+      csvEscape(startDate),
+      csvEscape(endDate),
     ].join(','))
   }
 
