@@ -70,14 +70,18 @@
         <UIcon name="i-heroicons-check-circle" class="w-6 h-6" />
       </div>
 
-      <div v-else-if="track.error" class="text-red-500">
-        <UIcon name="i-heroicons-exclamation-circle" class="w-6 h-6" />
-      </div>
+      <UTooltip v-else-if="track.error" :text="track.error" :popper="{ placement: 'top' }" :ui="{ background: 'bg-zinc-800', color: 'text-zinc-200' }">
+        <div class="text-red-500">
+          <UIcon name="i-heroicons-exclamation-circle" class="w-6 h-6" />
+        </div>
+      </UTooltip>
 
       <!-- Error indicator when validation fails -->
-      <div v-else-if="showErrors && hasErrors" class="text-red-400">
-        <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5" />
-      </div>
+      <UTooltip v-else-if="showErrors && hasErrors" :text="validationErrorSummary" :popper="{ placement: 'top' }" :ui="{ background: 'bg-zinc-800', color: 'text-zinc-200' }">
+        <div class="text-red-400">
+          <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5" />
+        </div>
+      </UTooltip>
 
       <!-- Remove (always show except during active upload) -->
       <UButton
@@ -439,6 +443,18 @@ const creditsErrorMessage = computed(() => {
   if (hasInvalidAuthorForInstrumental.value) return '— Author not allowed for instrumental'
   if (isMissingAuthorForNonInstrumental.value) return '— Author required for lyrics'
   return ''
+})
+
+// Build a summary of all validation errors for the tooltip
+const validationErrorSummary = computed(() => {
+  const errors: string[] = []
+  if (!props.track.isrc) errors.push('ISRC required')
+  else if (!isValidIsrc(props.track.isrc)) errors.push('Invalid ISRC format')
+  if (!props.track.lyrics_language) errors.push('Lyrics language required')
+  if (!hasComposerCredit.value) errors.push('Composer credit required')
+  if (hasInvalidAuthorForInstrumental.value) errors.push('Author not allowed for instrumental')
+  if (isMissingAuthorForNonInstrumental.value) errors.push('Author credit required for lyrics')
+  return errors.join(', ')
 })
 
 // Check if track has validation errors
