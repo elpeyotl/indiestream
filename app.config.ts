@@ -3,6 +3,38 @@ export default defineAppConfig({
   ui: {
     primary: 'violet',
     gray: 'zinc',
+    dropdown: {
+      background: 'bg-zinc-900',
+      ring: 'ring-1 ring-zinc-700',
+      item: {
+        active: 'bg-zinc-800',
+      },
+    },
+    select: {
+      background: 'bg-zinc-900',
+    },
+    selectMenu: {
+      background: 'bg-zinc-900',
+      ring: 'ring-1 ring-zinc-700',
+      option: {
+        active: 'bg-zinc-800',
+      },
+    },
+    popover: {
+      background: 'bg-zinc-900',
+      ring: 'ring-1 ring-zinc-700',
+    },
+    inputMenu: {
+      background: 'bg-zinc-900',
+      ring: 'ring-1 ring-zinc-700',
+      option: {
+        active: 'bg-zinc-800',
+      },
+    },
+    contextMenu: {
+      background: 'bg-zinc-900',
+      ring: 'ring-1 ring-zinc-700',
+    },
   },
 
   // Brand Identity
