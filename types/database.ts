@@ -113,6 +113,9 @@ export type Database = {
           rights_confirmed_by: string | null
           sample_declaration: string | null
           slug: string
+          terms_accepted_at: string | null
+          terms_version: string | null
+          ip_address: string | null
           title: string
           total_duration_seconds: number | null
           total_streams: number | null
@@ -143,6 +146,9 @@ export type Database = {
           rights_confirmed_by?: string | null
           sample_declaration?: string | null
           slug: string
+          terms_accepted_at?: string | null
+          terms_version?: string | null
+          ip_address?: string | null
           title: string
           total_duration_seconds?: number | null
           total_streams?: number | null
@@ -173,6 +179,9 @@ export type Database = {
           rights_confirmed_by?: string | null
           sample_declaration?: string | null
           slug?: string
+          terms_accepted_at?: string | null
+          terms_version?: string | null
+          ip_address?: string | null
           title?: string
           total_duration_seconds?: number | null
           total_streams?: number | null

@@ -69,6 +69,7 @@ export interface UploadWizardState {
   aiDeclaration: boolean
   originalContentConfirmed: boolean
   falseInfoUnderstood: boolean
+  termsAccepted: boolean
   // Copied credits for paste functionality
   copiedCredits: TrackCreditForm[] | null
   // Edit mode
@@ -104,6 +105,7 @@ const defaultState = (): UploadWizardState => ({
   aiDeclaration: false,
   originalContentConfirmed: false,
   falseInfoUnderstood: false,
+  termsAccepted: false,
   copiedCredits: null,
   isEditMode: false,
   editAlbumId: null,
@@ -422,6 +424,7 @@ export const useUploadWizard = () => {
       aiDeclaration: false,
       originalContentConfirmed: false,
       falseInfoUnderstood: false,
+      termsAccepted: false,
       copiedCredits: null,
       isEditMode: true,
       editAlbumId: album.id,

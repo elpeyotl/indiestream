@@ -163,6 +163,16 @@
             </span>
           </template>
         </UCheckbox>
+        <UCheckbox
+          v-model="state.termsAccepted"
+          :color="showValidationErrors && !state.termsAccepted ? 'red' : undefined"
+        >
+          <template #label>
+            <span :class="showValidationErrors && !state.termsAccepted ? 'text-red-400' : 'text-zinc-300'">
+              I have read and agree to the <NuxtLink to="/terms" target="_blank" class="text-violet-400 hover:text-violet-300 underline" @click.stop>Terms and Conditions</NuxtLink> of Fairtune
+            </span>
+          </template>
+        </UCheckbox>
       </div>
     </div>
 
@@ -283,7 +293,8 @@ const allCheckboxesChecked = computed(() => {
   return state.value.rightsConfirmed &&
     state.value.falseInfoUnderstood &&
     state.value.aiDeclaration &&
-    state.value.originalContentConfirmed
+    state.value.originalContentConfirmed &&
+    state.value.termsAccepted
 })
 
 const canPublish = computed(() => {
@@ -359,6 +370,10 @@ const validationErrors = computed(() => {
 
   if (!state.value.falseInfoUnderstood) {
     errors.push('Acknowledge the consequences of false information')
+  }
+
+  if (!state.value.termsAccepted) {
+    errors.push('Accept the Terms and Conditions')
   }
 
   return errors

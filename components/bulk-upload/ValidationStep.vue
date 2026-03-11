@@ -169,6 +169,13 @@
             </span>
           </template>
         </UCheckbox>
+        <UCheckbox v-model="termsAccepted">
+          <template #label>
+            <span class="text-zinc-300">
+              I have read and agree to the <NuxtLink to="/terms" target="_blank" class="text-violet-400 hover:text-violet-300 underline" @click.stop>Terms and Conditions</NuxtLink> of Fairtune
+            </span>
+          </template>
+        </UCheckbox>
       </div>
     </div>
 
@@ -203,6 +210,7 @@ const { state, summary, validateWithServer, setDuplicateArtistAction } = useBulk
 const validating = ref(false)
 const rightsConfirmed = ref(false)
 const aiDeclaration = ref(false)
+const termsAccepted = ref(false)
 
 // Calculate effective summary (excluding skipped artists)
 const effectiveSummary = computed(() => {
@@ -232,7 +240,7 @@ const effectiveSummary = computed(() => {
 
 const canStartImport = computed(() => {
   if (!state.value.serverValidation) return false
-  if (!rightsConfirmed.value || !aiDeclaration.value) return false
+  if (!rightsConfirmed.value || !aiDeclaration.value || !termsAccepted.value) return false
   if (state.value.serverValidation.errors.length > 0) return false
 
   // All duplicates must have an action selected

@@ -1,6 +1,7 @@
 // POST /api/admin/moderation-queue/[id]/approve - Approve track
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import { createAuditLog } from '~/server/utils/auditLog'
+import { sendUploadApprovedEmail } from '~/server/utils/email'
 
 export default defineEventHandler(async (event) => {
   // Verify admin access
@@ -14,7 +15,7 @@ export default defineEventHandler(async (event) => {
   // Check if user is admin
   const { data: profile } = await client
     .from('profiles')
-    .select('role')
+    .select('role, display_name')
     .eq('id', user.id)
     .single()
 
@@ -37,7 +38,7 @@ export default defineEventHandler(async (event) => {
       track_id,
       submitted_by,
       band_id,
-      track:tracks!track_id(title, moderation_status, moderation_notes),
+      track:tracks!track_id(title, album_id, moderation_status, moderation_notes),
       band:bands!band_id(name)
     `)
     .eq('id', queueId)
@@ -47,7 +48,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Queue item not found' })
   }
 
-  const track = queueItem.track as { title: string; moderation_status: string; moderation_notes: string | null } | null
+  const track = queueItem.track as { title: string; album_id: string; moderation_status: string; moderation_notes: string | null } | null
   const band = queueItem.band as { name: string } | null
 
   // Call approve_track function
@@ -90,6 +91,63 @@ export default defineEventHandler(async (event) => {
       message: `Your track "${trackTitle}" has been approved and is now live.`,
       link: `/dashboard/artist/${queueItem.band_id}`,
     })
+  }
+
+  // Check if ALL tracks of this album are now approved — send contract email if so
+  if (track?.album_id && queueItem.submitted_by) {
+    try {
+      // Get all tracks for this album
+      const { data: albumTracks } = await client
+        .from('tracks')
+        .select('id, title, moderation_status')
+        .eq('album_id', track.album_id)
+
+      const allApproved = albumTracks && albumTracks.length > 0 &&
+        albumTracks.every(t => t.moderation_status === 'approved')
+
+      if (allApproved) {
+        // Get album details
+        const { data: album } = await client
+          .from('albums')
+          .select('id, title, created_at, terms_version, terms_accepted_at, ip_address')
+          .eq('id', track.album_id)
+          .single()
+
+        // Get artist profile
+        const { data: artistProfile } = await client
+          .from('profiles')
+          .select('display_name, email')
+          .eq('id', queueItem.submitted_by)
+          .single()
+
+        if (album && artistProfile) {
+          const approvalDate = new Date().toISOString()
+          const trackTitles = albumTracks.map(t => t.title)
+
+          await sendUploadApprovedEmail({
+            to: artistProfile.email,
+            displayName: artistProfile.display_name || 'Artist',
+            email: artistProfile.email,
+            uploadId: album.id,
+            uploadType: 'Music Upload',
+            albumTitle: album.title,
+            submissionDate: album.terms_accepted_at || album.created_at || approvalDate,
+            approvalDate,
+            adminName: profile.display_name || 'Fairtune Team',
+            numberOfTracks: albumTracks.length,
+            trackList: trackTitles,
+            termsVersion: album.terms_version || '2026-02',
+            ipAddress: album.ip_address || null,
+            dashboardUrl: `/dashboard/artist/${queueItem.band_id}`,
+          })
+
+          console.log(`[Email] Upload approved email sent for album "${album.title}" to ${artistProfile.email}`)
+        }
+      }
+    } catch (emailError) {
+      // Don't fail the approval if email sending fails
+      console.error('[Email] Failed to send upload approved email:', emailError)
+    }
   }
 
   return {

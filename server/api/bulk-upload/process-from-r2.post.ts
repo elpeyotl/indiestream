@@ -100,6 +100,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
+  // Capture client IP for terms acceptance logging
+  const forwarded = getHeader(event, 'x-forwarded-for')
+  const realIp = getHeader(event, 'x-real-ip')
+  const clientIp = forwarded?.split(',')[0]?.trim() || realIp || null
+
   const body = await readBody(event)
   const { zipKey, artists, duplicateActions, rootPrefix } = body as {
     zipKey: string
@@ -344,6 +349,10 @@ export default defineEventHandler(async (event) => {
               c_line: cLine,
               is_published: true,
               rights_confirmed: true,
+              rights_confirmed_at: new Date().toISOString(),
+              terms_version: '2026-02',
+              terms_accepted_at: new Date().toISOString(),
+              ip_address: clientIp,
             })
             .select('id')
             .single()

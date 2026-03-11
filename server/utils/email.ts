@@ -129,6 +129,23 @@ export interface NewReleaseEmailData {
   coverUrl?: string | null
 }
 
+export interface UploadApprovedEmailData {
+  to: string
+  displayName: string
+  email: string
+  uploadId: string
+  uploadType: 'Music Upload' | 'Batch Upload'
+  albumTitle: string
+  submissionDate: string
+  approvalDate: string
+  adminName: string
+  numberOfTracks: number
+  trackList: string[]
+  termsVersion: string
+  ipAddress: string | null
+  dashboardUrl: string
+}
+
 export interface PurchaseConfirmationEmailData {
   to: string
   userName: string
@@ -244,6 +261,17 @@ export const sendNewReleaseEmail = async (data: NewReleaseEmailData) => {
   return sendEmail({
     to: data.to,
     subject: `New Release: ${data.albumTitle} by ${data.bandName}`,
+    html,
+  })
+}
+
+export const sendUploadApprovedEmail = async (data: UploadApprovedEmailData) => {
+  const { getUploadApprovedEmailTemplate } = await import('../emails/UploadApprovedEmail')
+  const html = renderEmailTemplate(getUploadApprovedEmailTemplate(data))
+
+  return sendEmail({
+    to: data.to,
+    subject: `Fairtune – Your music has been approved! | Contract Confirmation`,
     html,
   })
 }

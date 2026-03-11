@@ -354,6 +354,13 @@ const startUpload = async () => {
   const aiDeclaration = state.value.aiDeclaration
   const originalContentConfirmed = state.value.originalContentConfirmed
 
+  // Fetch client IP for terms acceptance logging
+  let clientIp: string | null = null
+  try {
+    const { ip } = await $fetch<{ ip: string | null }>('/api/upload/client-ip')
+    clientIp = ip
+  } catch { /* non-critical */ }
+
   try {
     let album: any
 
@@ -492,6 +499,9 @@ const startUpload = async () => {
           rights_confirmed_at: new Date().toISOString(),
           rights_confirmed_by: user.value?.id,
           original_content_confirmed: originalContentConfirmed,
+          terms_version: '2026-02',
+          terms_accepted_at: new Date().toISOString(),
+          ip_address: clientIp,
           p_line: state.value.albumForm.p_line || `℗ ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
           c_line: state.value.albumForm.c_line || `© ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
         })
@@ -612,6 +622,9 @@ const startUpload = async () => {
           rights_confirmed_at: new Date().toISOString(),
           rights_confirmed_by: user.value?.id,
           original_content_confirmed: originalContentConfirmed,
+          terms_version: '2026-02',
+          terms_accepted_at: new Date().toISOString(),
+          ip_address: clientIp,
           p_line: `℗ ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
           c_line: `© ${new Date().getFullYear()} ${state.value.albumForm.label_name || state.value.selectedBand?.name}`,
         })
