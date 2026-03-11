@@ -11,7 +11,7 @@
     @drop.prevent="$emit('drop')"
   >
     <!-- Track Header -->
-    <div class="flex items-center gap-4 mb-4">
+    <div class="flex items-center gap-4" :class="{ 'mb-4': !collapsed }">
       <!-- Drag Handle (only this element is draggable) -->
       <div
         class="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-zinc-300 select-none"
@@ -83,6 +83,17 @@
         </div>
       </UTooltip>
 
+      <!-- Collapse/Expand Toggle -->
+      <UButton
+        v-if="!track.uploading && (!track.uploaded || track.id)"
+        color="gray"
+        variant="ghost"
+        size="sm"
+        @click="collapsed = !collapsed"
+      >
+        <UIcon :name="collapsed ? 'i-heroicons-chevron-down' : 'i-heroicons-chevron-up'" class="w-4 h-4" />
+      </UButton>
+
       <!-- Remove (always show except during active upload) -->
       <UButton
         v-if="!track.uploading"
@@ -95,8 +106,8 @@
       </UButton>
     </div>
 
-    <!-- Track Metadata (show for new tracks and existing tracks in edit mode) -->
-    <div v-if="!track.uploading && (!track.uploaded || track.id)" class="space-y-4 pt-4 border-t border-zinc-700">
+    <!-- Track Metadata (show for new tracks and existing tracks in edit mode, hideable via collapse) -->
+    <div v-if="!collapsed && !track.uploading && (!track.uploaded || track.id)" class="space-y-4 pt-4 border-t border-zinc-700">
       <!-- ISRC Row -->
       <div class="flex items-start gap-4">
         <div class="flex-1">
@@ -366,6 +377,8 @@ const emit = defineEmits<{
   'generate-isrc': []
   'release-isrc': []
 }>()
+
+const collapsed = ref(false)
 
 const { formatFileSize, creditRoles, lyricsLanguages } = useUploadWizard()
 
