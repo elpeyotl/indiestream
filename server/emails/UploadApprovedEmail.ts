@@ -162,10 +162,10 @@ export const getUploadApprovedEmailTemplate = ({
     </mj-text>
 
     <mj-text font-size="13px">
-      <strong style="color: #f4f4f5;">How a listener's subscription fee is distributed (example: CHF 9.99):</strong><br/>
-      &bull; 70% (CHF 6.99) &ndash; distributed to artists based on listening time<br/>
-      &bull; 15% (CHF 1.50) &ndash; royalties to collecting societies (PROs)<br/>
-      &bull; 15% (CHF 1.50) &ndash; platform costs (servers, bandwidth, team)
+      <strong style="color: #f4f4f5;">How a listener's subscription fee is distributed (example: CHF 12.00):</strong><br/>
+      &bull; 70% (CHF 8.40) &ndash; distributed to artists based on listening time<br/>
+      &bull; 15% (CHF 1.80) &ndash; royalties to collecting societies (PROs)<br/>
+      &bull; 15% (CHF 1.80) &ndash; platform costs (servers, bandwidth, team)
     </mj-text>
 
     <mj-text font-size="13px">

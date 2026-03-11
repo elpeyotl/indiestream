@@ -112,11 +112,11 @@ export default defineEventHandler(async (event) => {
     }
 
     // Calculate artist earnings using user-centric model
-    // Transparent revenue split per $9.99 subscription:
-    // - 70% ($6.99) goes directly to artists
-    // - 15% ($1.50) goes to CMOs (SUISA/GEMA/PRS/ASCAP/BMI) for performance royalties
-    // - 15% ($1.50) goes to platform operations
-    const SUBSCRIPTION_PRICE_CENTS = 999
+    // Transparent revenue split per CHF 12.00 subscription:
+    // - 70% (CHF 8.40) goes directly to artists
+    // - 15% (CHF 1.80) goes to CMOs (SUISA/GEMA/PRS/ASCAP/BMI) for performance royalties
+    // - 15% (CHF 1.80) goes to platform operations
+    const SUBSCRIPTION_PRICE_CENTS = 1200
     const ARTIST_SHARE = 0.70
     const CMO_SHARE = 0.15
     const PLATFORM_SHARE = 0.15

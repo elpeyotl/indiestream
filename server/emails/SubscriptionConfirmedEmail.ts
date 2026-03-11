@@ -11,7 +11,7 @@ interface SubscriptionConfirmedEmailProps {
 export const getSubscriptionConfirmedEmailTemplate = ({
   userName = 'Listener',
   tier = 'Listener',
-  amount = 9.99,
+  amount = 12.00,
   currency = 'CHF',
   periodEnd = '2024-02-14',
 }: SubscriptionConfirmedEmailProps) => {

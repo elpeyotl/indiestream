@@ -4,7 +4,7 @@
     <div class="text-center mb-16">
       <h1 class="text-4xl md:text-5xl font-bold text-zinc-100 mb-6">Where your money goes</h1>
       <p class="text-xl text-zinc-400 max-w-2xl mx-auto">
-        $9.99/month. 70% to artists. 15% to royalties. 15% platform. No pool. No mystery.
+        CHF 12/month. 70% to artists. 15% to royalties. 15% platform. No pool. No mystery.
       </p>
     </div>
 
@@ -23,7 +23,7 @@
             1
           </div>
           <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 ml-4">
-            <h3 class="font-semibold text-zinc-100 mb-2">Pay $9.99/month</h3>
+            <h3 class="font-semibold text-zinc-100 mb-2">Pay CHF 12/month</h3>
             <p class="text-zinc-400 text-sm">
               Unlimited streaming. Every artist on the platform. No ads. No tiers.
             </p>
@@ -55,7 +55,7 @@
 
       <!-- Payment Example -->
       <div class="bg-zinc-900 rounded-2xl p-8 border border-zinc-800">
-        <h3 class="font-semibold text-zinc-100 mb-6 text-center">Real example: Where your $9.99 goes</h3>
+        <h3 class="font-semibold text-zinc-100 mb-6 text-center">Real example: Where your CHF 12 goes</h3>
         <div class="max-w-md mx-auto space-y-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -67,7 +67,7 @@
                 <p class="text-zinc-500 text-sm">60% of your listening</p>
               </div>
             </div>
-            <span class="text-teal-400 font-semibold">$4.19</span>
+            <span class="text-teal-400 font-semibold">CHF 5.04</span>
           </div>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -79,7 +79,7 @@
                 <p class="text-zinc-500 text-sm">30% of your listening</p>
               </div>
             </div>
-            <span class="text-teal-400 font-semibold">$2.10</span>
+            <span class="text-teal-400 font-semibold">CHF 2.52</span>
           </div>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -91,16 +91,16 @@
                 <p class="text-zinc-500 text-sm">10% of your listening</p>
               </div>
             </div>
-            <span class="text-teal-400 font-semibold">$0.70</span>
+            <span class="text-teal-400 font-semibold">CHF 0.84</span>
           </div>
           <div class="h-px bg-zinc-700 my-4" />
           <div class="flex items-center justify-between text-zinc-400">
             <span>Royalties to PROs (songwriters)</span>
-            <span>$1.50</span>
+            <span>CHF 1.80</span>
           </div>
           <div class="flex items-center justify-between text-zinc-400">
             <span>Platform costs (servers, bandwidth, team)</span>
-            <span>$1.50</span>
+            <span>CHF 1.80</span>
           </div>
         </div>
       </div>
@@ -210,7 +210,7 @@
 useHead({
   title: 'How It Works | Fairtune',
   meta: [
-    { name: 'description', content: '$9.99/month. 70% to artists. 15% to royalties. 15% platform costs. We show you every cent.' },
+    { name: 'description', content: 'CHF 12/month. 70% to artists. 15% to royalties. 15% platform costs. We show you every cent.' },
   ],
 })
 </script>

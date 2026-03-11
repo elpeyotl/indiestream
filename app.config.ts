@@ -107,14 +107,14 @@ export default defineAppConfig({
 
   // Platform Configuration
   platform: {
-    // Revenue distribution ($9.99/month)
-    // 70% ($6.99) to artists - split by listening time
-    // 15% ($1.50) to royalties - PROs (ASCAP, BMI, GEMA, SUISA, etc.)
-    // 15% ($1.50) platform costs - servers, bandwidth, team
+    // Revenue distribution (CHF 12.00/month)
+    // 70% (CHF 8.40) to artists - split by listening time
+    // 15% (CHF 1.80) to royalties - PROs (SUISA, GEMA, ASCAP, BMI, etc.)
+    // 15% (CHF 1.80) platform costs - servers, bandwidth, team
     platformFeePercentage: 15,    // 15% platform costs
     royaltySharePercentage: 15,   // 15% to royalty societies (PROs)
     artistSharePercentage: 70,    // 70% direct to artists
-    minimumPayoutCents: 1000,     // $10 minimum payout threshold
+    minimumPayoutCents: 1000,     // CHF 10 minimum payout threshold
 
     // Subscription tiers (prices in cents)
     subscriptionTiers: {
@@ -127,20 +127,10 @@ export default defineAppConfig({
           snippetDuration: 30, // seconds
         },
       },
-      standard: {
-        name: 'Standard',
-        priceMonthly: 999,   // $9.99
-        priceYearly: 9990,   // $99.90
-        features: {
-          fullStreaming: true,
-          downloads: true,
-          downloadQuality: 'mp3_320',
-        },
-      },
-      premium: {
-        name: 'Premium',
-        priceMonthly: 1499,  // $14.99
-        priceYearly: 14990,  // $149.90
+      listener: {
+        name: 'Listener',
+        priceMonthly: 1200,   // CHF 12.00
+        priceYearly: 12000,   // CHF 120.00 (2 months free)
         features: {
           fullStreaming: true,
           downloads: true,

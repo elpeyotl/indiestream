@@ -119,15 +119,15 @@
         <div class="space-y-2 text-sm text-zinc-400">
           <p>
             <span class="text-violet-400 font-medium">User-Centric Payouts:</span>
-            Each subscriber's $9.99 monthly fee is distributed only to artists they actually listened to.
+            Each subscriber's CHF 12 monthly fee is distributed only to artists they actually listened to.
           </p>
           <p>
             <span class="text-teal-400 font-medium">Transparent Split:</span>
-            You receive 70% directly ($6.99). 15% goes to royalty societies (SUISA/GEMA/etc.) for performance rights. 15% platform fee.
+            You receive 70% directly (CHF 8.40). 15% goes to royalty societies (SUISA/GEMA/etc.) for performance rights. 15% platform fee.
           </p>
           <p>
             <span class="text-zinc-300 font-medium">Example:</span>
-            If a subscriber spends 50% of their listening time on your music, you receive 50% of $6.99 (~$3.50) from that subscriber.
+            If a subscriber spends 50% of their listening time on your music, you receive 50% of CHF 8.40 (~CHF 4.20) from that subscriber.
           </p>
         </div>
       </UCard>

@@ -98,7 +98,7 @@ export default defineEventHandler(async (event): Promise<MoneyDistribution> => {
   }
 
   // Revenue model constants
-  const SUBSCRIPTION_PRICE_CENTS = 999
+  const SUBSCRIPTION_PRICE_CENTS = 1200
   const ARTIST_SHARE = 0.70
   const CMO_SHARE = 0.15
   const PLATFORM_SHARE = 0.15

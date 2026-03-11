@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
     .then() // Don't await, just fire
 
   // Revenue model constants
-  const SUBSCRIPTION_PRICE_CENTS = 999
+  const SUBSCRIPTION_PRICE_CENTS = 1200
   const ARTIST_SHARE = 0.70
 
   // Get user's subscription info

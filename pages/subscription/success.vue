@@ -56,19 +56,23 @@
             </div>
           </template>
 
-          <!-- Step 2: 85% to Artists -->
+          <!-- Step 2: 85% to Music -->
           <template v-else-if="currentStep === 2">
             <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-violet-500/20 flex items-center justify-center">
               <UIcon name="i-heroicons-heart" class="w-14 h-14 text-violet-400" />
             </div>
-            <h2 class="text-3xl font-bold text-zinc-100 mb-4">85% goes to artists</h2>
+            <h2 class="text-3xl font-bold text-zinc-100 mb-4">85% goes to music</h2>
             <p class="text-zinc-400 mb-8">
-              Unlike other platforms, the majority of your subscription goes directly to the artists you listen to. No middlemen.
+              Unlike other platforms, 70% of your subscription goes directly to the artists you listen to. 15% goes to songwriters via royalty societies.
             </p>
-            <div class="flex justify-center gap-12">
+            <div class="flex justify-center gap-8">
               <div class="text-center">
-                <p class="text-5xl font-bold text-violet-400">85%</p>
+                <p class="text-5xl font-bold text-teal-400">70%</p>
                 <p class="text-zinc-500 text-sm mt-1">To Artists</p>
+              </div>
+              <div class="text-center">
+                <p class="text-5xl font-bold text-violet-400">15%</p>
+                <p class="text-zinc-500 text-sm mt-1">Royalties</p>
               </div>
               <div class="text-center">
                 <p class="text-5xl font-bold text-zinc-600">15%</p>

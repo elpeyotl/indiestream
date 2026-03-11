@@ -385,9 +385,9 @@
     <UCard class="bg-zinc-900/50 border-zinc-800">
       <h3 class="font-semibold text-zinc-100 mb-3">Payout System Info</h3>
       <div class="space-y-2 text-sm text-zinc-400">
-        <p><span class="text-violet-400 font-medium">User-Centric Model:</span> Each subscriber's $9.99 is distributed only to artists they listened to.</p>
+        <p><span class="text-violet-400 font-medium">User-Centric Model:</span> Each subscriber's CHF 12 is distributed only to artists they listened to.</p>
         <p><span class="text-teal-400 font-medium">Transparent Split:</span> 70% to artists, 15% to CMOs (SUISA/GEMA/etc.), 15% platform fee.</p>
-        <p><span class="text-zinc-300 font-medium">$10 Minimum:</span> Artists need at least $10 balance and a connected Stripe account to receive payouts.</p>
+        <p><span class="text-zinc-300 font-medium">CHF 10 Minimum:</span> Artists need at least CHF 10 balance and a connected Stripe account to receive payouts.</p>
         <p><span class="text-zinc-300 font-medium">Stripe Connect:</span> Artists connect their bank account through Stripe Express onboarding in their dashboard.</p>
       </div>
     </UCard>

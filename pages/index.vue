@@ -50,7 +50,7 @@
     <section class="container mx-auto px-4 py-24">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-4xl font-bold mb-4">How it actually works</h2>
-        <p class="text-zinc-400 max-w-xl mx-auto">No pools. No mystery math. Your $9.99 goes to the artists you listen to.</p>
+        <p class="text-zinc-400 max-w-xl mx-auto">No pools. No mystery math. Your CHF 12 goes to the artists you listen to.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -90,7 +90,7 @@
     <section class="container mx-auto px-4 py-24">
       <div class="max-w-4xl mx-auto">
         <div class="text-center mb-16">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">Where your $9.99 goes</h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4">Where your CHF 12 goes</h2>
           <p class="text-zinc-400">Every month. No exceptions. No mystery.</p>
         </div>
 
@@ -101,7 +101,7 @@
           <div class="space-y-8">
             <div class="flex gap-6 items-start">
               <div class="w-16 h-16 rounded-full bg-teal-500/20 border-2 border-teal-500 flex items-center justify-center shrink-0 relative z-10">
-                <span class="text-teal-400 font-bold">$6.99</span>
+                <span class="text-teal-400 font-bold">CHF 8.40</span>
               </div>
               <div class="pt-3">
                 <h3 class="text-xl font-semibold mb-2">70% to artists</h3>
@@ -111,7 +111,7 @@
 
             <div class="flex gap-6 items-start">
               <div class="w-16 h-16 rounded-full bg-violet-500/20 border-2 border-violet-500 flex items-center justify-center shrink-0 relative z-10">
-                <span class="text-violet-400 font-bold">$1.50</span>
+                <span class="text-violet-400 font-bold">CHF 1.80</span>
               </div>
               <div class="pt-3">
                 <h3 class="text-xl font-semibold mb-2">15% to royalties</h3>
@@ -121,7 +121,7 @@
 
             <div class="flex gap-6 items-start">
               <div class="w-16 h-16 rounded-full bg-fuchsia-500/20 border-2 border-fuchsia-500 flex items-center justify-center shrink-0 relative z-10">
-                <span class="text-fuchsia-400 font-bold">$1.50</span>
+                <span class="text-fuchsia-400 font-bold">CHF 1.80</span>
               </div>
               <div class="pt-3">
                 <h3 class="text-xl font-semibold mb-2">15% keeps us running</h3>
@@ -208,7 +208,7 @@
         <div class="relative">
           <h2 class="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to put your money where your ears are?</h2>
           <p class="text-violet-100 max-w-xl mx-auto mb-8">
-            $9.99/month. 70% to artists. You'll see exactly where it goes.
+            CHF 12/month. 70% to artists. You'll see exactly where it goes.
           </p>
           <UButton size="xl" color="white" to="/register">
             Start Listening

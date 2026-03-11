@@ -25,26 +25,26 @@
             We think that's bullshit.
           </p>
           <p class="text-zinc-400">
-            On Fairtune, your money goes to the artists you actually listen to. Listen to one band all month? They get your $6.99. No pool. No mystery. You see exactly where every cent goes.
+            On Fairtune, your money goes to the artists you actually listen to. Listen to one band all month? They get your CHF 8.40. No pool. No mystery. You see exactly where every cent goes.
           </p>
         </div>
         <div class="bg-zinc-900 rounded-2xl p-8 border border-zinc-800">
           <div class="text-center mb-4">
-            <div class="text-lg font-semibold text-zinc-300 mb-2">Your $9.99/month</div>
+            <div class="text-lg font-semibold text-zinc-300 mb-2">Your CHF 12/month</div>
           </div>
           <div class="space-y-4">
             <div class="flex justify-between items-center">
               <span class="text-zinc-400">To artists</span>
-              <span class="text-2xl font-bold text-teal-400">$6.99</span>
+              <span class="text-2xl font-bold text-teal-400">CHF 8.40</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-zinc-400">To royalties (PROs)</span>
-              <span class="text-2xl font-bold text-violet-400">$1.50</span>
+              <span class="text-2xl font-bold text-violet-400">CHF 1.80</span>
             </div>
             <div class="h-px bg-zinc-800" />
             <div class="flex justify-between items-center">
               <span class="text-zinc-400">Platform costs</span>
-              <span class="text-2xl font-bold text-fuchsia-400">$1.50</span>
+              <span class="text-2xl font-bold text-fuchsia-400">CHF 1.80</span>
             </div>
           </div>
           <p class="text-zinc-500 text-xs mt-4 text-center">
