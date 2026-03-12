@@ -345,8 +345,14 @@
 
               <!-- Text -->
               <div class="min-w-0">
-                <p class="text-sm md:text-base font-medium text-zinc-100 truncate">
+                <p class="text-sm md:text-base font-medium text-zinc-100 truncate flex items-center gap-1">
                   {{ currentTrack.title }}
+                  <UIcon
+                    v-if="isPlayingOffline"
+                    name="i-heroicons-cloud-arrow-down"
+                    class="w-3.5 h-3.5 text-violet-400 shrink-0"
+                    title="Playing offline"
+                  />
                 </p>
                 <p class="text-xs md:text-sm text-zinc-400 truncate">
                   {{ currentTrack.artist }}
@@ -588,6 +594,13 @@ const subscriptionStore = useSubscriptionStore()
 const { freePlaysRemaining, isSubscribed } = storeToRefs(subscriptionStore)
 
 const playerStore = usePlayerStore()
+const offlineStore = useOfflineStore()
+
+// Check if current track is playing from offline cache
+const isPlayingOffline = computed(() => {
+  if (!currentTrack.value) return false
+  return offlineStore.isTrackOffline(currentTrack.value.id)
+})
 
 // Use storeToRefs for reactive state
 const {

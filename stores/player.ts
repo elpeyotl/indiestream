@@ -1,6 +1,7 @@
 // Pinia store for global audio player
 import { defineStore, storeToRefs } from 'pinia'
 import type { Track, Album } from '~/stores/album'
+import { putDeferredStream } from '~/utils/offlineDb'
 
 export type RepeatMode = 'off' | 'all' | 'one'
 
@@ -30,6 +31,8 @@ let sourceNode: MediaElementAudioSourceNode | null = null
 let analyserAnimationId: number | null = null
 let listeningStartTime = 0
 let preloadTriggeredAt75 = false
+let currentBlobUrl: string | null = null
+let preloadBlobUrl: string | null = null
 
 // Update Media Session metadata (for lock screen controls)
 const updateMediaSessionMetadata = (track: PlayerTrack | null) => {
@@ -100,6 +103,7 @@ export const usePlayerStore = defineStore('player', () => {
   // Lazy store access to avoid cross-request pollution on SSR
   const getAlbumStore = () => useAlbumStore()
   const getSubscriptionStore = () => useSubscriptionStore()
+  const getOfflineStore = () => useOfflineStore()
   const user = useSupabaseUser()
 
   // Computed properties that lazily access other stores
@@ -142,12 +146,29 @@ export const usePlayerStore = defineStore('player', () => {
 
     try {
       let audioUrl = nextTrack.audioUrl
+
+      // Check offline cache first
+      if (!audioUrl && nextTrack.audioKey) {
+        const offlineStore = getOfflineStore()
+        if (offlineStore.isTrackOffline(nextTrack.id)) {
+          audioUrl = await offlineStore.getOfflineBlobUrl(nextTrack.audioKey) ?? ''
+        }
+      }
+
       if (!audioUrl && nextTrack.audioKey) {
         audioUrl = await getAlbumStore().getStreamUrl(nextTrack.audioKey)
         nextTrack.audioUrl = audioUrl
       }
 
       if (audioUrl && preloadAudio.src !== audioUrl) {
+        // Clean up previous preload blob URL
+        if (preloadBlobUrl) {
+          URL.revokeObjectURL(preloadBlobUrl)
+          preloadBlobUrl = null
+        }
+        if (audioUrl.startsWith('blob:')) {
+          preloadBlobUrl = audioUrl
+        }
         preloadAudio.src = audioUrl
         preloadAudio.load()
       }
@@ -156,12 +177,28 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  // Record a stream to the backend
+  // Record a stream to the backend (or defer if offline)
   const recordStream = async (trackId: string, durationSeconds: number) => {
     if (!user.value) return
     if (streamRecorded.value) return
 
     streamRecorded.value = true
+
+    // If offline, queue for later sync
+    if (!navigator.onLine) {
+      try {
+        await putDeferredStream({
+          trackId,
+          durationSeconds,
+          isFreePlay: isFreePlay.value,
+          timestamp: Date.now(),
+        })
+      } catch (e) {
+        console.error('Failed to defer stream recording:', e)
+        streamRecorded.value = false
+      }
+      return
+    }
 
     try {
       await $fetch('/api/streams/record', {
@@ -467,7 +504,25 @@ export const usePlayerStore = defineStore('player', () => {
     isLoading.value = true
 
     try {
-      const audioUrlValue = await getAlbumStore().getStreamUrl(audioKey)
+      // Check offline cache first
+      let audioUrlValue: string | null = null
+      const offlineStore = getOfflineStore()
+      if (offlineStore.isTrackOffline(track.id)) {
+        audioUrlValue = await offlineStore.getOfflineBlobUrl(audioKey)
+      }
+
+      if (!audioUrlValue) {
+        audioUrlValue = await getAlbumStore().getStreamUrl(audioKey)
+      }
+
+      // Clean up previous blob URL
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl)
+        currentBlobUrl = null
+      }
+      if (audioUrlValue?.startsWith('blob:')) {
+        currentBlobUrl = audioUrlValue
+      }
 
       const playerTrack: PlayerTrack = {
         id: track.id,
@@ -478,6 +533,7 @@ export const usePlayerStore = defineStore('player', () => {
         albumSlug: album.slug,
         coverUrl,
         audioUrl: audioUrlValue,
+        audioKey,
         duration: track.duration_seconds,
       }
 
@@ -508,10 +564,19 @@ export const usePlayerStore = defineStore('player', () => {
     queue.value = []
     queueIndex.value = startIndex
 
+    const offlineStore = getOfflineStore()
+
     for (const track of tracks) {
       try {
         const audioKey = getAlbumStore().getPlaybackAudioKey(track)!
-        const audioUrlValue = await getAlbumStore().getStreamUrl(audioKey)
+
+        // For offline tracks, use lazy loading via audioKey (resolved in playFromQueue)
+        // For online tracks, prefetch the URL
+        let audioUrlValue = ''
+        if (!offlineStore.isTrackOffline(track.id)) {
+          audioUrlValue = await getAlbumStore().getStreamUrl(audioKey)
+        }
+
         queue.value.push({
           id: track.id,
           title: track.title,
@@ -521,6 +586,7 @@ export const usePlayerStore = defineStore('player', () => {
           albumSlug: album.slug,
           coverUrl,
           audioUrl: audioUrlValue,
+          audioKey,
           duration: track.duration_seconds,
         })
       } catch (e) {
@@ -550,6 +616,15 @@ export const usePlayerStore = defineStore('player', () => {
 
     try {
       let audioUrlValue = track.audioUrl
+
+      // Check offline cache first
+      if (!audioUrlValue && track.audioKey) {
+        const offlineStore = getOfflineStore()
+        if (offlineStore.isTrackOffline(track.id)) {
+          audioUrlValue = await offlineStore.getOfflineBlobUrl(track.audioKey) ?? ''
+        }
+      }
+
       if (!audioUrlValue && track.audioKey) {
         audioUrlValue = await getAlbumStore().getStreamUrl(track.audioKey)
         track.audioUrl = audioUrlValue
@@ -558,6 +633,19 @@ export const usePlayerStore = defineStore('player', () => {
 
       if (!audioUrlValue) {
         throw new Error('No audio URL available')
+      }
+
+      // Clean up previous blob URL
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl)
+        currentBlobUrl = null
+      }
+      // If this blob URL came from preload, don't double-track it
+      if (audioUrlValue.startsWith('blob:')) {
+        if (preloadBlobUrl === audioUrlValue) {
+          preloadBlobUrl = null
+        }
+        currentBlobUrl = audioUrlValue
       }
 
       audio.src = audioUrlValue

@@ -138,6 +138,12 @@
               />
               {{ isAlbumSaved(album.id) ? 'Saved' : 'Save' }}
             </UButton>
+            <!-- Save Offline Button (subscribers only) -->
+            <SaveOfflineButton
+              v-if="album.tracks?.length"
+              :album="album"
+              :tracks="album.tracks"
+            />
             <!-- Buy Button (if purchasable and not owned) -->
             <UButton
               v-if="album.purchasable && !isOwnerOrAdmin && !purchaseStatus?.owned"
@@ -434,6 +440,7 @@ const userProfileStore = useUserProfileStore()
 const { isAdmin } = storeToRefs(userProfileStore)
 const purchaseStore = usePurchaseStore()
 const { fetchPurchaseStatus } = purchaseStore
+const offlineStore = useOfflineStore()
 const user = useSupabaseUser()
 const haptics = useHaptics()
 const toast = useToast()
@@ -734,6 +741,22 @@ const albumMenuItems = computed(() => [
       click: handleAlbumShare,
     },
   ],
+  ...(album.value?.tracks?.length ? [[
+    {
+      label: offlineStore.isAlbumOffline(album.value.id) ? 'Remove Offline' : 'Save Offline',
+      icon: offlineStore.isAlbumOffline(album.value.id) ? 'i-heroicons-cloud-arrow-down' : 'i-heroicons-arrow-down-tray',
+      click: async () => {
+        if (!album.value) return
+        if (offlineStore.isAlbumOffline(album.value.id)) {
+          await offlineStore.removeAlbumOffline(album.value.id)
+          toast.add({ title: 'Removed from offline', color: 'gray' })
+        } else if (album.value.tracks?.length) {
+          await offlineStore.saveAlbumOffline(album.value, album.value.tracks)
+          toast.add({ title: 'Downloading for offline', color: 'violet' })
+        }
+      },
+    },
+  ]] : []),
 ])
 
 // Open mobile actions sheet

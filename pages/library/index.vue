@@ -524,6 +524,82 @@
           </div>
         </div>
       </template>
+
+      <template #downloads>
+        <EmptyState
+          v-if="offlineAlbumsArray.length === 0"
+          icon="i-heroicons-arrow-down-tray"
+          title="No offline downloads"
+          description="Save albums for offline listening from album pages. Your music will be available without an internet connection."
+          action-label="Discover Music"
+          action-to="/discover"
+        />
+
+        <div v-else>
+          <!-- Storage Usage -->
+          <div class="mb-6">
+            <OfflineStorageBar />
+          </div>
+
+          <!-- Offline Albums Grid -->
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div
+              v-for="offlineAlbum in offlineAlbumsArray"
+              :key="offlineAlbum.albumId"
+              class="group cursor-pointer"
+              @click="playOfflineAlbum(offlineAlbum)"
+            >
+              <div class="relative aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3 shadow-lg group-hover:shadow-xl transition-shadow">
+                <img
+                  v-if="offlineAlbumCovers[offlineAlbum.albumId]"
+                  :src="offlineAlbumCovers[offlineAlbum.albumId]"
+                  :alt="offlineAlbum.title"
+                  class="w-full h-full object-cover"
+                >
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <UIcon name="i-heroicons-musical-note" class="w-12 h-12 text-zinc-600" />
+                </div>
+
+                <!-- Play overlay -->
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <UIcon name="i-heroicons-play" class="w-12 h-12 text-white" />
+                </div>
+
+                <!-- Status Badge -->
+                <div class="absolute top-2 right-2">
+                  <UBadge
+                    :color="offlineAlbum.status === 'complete' ? 'green' : offlineAlbum.status === 'downloading' ? 'violet' : 'amber'"
+                    size="xs"
+                  >
+                    <UIcon
+                      :name="offlineAlbum.status === 'complete' ? 'i-heroicons-check' : offlineAlbum.status === 'downloading' ? 'i-heroicons-arrow-path' : 'i-heroicons-exclamation-triangle'"
+                      class="w-3 h-3 mr-1"
+                    />
+                    {{ offlineAlbum.status === 'complete' ? 'Offline' : offlineAlbum.status === 'downloading' ? `${offlineAlbum.cachedTracks}/${offlineAlbum.totalTracks}` : 'Partial' }}
+                  </UBadge>
+                </div>
+              </div>
+
+              <h3 class="font-medium text-zinc-100 truncate group-hover:text-violet-400 transition-colors">
+                {{ offlineAlbum.title }}
+              </h3>
+              <p class="text-sm text-zinc-400 truncate">
+                {{ offlineAlbum.artistName }}
+              </p>
+              <div class="flex items-center justify-between mt-1">
+                <span class="text-xs text-zinc-500">{{ offlineStore.formatBytes(offlineAlbum.totalSizeBytes) }}</span>
+                <UButton
+                  color="gray"
+                  variant="ghost"
+                  size="2xs"
+                  icon="i-heroicons-trash"
+                  @click.stop="offlineStore.removeAlbumOffline(offlineAlbum.albumId)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </PillTabs>
 
     <!-- Create Playlist Modal -->
@@ -621,6 +697,45 @@ const { fetchRecentlyPlayed } = recentActivityStore
 const purchaseStore = usePurchaseStore()
 const { purchasedAlbums, loadingPurchases } = storeToRefs(purchaseStore)
 const { fetchPurchases } = purchaseStore
+const offlineStore = useOfflineStore()
+const offlineAlbumsArray = computed(() => Array.from(offlineStore.offlineAlbums.values()))
+const offlineAlbumCovers = ref<Record<string, string>>({})
+
+const loadOfflineCovers = async () => {
+  for (const album of offlineAlbumsArray.value) {
+    if (album.coverKey && !offlineAlbumCovers.value[album.albumId]) {
+      const blobUrl = await offlineStore.getOfflineCoverBlobUrl(album.coverKey)
+      if (blobUrl) {
+        offlineAlbumCovers.value[album.albumId] = blobUrl
+      }
+    }
+  }
+}
+
+const playOfflineAlbum = async (album: { albumId: string; coverKey: string | null }) => {
+  const tracks = Array.from(offlineStore.offlineTracks.values())
+    .filter(t => t.albumId === album.albumId)
+    .sort((a, b) => a.trackNumber - b.trackNumber)
+
+  if (tracks.length === 0) return
+
+  const coverUrl = offlineAlbumCovers.value[album.albumId] || null
+
+  setQueue(
+    tracks.map(track => ({
+      id: track.trackId,
+      title: track.title,
+      artist: track.artist,
+      artistSlug: track.artistSlug,
+      albumTitle: track.albumTitle,
+      albumSlug: track.albumSlug,
+      coverUrl,
+      audioKey: track.audioKey,
+      duration: track.duration,
+    })),
+    0,
+  )
+}
 const route = useRoute()
 const loadingHistory = ref(false)
 const activeTab = ref(0)
@@ -746,6 +861,11 @@ const tabs = computed(() => [
     slot: 'purchases',
     label: `Purchased (${purchasedAlbums.value.length})`,
     icon: 'i-heroicons-shopping-bag',
+  },
+  {
+    slot: 'downloads',
+    label: `Downloads (${offlineAlbumsArray.value.length})`,
+    icon: 'i-heroicons-arrow-down-tray',
   },
 ])
 
@@ -1049,10 +1169,15 @@ watch(activeTab, (newTab) => {
 
 // Handle initial setup on mount
 onMounted(() => {
+  // Initialize offline store and load covers
+  offlineStore.init().then(() => loadOfflineCovers())
+
   // Handle URL query param for deep linking (e.g., /library?tab=history)
   const tabParam = route.query.tab as string
   if (tabParam === 'history') {
     activeTab.value = 4
+  } else if (tabParam === 'downloads') {
+    activeTab.value = 6
   }
 })
 

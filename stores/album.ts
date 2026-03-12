@@ -117,13 +117,27 @@ export const useAlbumStore = defineStore('album', () => {
     return track.original_audio_key || track.audio_key
   }
 
-  // Get cached cover URL or fetch new one
+  // Get cached cover URL or fetch new one (with offline fallback)
   const getCachedCoverUrl = async (key: string | null | undefined): Promise<string | null> => {
     if (!key) return null
 
     const cached = coverUrlCache.get(key)
     if (isCacheValid(cached)) {
       return cached.data
+    }
+
+    // If offline, try to get cover from IndexedDB
+    if (import.meta.client && !navigator.onLine) {
+      try {
+        const offlineStore = useOfflineStore()
+        const blobUrl = await offlineStore.getOfflineCoverBlobUrl(key)
+        if (blobUrl) {
+          coverUrlCache.set(key, { data: blobUrl, timestamp: Date.now() })
+          return blobUrl
+        }
+      } catch {
+        // Fall through to network fetch
+      }
     }
 
     try {

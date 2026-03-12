@@ -67,7 +67,9 @@ export default defineNuxtConfig({
 
   // PWA configuration
   pwa: {
-    strategies: 'generateSW',
+    strategies: 'injectManifest',
+    srcDir: 'service-worker',
+    filename: 'sw.ts',
     registerType: 'autoUpdate',
     manifest: {
       name: 'Fairtune',
@@ -97,22 +99,8 @@ export default defineNuxtConfig({
         },
       ],
     },
-    workbox: {
+    injectManifest: {
       globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
-      navigateFallbackDenylist: [/^\/api\//],
-      runtimeCaching: [
-        {
-          urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'supabase-cache',
-            expiration: {
-              maxEntries: 50,
-              maxAgeSeconds: 60 * 60,
-            },
-          },
-        },
-      ],
     },
     client: {
       installPrompt: true,
@@ -213,6 +201,8 @@ export default defineNuxtConfig({
       '/api/bulk-upload/**': {
         // Allow large body for bulk upload endpoints
       },
+      // Prerender the offline fallback page so Workbox can cache it
+      '/offline': { prerender: true },
     },
   },
 

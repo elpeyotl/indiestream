@@ -388,6 +388,9 @@
       </div>
     </header>
 
+    <!-- Offline Indicator -->
+    <OfflineIndicator />
+
     <!-- Main Content -->
     <!-- pb-40 on mobile for bottom nav + player, pb-24 on desktop for player only -->
     <main class="pb-40 lg:pb-24">
@@ -538,6 +541,11 @@ const userMenuOpen = ref(false);
 
 // Notifications popover state
 const notificationsOpen = ref(false);
+
+// Initialize offline systems
+const offlineStore = useOfflineStore();
+offlineStore.init();
+useDeferredSync();
 
 const user = useSupabaseUser();
 const client = useSupabaseClient();
