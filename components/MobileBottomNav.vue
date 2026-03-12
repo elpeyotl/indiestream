@@ -4,8 +4,23 @@
     :style="{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }"
   >
     <div class="flex items-center justify-around px-2 pt-2">
+      <!-- Offline Navigation -->
+      <template v-if="!isOnline">
+        <NuxtLink
+          to="/offline"
+          class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 active:scale-95"
+          :class="isActive('/offline') ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-100'"
+        >
+          <UIcon
+            :name="isActive('/offline') ? 'i-heroicons-cloud-arrow-down-solid' : 'i-heroicons-cloud-arrow-down'"
+            class="w-6 h-6"
+          />
+          <span class="text-xs font-medium">Downloads</span>
+        </NuxtLink>
+      </template>
+
       <!-- Logged-in Navigation -->
-      <template v-if="user">
+      <template v-else-if="user">
         <!-- 1. Discover -->
         <NuxtLink
           to="/discover"
@@ -120,6 +135,7 @@
 <script setup lang="ts">
 const user = useSupabaseUser()
 const route = useRoute()
+const { isOnline } = useNetworkStatus()
 
 const isActive = (path: string): boolean => {
   return route.path === path || route.path.startsWith(path + '/')

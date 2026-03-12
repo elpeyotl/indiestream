@@ -28,8 +28,19 @@
 
           <!-- Navigation -->
           <nav class="hidden lg:flex items-center gap-6">
+            <!-- Offline navigation -->
+            <template v-if="!networkOnline">
+              <NuxtLink
+                to="/offline"
+                class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
+              >
+                <UIcon name="i-heroicons-cloud-arrow-down" class="w-4 h-4" />
+                Downloads
+              </NuxtLink>
+            </template>
+
             <!-- Logged-in navigation -->
-            <template v-if="user">
+            <template v-else-if="user">
               <NuxtLink
                 to="/discover"
                 class="flex items-center gap-1.5 text-zinc-400 hover:text-violet-400 transition-colors"
@@ -114,8 +125,8 @@
             </template>
           </nav>
 
-          <!-- Auth / User Menu -->
-          <div class="flex items-center gap-3">
+          <!-- Auth / User Menu (hidden when offline) -->
+          <div v-if="networkOnline" class="flex items-center gap-3">
             <!-- Global Search - Hidden on mobile (search is in bottom nav) -->
             <GlobalSearch class="hidden lg:block" />
 
@@ -406,8 +417,9 @@
     <!-- PWA Install Prompt -->
     <PwaInstallPrompt />
 
-    <!-- Footer - Hidden on mobile for logged-in users -->
+    <!-- Footer - Hidden on mobile for logged-in users, hidden when offline -->
     <footer
+      v-if="networkOnline"
       class="mt-20 border-t border-zinc-800 bg-zinc-950"
       :class="{ 'hidden lg:block': user }"
     >
@@ -541,6 +553,9 @@ const userMenuOpen = ref(false);
 
 // Notifications popover state
 const notificationsOpen = ref(false);
+
+// Network status for offline navigation
+const { isOnline: networkOnline } = useNetworkStatus();
 
 // Initialize offline systems
 const offlineStore = useOfflineStore();
