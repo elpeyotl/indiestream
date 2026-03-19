@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.18.5'
+export const APP_VERSION = '0.28.0'
 
 export interface ChangelogEntry {
   version: string
@@ -10,6 +10,119 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.28.0',
+    date: '2026-03-19',
+    changes: [
+      { type: 'added', description: 'Email signup on coming-soon page for launch notifications' },
+    ],
+  },
+  {
+    version: '0.27.0',
+    date: '2026-03-12',
+    changes: [
+      { type: 'added', description: 'Offline audio streaming: download albums for offline playback' },
+      { type: 'added', description: 'Dedicated offline mode with auto-redirect when connection is lost' },
+      { type: 'added', description: 'Offline indicator and storage management in library' },
+    ],
+  },
+  {
+    version: '0.26.0',
+    date: '2026-03-11',
+    changes: [
+      { type: 'changed', description: 'Pricing updated to CHF 12/month single tier with FLAC streaming' },
+      { type: 'added', description: 'Terms acceptance required for uploads with contract confirmation email on approval' },
+      { type: 'added', description: 'Collapsible track tiles in upload wizard for easier reordering' },
+    ],
+  },
+  {
+    version: '0.25.0',
+    date: '2026-03-09',
+    changes: [
+      { type: 'fixed', description: 'SUISA CSV export: deduplicate songs and quote all fields' },
+      { type: 'fixed', description: 'White dropdown backgrounds on Windows Chrome' },
+      { type: 'added', description: 'Tooltips on track upload error icons' },
+    ],
+  },
+  {
+    version: '0.24.0',
+    date: '2026-03-02',
+    changes: [
+      { type: 'added', description: 'Album actions menu with track actions always visible' },
+      { type: 'added', description: 'Play/pause toggle on PlayAllButton' },
+      { type: 'fixed', description: 'Followers tab not loading when switching tabs interactively' },
+    ],
+  },
+  {
+    version: '0.23.0',
+    date: '2026-01-26',
+    changes: [
+      { type: 'added', description: 'Zine page for curated album discovery' },
+      { type: 'added', description: 'Artist Support: Tips and Boost features' },
+      { type: 'added', description: 'Tips and purchases integrated into impact stats and artist dashboard' },
+      { type: 'fixed', description: 'Artist earnings not credited for tips and purchases' },
+    ],
+  },
+  {
+    version: '0.22.0',
+    date: '2026-01-23',
+    changes: [
+      { type: 'added', description: 'Album purchase and download feature' },
+      { type: 'added', description: 'Inline payment for subscriptions with purchase success page' },
+      { type: 'added', description: 'Unlimited streaming for purchased albums' },
+      { type: 'added', description: 'AlbumCard component with owned badge across all album grids' },
+      { type: 'added', description: 'Homepage redesign with featured albums and new pages' },
+      { type: 'added', description: 'Haptic feedback across mobile interactions' },
+      { type: 'added', description: 'Admin audit logging system' },
+      { type: 'changed', description: 'Album purchase/download UI made more compact' },
+      { type: 'changed', description: 'Replaced all outline buttons with ghost variant' },
+      { type: 'fixed', description: 'Subscription flow for trials using SetupIntent' },
+      { type: 'fixed', description: 'Free play counter race condition' },
+      { type: 'fixed', description: 'Foreign key constraint for band deletion' },
+    ],
+  },
+  {
+    version: '0.21.0',
+    date: '2026-01-23',
+    changes: [
+      { type: 'added', description: 'Lyrics language field with author credit validation' },
+      { type: 'added', description: 'Browse links and guest mobile navigation' },
+      { type: 'added', description: 'Welcome tutorial carousel on subscription success page' },
+      { type: 'added', description: 'Guest middleware to redirect logged-in users from login/register' },
+      { type: 'added', description: 'Image resizing in bulk upload' },
+      { type: 'changed', description: 'Renamed Stats to My Impact in navigation' },
+      { type: 'fixed', description: 'Impact share page RLS issue and own bands filtered out' },
+      { type: 'fixed', description: 'Bulk upload SSR error with lazy-loaded JSZip' },
+      { type: 'fixed', description: 'DMCA form now requires artist/album URL' },
+    ],
+  },
+  {
+    version: '0.20.0',
+    date: '2026-01-22',
+    changes: [
+      { type: 'added', description: 'Rebrand from Indiestream/Fairstream to Fairtune' },
+      { type: 'added', description: 'Mobile search page with shared useSearch composable' },
+      { type: 'added', description: 'Genre enhancements: hero banners, filtering, featured genres system' },
+      { type: 'changed', description: 'Migrated composables to Pinia stores with SWR caching pattern' },
+      { type: 'changed', description: 'Enabled TypeScript strict mode across entire codebase' },
+      { type: 'changed', description: 'Upgraded Stripe to latest stable v20' },
+      { type: 'fixed', description: 'Subscription sync handling for trialing subscriptions' },
+      { type: 'fixed', description: 'Vue hydration mismatch on dashboard page' },
+      { type: 'fixed', description: 'Play button not updating when audio starts' },
+    ],
+  },
+  {
+    version: '0.19.0',
+    date: '2026-01-21',
+    changes: [
+      { type: 'added', description: 'Coming soon page with environment variable toggle' },
+      { type: 'added', description: 'Stale-while-revalidate caching with localStorage persistence' },
+      { type: 'changed', description: 'Combined Impact and Listening into unified Stats page with tabs' },
+      { type: 'changed', description: 'Refactored pages to use Nuxt built-in data fetching' },
+      { type: 'fixed', description: 'Notification bell on desktop, changed mark all read to clear all' },
+      { type: 'fixed', description: 'Background selector popover and mobile touch handling in expanded player' },
+    ],
+  },
   {
     version: '0.18.5',
     date: '2026-01-20',
