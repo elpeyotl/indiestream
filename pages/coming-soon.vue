@@ -26,14 +26,45 @@
         A new way to stream music where your subscription directly supports the artists you love.
       </p>
 
-      <!-- Email signup (optional placeholder) -->
-      <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mb-12">
-        <a
-          href="mailto:hello@fairtune.fm"
-          class="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-lg transition-colors"
+      <!-- Email signup -->
+      <div class="w-full max-w-md mx-auto mb-12">
+        <form
+          v-if="!submitted"
+          class="flex flex-col sm:flex-row gap-3"
+          @submit.prevent="submitEmail"
         >
-          Get Notified
-        </a>
+          <input
+            v-model="email"
+            type="email"
+            placeholder="your@email.com"
+            required
+            :disabled="submitting"
+            class="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            :disabled="submitting || !email"
+            class="px-6 py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-violet-600/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors whitespace-nowrap"
+          >
+            {{ submitting ? 'Sending...' : 'Get Notified' }}
+          </button>
+        </form>
+
+        <!-- Success state -->
+        <div v-else class="flex items-center justify-center gap-2 text-green-400">
+          <UIcon name="i-heroicons-check-circle" class="w-5 h-5" />
+          <span class="font-medium">You're on the list! We'll be in touch.</span>
+        </div>
+
+        <!-- Error state -->
+        <p v-if="errorMessage" class="mt-2 text-sm text-red-400 text-center">
+          {{ errorMessage }}
+        </p>
+
+        <!-- Privacy note -->
+        <p v-if="!submitted" class="mt-3 text-xs text-zinc-600 text-center">
+          We'll only use your email to notify you when Fairtune launches.
+        </p>
       </div>
 
       <!-- Social links or additional info -->
@@ -55,4 +86,28 @@ useHead({
     { name: 'description', content: 'Fairtune - Stream Fair. Support Direct. A new music streaming platform coming soon.' },
   ],
 })
+
+const email = ref('')
+const submitting = ref(false)
+const submitted = ref(false)
+const errorMessage = ref('')
+
+const submitEmail = async () => {
+  if (!email.value || submitting.value) return
+
+  submitting.value = true
+  errorMessage.value = ''
+
+  try {
+    await $fetch('/api/newsletter-signup', {
+      method: 'POST',
+      body: { email: email.value },
+    })
+    submitted.value = true
+  } catch (error: any) {
+    errorMessage.value = error.data?.statusMessage || 'Something went wrong. Please try again.'
+  } finally {
+    submitting.value = false
+  }
+}
 </script>
