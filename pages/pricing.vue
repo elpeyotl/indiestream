@@ -4,7 +4,9 @@
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-zinc-100 mb-4">CHF 13. That's it.</h1>
       <p class="text-xl text-zinc-400 max-w-2xl mx-auto">
-        <span class="text-teal-400 font-semibold">70% to artists. 15% to royalties. 15% keeps us running.</span>
+        <span class="text-teal-400 font-semibold"
+          >70% to artists. 15% to royalties. 15% keeps us running.</span
+        >
       </p>
     </div>
 
@@ -50,7 +52,9 @@
       </div>
 
       <!-- Listener Tier -->
-      <div class="bg-gradient-to-b from-violet-900/50 to-zinc-900 rounded-2xl p-8 border-2 border-violet-500 relative">
+      <div
+        class="bg-gradient-to-b from-violet-900/50 to-zinc-900 rounded-2xl p-8 border-2 border-violet-500 relative"
+      >
         <div class="absolute -top-3 left-1/2 -translate-x-1/2">
           <UBadge color="violet" size="sm">The only plan</UBadge>
         </div>
@@ -61,9 +65,7 @@
             <span class="text-zinc-500">/month</span>
           </div>
         </div>
-        <p class="text-zinc-400 mb-6">
-          Everything. No tiers. No upsells.
-        </p>
+        <p class="text-zinc-400 mb-6">Everything. No tiers. No upsells.</p>
         <ul class="space-y-3 mb-8">
           <li class="flex items-center gap-2 text-zinc-300">
             <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
@@ -93,7 +95,13 @@
           :loading="loading"
           @click="handleSubscribe"
         >
-          {{ isSubscribed ? 'Already Subscribed' : user ? 'Start Free Trial' : 'Start Listening' }}
+          {{
+            isSubscribed
+              ? "Already Subscribed"
+              : user
+                ? "Start Free Trial"
+                : "Start Listening"
+          }}
         </UButton>
       </div>
 
@@ -106,9 +114,7 @@
             <span class="text-zinc-500">forever</span>
           </div>
         </div>
-        <p class="text-zinc-400 mb-6">
-          Upload. Get paid. That's it.
-        </p>
+        <p class="text-zinc-400 mb-6">Upload. Get paid. That's it.</p>
         <ul class="space-y-3 mb-8">
           <li class="flex items-center gap-2 text-zinc-300">
             <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
@@ -131,7 +137,13 @@
             You keep your rights
           </li>
         </ul>
-        <UButton color="fuchsia" variant="ghost" block size="lg" to="/dashboard/artist/new">
+        <UButton
+          color="fuchsia"
+          variant="ghost"
+          block
+          size="lg"
+          to="/dashboard/artist/new"
+        >
           Start uploading
         </UButton>
       </div>
@@ -139,19 +151,26 @@
 
     <!-- How Payment Works -->
     <div class="max-w-4xl mx-auto mb-16">
-      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">Where your CHF 13 goes</h2>
+      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">
+        Where your CHF 13 goes
+      </h2>
       <div class="grid md:grid-cols-3 gap-8">
         <div class="text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-teal-500/20 flex items-center justify-center">
+          <div
+            class="w-16 h-16 mx-auto mb-4 rounded-full bg-teal-500/20 flex items-center justify-center"
+          >
             <span class="text-xl font-bold text-teal-400">CHF 9.10</span>
           </div>
           <h3 class="font-semibold text-zinc-100 mb-2">70% to artists</h3>
           <p class="text-zinc-400 text-sm">
-            Split between the artists you actually listened to. Your money, your artists.
+            Split between the artists you actually listened to. Your money, your
+            artists.
           </p>
         </div>
         <div class="text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
+          <div
+            class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center"
+          >
             <span class="text-xl font-bold text-violet-400">CHF 1.95</span>
           </div>
           <h3 class="font-semibold text-zinc-100 mb-2">15% to royalties</h3>
@@ -160,7 +179,9 @@
           </p>
         </div>
         <div class="text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-fuchsia-500/20 flex items-center justify-center">
+          <div
+            class="w-16 h-16 mx-auto mb-4 rounded-full bg-fuchsia-500/20 flex items-center justify-center"
+          >
             <span class="text-xl font-bold text-fuchsia-400">CHF 1.95</span>
           </div>
           <h3 class="font-semibold text-zinc-100 mb-2">15% platform</h3>
@@ -173,14 +194,22 @@
 
     <!-- Comparison -->
     <div class="max-w-3xl mx-auto mb-16">
-      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">The difference</h2>
-      <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
+      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">
+        The difference
+      </h2>
+      <div
+        class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800"
+      >
         <table class="w-full">
           <thead>
             <tr class="border-b border-zinc-800">
               <th class="text-left p-4 text-zinc-400 font-medium"></th>
-              <th class="text-center p-4 text-violet-400 font-semibold">Fairtune</th>
-              <th class="text-center p-4 text-zinc-500 font-medium">Big streaming</th>
+              <th class="text-center p-4 text-violet-400 font-semibold">
+                Fairtune
+              </th>
+              <th class="text-center p-4 text-zinc-500 font-medium">
+                Big streaming
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-zinc-800">
@@ -191,38 +220,61 @@
             </tr>
             <tr>
               <td class="p-4 text-zinc-300">Your money goes to</td>
-              <td class="p-4 text-center text-teal-400 font-semibold">Artists you listen to</td>
-              <td class="p-4 text-center text-zinc-500">A pool (mostly Drake)</td>
+              <td class="p-4 text-center text-teal-400 font-semibold">
+                Artists you listen to
+              </td>
+              <td class="p-4 text-center text-zinc-500">
+                A pool (mostly Drake)
+              </td>
             </tr>
             <tr>
               <td class="p-4 text-zinc-300">See where it goes</td>
               <td class="p-4 text-center">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500 mx-auto" />
+                <UIcon
+                  name="i-heroicons-check"
+                  class="w-5 h-5 text-teal-500 mx-auto"
+                />
               </td>
               <td class="p-4 text-center">
-                <UIcon name="i-heroicons-x-mark" class="w-5 h-5 text-zinc-600 mx-auto" />
+                <UIcon
+                  name="i-heroicons-x-mark"
+                  class="w-5 h-5 text-zinc-600 mx-auto"
+                />
               </td>
             </tr>
             <tr>
               <td class="p-4 text-zinc-300">Independent only</td>
               <td class="p-4 text-center">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500 mx-auto" />
+                <UIcon
+                  name="i-heroicons-check"
+                  class="w-5 h-5 text-teal-500 mx-auto"
+                />
               </td>
               <td class="p-4 text-center">
-                <UIcon name="i-heroicons-x-mark" class="w-5 h-5 text-zinc-600 mx-auto" />
+                <UIcon
+                  name="i-heroicons-x-mark"
+                  class="w-5 h-5 text-zinc-600 mx-auto"
+                />
               </td>
             </tr>
             <tr>
               <td class="p-4 text-zinc-300">Royalties on every stream</td>
               <td class="p-4 text-center">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500 mx-auto" />
+                <UIcon
+                  name="i-heroicons-check"
+                  class="w-5 h-5 text-teal-500 mx-auto"
+                />
               </td>
               <td class="p-4 text-center text-zinc-500">Only paid streams</td>
             </tr>
             <tr>
               <td class="p-4 text-zinc-300">Free tier loophole</td>
-              <td class="p-4 text-center text-teal-400 font-semibold">No free tier</td>
-              <td class="p-4 text-center text-zinc-500">Unlimited free plays</td>
+              <td class="p-4 text-center text-teal-400 font-semibold">
+                No free tier
+              </td>
+              <td class="p-4 text-center text-zinc-500">
+                Unlimited free plays
+              </td>
             </tr>
           </tbody>
         </table>
@@ -231,7 +283,9 @@
 
     <!-- FAQ -->
     <div class="max-w-2xl mx-auto">
-      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">Frequently Asked Questions</h2>
+      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">
+        Frequently Asked Questions
+      </h2>
       <UAccordion :items="faqItems" />
     </div>
 
@@ -244,72 +298,83 @@
 </template>
 
 <script setup lang="ts">
-const user = useSupabaseUser()
-const subscriptionStore = useSubscriptionStore()
-const { isSubscribed, loading } = subscriptionStore
-const toast = useToast()
+const user = useSupabaseUser();
+const subscriptionStore = useSubscriptionStore();
+const { isSubscribed, loading } = subscriptionStore;
+const toast = useToast();
 
 useHead({
-  title: 'Pricing | Fairtune',
+  title: "Pricing | Fairtune",
   meta: [
-    { name: 'description', content: 'CHF 13/month. 70% to artists. 15% to royalties. 15% platform. Lossless included. We show you every cent.' },
+    {
+      name: "description",
+      content:
+        "CHF 13/month. 70% to artists. 15% to royalties. 15% platform. Lossless included. We show you every cent.",
+    },
   ],
-})
+});
 
 // Stripe Price ID for Listener plan (CHF 13.00/month)
 // TODO: Create new CHF 13.00 price in Stripe dashboard and update this ID
-const LISTENER_PRICE_ID = 'price_1SolWZDpO91TMxctZrzuoJ0v'
+const LISTENER_PRICE_ID = "price_1TFJK2DF7ZFXLqDOBFeb4Jgt";
 
 // Modal state
-const showSubscriptionModal = ref(false)
+const showSubscriptionModal = ref(false);
 
 const handleSubscribe = () => {
   if (!user.value) {
-    navigateTo('/register')
-    return
+    navigateTo("/register");
+    return;
   }
 
   if (isSubscribed) {
     toast.add({
-      title: 'Already subscribed',
-      description: 'You already have an active subscription.',
-      color: 'blue',
-    })
-    return
+      title: "Already subscribed",
+      description: "You already have an active subscription.",
+      color: "blue",
+    });
+    return;
   }
 
   // Open inline subscription modal
-  showSubscriptionModal.value = true
-}
+  showSubscriptionModal.value = true;
+};
 
 const faqItems = [
   {
-    label: 'How does the artist payment work?',
-    content: 'Unlike traditional streaming services that use a royalty pool, your subscription is divided based on your actual listening. If you spend 50% of your listening time on one artist, they receive 50% of the artist share. Your CHF 13 is split: 70% (CHF 9.10) to artists, 15% (CHF 1.95) to performance royalty societies (SUISA, GEMA, etc.), and 15% (CHF 1.95) platform fee.',
+    label: "How does the artist payment work?",
+    content:
+      "Unlike traditional streaming services that use a royalty pool, your subscription is divided based on your actual listening. If you spend 50% of your listening time on one artist, they receive 50% of the artist share. Your CHF 13 is split: 70% (CHF 9.10) to artists, 15% (CHF 1.95) to performance royalty societies (SUISA, GEMA, etc.), and 15% (CHF 1.95) platform fee.",
   },
   {
-    label: 'Do you pay royalties on every stream?',
-    content: 'Yes! Unlike some platforms that allow unlimited free streaming (generating no royalties), every stream on Fairtune from a paying subscriber generates revenue for both artists and royalty societies (SUISA, GEMA, ASCAP, BMI, etc.). Our free tier only offers 30-second previews, ensuring all full-length plays are properly compensated. No loopholes.',
+    label: "Do you pay royalties on every stream?",
+    content:
+      "Yes! Unlike some platforms that allow unlimited free streaming (generating no royalties), every stream on Fairtune from a paying subscriber generates revenue for both artists and royalty societies (SUISA, GEMA, ASCAP, BMI, etc.). Our free tier only offers 30-second previews, ensuring all full-length plays are properly compensated. No loopholes.",
   },
   {
-    label: 'Can I cancel anytime?',
-    content: 'Yes! You can cancel your subscription at any time. You\'ll continue to have access until the end of your billing period.',
+    label: "Can I cancel anytime?",
+    content:
+      "Yes! You can cancel your subscription at any time. You'll continue to have access until the end of your billing period.",
   },
   {
-    label: 'How do artists get paid?',
-    content: 'Artists receive monthly payouts via direct bank transfer or PayPal. We process payments on the 15th of each month for the previous month\'s streams.',
+    label: "How do artists get paid?",
+    content:
+      "Artists receive monthly payouts via direct bank transfer or PayPal. We process payments on the 15th of each month for the previous month's streams.",
   },
   {
-    label: 'Is there a free trial?',
-    content: 'We offer a 7-day free trial for new subscribers. You can cancel anytime during the trial and won\'t be charged.',
+    label: "Is there a free trial?",
+    content:
+      "We offer a 7-day free trial for new subscribers. You can cancel anytime during the trial and won't be charged.",
   },
   {
-    label: 'What audio quality do you offer?',
-    content: 'All subscribers get access to lossless FLAC audio (CD quality: 16-bit/44.1kHz) and AAC 256kbps streaming. You can choose your preferred quality in the player settings.',
+    label: "What audio quality do you offer?",
+    content:
+      "All subscribers get access to lossless FLAC audio (CD quality: 16-bit/44.1kHz) and AAC 256kbps streaming. You can choose your preferred quality in the player settings.",
   },
   {
-    label: 'How do I become a verified artist?',
-    content: 'Once you\'ve created an artist profile and uploaded at least one release, you can apply for verification through your dashboard. We review applications within 48 hours.',
+    label: "How do I become a verified artist?",
+    content:
+      "Once you've created an artist profile and uploaded at least one release, you can apply for verification through your dashboard. We review applications within 48 hours.",
   },
-]
+];
 </script>

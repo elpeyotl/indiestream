@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.25.1] - 2026-03-26
+
+### Changed
+- Updated Stripe price ID for new CHF 13.00/month Listener product
+
 ## [0.25.0] - 2026-03-26
 
 ### Changed
