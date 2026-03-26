@@ -31,6 +31,9 @@
       </div>
     </div>
 
+    <!-- Stripe Connect Banner -->
+    <DashboardStripeConnectBanner v-if="band.status === 'active'" />
+
     <!-- Header -->
     <div class="flex items-start justify-between mb-8">
       <div>
@@ -442,7 +445,7 @@ const handleDeleteAlbum = async () => {
 }
 
 // Handle URL query params on mount
-onMounted(() => {
+onMounted(async () => {
   initTabFromUrl()
 
   // Check for Stripe Connect return
