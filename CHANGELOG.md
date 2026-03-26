@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.26.0] - 2026-03-26
+
+### Added
+- **Seed data** for development — test users, bands, albums, tracks, subscriptions, and playlists (`supabase/seed.sql`)
+- **Go-live checklist** in `docs/GO_LIVE_CHECKLIST.md`
+
+### Fixed
+- **Migration ordering** — Renamed transcoding migration from `2025` to `2026` prefix so it runs after initial schema creation
+- **Fresh DB compatibility** — Made data-migration statements conditional (transcoding `audio_key`, Stripe account migration, artist balance resets) so they don't error on empty databases
+- **Duplicate realtime publication** — Made `albums` realtime publication add idempotent
+- **Seed data bug** — Fixed VALUES list length mismatch in albums INSERT
+
+### Changed
+- Updated `.env.example` with all current environment variables
+- Updated `supabase/config.toml` to PostgreSQL 17
+- Updated test fixtures to match seed data credentials
+- Set up new Supabase projects: `fairtune-dev` and `fairtune-prd` with all 55 migrations applied
+
 ## [0.25.1] - 2026-03-26
 
 ### Changed
