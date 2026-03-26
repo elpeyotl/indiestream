@@ -6,17 +6,24 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_account_id TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_account_status TEXT DEFAULT 'not_connected';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_onboarding_complete BOOLEAN DEFAULT FALSE;
 
--- Migrate existing band Stripe accounts to their owners
--- Takes the first connected Stripe account found among user's bands
-UPDATE profiles p
-SET
-  stripe_account_id = b.stripe_account_id,
-  stripe_account_status = b.stripe_account_status,
-  stripe_onboarding_complete = b.stripe_onboarding_complete
-FROM bands b
-WHERE b.owner_id = p.id
-  AND b.stripe_account_id IS NOT NULL
-  AND p.stripe_account_id IS NULL;
+-- Migrate existing band Stripe accounts to their owners (only if band has stripe_account_status column)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'bands' AND column_name = 'stripe_account_status'
+  ) THEN
+    UPDATE profiles p
+    SET
+      stripe_account_id = b.stripe_account_id,
+      stripe_account_status = b.stripe_account_status,
+      stripe_onboarding_complete = b.stripe_onboarding_complete
+    FROM bands b
+    WHERE b.owner_id = p.id
+      AND b.stripe_account_id IS NOT NULL
+      AND p.stripe_account_id IS NULL;
+  END IF;
+END $$;
 
 -- Note: Keep band Stripe columns for backwards compatibility
 -- They can be removed in a future migration after verifying everything works

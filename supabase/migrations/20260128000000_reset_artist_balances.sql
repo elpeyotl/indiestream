@@ -1,11 +1,18 @@
 -- Reset artist balances due to calculation bug that was doubling amounts
 -- This clears all balances so they can be recalculated correctly
+-- Wrapped in DO block for safety on fresh databases
 
--- Reset all balances to zero
-UPDATE artist_balances SET balance_cents = 0, lifetime_earnings_cents = 0;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'artist_balances') THEN
+    UPDATE artist_balances SET balance_cents = 0, lifetime_earnings_cents = 0;
+  END IF;
 
--- Also clear the artist_earnings table to allow fresh recalculation
-DELETE FROM artist_earnings;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'artist_earnings') THEN
+    DELETE FROM artist_earnings;
+  END IF;
 
--- Reset revenue periods to allow recalculation
-UPDATE revenue_periods SET status = 'pending' WHERE status IN ('calculated', 'calculating');
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'revenue_periods') THEN
+    UPDATE revenue_periods SET status = 'pending' WHERE status IN ('calculated', 'calculating');
+  END IF;
+END $$;

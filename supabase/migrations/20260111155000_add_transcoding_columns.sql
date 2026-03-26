@@ -8,11 +8,19 @@ ALTER TABLE public.tracks
   ADD COLUMN IF NOT EXISTS streaming_audio_key TEXT,
   ADD COLUMN IF NOT EXISTS transcoding_status VARCHAR(20) DEFAULT 'pending';
 
--- Migrate existing audio_key to original_audio_key for tracks that don't have it set
-UPDATE public.tracks
-SET original_audio_key = audio_key,
-    original_format = LOWER(SPLIT_PART(audio_key, '.', -1))
-WHERE original_audio_key IS NULL AND audio_key IS NOT NULL;
+-- Migrate existing audio_key to original_audio_key (only if audio_key column exists)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'tracks' AND column_name = 'audio_key'
+  ) THEN
+    UPDATE public.tracks
+    SET original_audio_key = audio_key,
+        original_format = LOWER(SPLIT_PART(audio_key, '.', -1))
+    WHERE original_audio_key IS NULL AND audio_key IS NOT NULL;
+  END IF;
+END $$;
 
 -- Add index for finding tracks that need transcoding
 CREATE INDEX IF NOT EXISTS idx_tracks_transcoding_status ON public.tracks(transcoding_status)

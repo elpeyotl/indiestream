@@ -1,37 +1,35 @@
 /**
  * Test User Credentials for E2E Tests
  *
- * To run authenticated tests, create these users in your Supabase instance:
+ * These users are created by supabase/seed.sql:
  *
- * 1. TEST_USER: Regular listener account
- *    - Create via /register page or Supabase dashboard
+ * 1. TEST_USER: Regular listener (subscribed)
+ *    - test@test.test / test123test123
  *
- * 2. TEST_ARTIST: User with artist profile
- *    - Create account, then create an artist via /dashboard/artist/new
+ * 2. TEST_ARTIST: User with artist profile (owns "Iron Veil")
+ *    - artist@test.test / test123test123
  *
  * 3. TEST_ADMIN: Admin user
- *    - Create account, then set role='admin' in profiles table:
- *    UPDATE profiles SET role = 'admin' WHERE email = 'admin@example.com';
+ *    - admin@test.test / test123test123
  *
- * Alternatively, set environment variables:
- * - TEST_USER_EMAIL / TEST_USER_PASSWORD
- * - TEST_ADMIN_EMAIL / TEST_ADMIN_PASSWORD
+ * To reset test data: npx supabase db reset --linked
+ * Override credentials via env vars if needed.
  */
 
-// Regular listener user
+// Regular listener user (subscribed)
 export const TEST_USER = {
-  email: process.env.TEST_USER_EMAIL || 'test@example.com',
-  password: process.env.TEST_USER_PASSWORD || 'testpassword123',
+  email: process.env.TEST_USER_EMAIL || 'test@test.test',
+  password: process.env.TEST_USER_PASSWORD || 'test123test123',
 }
 
 // User with artist profile
 export const TEST_ARTIST = {
-  email: process.env.TEST_ARTIST_EMAIL || 'artist@example.com',
-  password: process.env.TEST_ARTIST_PASSWORD || 'artistpassword123',
+  email: process.env.TEST_ARTIST_EMAIL || 'artist@test.test',
+  password: process.env.TEST_ARTIST_PASSWORD || 'test123test123',
 }
 
 // Admin user (role: 'admin' in profiles table)
 export const TEST_ADMIN = {
-  email: process.env.TEST_ADMIN_EMAIL || 'admin@example.com',
-  password: process.env.TEST_ADMIN_PASSWORD || 'adminpassword123',
+  email: process.env.TEST_ADMIN_EMAIL || 'admin@test.test',
+  password: process.env.TEST_ADMIN_PASSWORD || 'test123test123',
 }
