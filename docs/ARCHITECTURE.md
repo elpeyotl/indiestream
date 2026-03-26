@@ -387,14 +387,10 @@ Proposed Architecture (Multi-quality):
 
 ### Business Model Considerations
 
-**Potential Pricing:**
-- Current Listener subscription: $9.99/mo
-- HiFi tier (new): $14.99-19.99/mo (+$5-10 premium)
+**Current Pricing:**
+- Listener subscription: CHF 13.00/mo (single tier, includes lossless FLAC)
 
-**Break-even Analysis:**
-- Additional infrastructure cost: ~$100/mo at scale
-- HiFi premium per user: $5-10/mo
-- Break-even: 10-20 HiFi subscribers
+**Note:** Lossless FLAC is now included in the single CHF 13.00/mo Listener tier. No separate HiFi tier needed.
 
 ### Recommendation: When to Implement
 
@@ -429,9 +425,8 @@ Proposed Architecture (Multi-quality):
 **When we do implement:**
 - Start with FLAC 16-bit/44.1kHz (CD quality) only
 - Use Vercel Functions + FFmpeg for transcoding
-- Offer as $14.99/mo "HiFi" tier
+- Included in the CHF 13.00/mo Listener tier (no separate HiFi tier)
 - Expected additional cost: ~$100-150/mo at scale
-- Break-even: ~15-20 HiFi subscribers
 
 ---
 

@@ -1,7 +1,7 @@
 # Fairtune - Development Notes
 
 ## Project Overview
-Fairtune is a Bandcamp-clone music streaming platform focused on fair artist compensation. Artists keep 85% of streaming revenue, distributed based on actual listener engagement rather than a pooled model.
+Fairtune is a Bandcamp-clone music streaming platform focused on fair artist compensation. Artists keep 70% of streaming revenue, distributed based on actual listener engagement rather than a pooled model.
 
 ## Tech Stack
 - **Frontend**: Nuxt 3, Vue 3 (Composition API), TypeScript
@@ -36,8 +36,8 @@ Fairtune is a Bandcamp-clone music streaming platform focused on fair artist com
 - Listening history tracked for logged-in users
 
 ### Revenue Model
-- $9.99/month subscription for listeners
-- 85% goes to artists, 15% platform fee
+- CHF 13.00/month subscription for listeners (single "Listener" tier, all features including lossless FLAC)
+- 70% goes to artists, 15% to PROs, 15% platform fee
 - Revenue split based on individual listener's time spent per artist
 
 ## Database Schema Highlights
@@ -99,16 +99,17 @@ Album and track management, including R2 URL generation
 ## Cost Calculation
 
 ### Revenue Model
-- **Subscription Price**: $9.99/month
-- **Artist Share**: 85% ($8.49)
-- **Platform Share**: 15% ($1.50)
+- **Subscription Price**: CHF 13.00/month
+- **Artist Share**: 70% (CHF 9.10)
+- **PRO/MRO Share**: 15% (CHF 1.95)
+- **Platform Share**: 15% (CHF 1.95)
 
 ### Per-Stream Value (Example)
 If a subscriber listens 100 hours/month:
 - Total listening: 6,000 minutes
-- If Artist A gets 60% of listening time (3,600 min): $5.09
-- If Artist B gets 30% (1,800 min): $2.55
-- If Artist C gets 10% (600 min): $0.85
+- If Artist A gets 60% of listening time (3,600 min): CHF 5.46
+- If Artist B gets 30% (1,800 min): CHF 2.73
+- If Artist C gets 10% (600 min): CHF 0.91
 
 ### Comparison to Traditional Streaming
 | Platform | Per-Stream Rate | Streams for $1 |
@@ -135,14 +136,14 @@ If a subscriber listens 100 hours/month:
 - Pro ($20/mo): 1TB bandwidth, more compute
 
 #### Stripe Fees
-- 2.9% + $0.30 per transaction
-- On $9.99 subscription: ~$0.59 fee
-- Net per subscriber: ~$9.40
+- 2.9% + CHF 0.30 per transaction
+- On CHF 13.00 subscription: ~CHF 0.68 fee
+- Net per subscriber: ~CHF 12.32
 
 ### Break-even Analysis
 Monthly fixed costs (Pro tiers): ~$65/month
-- Need ~7 paying subscribers to cover infrastructure
-- Each additional subscriber = ~$1.50 platform revenue (after Stripe)
+- Need ~5 paying subscribers to cover infrastructure
+- Each additional subscriber = ~CHF 1.95 platform revenue (after Stripe)
 
 ### Payout Calculation (Monthly)
 ```
@@ -150,7 +151,7 @@ For each artist:
 1. Sum all listening_seconds from their streams this month
 2. For each subscriber who listened to them:
    - subscriber_share = (artist_seconds / subscriber_total_seconds)
-   - artist_amount += subscriber_share * $8.49
+   - artist_amount += subscriber_share * CHF 9.10
 3. Total payout = sum of all subscriber contributions
 ```
 
@@ -275,11 +276,11 @@ Image uploads in the dashboard use the `/api/upload/process-image` endpoint inst
 
 ### Cost Impact on Business Model
 
-If PRO licensing is added:
-- Current artist share: 85%
-- After PRO fees (est. 4%): ~81%
-- After payment processing (6%): ~75%
-- Platform margin becomes tighter
+PRO licensing is built into the 70/15/15 split:
+- Current artist share: 70% (CHF 9.10)
+- PRO/MRO share: 15% (CHF 1.95)
+- Platform share: 15% (CHF 1.95)
+- After payment processing (~3%): platform margin becomes tighter
 
 ### Next Steps (Legal/Business)
 

@@ -33,17 +33,17 @@ export const getWelcomeEmailTemplate = ({
     <mj-divider />
 
     <mj-text font-size="18px" font-weight="600" color="#f4f4f5" padding-bottom="16px">
-      Where your CHF 12 goes
+      Where your CHF 13 goes
     </mj-text>
 
     <mj-text font-size="14px" line-height="22px" padding-bottom="8px">
-      <strong class="highlight">CHF 8.40 (70%)</strong> to the artists you listen to
+      <strong class="highlight">CHF 9.10 (70%)</strong> to the artists you listen to
     </mj-text>
     <mj-text font-size="14px" line-height="22px" padding-bottom="8px">
-      <strong class="highlight">CHF 1.80 (15%)</strong> to royalties (PROs like SUISA, GEMA, ASCAP, BMI)
+      <strong class="highlight">CHF 1.95 (15%)</strong> to royalties (PROs like SUISA, GEMA, ASCAP)
     </mj-text>
     <mj-text font-size="14px" line-height="22px" padding-bottom="8px">
-      <strong class="highlight">CHF 1.80 (15%)</strong> keeps us running (servers, bandwidth, team)
+      <strong class="highlight">CHF 1.95 (15%)</strong> keeps us running (servers, bandwidth, team)
     </mj-text>
     <mj-text font-size="14px" line-height="22px" padding-bottom="24px">
       Every month, you'll see exactly where your money went. Cent by cent.

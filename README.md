@@ -178,13 +178,13 @@ npm run typecheck    # TypeScript type checking
 
 ### Subscription Tiers
 
-- **Free**: 30-second snippets only
-- **Standard** ($9.99/month): Full streaming + MP3 downloads
-- **Premium** ($14.99/month): Full streaming + FLAC downloads
+- **Free**: 30-second previews only
+- **Listener** (CHF 13.00/month): Full streaming, lossless FLAC, all features included
 
-### Revenue Split
+### Revenue Split (Streaming)
 
-- **85%** to artists (based on listening time)
+- **70%** to artists (based on listening time)
+- **15%** to PROs (SUISA, GEMA, ASCAP, BMI, etc.)
 - **15%** platform fee
 
 ## 📄 License

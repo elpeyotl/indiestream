@@ -183,8 +183,8 @@
             </h3>
             <p class="text-zinc-400 mb-6 max-w-md mx-auto">
               {{ distribution.hasImpact
-                ? 'With a subscription, 70% of your CHF 12 goes directly to artists based on what you stream. Add streaming support to your tips and purchases!'
-                : 'See your personal impact and support the artists you love with a subscription. 70% of your CHF 12 goes directly to artists based on what you listen to.'
+                ? 'With a subscription, 70% of your CHF 13 goes directly to artists based on what you stream. Add streaming support to your tips and purchases!'
+                : 'See your personal impact and support the artists you love with a subscription. 70% of your CHF 13 goes directly to artists based on what you listen to.'
               }}
             </p>
             <UButton color="violet" to="/pricing" size="lg">
@@ -443,7 +443,7 @@
               <h3 class="text-zinc-100 font-semibold mb-1">How Your Support Reaches Artists</h3>
               <p class="text-zinc-400 text-sm leading-relaxed">
                 Your support reaches artists in three ways:
-                <span class="text-teal-400">70% of your subscription</span> (CHF 8.40/mo) goes to artists based on your listening time,
+                <span class="text-teal-400">70% of your subscription</span> ($6.99/mo) goes to artists based on your listening time,
                 <span class="text-pink-400">~97% of your tips</span> go directly to artists (only Stripe processing fees apply),
                 and <span class="text-emerald-400">85% of album purchases</span> go to artists.
                 The remaining subscription amounts fund performance royalties (CMOs) and platform operations.

@@ -20,7 +20,7 @@ Fairtune is a **fair-pay music streaming platform** for independent artists. Unl
 
 | Issue | Traditional Platforms | Fairtune Solution |
 |-------|----------------------|----------------------|
-| **Revenue Pool** | All subscriptions go into one pool | Your $9.99 goes to artists YOU listen to |
+| **Revenue Pool** | All subscriptions go into one pool | Your CHF 13.00 goes to artists YOU listen to |
 | **Major Label Dominance** | ~70% of streams go to major labels | Independent artists only |
 | **Artist Share** | ~$0.003 per stream (~30% to artist) | ~$0.007+ per stream (70% to artist) |
 | **Transparency** | Opaque payout calculations | Real-time earnings dashboard |
@@ -41,14 +41,14 @@ Fairtune is a **fair-pay music streaming platform** for independent artists. Unl
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    $9.99 Listener Subscription                   │
+│                 CHF 13.00 Listener Subscription                  │
 └─────────────────────────────────────────────────────────────────┘
                               │
          ┌────────────────────┼────────────────────┐
          ▼                    ▼                    ▼
    ┌──────────┐        ┌──────────┐        ┌──────────┐
    │   70%    │        │   15%    │        │   15%    │
-   │  $6.99   │        │  $1.50   │        │  $1.50   │
+   │ CHF 9.10 │        │ CHF 1.95 │        │ CHF 1.95 │
    │ Artists  │        │ PRO/MRO  │        │ Platform │
    └──────────┘        └──────────┘        └──────────┘
    Direct payout       SUISA, GEMA,        Operations,
@@ -71,8 +71,8 @@ Fairtune is a **fair-pay music streaming platform** for independent artists. Unl
 
 | Tier | Price | Features |
 |------|-------|----------|
-| **Free** | $0/month | 30-second previews, browse artists, create account |
-| **Listener** | $9.99/month | Unlimited streaming, high-quality audio, listening history, direct artist support, no ads |
+| **Free** | CHF 0/month | 30-second previews, browse artists, create account |
+| **Listener** | CHF 13.00/month | Unlimited streaming, lossless FLAC audio, listening history, direct artist support, no ads |
 
 ### For Artists
 
@@ -94,7 +94,7 @@ Fairtune is a **fair-pay music streaming platform** for independent artists. Unl
 | **Transparency** | See exactly where your subscription went each month ("My Impact" dashboard) |
 | **No Ads** | Clean, uninterrupted listening experience |
 | **Ethical Choice** | Support independent artists and fair pay practices |
-| **Quality Audio** | 320kbps streaming (HiFi lossless planned) |
+| **Quality Audio** | Lossless FLAC streaming included |
 | **Share Your Impact** | Public impact stats you can share on social media |
 
 ### For Artists
@@ -231,7 +231,7 @@ Fairtune is a **fair-pay music streaming platform** for independent artists. Unl
 
 | Feature | Business Value | Complexity |
 |---------|----------------|------------|
-| **HiFi/Lossless streaming** | Premium upsell ($14.99/mo tier) | Medium |
+| **~~HiFi/Lossless streaming~~** | ~~Premium upsell~~ (Now included in Listener tier) | Done |
 | **Offline playback** | Subscriber retention | Medium |
 | **Genre pages** | Discovery, engagement | Low |
 | **Curated playlists** | Editorial voice, retention | Low |
@@ -256,7 +256,7 @@ Fairtune is a **fair-pay music streaming platform** for independent artists. Unl
 | Metric | Description |
 |--------|-------------|
 | **MAU** | Monthly Active Users |
-| **Paid Subscribers** | Users on $9.99/mo plan |
+| **Paid Subscribers** | Users on CHF 13.00/mo plan |
 | **Conversion Rate** | Free → Paid conversion |
 | **Artist Signups** | New artist profiles created |
 | **Track Uploads** | New tracks added to catalog |
@@ -288,10 +288,10 @@ Fairtune is a **fair-pay music streaming platform** for independent artists. Unl
 
 | Metric | Value |
 |--------|-------|
-| **MRR** | $499,500 |
-| **To Artists (70%)** | $349,650 |
-| **To PROs (15%)** | $74,925 |
-| **Platform Revenue (15%)** | $74,925 |
+| **MRR** | CHF 650,000 |
+| **To Artists (70%)** | CHF 455,000 |
+| **To PROs (15%)** | CHF 97,500 |
+| **Platform Revenue (15%)** | CHF 97,500 |
 | **Infrastructure Costs** | ~$150* |
 | **Gross Margin** | ~99.8% |
 
@@ -329,7 +329,7 @@ Fairtune is a **fair-pay music streaming platform** for independent artists. Unl
 2. **Sustainable unit economics** - 15% platform fee with minimal infrastructure costs
 3. **Strong differentiation** - Only user-centric, PRO-compliant indie streaming platform
 4. **Scalable architecture** - Serverless infrastructure that costs ~$150/mo at 50K users
-5. **Clear growth path** - Premium tiers (HiFi), downloads, merch as future revenue
+5. **Clear growth path** - Downloads, merch as future revenue streams
 
 ### For Artists
 
@@ -341,7 +341,7 @@ Fairtune is a **fair-pay music streaming platform** for independent artists. Unl
 
 ### For Listeners
 
-1. **Direct support** - Your $9.99 goes to artists you actually listen to
+1. **Direct support** - Your CHF 13.00 goes to artists you actually listen to
 2. **Transparency** - See exactly where your money went
 3. **Ethical streaming** - Support fair pay for musicians
 4. **No ads, no compromise** - Clean listening experience

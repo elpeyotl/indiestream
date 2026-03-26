@@ -9,7 +9,7 @@ interface PaymentFailedEmailProps {
 
 export const getPaymentFailedEmailTemplate = ({
   userName = 'Listener',
-  amount = 9.99,
+  amount = 13.00,
   currency = 'CHF',
   updatePaymentUrl,
 }: PaymentFailedEmailProps) => {

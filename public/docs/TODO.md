@@ -27,7 +27,7 @@
 - [x] Public access to album covers and artist avatars
 
 ### Static Pages
-- [x] Pricing page (Free, Listener $9.99/mo, Artist tiers)
+- [x] Pricing page (Free, Listener CHF 13.00/mo, Artist tiers)
 - [x] About page
 - [x] How It Works page
 - [x] For Artists landing page

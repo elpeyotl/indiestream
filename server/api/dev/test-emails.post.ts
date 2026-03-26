@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
       to,
       userName: 'Test User',
       tier: 'Listener',
-      amount: 9.99,
+      amount: 13.00,
       currency: 'CHF',
       periodEnd: 'February 17, 2026',
     })
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
     const r3 = await sendPaymentFailedEmail({
       to,
       userName: 'Test User',
-      amount: 9.99,
+      amount: 13.00,
       currency: 'CHF',
       updatePaymentUrl: `${config.public.appUrl}/settings/billing`,
     })

@@ -56,7 +56,7 @@
         Stream fair. Support direct.
       </h2>
       <p class="text-lg text-zinc-300 mb-2">
-        CHF 9.99/month. 70% to artists.
+        CHF 13/month. Lossless audio. 70% to artists.
       </p>
       <p class="text-zinc-400 mb-6">
         See exactly where your money goes.

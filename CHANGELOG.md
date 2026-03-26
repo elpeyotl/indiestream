@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.25.0] - 2026-03-26
+
+### Changed
+- **New Pricing: CHF 13/month single tier** — Replaced Standard ($9.99) + Premium ($14.99) tiers with one all-inclusive Listener plan at CHF 13.00/month
+- **Lossless audio for everyone** — FLAC streaming and offline mode included for all subscribers, no premium upsell
+- **Currency changed to CHF** — All pricing now displayed in Swiss Francs
+- **Revenue split updated** — 70% (CHF 9.10) to artists, 15% (CHF 1.95) to PROs, 15% (CHF 1.95) platform
+- **Database migration** — Consolidated `standard`/`premium` enum values into single `listener` tier
+- Updated all pages, components, emails, API endpoints, and documentation to reflect new pricing
+- Transcoding worker memory increased to 2GB in fly.toml
+
 ## [0.24.1] - 2026-01-25
 
 ### Fixed

@@ -7,18 +7,18 @@
           <UIcon name="i-heroicons-musical-note" class="w-8 h-8 text-violet-400" />
         </div>
         <h3 class="text-xl font-semibold text-zinc-100">Start your subscription</h3>
-        <p class="text-sm text-zinc-400 mt-1">Unlimited streaming, 70% to artists</p>
+        <p class="text-sm text-zinc-400 mt-1">Unlimited lossless streaming, 70% to artists</p>
       </div>
 
       <!-- Plan Summary -->
       <div v-if="!showPaymentForm" class="mb-6">
         <div class="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-zinc-300 font-medium">Fairtune Abo</span>
+            <span class="text-zinc-300 font-medium">Listener Plan</span>
             <UBadge color="violet" variant="subtle" size="xs">7-day free trial</UBadge>
           </div>
           <div class="flex items-baseline gap-1">
-            <span class="text-3xl font-bold text-zinc-100">CHF 12</span>
+            <span class="text-3xl font-bold text-zinc-100">CHF 13</span>
             <span class="text-zinc-500">/month</span>
           </div>
           <p class="text-sm text-zinc-500 mt-2">after trial ends</p>
@@ -32,7 +32,7 @@
           </li>
           <li class="flex items-center gap-2 text-sm text-zinc-300">
             <UIcon name="i-heroicons-check" class="w-4 h-4 text-teal-500 shrink-0" />
-            Lossless FLAC streaming
+            Lossless audio (FLAC)
           </li>
           <li class="flex items-center gap-2 text-sm text-zinc-300">
             <UIcon name="i-heroicons-check" class="w-4 h-4 text-teal-500 shrink-0" />
@@ -63,7 +63,7 @@
         <div class="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
           <div>
             <span class="text-sm text-zinc-400">7-day free trial, then</span>
-            <p class="text-lg font-semibold text-zinc-100">CHF 12/month</p>
+            <p class="text-lg font-semibold text-zinc-100">CHF 13/month</p>
           </div>
           <UBadge color="green" variant="subtle">
             Free for 7 days

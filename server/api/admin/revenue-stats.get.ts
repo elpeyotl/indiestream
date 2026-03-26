@@ -34,8 +34,8 @@ export default defineEventHandler(async (event) => {
     const canceledCount = realSubs.filter(s => s.status === 'canceled').length
     const pastDueCount = realSubs.filter(s => s.status === 'past_due').length
 
-    // Calculate MRR (active + trialing subscribers * CHF 12.00)
-    const SUBSCRIPTION_PRICE_CENTS = 1200
+    // Calculate MRR (active + trialing subscribers * CHF 13.00)
+    const SUBSCRIPTION_PRICE_CENTS = 1300
     const monthlyRecurringRevenue = (activeCount + trialingCount) * SUBSCRIPTION_PRICE_CENTS
 
     // Get total artist balances (pending payout)

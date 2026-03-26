@@ -204,8 +204,8 @@
             <aside class="bg-stone-900/80 rounded-xl border border-stone-800 p-5 text-center">
               <p class="text-white font-medium mb-2">Like what you see?</p>
               <p class="text-stone-400 text-sm mb-4">
-                CHF 9.99/mo<br />
-                85% goes to artists<br />
+                CHF 13/mo<br />
+                70% goes to artists<br />
                 (not shareholders)
               </p>
               <NuxtLink

@@ -1971,7 +1971,7 @@ export type Database = {
         | "past_due"
         | "trialing"
         | "incomplete"
-      subscription_tier: "free" | "standard" | "premium"
+      subscription_tier: "free" | "listener"
       user_role: "user" | "band" | "admin"
     }
     CompositeTypes: {
@@ -2118,7 +2118,7 @@ export const Constants = {
         "trialing",
         "incomplete",
       ],
-      subscription_tier: ["free", "standard", "premium"],
+      subscription_tier: ["free", "listener"],
       user_role: ["user", "band", "admin"],
     },
   },

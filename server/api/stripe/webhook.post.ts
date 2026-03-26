@@ -164,7 +164,7 @@ export default defineEventHandler(async (event) => {
                 : ''
 
               // Get invoice amount
-              const invoiceAmount = session.amount_total ? session.amount_total / 100 : 9.99
+              const invoiceAmount = session.amount_total ? session.amount_total / 100 : 13.00
 
               try {
                 // Send welcome email
@@ -290,8 +290,8 @@ export default defineEventHandler(async (event) => {
                   to: profile.email,
                   userName: profile.display_name || 'Listener',
                   tier: isTrial ? 'Listener (7-day trial)' : 'Listener',
-                  amount: 9.99,
-                  currency: 'USD',
+                  amount: 13.00,
+                  currency: 'CHF',
                   periodEnd: periodEndDate,
                 })
 
@@ -377,7 +377,7 @@ export default defineEventHandler(async (event) => {
               .single()
 
             if (profile?.email) {
-              const invoiceAmount = invoice.amount_due ? invoice.amount_due / 100 : 9.99
+              const invoiceAmount = invoice.amount_due ? invoice.amount_due / 100 : 13.00
               const config = useRuntimeConfig()
 
               try {

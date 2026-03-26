@@ -3,38 +3,6 @@ export default defineAppConfig({
   ui: {
     primary: 'violet',
     gray: 'zinc',
-    dropdown: {
-      background: 'bg-zinc-900',
-      ring: 'ring-1 ring-zinc-700',
-      item: {
-        active: 'bg-zinc-800',
-      },
-    },
-    select: {
-      background: 'bg-zinc-900',
-    },
-    selectMenu: {
-      background: 'bg-zinc-900',
-      ring: 'ring-1 ring-zinc-700',
-      option: {
-        active: 'bg-zinc-800',
-      },
-    },
-    popover: {
-      background: 'bg-zinc-900',
-      ring: 'ring-1 ring-zinc-700',
-    },
-    inputMenu: {
-      background: 'bg-zinc-900',
-      ring: 'ring-1 ring-zinc-700',
-      option: {
-        active: 'bg-zinc-800',
-      },
-    },
-    contextMenu: {
-      background: 'bg-zinc-900',
-      ring: 'ring-1 ring-zinc-700',
-    },
   },
 
   // Brand Identity
@@ -107,10 +75,10 @@ export default defineAppConfig({
 
   // Platform Configuration
   platform: {
-    // Revenue distribution (CHF 12.00/month)
-    // 70% (CHF 8.40) to artists - split by listening time
-    // 15% (CHF 1.80) to royalties - PROs (SUISA, GEMA, ASCAP, BMI, etc.)
-    // 15% (CHF 1.80) platform costs - servers, bandwidth, team
+    // Revenue distribution (CHF 13.00/month)
+    // 70% (CHF 9.10) to artists - split by listening time
+    // 15% (CHF 1.95) to royalties - PROs (SUISA, GEMA, ASCAP, BMI, etc.)
+    // 15% (CHF 1.95) platform costs - servers, bandwidth, team
     platformFeePercentage: 15,    // 15% platform costs
     royaltySharePercentage: 15,   // 15% to royalty societies (PROs)
     artistSharePercentage: 70,    // 70% direct to artists
@@ -129,12 +97,13 @@ export default defineAppConfig({
       },
       listener: {
         name: 'Listener',
-        priceMonthly: 1200,   // CHF 12.00
-        priceYearly: 12000,   // CHF 120.00 (2 months free)
+        priceMonthly: 1300,  // CHF 13.00
+        priceYearly: 12000,  // CHF 120.00 (save CHF 36/year)
         features: {
           fullStreaming: true,
           downloads: true,
           downloadQuality: 'flac',
+          losslessStreaming: true,
           offlineMode: true,
         },
       },

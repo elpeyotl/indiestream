@@ -2,7 +2,7 @@
   <div class="container mx-auto px-4 py-12">
     <!-- Header -->
     <div class="text-center mb-12">
-      <h1 class="text-4xl font-bold text-zinc-100 mb-4">CHF 12. That's it.</h1>
+      <h1 class="text-4xl font-bold text-zinc-100 mb-4">CHF 13. That's it.</h1>
       <p class="text-xl text-zinc-400 max-w-2xl mx-auto">
         <span class="text-teal-400 font-semibold">70% to artists. 15% to royalties. 15% keeps us running.</span>
       </p>
@@ -57,7 +57,7 @@
         <div class="mb-6">
           <h3 class="text-lg font-semibold text-violet-400 mb-2">Listener</h3>
           <div class="flex items-baseline gap-1">
-            <span class="text-4xl font-bold text-zinc-100">CHF 12</span>
+            <span class="text-4xl font-bold text-zinc-100">CHF 13</span>
             <span class="text-zinc-500">/month</span>
           </div>
         </div>
@@ -71,7 +71,7 @@
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
             <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
-            Lossless FLAC streaming
+            Lossless audio (FLAC)
           </li>
           <li class="flex items-center gap-2 text-zinc-300">
             <UIcon name="i-heroicons-check" class="w-5 h-5 text-teal-500" />
@@ -139,11 +139,11 @@
 
     <!-- How Payment Works -->
     <div class="max-w-4xl mx-auto mb-16">
-      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">Where your CHF 12 goes</h2>
+      <h2 class="text-2xl font-bold text-zinc-100 text-center mb-8">Where your CHF 13 goes</h2>
       <div class="grid md:grid-cols-3 gap-8">
         <div class="text-center">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-teal-500/20 flex items-center justify-center">
-            <span class="text-xl font-bold text-teal-400">CHF 8.40</span>
+            <span class="text-xl font-bold text-teal-400">CHF 9.10</span>
           </div>
           <h3 class="font-semibold text-zinc-100 mb-2">70% to artists</h3>
           <p class="text-zinc-400 text-sm">
@@ -152,16 +152,16 @@
         </div>
         <div class="text-center">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/20 flex items-center justify-center">
-            <span class="text-xl font-bold text-violet-400">CHF 1.80</span>
+            <span class="text-xl font-bold text-violet-400">CHF 1.95</span>
           </div>
           <h3 class="font-semibold text-zinc-100 mb-2">15% to royalties</h3>
           <p class="text-zinc-400 text-sm">
-            To PROs (ASCAP, BMI, GEMA, SUISA). Songwriters get paid.
+            To PROs (SUISA, GEMA, ASCAP, BMI). Songwriters get paid.
           </p>
         </div>
         <div class="text-center">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-fuchsia-500/20 flex items-center justify-center">
-            <span class="text-xl font-bold text-fuchsia-400">CHF 1.80</span>
+            <span class="text-xl font-bold text-fuchsia-400">CHF 1.95</span>
           </div>
           <h3 class="font-semibold text-zinc-100 mb-2">15% platform</h3>
           <p class="text-zinc-400 text-sm">
@@ -252,11 +252,12 @@ const toast = useToast()
 useHead({
   title: 'Pricing | Fairtune',
   meta: [
-    { name: 'description', content: 'CHF 12/month. 70% to artists. 15% to royalties. 15% platform. We show you every cent.' },
+    { name: 'description', content: 'CHF 13/month. 70% to artists. 15% to royalties. 15% platform. Lossless included. We show you every cent.' },
   ],
 })
 
-// TODO: Create new Stripe price for CHF 12.00/month and update this ID
+// Stripe Price ID for Listener plan (CHF 13.00/month)
+// TODO: Create new CHF 13.00 price in Stripe dashboard and update this ID
 const LISTENER_PRICE_ID = 'price_1SolWZDpO91TMxctZrzuoJ0v'
 
 // Modal state
@@ -284,7 +285,7 @@ const handleSubscribe = () => {
 const faqItems = [
   {
     label: 'How does the artist payment work?',
-    content: 'Unlike traditional streaming services that use a royalty pool, your subscription is divided based on your actual listening. If you spend 50% of your listening time on one artist, they receive 50% of the artist share. Your CHF 12 is split: 70% (CHF 8.40) to artists, 15% (CHF 1.80) to performance royalty societies (SUISA, GEMA, etc.), and 15% (CHF 1.80) platform fee.',
+    content: 'Unlike traditional streaming services that use a royalty pool, your subscription is divided based on your actual listening. If you spend 50% of your listening time on one artist, they receive 50% of the artist share. Your CHF 13 is split: 70% (CHF 9.10) to artists, 15% (CHF 1.95) to performance royalty societies (SUISA, GEMA, etc.), and 15% (CHF 1.95) platform fee.',
   },
   {
     label: 'Do you pay royalties on every stream?',
@@ -304,7 +305,7 @@ const faqItems = [
   },
   {
     label: 'What audio quality do you offer?',
-    content: 'We stream in lossless FLAC quality for all subscribers. You can also purchase and download tracks in FLAC.',
+    content: 'All subscribers get access to lossless FLAC audio (CD quality: 16-bit/44.1kHz) and AAC 256kbps streaming. You can choose your preferred quality in the player settings.',
   },
   {
     label: 'How do I become a verified artist?',

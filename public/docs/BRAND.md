@@ -128,7 +128,7 @@ Direct, honest, anti-corporate. For people who actually give a shit about music.
 
 **Do Say:**
 - "70% to artists. 15% to royalties. 15% keeps us running."
-- "$6.99 of your $9.99 goes to the artists you listen to."
+- "CHF 9.10 of your CHF 13.00 goes to the artists you listen to."
 - "No pool. No mystery math. You see every cent."
 - "Like Bandcamp, but you can stream."
 - "No investors. No VC money. Just costs."
@@ -159,9 +159,9 @@ Direct, honest, anti-corporate. For people who actually give a shit about music.
 - **70%** - Direct to artists (from your listening)
 - **15%** - To royalties (PROs - ASCAP, BMI, GEMA, SUISA)
 - **15%** - Platform costs (servers, bandwidth, team)
-- **$6.99** - Artist share from your $9.99/month
-- **$1.50** - Royalty share
-- **$1.50** - Platform share
+- **CHF 9.10** - Artist share from your CHF 13.00/month
+- **CHF 1.95** - Royalty share
+- **CHF 1.95** - Platform share
 
 **NEVER say "85% to artists"** - that's incorrect. The split is 70/15/15.
 
