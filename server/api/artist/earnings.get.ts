@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   // Verify user owns the band
   const { data: band, error: bandError } = await client
     .from('bands')
-    .select('id, owner_id, name, stripe_account_id, stripe_account_status, total_earnings_cents')
+    .select('id, owner_id, name, total_earnings_cents')
     .eq('id', bandId)
     .single()
 
@@ -43,6 +43,16 @@ export default defineEventHandler(async (event) => {
       message: 'You do not own this band',
     })
   }
+
+  // Get user's Stripe Connect status from profile
+  const { data: profile } = await client
+    .from('profiles')
+    .select('stripe_account_id, stripe_account_status')
+    .eq('id', user.id)
+    .single()
+
+  const stripeStatus = profile?.stripe_account_status || 'not_connected'
+  const stripeAccountId = profile?.stripe_account_id || null
 
   // Get artist balance
   const { data: balance } = await client
@@ -104,8 +114,8 @@ export default defineEventHandler(async (event) => {
   return {
     bandId,
     bandName: band.name,
-    stripeStatus: band.stripe_account_status || 'not_connected',
-    stripeAccountId: band.stripe_account_id,
+    stripeStatus,
+    stripeAccountId,
 
     // Balance info
     currentBalance: balance?.balance_cents || 0,
@@ -120,7 +130,7 @@ export default defineEventHandler(async (event) => {
     minimumPayout: 1000, // $10.00 in cents
 
     // Can request payout?
-    canRequestPayout: (balance?.balance_cents || 0) >= 1000 && band.stripe_account_status === 'active',
+    canRequestPayout: (balance?.balance_cents || 0) >= 1000 && stripeStatus === 'active',
 
     // Payout history
     payouts: payouts?.map(p => ({

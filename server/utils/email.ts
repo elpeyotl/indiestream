@@ -27,8 +27,8 @@ export const sendEmail = async (options: SendEmailOptions) => {
   const config = useRuntimeConfig()
   const client = getResendClient()
 
-  // Use Resend's test domain for development, or configure RESEND_FROM_EMAIL for production
-  const fromAddress = options.from || `Fairtune <${config.resendFromEmail || 'onboarding@resend.dev'}>`
+  // Use RESEND_FROM_EMAIL if set (should be "Name <email>" format), or fall back to Resend test domain
+  const fromAddress = options.from || config.resendFromEmail || 'Fairtune <onboarding@resend.dev>'
 
   try {
     const { data, error } = await client.emails.send({

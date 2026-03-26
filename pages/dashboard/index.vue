@@ -246,6 +246,38 @@
       </div>
     </ClientOnly>
 
+    <!-- Stripe Connect Banner -->
+    <ClientOnly>
+      <div
+        v-if="bands && bands.length > 0 && stripeConnectStatus && stripeConnectStatus !== 'active'"
+        class="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/20"
+      >
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center shrink-0">
+              <UIcon name="i-heroicons-banknotes" class="w-5 h-5 text-yellow-400" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="font-semibold text-zinc-100 text-sm">Set up payouts to start earning</h3>
+              <p class="text-xs text-zinc-400 truncate">
+                {{ stripeConnectStatus === 'pending' ? 'Complete your Stripe account setup.' : 'Connect Stripe to receive revenue from your music.' }}
+              </p>
+            </div>
+          </div>
+          <UButton
+            color="yellow"
+            variant="soft"
+            size="sm"
+            :loading="stripeConnectLoading"
+            @click="handleStripeSetup"
+            class="shrink-0"
+          >
+            {{ stripeConnectStatus === 'pending' ? 'Complete Setup' : 'Connect Stripe' }}
+          </UButton>
+        </div>
+      </div>
+    </ClientOnly>
+
     <!-- Artist Section -->
     <ClientOnly>
       <template #fallback>
@@ -617,6 +649,32 @@ interface ImpactDistribution {
 const syncing = ref(false)
 const toast = useToast()
 
+// Stripe Connect status for artist payout banner
+const stripeConnectStore = useStripeConnectStore()
+const { startOnboarding: stripeStartOnboarding, getAccountLink: stripeGetAccountLink, fetchConnectStatus } = stripeConnectStore
+const stripeConnectStatus = ref<string | null>(null)
+const stripeConnectLoading = ref(false)
+
+const handleStripeSetup = async () => {
+  stripeConnectLoading.value = true
+  try {
+    if (stripeConnectStatus.value === 'pending') {
+      await stripeGetAccountLink()
+    } else {
+      await stripeStartOnboarding()
+    }
+  } catch (e: any) {
+    toast.add({
+      title: 'Connection Failed',
+      description: e.data?.message || 'Failed to start Stripe setup',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'red',
+    })
+  } finally {
+    stripeConnectLoading.value = false
+  }
+}
+
 // Fetch bands using useAsyncData (auth-required, client-only)
 const { data: bands, pending: bandsPending } = await useLazyAsyncData(
   'dashboard-bands',
@@ -812,4 +870,12 @@ onMounted(() => {
   // Refresh subscription status on mount (in case webhook updated it)
   fetchSubscription()
 })
+
+// Fetch Stripe Connect status once bands are loaded
+watch(bands, async (newBands) => {
+  if (newBands && newBands.length > 0 && stripeConnectStatus.value === null) {
+    const status = await fetchConnectStatus()
+    stripeConnectStatus.value = status?.status || 'not_connected'
+  }
+}, { immediate: true })
 </script>

@@ -4,7 +4,7 @@ import type { Database } from '~/types/database'
 // Types
 export interface SubscriptionData {
   status: string
-  plan: string
+  tier: string
   current_period_end: string | null
   cancel_at_period_end: boolean
   stripe_subscription_id: string | null
@@ -40,7 +40,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     try {
       const { data, error: fetchError } = await supabase
         .from('subscriptions')
-        .select('status, plan, current_period_end, cancel_at_period_end, stripe_subscription_id')
+        .select('status, tier, current_period_end, cancel_at_period_end, stripe_subscription_id')
         .eq('user_id', userId.value)
         .maybeSingle()
 
