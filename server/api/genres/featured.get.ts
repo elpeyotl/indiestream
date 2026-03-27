@@ -4,11 +4,13 @@ import { serverSupabaseClient } from '#supabase/server'
 export default defineEventHandler(async (event) => {
   const client = await serverSupabaseClient(event)
 
-  // Get featured genres ordered by position
+  // Get featured genres ordered by featured_position
   const { data: featured, error } = await client
-    .from('featured_genres')
-    .select('id, genre_slug, genre_name, position')
-    .order('position', { ascending: true })
+    .from('genres')
+    .select('id, name, slug')
+    .eq('is_active', true)
+    .eq('is_featured', true)
+    .order('featured_position', { ascending: true })
 
   if (error) {
     console.error('Failed to fetch featured genres:', error)
@@ -19,42 +21,37 @@ export default defineEventHandler(async (event) => {
     return { featuredGenres: [] }
   }
 
-  // Get all active bands to count artists per genre and get avatar keys
-  const { data: bands } = await client
-    .from('bands')
-    .select('genres, avatar_key, total_streams')
-    .eq('status', 'active')
-    .order('total_streams', { ascending: false })
+  // Get band_genres with avatars for featured genres only
+  const featuredIds = featured.map((f) => f.id)
+  const { data: bandGenres } = await client
+    .from('band_genres')
+    .select('genre_id, band:bands!inner(avatar_key, total_streams, status)')
+    .in('genre_id', featuredIds)
 
-  // Build genre stats map - collect all avatar keys for random selection
+  // Build stats per genre
   const genreStats = new Map<string, { count: number; avatarKeys: string[] }>()
 
-  for (const band of bands || []) {
-    if (band.genres && Array.isArray(band.genres)) {
-      for (const genre of band.genres) {
-        const slug = genre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-        const existing = genreStats.get(slug) || { count: 0, avatarKeys: [] }
-        existing.count++
-        // Collect all avatar keys for random selection
-        if (band.avatar_key) {
-          existing.avatarKeys.push(band.avatar_key)
-        }
-        genreStats.set(slug, existing)
-      }
+  for (const bg of bandGenres || []) {
+    const band = bg.band as any
+    if (band?.status !== 'active') continue
+
+    const existing = genreStats.get(bg.genre_id) || { count: 0, avatarKeys: [] }
+    existing.count++
+    if (band.avatar_key) {
+      existing.avatarKeys.push(band.avatar_key)
     }
+    genreStats.set(bg.genre_id, existing)
   }
 
-  // Enrich featured genres with stats, picking random avatar
   const enrichedGenres = featured.map((fg) => {
-    const stats = genreStats.get(fg.genre_slug) || { count: 0, avatarKeys: [] }
-    // Pick a random avatar from all available
+    const stats = genreStats.get(fg.id) || { count: 0, avatarKeys: [] }
     const randomAvatar = stats.avatarKeys.length > 0
       ? stats.avatarKeys[Math.floor(Math.random() * stats.avatarKeys.length)]
       : null
     return {
       id: fg.id,
-      slug: fg.genre_slug,
-      name: fg.genre_name,
+      slug: fg.slug,
+      name: fg.name,
       artistCount: stats.count,
       avatarKeys: randomAvatar ? [randomAvatar] : [],
     }

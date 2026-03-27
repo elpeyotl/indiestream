@@ -1,16 +1,14 @@
-// POST /api/admin/featured-genres - Add a genre to featured list
+// POST /api/admin/featured-genres - Feature a genre (toggle is_featured on genres table)
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-  // Verify admin access
   const user = await serverSupabaseUser(event)
   if (!user) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const client = await serverSupabaseServiceRole(event)
+  const client = serverSupabaseServiceRole(event)
 
-  // Check if user is admin
   const { data: profile } = await client
     .from('profiles')
     .select('role')
@@ -28,35 +26,65 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'genre_slug and genre_name are required' })
   }
 
-  // Check if genre is already featured
-  const { data: existing } = await client
-    .from('featured_genres')
-    .select('id')
-    .eq('genre_slug', genre_slug)
+  // Find the genre by slug
+  const { data: existingGenre } = await client
+    .from('genres')
+    .select('id, is_featured')
+    .eq('slug', genre_slug)
     .single()
 
-  if (existing) {
+  if (existingGenre?.is_featured) {
     throw createError({ statusCode: 400, statusMessage: 'Genre is already featured' })
   }
 
-  // Get max position to add at the end
+  // Get max featured_position
   const { data: maxPos } = await client
-    .from('featured_genres')
-    .select('position')
-    .order('position', { ascending: false })
+    .from('genres')
+    .select('featured_position')
+    .eq('is_featured', true)
+    .order('featured_position', { ascending: false })
     .limit(1)
     .single()
 
-  const newPosition = (maxPos?.position ?? -1) + 1
+  const newPosition = (maxPos?.featured_position ?? -1) + 1
 
-  // Insert the new featured genre
+  if (existingGenre) {
+    // Genre exists, just toggle featured
+    const { data, error } = await client
+      .from('genres')
+      .update({
+        is_featured: true,
+        featured_position: newPosition,
+      })
+      .eq('id', existingGenre.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Failed to feature genre:', error)
+      throw createError({ statusCode: 500, message: 'Failed to feature genre' })
+    }
+
+    return {
+      success: true,
+      featuredGenre: {
+        id: data.id,
+        genre_slug: data.slug,
+        genre_name: data.name,
+        position: data.featured_position,
+      },
+    }
+  }
+
+  // Genre doesn't exist yet, create it as featured
   const { data, error } = await client
-    .from('featured_genres')
+    .from('genres')
     .insert({
-      genre_slug,
-      genre_name,
-      position: newPosition,
-      featured_by: user.id,
+      name: genre_name,
+      slug: genre_slug,
+      is_featured: true,
+      featured_position: newPosition,
+      position: 2000,
     })
     .select()
     .single()
@@ -66,5 +94,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Failed to add featured genre' })
   }
 
-  return { success: true, featuredGenre: data }
+  return {
+    success: true,
+    featuredGenre: {
+      id: data.id,
+      genre_slug: data.slug,
+      genre_name: data.name,
+      position: data.featured_position,
+    },
+  }
 })

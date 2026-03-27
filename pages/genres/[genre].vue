@@ -112,8 +112,10 @@ const { setQueue } = playerStore
 
 const genreSlug = computed(() => route.params.genre as string)
 
-// Convert slug back to display name
+// Genre display name from DB (falls back to slug-derived name)
+const genreDisplayName = ref('')
 const displayGenre = computed(() => {
+  if (genreDisplayName.value) return genreDisplayName.value
   return genreSlug.value
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -178,26 +180,43 @@ watch(sortOption, (val) => {
 const { data: artists, pending: loading } = await useLazyAsyncData(
   `genre-${route.params.genre}`,
   async () => {
+    // Find the genre by slug
+    const { data: genre } = await (client as any)
+      .from('genres')
+      .select('id, name')
+      .eq('slug', genreSlug.value)
+      .eq('is_active', true)
+      .single()
+
+    if (!genre) return [] as Band[]
+
+    // Use the proper display name from the DB
+    genreDisplayName.value = genre.name
+
+    // Get band IDs in this genre via junction table
+    const { data: bandGenres } = await (client as any)
+      .from('band_genres')
+      .select('band_id')
+      .eq('genre_id', genre.id)
+
+    const bandIds = (bandGenres || []).map((bg: any) => bg.band_id)
+    if (bandIds.length === 0) return [] as Band[]
+
+    // Fetch bands by IDs
     const { data, error } = await client
       .from('bands')
       .select('id, name, slug, theme_color, avatar_key, avatar_url, total_streams, is_verified, genres, created_at')
       .eq('status', 'active')
+      .in('id', bandIds)
       .order('total_streams', { ascending: false })
 
     if (error) throw error
 
-    // Filter by genre (case-insensitive match)
-    const bandsData = (data || []) as any[]
-    const filteredArtists = bandsData.filter(band => {
-      if (!band.genres || !Array.isArray(band.genres)) return false
-      return band.genres.some((g: string) =>
-        g.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') === genreSlug.value
-      )
-    })
+    const filteredArtists = (data || []) as any[]
 
     // Load avatar URLs in parallel
     await Promise.all(
-      filteredArtists.map(async (artist) => {
+      filteredArtists.map(async (artist: any) => {
         if (artist.avatar_key) {
           const url = await getCachedCoverUrl(artist.avatar_key)
           if (url) artist.avatar_url = url

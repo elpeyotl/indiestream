@@ -694,6 +694,137 @@ export type Database = {
           },
         ]
       }
+      genres: {
+        Row: {
+          created_at: string | null
+          featured_position: number | null
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          name: string
+          position: number
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          featured_position?: number | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          name: string
+          position?: number
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          featured_position?: number | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          name?: string
+          position?: number
+          slug?: string
+        }
+        Relationships: []
+      }
+      band_genres: {
+        Row: {
+          band_id: string
+          genre_id: string
+        }
+        Insert: {
+          band_id: string
+          genre_id: string
+        }
+        Update: {
+          band_id?: string
+          genre_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "band_genres_band_id_fkey"
+            columns: ["band_id"]
+            isOneToOne: false
+            referencedRelation: "bands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "band_genres_genre_id_fkey"
+            columns: ["genre_id"]
+            isOneToOne: false
+            referencedRelation: "genres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      genre_suggestions: {
+        Row: {
+          admin_notes: string | null
+          band_id: string | null
+          created_at: string | null
+          id: string
+          merged_into_genre_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suggested_by: string
+          suggested_name: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          band_id?: string | null
+          created_at?: string | null
+          id?: string
+          merged_into_genre_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by: string
+          suggested_name: string
+        }
+        Update: {
+          admin_notes?: string | null
+          band_id?: string | null
+          created_at?: string | null
+          id?: string
+          merged_into_genre_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by?: string
+          suggested_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "genre_suggestions_suggested_by_fkey"
+            columns: ["suggested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "genre_suggestions_band_id_fkey"
+            columns: ["band_id"]
+            isOneToOne: false
+            referencedRelation: "bands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "genre_suggestions_merged_into_genre_id_fkey"
+            columns: ["merged_into_genre_id"]
+            isOneToOne: false
+            referencedRelation: "genres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "genre_suggestions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           band_id: string
@@ -2142,3 +2273,8 @@ export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 export type Purchase = Database['public']['Tables']['purchases']['Row']
 export type PurchaseInsert = Database['public']['Tables']['purchases']['Insert']
 export type PurchaseUpdate = Database['public']['Tables']['purchases']['Update']
+export type Genre = Database['public']['Tables']['genres']['Row']
+export type GenreInsert = Database['public']['Tables']['genres']['Insert']
+export type GenreUpdate = Database['public']['Tables']['genres']['Update']
+export type BandGenre = Database['public']['Tables']['band_genres']['Row']
+export type GenreSuggestion = Database['public']['Tables']['genre_suggestions']['Row']

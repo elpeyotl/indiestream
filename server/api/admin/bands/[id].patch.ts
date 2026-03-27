@@ -53,6 +53,18 @@ export default defineEventHandler(async (event) => {
   if (body.theme_color !== undefined) updates.theme_color = body.theme_color
   if (body.genres !== undefined) updates.genres = body.genres
 
+  // Update band_genres junction table if genre_ids provided
+  if (body.genre_ids !== undefined && Array.isArray(body.genre_ids)) {
+    // Remove existing band_genres
+    await client.from('band_genres').delete().eq('band_id', bandId)
+    // Insert new ones
+    if (body.genre_ids.length > 0) {
+      await client.from('band_genres').insert(
+        body.genre_ids.map((genreId: string) => ({ band_id: bandId, genre_id: genreId }))
+      )
+    }
+  }
+
   // Verification status
   if (body.is_verified !== undefined) {
     updates.is_verified = body.is_verified

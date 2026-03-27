@@ -2,15 +2,13 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-  // Verify admin access
   const user = await serverSupabaseUser(event)
   if (!user) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const client = await serverSupabaseServiceRole(event)
+  const client = serverSupabaseServiceRole(event)
 
-  // Check if user is admin
   const { data: profile } = await client
     .from('profiles')
     .select('role')
@@ -28,17 +26,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'orderedIds array is required' })
   }
 
-  // Update positions in batch
+  // Update featured_position in the genres table
   const updates = orderedIds.map((id: string, index: number) =>
     client
-      .from('featured_genres')
-      .update({ position: index })
+      .from('genres')
+      .update({ featured_position: index })
       .eq('id', id)
   )
 
   const results = await Promise.all(updates)
 
-  // Check for any errors
   const errors = results.filter((r) => r.error)
   if (errors.length > 0) {
     console.error('Failed to reorder featured genres:', errors)

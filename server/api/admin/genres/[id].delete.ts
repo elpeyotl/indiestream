@@ -1,4 +1,4 @@
-// DELETE /api/admin/featured-genres/[id] - Unfeature a genre
+// DELETE /api/admin/genres/[id] - Deactivate a genre (soft delete)
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
@@ -24,15 +24,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID required' })
   }
 
-  // Unfeature the genre (don't delete it from genres table)
+  // Soft delete: set is_active to false
   const { error } = await client
     .from('genres')
-    .update({ is_featured: false, featured_position: null })
+    .update({ is_active: false })
     .eq('id', id)
 
   if (error) {
-    console.error('Failed to unfeature genre:', error)
-    throw createError({ statusCode: 500, message: 'Failed to unfeature genre' })
+    console.error('Failed to deactivate genre:', error)
+    throw createError({ statusCode: 500, message: 'Failed to deactivate genre' })
   }
 
   return { success: true }

@@ -286,6 +286,22 @@ export default defineEventHandler(async (event) => {
         bandId = band.id
         results.artistsCreated++
         results.createdArtists.push({ id: band.id, name: artist.name, slug: artistSlug, avatarKey })
+
+        // Sync band_genres junction table
+        if (artist.genres.length > 0) {
+          const genreSlugs = artist.genres.map((g: string) =>
+            g.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+          )
+          const { data: matchedGenres } = await client
+            .from('genres')
+            .select('id')
+            .in('slug', genreSlugs)
+          if (matchedGenres && matchedGenres.length > 0) {
+            await client.from('band_genres').insert(
+              matchedGenres.map((g: any) => ({ band_id: band.id, genre_id: g.id }))
+            )
+          }
+        }
       }
 
       // Process albums for this artist

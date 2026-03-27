@@ -517,7 +517,7 @@ const loadBands = async (page = 1) => {
 const loadAllGenres = async () => {
   try {
     const data = await $fetch('/api/genres')
-    allGenres.value = data.genres.map((g: { name: string }) => g.name)
+    allGenres.value = data.genres.map((g: any) => g.name as string)
   } catch (e) {
     console.error('Failed to load genres:', e)
   }

@@ -281,28 +281,31 @@ export const useBandStore = defineStore('band', () => {
   }
 
   // Create band
-  const createBand = async (input: CreateBandInput): Promise<Band> => {
+  const createBand = async (input: CreateBandInput & { genre_ids?: string[] }): Promise<Band> => {
     if (!user.value) throw new Error('Must be logged in to create a band')
+
+    // Extract genre_ids (not part of bands table)
+    const { genre_ids, ...bandInput } = input
 
     const { data, error } = await supabase
       .from('bands')
       .insert({
         owner_id: user.value.id,
-        name: input.name,
-        slug: input.slug,
-        tagline: input.tagline || null,
-        bio: input.bio || null,
-        location: input.location || null,
-        genres: input.genres || [],
-        website: input.website || null,
-        instagram: input.instagram || null,
-        twitter: input.twitter || null,
-        facebook: input.facebook || null,
-        youtube: input.youtube || null,
-        spotify: input.spotify || null,
-        soundcloud: input.soundcloud || null,
-        bandcamp: input.bandcamp || null,
-        tiktok: input.tiktok || null,
+        name: bandInput.name,
+        slug: bandInput.slug,
+        tagline: bandInput.tagline || null,
+        bio: bandInput.bio || null,
+        location: bandInput.location || null,
+        genres: bandInput.genres || [],
+        website: bandInput.website || null,
+        instagram: bandInput.instagram || null,
+        twitter: bandInput.twitter || null,
+        facebook: bandInput.facebook || null,
+        youtube: bandInput.youtube || null,
+        spotify: bandInput.spotify || null,
+        soundcloud: bandInput.soundcloud || null,
+        bandcamp: bandInput.bandcamp || null,
+        tiktok: bandInput.tiktok || null,
       })
       .select()
       .single()
@@ -314,20 +317,32 @@ export const useBandStore = defineStore('band', () => {
       throw error
     }
 
+    const band = data as Band
+
+    // Insert band_genres junction records
+    if (genre_ids && genre_ids.length > 0) {
+      await supabase.from('band_genres').insert(
+        genre_ids.map((genreId) => ({ band_id: band.id, genre_id: genreId }))
+      )
+    }
+
     // Invalidate user bands cache
     userBandsFetchedAt = 0
 
-    return data as Band
+    return band
   }
 
   // Update band
-  const updateBand = async (bandId: string, input: UpdateBandInput): Promise<Band> => {
+  const updateBand = async (bandId: string, input: UpdateBandInput & { genre_ids?: string[] }): Promise<Band> => {
     if (!user.value) throw new Error('Must be logged in to update a band')
+
+    // Extract genre_ids from input (not part of bands table)
+    const { genre_ids, ...bandInput } = input
 
     const { data, error } = await supabase
       .from('bands')
       .update({
-        ...input,
+        ...bandInput,
         updated_at: new Date().toISOString(),
       })
       .eq('id', bandId)
@@ -338,6 +353,16 @@ export const useBandStore = defineStore('band', () => {
     if (error) throw error
 
     const band = data as Band
+
+    // Sync band_genres junction table if genre_ids provided
+    if (genre_ids !== undefined) {
+      await supabase.from('band_genres').delete().eq('band_id', bandId)
+      if (genre_ids.length > 0) {
+        await supabase.from('band_genres').insert(
+          genre_ids.map((genreId) => ({ band_id: bandId, genre_id: genreId }))
+        )
+      }
+    }
 
     // Update cache with new data
     const now = Date.now()

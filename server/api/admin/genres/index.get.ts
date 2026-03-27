@@ -1,4 +1,4 @@
-// GET /api/admin/featured-genres - List all featured genres for admin
+// GET /api/admin/genres - List all genres with artist counts
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
@@ -19,16 +19,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Admin access required' })
   }
 
-  // Get featured genres from the genres table
-  const { data: featuredGenres, error } = await client
+  // Get all genres (including inactive for admin)
+  const { data: genres, error } = await client
     .from('genres')
     .select('*')
-    .eq('is_featured', true)
-    .order('featured_position', { ascending: true })
+    .order('position', { ascending: true })
+    .order('name', { ascending: true })
 
   if (error) {
-    console.error('Failed to fetch featured genres:', error)
-    throw createError({ statusCode: 500, message: 'Failed to fetch featured genres' })
+    console.error('Failed to fetch genres:', error)
+    throw createError({ statusCode: 500, message: 'Failed to fetch genres' })
   }
 
   // Get artist counts per genre from band_genres
@@ -43,15 +43,10 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Map to legacy format for backward compat with admin UI
-  const enriched = (featuredGenres || []).map((g) => ({
-    id: g.id,
-    genre_slug: g.slug,
-    genre_name: g.name,
-    position: g.featured_position ?? 0,
-    featured_at: g.created_at,
+  const enriched = (genres || []).map((g) => ({
+    ...g,
     artistCount: genreCounts.get(g.id) || 0,
   }))
 
-  return { featuredGenres: enriched }
+  return { genres: enriched }
 })
