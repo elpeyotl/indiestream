@@ -221,8 +221,12 @@ export const useUploadWizard = () => {
 
   // Upload and process cover image (resizes to 600x600)
   const uploadProcessedCover = async (file: File, bandId: string, albumId: string): Promise<string> => {
+    // Pre-resize on client to avoid exceeding serverless payload limits
+    const { resizeCover } = useImageResize()
+    const resizedFile = await resizeCover(file)
+
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', resizedFile)
     formData.append('type', 'cover')
     formData.append('key', `covers/${bandId}/${albumId}/cover.jpg`)
 

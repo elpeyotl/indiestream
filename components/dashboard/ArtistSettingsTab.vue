@@ -406,9 +406,13 @@ const handleAvatarSelect = async (e: Event) => {
     // Create preview
     avatarPreview.value = URL.createObjectURL(file)
 
+    // Pre-resize on client to avoid exceeding serverless payload limits
+    const { resizeAvatar } = useImageResize()
+    const resizedFile = await resizeAvatar(file)
+
     // Upload and process image (resizes to square)
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', resizedFile)
     formData.append('type', 'avatar')
     formData.append('key', `avatars/${props.band.id}/avatar.jpg`)
 
@@ -464,9 +468,13 @@ const handleBannerSelect = async (e: Event) => {
     // Create preview
     bannerPreview.value = URL.createObjectURL(file)
 
+    // Pre-resize on client to avoid exceeding serverless payload limits
+    const { resizeBanner } = useImageResize()
+    const resizedFile = await resizeBanner(file)
+
     // Upload and process image (resizes to 1500x500)
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', resizedFile)
     formData.append('type', 'banner')
     formData.append('key', `banners/${props.band.id}/banner.jpg`)
 

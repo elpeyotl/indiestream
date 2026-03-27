@@ -415,8 +415,12 @@ const handleSubmit = async () => {
 
     // Then upload the avatar
     try {
+      // Pre-resize on client to avoid exceeding serverless payload limits
+      const { resizeAvatar } = useImageResize()
+      const resizedFile = await resizeAvatar(avatarFile.value)
+
       const formData = new FormData()
-      formData.append('file', avatarFile.value)
+      formData.append('file', resizedFile)
       formData.append('type', 'avatar')
       formData.append('key', `avatars/${band.id}/avatar.jpg`)
 
