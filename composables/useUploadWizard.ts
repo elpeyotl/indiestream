@@ -259,7 +259,7 @@ export const useUploadWizard = () => {
       lyrics_language: '',
       isrc_platform_assigned: false,
       generatingIsrc: false,
-      showCredits: false,
+      showCredits: true,
       fetchingIsrc: false,
       fetchingIswc: false,
     }
