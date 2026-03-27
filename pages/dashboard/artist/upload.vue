@@ -116,6 +116,9 @@ const deezerInitialQuery = ref('')
 // Check for edit mode query param
 const editAlbumId = computed(() => route.query.edit as string | undefined)
 
+// Check for band pre-selection query param
+const preselectedBandId = computed(() => route.query.band as string | undefined)
+
 // Load bands for create mode using useLazyAsyncData
 const { data: bands, pending: bandsLoading } = await useLazyAsyncData(
   'upload-bands',
@@ -126,7 +129,17 @@ const { data: bands, pending: bandsLoading } = await useLazyAsyncData(
     const loadedBands = await getUserBands()
     await resolveAvatarUrls(loadedBands)
     // Only show active bands (pending/suspended can't upload)
-    return loadedBands.filter(b => b.status === 'active')
+    const activeBands = loadedBands.filter(b => b.status === 'active')
+
+    // Auto-select band if passed via query param
+    if (preselectedBandId.value && !state.value.selectedBand) {
+      const match = activeBands.find(b => b.id === preselectedBandId.value)
+      if (match) {
+        state.value.selectedBand = match
+      }
+    }
+
+    return activeBands
   },
   {
     server: false,

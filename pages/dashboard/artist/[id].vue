@@ -89,7 +89,7 @@
 
       <UButton
         color="violet"
-        :to="band.status === 'active' ? '/dashboard/artist/upload' : undefined"
+        :to="band.status === 'active' ? `/dashboard/artist/upload?band=${band.id}` : undefined"
         :disabled="band.status !== 'active'"
         :title="band.status !== 'active' ? 'You can upload music once your profile is approved' : ''"
       >
