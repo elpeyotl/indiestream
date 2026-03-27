@@ -6,46 +6,17 @@
     </div>
 
     <template v-else>
-      <!-- Stripe Connect Setup Banner -->
-      <div
-        v-if="earningsData && earningsData.stripeStatus !== 'active'"
-        class="p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/20"
-      >
-        <div class="flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center shrink-0">
-              <UIcon name="i-heroicons-banknotes" class="w-5 h-5 text-yellow-400" />
-            </div>
-            <div class="min-w-0">
-              <h3 class="font-semibold text-zinc-100 text-sm">Set up payouts to start earning</h3>
-              <p class="text-xs text-zinc-400">
-                {{ earningsData.stripeStatus === 'pending' ? 'Complete your Stripe account setup to receive payouts.' : 'Connect your Stripe account to receive revenue from your music.' }}
-              </p>
-            </div>
-          </div>
-          <UButton
-            color="yellow"
-            variant="soft"
-            size="sm"
-            to="/dashboard/earnings"
-            class="shrink-0"
-          >
-            Set Up Payouts
-          </UButton>
-        </div>
-      </div>
-
-      <!-- Payout Settings Link (when connected) -->
-      <UCard v-else class="bg-zinc-900/50 border-zinc-800">
+      <!-- Payout Settings Link -->
+      <UCard class="bg-zinc-900/50 border-zinc-800">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-green-500/20">
-              <UIcon name="i-heroicons-check-circle" class="w-6 h-6 text-green-400" />
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-violet-500/20">
+              <UIcon name="i-heroicons-banknotes" class="w-6 h-6 text-violet-400" />
             </div>
             <div>
-              <h3 class="font-semibold text-zinc-100">Payouts Enabled</h3>
+              <h3 class="font-semibold text-zinc-100">Payout Settings</h3>
               <p class="text-sm text-zinc-400">
-                Your Stripe account is connected. View combined earnings across all your artists.
+                Manage your Stripe account and view combined earnings across all your artists.
               </p>
             </div>
           </div>

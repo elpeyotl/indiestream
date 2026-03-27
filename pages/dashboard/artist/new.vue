@@ -138,46 +138,11 @@
         </UFormGroup>
 
         <!-- Genres -->
-        <UFormGroup label="Genres" hint="Optional - Add up to 5 genres">
-          <div class="relative">
-            <UInput
-              v-model="genreInput"
-              placeholder="Search genres..."
-              size="lg"
-              :disabled="loading || form.genre_ids.length >= 5"
-              @input="searchGenres"
-              @keydown.enter.prevent="selectFirstSuggestion"
-              @keydown.escape="genreSuggestions = []"
-            />
-            <div
-              v-if="genreSuggestions.length > 0"
-              class="absolute z-50 top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-lg max-h-48 overflow-y-auto"
-            >
-              <button
-                v-for="suggestion in genreSuggestions"
-                :key="suggestion.id"
-                type="button"
-                class="w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-800 first:rounded-t-lg last:rounded-b-lg"
-                @click="selectGenre(suggestion)"
-              >
-                {{ suggestion.name }}
-              </button>
-            </div>
-          </div>
-          <div v-if="form.genre_ids.length" class="flex flex-wrap gap-2 mt-2">
-            <UBadge
-              v-for="(genreId, index) in form.genre_ids"
-              :key="genreId"
-              color="violet"
-              variant="soft"
-              class="cursor-pointer"
-              @click="removeGenre(index)"
-            >
-              {{ getGenreName(genreId) }}
-              <UIcon name="i-heroicons-x-mark" class="w-3 h-3 ml-1" />
-            </UBadge>
-          </div>
-        </UFormGroup>
+        <GenrePicker
+          v-model="form.genre_ids"
+          :disabled="loading"
+          hint="Optional - Add up to 5 genres"
+        />
 
         <!-- Social Links Section -->
         <div class="border-t border-zinc-800 pt-6 mt-2">
@@ -339,7 +304,6 @@ const form = reactive({
   slug: '',
   bio: '',
   location: '',
-  genres: [] as string[],  // kept for backward compat
   genre_ids: [] as string[],
   // Social links
   website: '',
@@ -352,18 +316,6 @@ const form = reactive({
   tiktok: '',
 })
 
-const genreInput = ref('')
-const allGenres = ref<Array<{ id: string; name: string; slug: string }>>([])
-const genreSuggestions = ref<Array<{ id: string; name: string; slug: string }>>([])
-
-onMounted(async () => {
-  try {
-    const data = await $fetch<{ genres: Array<{ id: string; name: string; slug: string }> }>('/api/genres/list')
-    allGenres.value = data.genres
-  } catch (e) {
-    console.error('Failed to load genres:', e)
-  }
-})
 const loading = ref(false)
 const slugStatus = ref<'idle' | 'checking' | 'available' | 'taken'>('idle')
 
@@ -437,44 +389,6 @@ const handleAvatarSelect = (e: Event) => {
   avatarPreview.value = URL.createObjectURL(file)
 }
 
-const searchGenres = () => {
-  const query = genreInput.value.toLowerCase().trim()
-  if (!query) {
-    genreSuggestions.value = []
-    return
-  }
-  genreSuggestions.value = allGenres.value
-    .filter(g =>
-      g.name.toLowerCase().includes(query) &&
-      !form.genre_ids.includes(g.id)
-    )
-    .slice(0, 8)
-}
-
-const selectGenre = (genre: { id: string; name: string }) => {
-  if (form.genre_ids.length < 5 && !form.genre_ids.includes(genre.id)) {
-    form.genre_ids.push(genre.id)
-    form.genres.push(genre.name)
-  }
-  genreInput.value = ''
-  genreSuggestions.value = []
-}
-
-const selectFirstSuggestion = () => {
-  if (genreSuggestions.value.length > 0) {
-    selectGenre(genreSuggestions.value[0])
-  }
-}
-
-const removeGenre = (index: number) => {
-  form.genre_ids.splice(index, 1)
-  form.genres.splice(index, 1)
-}
-
-const getGenreName = (genreId: string): string => {
-  return allGenres.value.find(g => g.id === genreId)?.name || ''
-}
-
 const handleSubmit = async () => {
   if (!isValid.value || !avatarFile.value) return
 
@@ -487,7 +401,6 @@ const handleSubmit = async () => {
       slug: form.slug.trim(),
       bio: form.bio.trim() || undefined,
       location: form.location.trim() || undefined,
-      genres: form.genres,
       genre_ids: form.genre_ids,
       // Social links
       website: form.website.trim() || undefined,

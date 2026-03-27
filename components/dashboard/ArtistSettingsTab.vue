@@ -254,76 +254,11 @@
       </div>
 
       <!-- Genres -->
-      <UFormGroup label="Genres">
-        <div class="relative">
-          <UInput
-            v-model="genreInput"
-            placeholder="Search genres..."
-            size="lg"
-            :disabled="saving || editForm.genre_ids.length >= 5"
-            @input="searchGenres"
-            @keydown.enter.prevent="selectFirstSuggestion"
-            @keydown.escape="genreSuggestions = []"
-          />
-          <!-- Genre suggestions dropdown -->
-          <div
-            v-if="genreSuggestions.length > 0"
-            class="absolute z-50 top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-lg max-h-48 overflow-y-auto"
-          >
-            <button
-              v-for="suggestion in genreSuggestions"
-              :key="suggestion.id"
-              type="button"
-              class="w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-800 first:rounded-t-lg last:rounded-b-lg"
-              @click="selectGenre(suggestion)"
-            >
-              {{ suggestion.name }}
-            </button>
-          </div>
-        </div>
-        <div v-if="editForm.genre_ids.length" class="flex flex-wrap gap-2 mt-2">
-          <UBadge
-            v-for="(genreId, index) in editForm.genre_ids"
-            :key="genreId"
-            color="violet"
-            variant="soft"
-            class="cursor-pointer"
-            @click="removeGenre(index)"
-          >
-            {{ getGenreName(genreId) }}
-            <UIcon name="i-heroicons-x-mark" class="w-3 h-3 ml-1" />
-          </UBadge>
-        </div>
-        <div class="flex items-center justify-between mt-2">
-          <p class="text-xs text-zinc-500">Up to 5 genres.</p>
-          <button
-            type="button"
-            class="text-xs text-violet-400 hover:text-violet-300"
-            @click="showSuggestGenre = !showSuggestGenre"
-          >
-            Don't see your genre? Suggest one
-          </button>
-        </div>
-        <!-- Suggest genre inline form -->
-        <div v-if="showSuggestGenre" class="mt-2 flex gap-2">
-          <UInput
-            v-model="suggestGenreName"
-            placeholder="Genre name..."
-            size="sm"
-            class="flex-1"
-          />
-          <UButton
-            color="violet"
-            variant="soft"
-            size="sm"
-            :loading="suggestingGenre"
-            :disabled="!suggestGenreName.trim()"
-            @click="submitGenreSuggestion"
-          >
-            Suggest
-          </UButton>
-        </div>
-      </UFormGroup>
+      <GenrePicker
+        v-model="editForm.genre_ids"
+        :band-id="band.id"
+        :disabled="saving"
+      />
 
       <!-- Theme Color -->
       <UFormGroup label="Theme Color">
@@ -381,12 +316,6 @@ const { getStreamUrl } = albumStore
 
 // State
 const saving = ref(false)
-const genreInput = ref('')
-const allGenres = ref<Array<{ id: string; name: string; slug: string }>>([])
-const genreSuggestions = ref<Array<{ id: string; name: string; slug: string }>>([])
-const showSuggestGenre = ref(false)
-const suggestGenreName = ref('')
-const suggestingGenre = ref(false)
 
 // Avatar upload
 const avatarInput = ref<HTMLInputElement | null>(null)
@@ -439,21 +368,6 @@ watch(() => props.band, (newBand) => {
   }
 }, { immediate: true })
 
-// Load genres on mount for autocomplete
-onMounted(() => {
-  loadAllGenres()
-})
-
-// Load master genre list
-const loadAllGenres = async () => {
-  try {
-    const data = await $fetch<{ genres: Array<{ id: string; name: string; slug: string }> }>('/api/genres/list')
-    allGenres.value = data.genres
-  } catch (e) {
-    console.error('Failed to load genres:', e)
-  }
-}
-
 // Load current band genres from junction table
 const loadBandGenres = async (bandId: string) => {
   try {
@@ -465,67 +379,6 @@ const loadBandGenres = async (bandId: string) => {
     editForm.genre_ids = (data || []).map((bg: any) => bg.genre_id)
   } catch (e) {
     console.error('Failed to load band genres:', e)
-  }
-}
-
-const searchGenres = () => {
-  const query = genreInput.value.toLowerCase().trim()
-  if (!query) {
-    genreSuggestions.value = []
-    return
-  }
-  genreSuggestions.value = allGenres.value
-    .filter(g =>
-      g.name.toLowerCase().includes(query) &&
-      !editForm.genre_ids.includes(g.id)
-    )
-    .slice(0, 8)
-}
-
-const selectGenre = (genre: { id: string; name: string }) => {
-  if (editForm.genre_ids.length < 5 && !editForm.genre_ids.includes(genre.id)) {
-    editForm.genre_ids.push(genre.id)
-    // Also keep old genres array in sync for backward compat
-    editForm.genres.push(genre.name)
-  }
-  genreInput.value = ''
-  genreSuggestions.value = []
-}
-
-const selectFirstSuggestion = () => {
-  if (genreSuggestions.value.length > 0) {
-    selectGenre(genreSuggestions.value[0])
-  }
-}
-
-const removeGenre = (index: number) => {
-  editForm.genre_ids.splice(index, 1)
-  editForm.genres.splice(index, 1)
-}
-
-// Get genre name by ID for display
-const getGenreName = (genreId: string): string => {
-  return allGenres.value.find(g => g.id === genreId)?.name || ''
-}
-
-// Suggest a new genre
-const submitGenreSuggestion = async () => {
-  const name = suggestGenreName.value.trim()
-  if (!name || !props.band) return
-
-  suggestingGenre.value = true
-  try {
-    await $fetch('/api/genres/suggest', {
-      method: 'POST',
-      body: { name, bandId: props.band.id },
-    })
-    toast.add({ title: 'Genre suggested', description: 'We\'ll review your suggestion shortly.', color: 'green', icon: 'i-heroicons-check-circle' })
-    suggestGenreName.value = ''
-    showSuggestGenre.value = false
-  } catch (e: any) {
-    toast.add({ title: 'Suggestion failed', description: e.data?.message || 'Failed to submit suggestion', color: 'red', icon: 'i-heroicons-exclamation-triangle' })
-  } finally {
-    suggestingGenre.value = false
   }
 }
 
