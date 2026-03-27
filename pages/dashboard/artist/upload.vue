@@ -529,29 +529,47 @@ const startUpload = async () => {
       state.value.step = 3
 
     } else {
-      // CREATE MODE: Create new album
-      album = await createAlbum({
-        band_id: state.value.selectedBand.id,
-        title: state.value.albumForm.title,
-        description: state.value.albumForm.description || undefined,
-        release_type: state.value.albumForm.release_type,
-        release_date: state.value.albumForm.release_date || undefined,
-        label_name: state.value.albumForm.label_name || undefined,
-        // Purchase settings
-        purchasable: state.value.albumForm.purchasable,
-        price_cents: state.value.albumForm.price_cents,
-        pay_what_you_want: state.value.albumForm.pay_what_you_want,
-        minimum_price_cents: state.value.albumForm.minimum_price_cents,
-      })
+      // CREATE MODE: Reuse existing draft album if retrying, otherwise create new
+      if (state.value.createdAlbum) {
+        album = state.value.createdAlbum
+        // Update metadata in case user changed it
+        await updateAlbum(album.id, {
+          title: state.value.albumForm.title,
+          description: state.value.albumForm.description || null,
+          release_type: state.value.albumForm.release_type,
+          release_date: state.value.albumForm.release_date || null,
+          label_name: state.value.albumForm.label_name || null,
+          purchasable: state.value.albumForm.purchasable,
+          price_cents: state.value.albumForm.price_cents,
+          pay_what_you_want: state.value.albumForm.pay_what_you_want,
+          minimum_price_cents: state.value.albumForm.minimum_price_cents,
+        })
+      } else {
+        album = await createAlbum({
+          band_id: state.value.selectedBand.id,
+          title: state.value.albumForm.title,
+          description: state.value.albumForm.description || undefined,
+          release_type: state.value.albumForm.release_type,
+          release_date: state.value.albumForm.release_date || undefined,
+          label_name: state.value.albumForm.label_name || undefined,
+          // Purchase settings
+          purchasable: state.value.albumForm.purchasable,
+          price_cents: state.value.albumForm.price_cents,
+          pay_what_you_want: state.value.albumForm.pay_what_you_want,
+          minimum_price_cents: state.value.albumForm.minimum_price_cents,
+        })
+      }
 
-      // Upload and process cover art
-      const coverKey = await uploadProcessedCover(state.value.coverFile!, state.value.selectedBand.id, album.id)
-      await updateAlbum(album.id, { cover_key: coverKey })
+      // Upload and process cover art (skip on retry if album already has cover)
+      if (state.value.coverFile && !album.cover_key) {
+        const coverKey = await uploadProcessedCover(state.value.coverFile, state.value.selectedBand.id, album.id)
+        await updateAlbum(album.id, { cover_key: coverKey })
+      }
 
-      // Create tracks and upload audio files
+      // Create tracks and upload audio files (skip already uploaded on retry)
       for (let i = 0; i < state.value.tracks.length; i++) {
         const track = state.value.tracks[i]
-        if (!track.file) continue
+        if (!track.file || track.uploaded) continue
 
         track.uploading = true
 
