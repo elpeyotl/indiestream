@@ -1811,6 +1811,7 @@ export type Database = {
           isrc_platform_assigned: boolean | null
           iswc: string | null
           lyrics: string | null
+          lyrics_language: string | null
           moderated_at: string | null
           moderated_by: string | null
           moderation_notes: string | null
@@ -1852,6 +1853,7 @@ export type Database = {
           isrc_platform_assigned?: boolean | null
           iswc?: string | null
           lyrics?: string | null
+          lyrics_language?: string | null
           moderated_at?: string | null
           moderated_by?: string | null
           moderation_notes?: string | null
@@ -1893,6 +1895,7 @@ export type Database = {
           isrc_platform_assigned?: boolean | null
           iswc?: string | null
           lyrics?: string | null
+          lyrics_language?: string | null
           moderated_at?: string | null
           moderated_by?: string | null
           moderation_notes?: string | null

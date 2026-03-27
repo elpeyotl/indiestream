@@ -390,7 +390,7 @@ export const useUploadWizard = () => {
           name: c.name,
           ipi_number: c.ipi_number || '',
         })),
-        lyrics_language: (track as any).lyrics_language || '',
+        lyrics_language: track.lyrics_language || '',
         isrc_platform_assigned: track.isrc_platform_assigned || false,
         generatingIsrc: false,
         showCredits: credits.length > 0,

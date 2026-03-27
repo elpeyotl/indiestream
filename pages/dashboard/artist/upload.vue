@@ -414,6 +414,7 @@ const startUpload = async () => {
             isrc: track.isrc || undefined,
             iswc: track.iswc || undefined,
             is_cover: track.is_cover,
+            lyrics_language: track.lyrics_language || null,
             spotify_track_id: track.spotify_track_id || undefined,
             musicbrainz_work_id: track.musicbrainz_work_id || undefined,
           })
@@ -440,6 +441,7 @@ const startUpload = async () => {
               isrc: track.isrc || undefined,
               iswc: track.iswc || undefined,
               is_cover: track.is_cover,
+              lyrics_language: track.lyrics_language || undefined,
               spotify_track_id: track.spotify_track_id || undefined,
               musicbrainz_work_id: track.musicbrainz_work_id || undefined,
               isrc_platform_assigned: track.isrc_platform_assigned || undefined,
@@ -586,6 +588,7 @@ const startUpload = async () => {
             isrc: track.isrc || undefined,
             iswc: track.iswc || undefined,
             is_cover: track.is_cover,
+            lyrics_language: track.lyrics_language || undefined,
             spotify_track_id: track.spotify_track_id || undefined,
             musicbrainz_work_id: track.musicbrainz_work_id || undefined,
             isrc_platform_assigned: track.isrc_platform_assigned || undefined,

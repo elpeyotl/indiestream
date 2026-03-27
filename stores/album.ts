@@ -35,7 +35,7 @@ export type CreateAlbumInput = Pick<AlbumInsert, 'band_id' | 'title' | 'descript
 
 export type UpdateAlbumInput = AlbumUpdate
 
-export type CreateTrackInput = Pick<TrackInsert, 'album_id' | 'band_id' | 'title' | 'track_number' | 'duration_seconds' | 'is_explicit' | 'lyrics' | 'isrc' | 'iswc' | 'is_cover' | 'spotify_track_id' | 'musicbrainz_work_id' | 'isrc_platform_assigned'>
+export type CreateTrackInput = Pick<TrackInsert, 'album_id' | 'band_id' | 'title' | 'track_number' | 'duration_seconds' | 'is_explicit' | 'lyrics' | 'lyrics_language' | 'isrc' | 'iswc' | 'is_cover' | 'spotify_track_id' | 'musicbrainz_work_id' | 'isrc_platform_assigned'>
 
 export type UpdateTrackInput = TrackUpdate
 
@@ -558,6 +558,7 @@ export const useAlbumStore = defineStore('album', () => {
         isrc: input.isrc || null,
         iswc: input.iswc || null,
         is_cover: input.is_cover || false,
+        lyrics_language: input.lyrics_language || null,
         spotify_track_id: input.spotify_track_id || null,
         musicbrainz_work_id: input.musicbrainz_work_id || null,
       })
