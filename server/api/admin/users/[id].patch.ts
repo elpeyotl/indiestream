@@ -1,5 +1,5 @@
 // Admin Update User API - Update user role
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 interface UpdateUserRequest {
   role?: 'user' | 'band' | 'admin'
@@ -41,8 +41,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Cannot remove your own admin role' })
   }
 
-  // Update user profile
-  const { data, error } = await client
+  // Update user profile (use service role to bypass RLS)
+  const serviceClient = serverSupabaseServiceRole(event)
+  const { data, error } = await serviceClient
     .from('profiles')
     .update({
       role: body.role,
