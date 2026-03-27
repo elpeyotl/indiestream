@@ -9,7 +9,7 @@ const toast = useToast()
 const handleSetup = async () => {
   loading.value = true
   try {
-    if (status.value === 'pending') {
+    if (status.value === 'pending' || status.value === 'restricted') {
       await getAccountLink()
     } else {
       await startOnboarding()
@@ -34,7 +34,7 @@ onMounted(async () => {
 
 <template>
   <div
-    v-if="status && status !== 'active'"
+    v-if="status && status !== 'active' && status !== 'verifying'"
     class="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/20"
   >
     <div class="flex items-center justify-between gap-4">
@@ -43,9 +43,11 @@ onMounted(async () => {
           <UIcon name="i-heroicons-banknotes" class="w-5 h-5 text-yellow-400" />
         </div>
         <div class="min-w-0">
-          <h3 class="font-semibold text-zinc-100 text-sm">Set up payouts to start earning</h3>
+          <h3 class="font-semibold text-zinc-100 text-sm">
+            {{ status === 'restricted' ? 'Your payout account needs attention' : 'Set up payouts to start earning' }}
+          </h3>
           <p class="text-xs text-zinc-400 truncate">
-            {{ status === 'pending' ? 'Complete your Stripe account setup to receive payouts.' : 'Connect your Stripe account to receive revenue from your music.' }}
+            {{ status === 'pending' ? 'Complete your Stripe account setup to receive payouts.' : status === 'restricted' ? 'Please update your Stripe information to continue receiving payouts.' : 'Connect your Stripe account to receive revenue from your music.' }}
           </p>
         </div>
       </div>
@@ -57,7 +59,7 @@ onMounted(async () => {
         @click="handleSetup"
         class="shrink-0"
       >
-        {{ status === 'pending' ? 'Complete Setup' : 'Connect Stripe' }}
+        {{ status === 'pending' || status === 'restricted' ? 'Complete Setup' : 'Connect Stripe' }}
       </UButton>
     </div>
   </div>

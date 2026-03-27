@@ -1,7 +1,9 @@
 // Get combined earnings across all user's bands
+import Stripe from 'stripe'
 import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig()
   const user = await serverSupabaseUser(event)
 
   if (!user) {
@@ -25,6 +27,36 @@ export default defineEventHandler(async (event) => {
       statusCode: 404,
       message: 'Profile not found',
     })
+  }
+
+  // Refresh Stripe status from Stripe API if the user has an account
+  if (profile.stripe_account_id) {
+    try {
+      const stripe = new Stripe(config.stripeSecretKey, {
+        apiVersion: '2025-12-15.clover',
+      })
+      const account = await stripe.accounts.retrieve(profile.stripe_account_id)
+
+      let freshStatus = 'pending'
+      if (account.details_submitted && account.payouts_enabled) {
+        freshStatus = 'active'
+      } else if (account.requirements?.disabled_reason) {
+        freshStatus = 'restricted'
+      } else if (account.details_submitted) {
+        freshStatus = 'verifying'
+      }
+
+      if (freshStatus !== profile.stripe_account_status) {
+        await client
+          .from('profiles')
+          .update({ stripe_account_status: freshStatus })
+          .eq('id', user.id)
+        profile.stripe_account_status = freshStatus
+      }
+    } catch (e) {
+      // If Stripe call fails, fall back to DB status
+      console.error('Failed to refresh Stripe status:', e)
+    }
   }
 
   // Get all user's bands with their balances

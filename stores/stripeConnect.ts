@@ -2,7 +2,7 @@
 
 // Types
 export interface ConnectStatus {
-  status: 'not_connected' | 'pending' | 'active' | 'restricted'
+  status: 'not_connected' | 'pending' | 'active' | 'restricted' | 'verifying'
   accountId: string | null
   payoutsEnabled: boolean
   chargesEnabled: boolean

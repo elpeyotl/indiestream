@@ -15,17 +15,17 @@
             <div
               class="w-12 h-12 rounded-xl flex items-center justify-center"
               :class="{
-                'bg-green-500/20': earnings.stripeStatus === 'active',
+                'bg-green-500/20': earnings.stripeStatus === 'active' || earnings.stripeStatus === 'verifying',
                 'bg-yellow-500/20': earnings.stripeStatus === 'pending',
                 'bg-zinc-800': earnings.stripeStatus === 'not_connected',
                 'bg-red-500/20': earnings.stripeStatus === 'restricted',
               }"
             >
               <UIcon
-                :name="earnings.stripeStatus === 'active' ? 'i-heroicons-check-circle' : earnings.stripeStatus === 'pending' ? 'i-heroicons-clock' : 'i-heroicons-credit-card'"
+                :name="earnings.stripeStatus === 'active' ? 'i-heroicons-check-circle' : earnings.stripeStatus === 'verifying' ? 'i-heroicons-clock' : earnings.stripeStatus === 'pending' ? 'i-heroicons-clock' : 'i-heroicons-credit-card'"
                 class="w-6 h-6"
                 :class="{
-                  'text-green-400': earnings.stripeStatus === 'active',
+                  'text-green-400': earnings.stripeStatus === 'active' || earnings.stripeStatus === 'verifying',
                   'text-yellow-400': earnings.stripeStatus === 'pending',
                   'text-zinc-400': earnings.stripeStatus === 'not_connected',
                   'text-red-400': earnings.stripeStatus === 'restricted',
@@ -34,11 +34,14 @@
             </div>
             <div>
               <h3 class="font-semibold text-zinc-100">
-                {{ earnings.stripeStatus === 'active' ? 'Payouts Enabled' : earnings.stripeStatus === 'pending' ? 'Setup Incomplete' : 'Connect Stripe' }}
+                {{ earnings.stripeStatus === 'active' ? 'Payouts Enabled' : earnings.stripeStatus === 'verifying' ? 'Verification in Progress' : earnings.stripeStatus === 'pending' ? 'Setup Incomplete' : earnings.stripeStatus === 'restricted' ? 'Action Required' : 'Connect Stripe' }}
               </h3>
               <p class="text-sm text-zinc-400">
                 <template v-if="earnings.stripeStatus === 'active'">
                   Your Stripe account is connected. Payouts are sent to all your artists from this single account.
+                </template>
+                <template v-else-if="earnings.stripeStatus === 'verifying'">
+                  Your Stripe account setup is complete. Stripe is verifying your information — this usually takes a few minutes.
                 </template>
                 <template v-else-if="earnings.stripeStatus === 'pending'">
                   Complete your Stripe account setup to start receiving payouts.
@@ -53,12 +56,12 @@
             </div>
           </div>
           <UButton
-            v-if="earnings.stripeStatus !== 'active'"
+            v-if="earnings.stripeStatus !== 'active' && earnings.stripeStatus !== 'verifying'"
             color="violet"
             :loading="connectLoading"
             @click="handleStripeConnect"
           >
-            {{ earnings.stripeStatus === 'pending' ? 'Complete Setup' : 'Set Up Payouts' }}
+            {{ earnings.stripeStatus === 'pending' || earnings.stripeStatus === 'restricted' ? 'Complete Setup' : 'Set Up Payouts' }}
           </UButton>
         </div>
       </UCard>
@@ -277,7 +280,7 @@ const formatDate = (dateStr: string): string => {
 const handleStripeConnect = async () => {
   connectLoading.value = true
   try {
-    if (earnings.value?.stripeStatus === 'pending') {
+    if (earnings.value?.stripeStatus === 'pending' || earnings.value?.stripeStatus === 'restricted') {
       await getAccountLink()
     } else {
       await startOnboarding()

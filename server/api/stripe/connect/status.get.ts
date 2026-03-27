@@ -52,6 +52,9 @@ export default defineEventHandler(async (event) => {
       status = 'active'
     } else if (account.requirements?.disabled_reason) {
       status = 'restricted'
+    } else if (account.details_submitted) {
+      // Onboarding complete but Stripe hasn't enabled payouts yet (verification in progress)
+      status = 'verifying'
     }
 
     // Update status in database if it changed
