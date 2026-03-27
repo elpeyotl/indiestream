@@ -80,6 +80,7 @@
 - [x] Composer credits with splits (name, role, IPI number, percentage)
 - [x] Cover song flagging
 - [x] Rights confirmation on publish
+- [x] Lyrics language field (ISO 639-1 codes + Instrumental option, with Author credit validation)
 
 #### User Features
 - [x] User profile page (public profiles with followed artists, settings page with avatar upload)
@@ -103,6 +104,7 @@
 - [x] Artist verification system (admin can verify artists with badge)
 - [x] Revenue dashboard (subscriptions, payouts, charts)
 - [x] Growth metrics over time (subscriber growth, artist growth charts)
+- [x] Audit logging system (track all admin actions with timestamp, user, old/new values)
 
 #### Platform
 - [ ] Mobile responsive improvements
@@ -133,7 +135,7 @@
 - [ ] Push notifications
 
 #### Discovery
-- [x] Genre pages (browse by genre, genre detail pages with artist filtering)
+- [x] Genre pages (browse by genre, genre detail pages with artist filtering, featured genres system)
 - [x] Curated playlists
 - [ ] "Similar artists" recommendations
 - [x] Charts/trending (top tracks, albums, artists by period)
@@ -191,6 +193,10 @@ All migrations should be run in Supabase SQL Editor in order:
 32. `20260125000000_moderation_queue_unique_track.sql` - Unique track constraint on moderation queue
 33. `20260125000001_pending_update_status.sql` - Add pending_update status for re-review
 34. `20260125000002_pending_update_rls.sql` - RLS for pending_update status
+35. `20260202000000_featured_playlists.sql` - Featured playlists system
+36. `20260207000000_featured_genres.sql` - Admin-controlled featured genres
+37. `20260207000001_lyrics_language.sql` - Lyrics language field for tracks
+38. `20260208000000_admin_audit_logs.sql` - Admin audit logging table
 
 ---
 
