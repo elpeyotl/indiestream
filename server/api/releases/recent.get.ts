@@ -1,5 +1,5 @@
 // GET /api/releases/recent - All new releases chronologically (NOT by popularity)
-import { serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const client = await serverSupabaseClient(event)
@@ -7,6 +7,15 @@ export default defineEventHandler(async (event) => {
   const limit = Math.min(parseInt(query.limit as string) || 20, 50)
   const offset = parseInt(query.offset as string) || 0
   const days = parseInt(query.days as string) || 90 // Default to 90 days for full page
+
+  // Check if moderation filtering is enabled
+  const serviceClient = await serverSupabaseServiceRole(event)
+  const { data: moderationSetting } = await serviceClient
+    .from('platform_settings')
+    .select('value')
+    .eq('key', 'require_track_moderation')
+    .single()
+  const requireModeration = moderationSetting?.value === true || moderationSetting?.value === 'true'
 
   // Calculate date threshold
   const dateThreshold = new Date()
@@ -42,8 +51,22 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Failed to fetch releases' })
   }
 
+  let filteredAlbums = albums || []
+
+  // Filter out albums with no approved tracks when moderation is enabled
+  if (requireModeration && filteredAlbums.length > 0) {
+    const albumIds = filteredAlbums.map((a) => a.id)
+    const { data: approvedTracks } = await client
+      .from('tracks')
+      .select('album_id')
+      .in('album_id', albumIds)
+      .eq('moderation_status', 'approved')
+    const albumsWithApprovedTracks = new Set((approvedTracks || []).map((t) => t.album_id))
+    filteredAlbums = filteredAlbums.filter((a) => albumsWithApprovedTracks.has(a.id))
+  }
+
   // Transform to match expected format
-  const transformedAlbums = (albums || []).map((album) => ({
+  const transformedAlbums = filteredAlbums.map((album) => ({
     id: album.id,
     title: album.title,
     slug: album.slug,
