@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
       message: 'Unauthorized'
     })
   }
-  const { fileName, contentType } = await readBody(event)
+  const { contentType } = await readBody(event)
 
   // Validate content type
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
@@ -20,8 +20,17 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Whitelist the extension — a raw filename could inject slashes and let the
+  // resulting key escape the avatars/ prefix.
+  const allowedExt: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+  }
+  const ext = allowedExt[contentType]
+
   // Generate unique key for user avatar
-  const ext = fileName.split('.').pop()
   const avatarKey = `avatars/${user.id}-${Date.now()}.${ext}`
 
   // Get presigned upload URL using existing utility

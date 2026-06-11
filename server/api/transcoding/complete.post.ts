@@ -15,13 +15,8 @@ interface CompleteRequest {
 }
 
 export default defineEventHandler(async (event) => {
-  // Verify this is an authorized request
-  const authHeader = getHeader(event, 'x-transcoding-secret')
-  const config = useRuntimeConfig()
-
-  if (authHeader !== config.transcodingSecret) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  // Verify this is an authorized request (worker shared secret).
+  requireTranscodingAuth(event)
 
   const body = await readBody<CompleteRequest>(event)
   const { jobId, trackId, success, streamingAudioKey, hifiAudioKey, archiveAudioKey, originalAudioKey, error } = body

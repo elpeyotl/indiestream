@@ -113,10 +113,21 @@ export const useAdminUtils = () => {
   }
 
   // Format social URL (handle both usernames and full URLs)
+  // Only allow http(s) URLs to reach an href — otherwise a stored value like
+  // `javascript:...` would execute as XSS when an admin clicks it.
+  const safeExternalUrl = (value: string): string => {
+    try {
+      const url = new URL(value)
+      return (url.protocol === 'http:' || url.protocol === 'https:') ? url.href : '#'
+    } catch {
+      return '#'
+    }
+  }
+
   const formatSocialUrl = (value: string, platform: string): string => {
-    // If it already looks like a URL, return as-is
+    // If it already looks like a URL, validate the scheme before returning
     if (value.startsWith('http://') || value.startsWith('https://')) {
-      return value
+      return safeExternalUrl(value)
     }
 
     // Remove @ if present
@@ -135,13 +146,13 @@ export const useAdminUtils = () => {
       case 'youtube':
         return `https://youtube.com/${username}`
       case 'spotify':
-        return value // Spotify URLs are complex, assume they passed a full URL
+        return safeExternalUrl(value) // assume a full URL
       case 'soundcloud':
         return `https://soundcloud.com/${username}`
       case 'bandcamp':
         return `https://${username}.bandcamp.com`
       default:
-        return value
+        return safeExternalUrl(value)
     }
   }
 

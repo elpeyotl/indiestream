@@ -1,7 +1,7 @@
 // Image processing endpoint - resizes and crops images to square before uploading to R2
 import sharp from 'sharp'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-import { serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 
 // Image size configurations
 const IMAGE_SIZES = {
@@ -54,6 +54,33 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Never trust a client-supplied storage key. Clients upload band assets as
+  // `<avatars|banners|covers>/<bandId>/...`; verify the caller owns that band.
+  // Anything else falls back to a user-scoped key.
+  let resolvedKey: string | null = null
+  if (customKey) {
+    if (customKey.includes('..') || customKey.includes('//')) {
+      throw createError({ statusCode: 400, message: 'Invalid upload key' })
+    }
+    const segments = customKey.split('/')
+    const prefix = segments[0]
+    const bandId = segments[1]
+    if (!['avatars', 'covers', 'banners'].includes(prefix) || !bandId) {
+      throw createError({ statusCode: 400, message: 'Invalid upload key' })
+    }
+    const supabase = await serverSupabaseServiceRole(event)
+    const { data: band } = await supabase
+      .from('bands')
+      .select('id')
+      .eq('id', bandId)
+      .eq('owner_id', user.id)
+      .maybeSingle()
+    if (!band) {
+      throw createError({ statusCode: 403, message: 'You do not own this band' })
+    }
+    resolvedKey = customKey
+  }
+
   const { width, height } = IMAGE_SIZES[imageType]
 
   try {
@@ -80,9 +107,9 @@ export default defineEventHandler(async (event) => {
         .toBuffer()
     }
 
-    // Generate R2 key
+    // Generate R2 key (validated band-scoped key, or a user-scoped fallback)
     const timestamp = Date.now()
-    const key = customKey || `${imageType}s/${user.id}/${timestamp}.jpg`
+    const key = resolvedKey || `${imageType}s/${user.id}/${timestamp}.jpg`
 
     // Initialize S3 client for R2
     const s3 = new S3Client({

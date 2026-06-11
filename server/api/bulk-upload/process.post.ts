@@ -243,6 +243,16 @@ export default defineEventHandler(async (event) => {
 
     try {
       if (artist.action === 'use_existing' && artist.existingId) {
+        // Verify the caller owns the band before attaching albums/tracks to it.
+        const { data: ownedBand } = await client
+          .from('bands')
+          .select('id')
+          .eq('id', artist.existingId)
+          .eq('owner_id', user.id)
+          .maybeSingle()
+        if (!ownedBand) {
+          throw createError({ statusCode: 403, statusMessage: 'You do not own this band' })
+        }
         // Use existing artist
         bandId = artist.existingId
         // artistSlug stays as artist.slug from CSV

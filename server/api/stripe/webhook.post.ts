@@ -43,6 +43,18 @@ export default defineEventHandler(async (event) => {
 
   const supabase = await serverSupabaseServiceRole(event)
 
+  // Idempotency: claim this event id. Stripe retries deliveries, so a duplicate
+  // (unique-violation, 23505) means it was already processed — ack and skip.
+  const { error: claimError } = await supabase
+    .from('stripe_webhook_events')
+    .insert({ id: stripeEvent.id, type: stripeEvent.type })
+  if (claimError) {
+    if (claimError.code === '23505') {
+      return { received: true, duplicate: true }
+    }
+    console.error('Failed to record webhook event for idempotency:', claimError)
+  }
+
   try {
     switch (stripeEvent.type) {
       case 'checkout.session.completed': {
@@ -511,6 +523,8 @@ export default defineEventHandler(async (event) => {
     return { received: true }
   } catch (error: any) {
     console.error('Webhook processing error:', error)
+    // Release the idempotency claim so Stripe's retry can reprocess this event.
+    await supabase.from('stripe_webhook_events').delete().eq('id', stripeEvent.id)
     throw createError({
       statusCode: 500,
       message: 'Webhook processing failed',

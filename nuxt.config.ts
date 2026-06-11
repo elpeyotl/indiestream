@@ -203,6 +203,34 @@ export default defineNuxtConfig({
       },
       // Prerender the offline fallback page so Workbox can cache it
       '/offline': { prerender: true },
+      // Security headers on every response.
+      '/**': {
+        headers: {
+          'X-Frame-Options': 'DENY',
+          'X-Content-Type-Options': 'nosniff',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+          'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+          'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+          // CSP is shipped in Report-Only first so it can be validated against
+          // real traffic (Stripe, Google Fonts, Supabase realtime, R2 presigned
+          // media, blob: offline playback) before being enforced. Once the
+          // report stream is clean, rename this header to 'Content-Security-Policy'.
+          'Content-Security-Policy-Report-Only': [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "font-src 'self' https://fonts.gstatic.com data:",
+            "img-src 'self' data: blob: https:",
+            "media-src 'self' blob: https:",
+            "connect-src 'self' https: wss:",
+            "frame-src https://js.stripe.com https://hooks.stripe.com",
+            "worker-src 'self' blob:",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "frame-ancestors 'none'",
+          ].join('; '),
+        },
+      },
     },
   },
 

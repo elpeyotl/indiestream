@@ -1,6 +1,6 @@
 // Get combined earnings across all user's bands
 import Stripe from 'stripe'
-import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -13,7 +13,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const client = await serverSupabaseClient(event)
+  // Service role: reads the caller's own stripe_* columns (protected) and
+  // own bands/earnings; all queries below are scoped to user.id / owned bands.
+  const client = await serverSupabaseServiceRole(event)
 
   // Get user's profile with Stripe info
   const { data: profile, error: profileError } = await client

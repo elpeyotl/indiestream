@@ -1,5 +1,5 @@
 // API endpoint to generate presigned URLs for file uploads
-import { serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 import { getUploadUrl, generateAudioKey, generateCoverKey, generateAvatarKey, generateBannerKey } from '~/server/utils/r2'
 
 interface PresignRequest {
@@ -41,6 +41,31 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage: 'albumId is required for audio and cover uploads',
     })
+  }
+
+  // The presigned key is derived from bandId/albumId/trackId, so the caller
+  // must own the target band (otherwise they could overwrite another artist's
+  // files). albumId, when supplied, must also belong to that band.
+  const supabase = await serverSupabaseServiceRole(event)
+  const { data: band } = await supabase
+    .from('bands')
+    .select('id')
+    .eq('id', body.bandId)
+    .eq('owner_id', user.id)
+    .maybeSingle()
+  if (!band) {
+    throw createError({ statusCode: 403, statusMessage: 'You do not own this band' })
+  }
+  if (body.albumId) {
+    const { data: album } = await supabase
+      .from('albums')
+      .select('id')
+      .eq('id', body.albumId)
+      .eq('band_id', body.bandId)
+      .maybeSingle()
+    if (!album) {
+      throw createError({ statusCode: 403, statusMessage: 'Album does not belong to this band' })
+    }
   }
 
   // Validate content types - lossless formats only for audio

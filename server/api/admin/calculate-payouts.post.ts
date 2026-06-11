@@ -50,11 +50,14 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Get all active subscribers during this period
+    // Get all *paying* subscribers during this period. Trialing accounts are
+    // excluded: they have been charged CHF 0, so counting them would mint an
+    // artist pool out of revenue that was never collected. Their listening
+    // becomes payout-eligible once they convert to an active subscription.
     const { data: subscribers, error: subError } = await serviceClient
       .from('subscriptions')
       .select('user_id, stripe_subscription_id, plan')
-      .in('status', ['active', 'trialing'])
+      .eq('status', 'active')
 
     if (subError) {
       console.error('Failed to fetch subscribers:', subError)

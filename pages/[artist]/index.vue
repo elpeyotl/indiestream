@@ -623,18 +623,29 @@ const hasAnySocialLink = computed(() => {
             band.value?.spotify || band.value?.soundcloud || band.value?.bandcamp || band.value?.tiktok)
 })
 
+// Only allow http(s) URLs to reach an href — otherwise a stored value like
+// `javascript:...` would execute as XSS when clicked.
+const safeExternalUrl = (value: string): string => {
+  try {
+    const url = new URL(value)
+    return (url.protocol === 'http:' || url.protocol === 'https:') ? url.href : '#'
+  } catch {
+    return '#'
+  }
+}
+
 const formatSocialUrl = (value: string, platform: string): string => {
-  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  if (value.startsWith('http://') || value.startsWith('https://')) return safeExternalUrl(value)
   const username = value.replace(/^@/, '')
   switch (platform) {
     case 'instagram': return `https://instagram.com/${username}`
     case 'twitter': return `https://x.com/${username}`
     case 'youtube': return `https://youtube.com/${username}`
-    case 'spotify': return value // Usually full URLs
+    case 'spotify': return safeExternalUrl(value) // Usually full URLs
     case 'soundcloud': return `https://soundcloud.com/${username}`
-    case 'bandcamp': return value // Usually full URLs
+    case 'bandcamp': return safeExternalUrl(value) // Usually full URLs
     case 'tiktok': return `https://tiktok.com/@${username}`
-    default: return value
+    default: return safeExternalUrl(value)
   }
 }
 

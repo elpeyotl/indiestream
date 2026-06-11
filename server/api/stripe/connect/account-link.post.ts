@@ -1,6 +1,6 @@
 // Generate new account link for incomplete Stripe Connect onboarding
 import Stripe from 'stripe'
-import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -13,7 +13,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const client = await serverSupabaseClient(event)
+  // Service role: reads the caller's own stripe_account_id (protected column).
+  const client = await serverSupabaseServiceRole(event)
 
   // Get user's profile with Stripe info
   const { data: profile, error: profileError } = await client

@@ -1,6 +1,5 @@
 // POST /api/transcoding/presign - Get presigned URLs for transcoding worker
 // Returns download URL for original + upload URLs for transcoded files (AAC + FLAC)
-import { serverSupabaseServiceRole } from '#supabase/server'
 import { getDownloadUrl, getUploadUrl } from '~/server/utils/r2'
 
 interface PresignRequest {
@@ -11,13 +10,8 @@ interface PresignRequest {
 }
 
 export default defineEventHandler(async (event) => {
-  // Verify this is an authorized request
-  const authHeader = getHeader(event, 'x-transcoding-secret')
-  const config = useRuntimeConfig()
-
-  if (authHeader !== config.transcodingSecret) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  // Verify this is an authorized request (worker shared secret).
+  requireTranscodingAuth(event)
 
   const body = await readBody<PresignRequest>(event)
   const { trackId, originalAudioKey, bandId, albumId } = body

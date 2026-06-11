@@ -1,5 +1,5 @@
 // Get artist earnings summary and payout history
-import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -21,7 +21,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const client = await serverSupabaseClient(event)
+  // Service role: reads the band owner's stripe_* columns (protected). Ownership
+  // is explicitly verified below before any earnings data is returned.
+  const client = await serverSupabaseServiceRole(event)
 
   // Verify user owns the band
   const { data: band, error: bandError } = await client

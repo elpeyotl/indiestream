@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const { trackId, durationSeconds, isFreePlay } = body
+  const { trackId, durationSeconds } = body
 
   if (!trackId || typeof durationSeconds !== 'number') {
     throw createError({
@@ -71,10 +71,23 @@ export default defineEventHandler(async (event) => {
     isOwnMusic = !!ownsBand
   }
 
-  // Note: Free play consumption happens in the record_stream database function
-  // to ensure atomicity and avoid double-counting
-  // If user owns the band, this is NOT a free play (they can listen unlimited)
-  const shouldCountAsFreePlay = !isOwnMusic && (isFreePlay || false)
+  // Determine free-play status SERVER-SIDE — never trust a client flag, or a
+  // free user could mark their plays as paid streams and inflate payouts.
+  // Subscribers (active/trialing) and the band's own owner stream unlimited and
+  // are not free plays; everyone else's plays are free plays, which never count
+  // toward artist stats or payouts. The record_stream function consumes the
+  // free-play allowance atomically and applies replay/duration protection.
+  let hasSubscription = false
+  {
+    const { data: sub } = await client
+      .from('subscriptions')
+      .select('status')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .maybeSingle()
+    hasSubscription = !!sub
+  }
+  const shouldCountAsFreePlay = !isOwnMusic && !hasSubscription
 
   // Call the record_stream function with country and free play flag
   const { data, error } = await client.rpc('record_stream', {

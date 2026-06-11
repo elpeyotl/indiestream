@@ -37,6 +37,20 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Escape all user-supplied fields before interpolating into the email HTML
+  // to prevent HTML/phishing injection into the admin inbox.
+  const escapeHtml = (s: string) =>
+    s.replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+
+  const safeName = escapeHtml(body.name)
+  const safeEmail = escapeHtml(body.email)
+  const safeSubject = escapeHtml(body.subject)
+  const safeMessage = escapeHtml(body.message).replace(/\n/g, '<br />')
+
   const resend = new Resend(config.resendApiKey)
 
   try {
@@ -44,14 +58,14 @@ export default defineEventHandler(async (event) => {
       from: 'Fairtune Contact <onboarding@resend.dev>',
       to: config.contactEmail,
       replyTo: body.email,
-      subject: `[Contact] ${body.subject}`,
+      subject: `[Contact] ${safeSubject}`,
       html: `
         <h2>New Contact Form Submission</h2>
-        <p><strong>From:</strong> ${body.name} (${body.email})</p>
-        <p><strong>Subject:</strong> ${body.subject}</p>
+        <p><strong>From:</strong> ${safeName} (${safeEmail})</p>
+        <p><strong>Subject:</strong> ${safeSubject}</p>
         <hr />
         <p><strong>Message:</strong></p>
-        <p>${body.message.replace(/\n/g, '<br />')}</p>
+        <p>${safeMessage}</p>
         <hr />
         <p style="color: #666; font-size: 12px;">
           This message was sent from the Fairtune contact form.

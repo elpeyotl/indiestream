@@ -29,6 +29,7 @@ let audioContext: AudioContext | null = null
 let analyser: AnalyserNode | null = null
 let sourceNode: MediaElementAudioSourceNode | null = null
 let analyserAnimationId: number | null = null
+let startAnalyserLoop: (() => void) | null = null
 let listeningStartTime = 0
 let preloadTriggeredAt75 = false
 let currentBlobUrl: string | null = null
@@ -343,9 +344,18 @@ export const usePlayerStore = defineStore('player', () => {
           // Type assertion needed due to Uint8Array generic variance in TypeScript
           analyser.getByteFrequencyData(audioData.value as unknown as Uint8Array<ArrayBuffer>)
         }
-        analyserAnimationId = requestAnimationFrame(updateAnalyser)
+        // Only keep the rAF loop alive while audio is actually playing —
+        // otherwise it runs forever (battery/CPU drain on a singleton store).
+        if (isPlaying.value) {
+          analyserAnimationId = requestAnimationFrame(updateAnalyser)
+        } else {
+          analyserAnimationId = null
+        }
       }
-      updateAnalyser()
+      startAnalyserLoop = () => {
+        if (analyserAnimationId === null) updateAnalyser()
+      }
+      startAnalyserLoop()
     } catch (e) {
       console.error('Failed to initialize audio analyser:', e)
     }
@@ -419,10 +429,16 @@ export const usePlayerStore = defineStore('player', () => {
       listeningStartTime = Date.now()
       updateMediaSessionPlaybackState(true)
       preloadNextTrack()
+      // Resume the visualiser loop (it stops itself while paused).
+      startAnalyserLoop?.()
     })
 
     audio.addEventListener('pause', () => {
       isPlaying.value = false
+      if (analyserAnimationId !== null) {
+        cancelAnimationFrame(analyserAnimationId)
+        analyserAnimationId = null
+      }
       updateMediaSessionPlaybackState(false)
     })
 

@@ -1,9 +1,10 @@
 // Server-side proxy for downloading R2 files as blobs (for offline caching)
 // Unlike the regular stream endpoint which returns a presigned URL,
 // this endpoint proxies the actual file content to avoid CORS issues.
-import { serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 import { getR2Client } from '~/server/utils/r2'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
+import { isOpenKey, authorizeRestrictedKey } from '~/server/utils/audioAccess'
 
 export default defineEventHandler(async (event) => {
   const encodedKey = getRouterParam(event, 'key')
@@ -13,12 +14,13 @@ export default defineEventHandler(async (event) => {
 
   const key = Buffer.from(encodedKey, 'base64url').toString('utf-8')
 
-  // Require authentication for audio downloads
-  if (!key.startsWith('covers/') && !key.startsWith('avatars/')) {
-    const user = await serverSupabaseUser(event)
-    if (!user) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-    }
+  // Public artwork + standard-quality streams may be proxied for anyone.
+  // Restricted keys (hifi masters, originals, per-user uploads) require an
+  // entitled, authenticated caller.
+  if (!isOpenKey(key)) {
+    const user = await serverSupabaseUser(event).catch(() => null)
+    const authClient = await serverSupabaseServiceRole(event)
+    await authorizeRestrictedKey(key, user, authClient)
   }
 
   try {

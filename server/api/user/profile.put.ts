@@ -1,4 +1,4 @@
-import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -26,7 +26,10 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const client = await serverSupabaseClient(event)
+  // Service role: the update is restricted to the fixed safe field allow-list
+  // below and scoped to the caller's own row; the returning representation
+  // includes email, which the data API no longer exposes to authenticated.
+  const client = await serverSupabaseServiceRole(event)
 
   const updateData: Record<string, any> = {
     display_name: body.displayName,

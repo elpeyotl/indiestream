@@ -1,4 +1,4 @@
-import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 import { getDownloadUrl } from '~/server/utils/r2'
 
 export default defineEventHandler(async (event) => {
@@ -10,7 +10,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const client = await serverSupabaseClient(event)
+  // Service role: reads the caller's own row including email (no longer exposed
+  // to the authenticated role via the data API). Scoped to user.id.
+  const client = await serverSupabaseServiceRole(event)
 
   const { data: profile, error } = await client
     .from('profiles')

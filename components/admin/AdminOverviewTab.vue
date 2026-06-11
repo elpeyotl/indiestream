@@ -123,7 +123,7 @@ const loadStats = async () => {
 
     const { count: userCount } = await client
       .from('profiles')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
 
     stats.value = {
       totalStreams: streamCount || 0,

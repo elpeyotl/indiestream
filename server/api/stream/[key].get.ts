@@ -1,6 +1,7 @@
 // API endpoint to get streaming URLs for files (audio, covers, avatars)
-import { serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 import { getDownloadUrl } from '~/server/utils/r2'
+import { isOpenKey, authorizeRestrictedKey } from '~/server/utils/audioAccess'
 
 export default defineEventHandler(async (event) => {
   // Get the key from the URL (it's base64 encoded to handle slashes)
@@ -14,18 +15,13 @@ export default defineEventHandler(async (event) => {
 
   const key = Buffer.from(encodedKey, 'base64url').toString('utf-8')
 
-  // Check what type of content is being requested
-  const isPublicContent = key.startsWith('covers/') || key.startsWith('avatars/')
-
-  // For non-public content (audio), optionally check authentication
-  // For now, allow all streaming but this can be restricted later
-  if (!isPublicContent) {
-    try {
-      const user = await serverSupabaseUser(event)
-      // Future: implement subscription checks for audio streaming
-    } catch {
-      // Allow unauthenticated access for now
-    }
+  // Public artwork + standard-quality streams may be signed for anyone.
+  // Restricted keys (hifi masters, originals, per-user uploads) require an
+  // entitled, authenticated caller.
+  if (!isOpenKey(key)) {
+    const user = await serverSupabaseUser(event).catch(() => null)
+    const authClient = await serverSupabaseServiceRole(event)
+    await authorizeRestrictedKey(key, user, authClient)
   }
 
   try {

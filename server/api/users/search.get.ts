@@ -1,5 +1,5 @@
 // GET /api/users/search - Search for users by display name or email
-import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -12,13 +12,22 @@ export default defineEventHandler(async (event) => {
   }
 
   const query = getQuery(event)
-  const searchQuery = (query.q as string || '').trim().toLowerCase()
+  const rawQuery = (query.q as string || '').trim().toLowerCase()
 
-  if (!searchQuery || searchQuery.length < 2) {
+  if (!rawQuery || rawQuery.length < 2) {
     return []
   }
 
-  const client = await serverSupabaseClient(event)
+  // Strip PostgREST filter metacharacters to prevent .or() filter injection
+  // (commas/parens/dots/colons/asterisks/backslashes change the filter grammar).
+  const searchQuery = rawQuery.replace(/[,()*:\\%]/g, '').slice(0, 100)
+  if (searchQuery.length < 2) {
+    return []
+  }
+
+  // Service role: email is no longer exposed to the data API; search runs
+  // server-side and only the masked email_hint is ever returned.
+  const client = await serverSupabaseServiceRole(event)
 
   // Search by display_name or email (case-insensitive)
   const { data: users, error } = await client

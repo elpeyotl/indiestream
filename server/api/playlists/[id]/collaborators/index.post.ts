@@ -1,4 +1,4 @@
-import { serverSupabaseUser, serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseUser, serverSupabaseClient, serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const playlistId = getRouterParam(event, 'id')
@@ -134,9 +134,12 @@ export default defineEventHandler(async (event) => {
 
   const inviterName = inviter?.display_name || 'Someone'
 
-  // Send notification to the new collaborator (only for new collaborators, not role updates)
+  // Send notification to the new collaborator (only for new collaborators, not role updates).
+  // Notifications are insertable only by the service role (clients must not be
+  // able to forge notifications for arbitrary users); ownership was verified above.
   if (isNewCollaborator) {
-    await client
+    const serviceClient = await serverSupabaseServiceRole(event)
+    await serviceClient
       .from('notifications')
       .insert({
         user_id: targetUserId,

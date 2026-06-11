@@ -165,7 +165,10 @@ export default defineEventHandler(async (event) => {
 
       try {
         // Create single Stripe transfer for all user's bands
-        // Note: Using CHF as that's the platform's default currency
+        // Note: Using CHF as that's the platform's default currency.
+        // An idempotency key prevents a retried or concurrent run from issuing
+        // a second transfer for the same owner/amount on the same day.
+        const idempotencyKey = `payout_${ownerId}_${amount}_${new Date().toISOString().slice(0, 10)}`
         const transfer = await stripe.transfers.create({
           amount,
           currency: 'chf',
@@ -177,7 +180,7 @@ export default defineEventHandler(async (event) => {
             band_ids: ownerData.bands.map(b => b.bandId).join(','),
             payout_date: new Date().toISOString(),
           },
-        })
+        }, { idempotencyKey })
 
         // Create payout records for each band
         for (const band of ownerData.bands) {

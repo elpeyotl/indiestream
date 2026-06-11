@@ -3,13 +3,8 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-  // Verify this is an authorized request (use a secret header for worker auth)
-  const authHeader = getHeader(event, 'x-transcoding-secret')
-  const config = useRuntimeConfig()
-
-  if (authHeader !== config.transcodingSecret) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  // Verify this is an authorized request (worker shared secret).
+  requireTranscodingAuth(event)
 
   const query = getQuery(event)
   const limit = Math.min(Number(query.limit) || 5, 20) // Max 20 at a time

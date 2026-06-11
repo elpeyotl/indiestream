@@ -6,7 +6,11 @@ import { serverSupabaseClient } from '#supabase/server'
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const code = query.code as string | undefined
-  const next = (query.next as string) || '/dashboard'
+
+  // Only allow same-origin relative redirects (reject absolute and
+  // protocol-relative URLs) to prevent an open redirect.
+  const rawNext = (query.next as string) || '/dashboard'
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard'
 
   if (code) {
     const supabase = await serverSupabaseClient(event)
