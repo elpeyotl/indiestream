@@ -33,6 +33,18 @@
           class="flex flex-col sm:flex-row gap-3"
           @submit.prevent="submitEmail"
         >
+          <!-- Honeypot: invisible to humans, bots fill it and get discarded -->
+          <div class="absolute -left-[9999px] top-0 h-0 overflow-hidden" aria-hidden="true">
+            <label for="newsletter-website">Website</label>
+            <input
+              id="newsletter-website"
+              v-model="honeypot"
+              type="text"
+              name="website"
+              tabindex="-1"
+              autocomplete="off"
+            >
+          </div>
           <input
             v-model="email"
             type="email"
@@ -92,6 +104,13 @@ const submitting = ref(false)
 const submitted = ref(false)
 const errorMessage = ref('')
 
+// Spam protection: honeypot + time between render and submit
+const honeypot = ref('')
+const renderedAt = ref(0)
+onMounted(() => {
+  renderedAt.value = Date.now()
+})
+
 const submitEmail = async () => {
   if (!email.value || submitting.value) return
 
@@ -101,7 +120,11 @@ const submitEmail = async () => {
   try {
     await $fetch('/api/newsletter-signup', {
       method: 'POST',
-      body: { email: email.value },
+      body: {
+        email: email.value,
+        website: honeypot.value,
+        elapsedMs: Date.now() - renderedAt.value,
+      },
     })
     submitted.value = true
   } catch (error: any) {

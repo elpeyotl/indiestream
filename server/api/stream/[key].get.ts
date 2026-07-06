@@ -2,8 +2,18 @@
 import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 import { getDownloadUrl } from '~/server/utils/r2'
 import { isOpenKey, authorizeRestrictedKey } from '~/server/utils/audioAccess'
+import { enforceRateLimit } from '~/server/utils/rateLimit'
 
 export default defineEventHandler(async (event) => {
+  // Generous: this endpoint also signs URLs for covers/avatars, so a single
+  // page render can trigger dozens of requests. Fixed bucket name because the
+  // route path contains the file key.
+  enforceRateLimit(event, {
+    name: '/api/stream',
+    max: 300,
+    windowMs: 60 * 1000,
+    message: 'Too many requests. Please slow down.',
+  })
   // Get the key from the URL (it's base64 encoded to handle slashes)
   const encodedKey = getRouterParam(event, 'key')
   if (!encodedKey) {

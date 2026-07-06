@@ -12,6 +12,19 @@
       <!-- Contact Form -->
       <div class="bg-zinc-900 rounded-2xl p-8 border border-zinc-800 mb-12">
         <form @submit.prevent="submitForm" class="space-y-6">
+          <!-- Honeypot: invisible to humans, bots fill it and get discarded -->
+          <div class="absolute -left-[9999px] top-0 h-0 overflow-hidden" aria-hidden="true">
+            <label for="contact-website">Website</label>
+            <input
+              id="contact-website"
+              v-model="honeypot"
+              type="text"
+              name="website"
+              tabindex="-1"
+              autocomplete="off"
+            >
+          </div>
+
           <UFormGroup label="Name">
             <UInput
               v-model="form.name"
@@ -132,6 +145,13 @@ const submitting = ref(false)
 const submitted = ref(false)
 const errorMessage = ref('')
 
+// Spam protection: honeypot + time between render and submit
+const honeypot = ref('')
+const renderedAt = ref(0)
+onMounted(() => {
+  renderedAt.value = Date.now()
+})
+
 const subjectOptions = [
   'General Inquiry',
   'Account Help',
@@ -161,6 +181,8 @@ const submitForm = async () => {
         email: form.email,
         subject: form.subject,
         message: form.message,
+        website: honeypot.value,
+        elapsedMs: Date.now() - renderedAt.value,
       },
     })
 

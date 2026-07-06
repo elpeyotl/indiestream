@@ -1,5 +1,6 @@
 // API endpoint to record a stream
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { enforceRateLimit } from '~/server/utils/rateLimit'
 
 // Get country code from request headers
 // Cloudflare: CF-IPCountry
@@ -28,6 +29,14 @@ function getCountryCode(event: any): string | null {
 }
 
 export default defineEventHandler(async (event) => {
+  // Generous: legitimate playback records at most a few streams per minute,
+  // even with heavy skipping.
+  enforceRateLimit(event, {
+    max: 60,
+    windowMs: 60 * 1000,
+    message: 'Too many stream events. Please slow down.',
+  })
+
   const user = await serverSupabaseUser(event)
   if (!user) {
     throw createError({
