@@ -19,7 +19,7 @@ export default defineNuxtRouteMiddleware((to) => {
   })
 
   if (import.meta.server) {
-    const secret = config.inviteSecret
+    const secret = typeof config.inviteSecret === 'string' ? config.inviteSecret : ''
     if (secret) {
       // Invite link: validate the query param and persist access
       if (to.query.invite === secret) {

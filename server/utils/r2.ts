@@ -1,5 +1,5 @@
 // Cloudflare R2 Storage utilities using S3-compatible API
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 let r2Client: S3Client | null = null
@@ -66,6 +66,46 @@ export const deleteFromR2 = async (key: string): Promise<void> => {
   })
 
   await client.send(command)
+}
+
+// Delete all objects under a prefix (paginated). Returns the number of
+// objects deleted. Used for account deletion cleanup where per-key deletes
+// would miss orphaned versions (e.g. re-uploaded avatars).
+export const deleteFromR2ByPrefix = async (prefix: string): Promise<number> => {
+  // All legitimate prefixes contain an entity UUID, so anything short is a
+  // bug that could wipe far more than intended.
+  if (!prefix || prefix.length < 20 || !prefix.includes('/')) {
+    throw new Error(`Refusing to delete R2 objects with suspicious prefix: "${prefix}"`)
+  }
+
+  const config = useRuntimeConfig()
+  const client = getR2Client()
+
+  let deleted = 0
+  let continuationToken: string | undefined
+
+  do {
+    const list = await client.send(new ListObjectsV2Command({
+      Bucket: config.r2BucketName,
+      Prefix: prefix,
+      ContinuationToken: continuationToken,
+    }))
+
+    const objects = (list.Contents || [])
+      .flatMap((o) => (o.Key ? [{ Key: o.Key }] : []))
+
+    if (objects.length > 0) {
+      await client.send(new DeleteObjectsCommand({
+        Bucket: config.r2BucketName,
+        Delete: { Objects: objects },
+      }))
+      deleted += objects.length
+    }
+
+    continuationToken = list.IsTruncated ? list.NextContinuationToken : undefined
+  } while (continuationToken)
+
+  return deleted
 }
 
 // Generate a unique key for audio files

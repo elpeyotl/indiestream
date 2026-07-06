@@ -8,6 +8,7 @@
 
 ### Added
 - **Account self-deletion** (GDPR/nDSG) — `POST /api/settings/delete-account` plus a Danger Zone in settings with type-your-email confirmation; cancels active Stripe subscriptions and is blocked while artist earnings are unpaid
+- **R2 file cleanup on user deletion** — deleting a user (self-service or admin) now also removes their stored files from R2: band audio/transcodes/artwork, profile avatars (including orphaned re-upload versions), and bulk-upload archives
 - **Invite bypass for coming-soon mode** — `?invite=<INVITE_SECRET>` sets a 30-day cookie that skips the coming-soon page (new `INVITE_SECRET` env variable)
 - **Seed data** for development — test users, bands, albums, tracks, subscriptions, and playlists (`supabase/seed.sql`)
 - **Go-live checklist** in `docs/GO_LIVE_CHECKLIST.md`
