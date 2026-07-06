@@ -2,7 +2,13 @@
 
 ## [0.26.0] - 2026-03-26
 
+### Security
+- **Rate limiting** — In-memory sliding-window rate limiter (`server/utils/rateLimit.ts`) applied to contact form, newsletter signup, stream recording, and stream URL signing (429 with user-facing message on excess)
+- **Spam protection** — Honeypot field and minimum-submit-time check on the contact form and newsletter signup; bot submissions are silently discarded
+
 ### Added
+- **Account self-deletion** (GDPR/nDSG) — `POST /api/settings/delete-account` plus a Danger Zone in settings with type-your-email confirmation; cancels active Stripe subscriptions and is blocked while artist earnings are unpaid
+- **Invite bypass for coming-soon mode** — `?invite=<INVITE_SECRET>` sets a 30-day cookie that skips the coming-soon page (new `INVITE_SECRET` env variable)
 - **Seed data** for development — test users, bands, albums, tracks, subscriptions, and playlists (`supabase/seed.sql`)
 - **Go-live checklist** in `docs/GO_LIVE_CHECKLIST.md`
 
