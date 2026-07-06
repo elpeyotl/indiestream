@@ -248,6 +248,7 @@ export default defineNuxtConfig({
     resendFromEmail: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
     contactEmail: process.env.CONTACT_EMAIL || 'hello@fairtune.fm',
     transcodingSecret: process.env.TRANSCODING_SECRET,
+    inviteSecret: process.env.INVITE_SECRET,
 
     // Public keys (exposed to client)
     public: {

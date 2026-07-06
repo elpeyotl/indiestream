@@ -44,7 +44,7 @@ Deploy to production with `COMING_SOON_MODE=true` and an invite system so early 
 
 - [ ] Create admin user in production database
 - [ ] Set `COMING_SOON_MODE=true` in prod
-- [ ] Implement invite link bypass (e.g. `?invite=SECRET` sets a cookie that skips coming-soon page)
+- [x] Implement invite link bypass — `?invite=<INVITE_SECRET>` sets a 30-day cookie that skips the coming-soon page. Set `INVITE_SECRET` in prod env; rotate it to revoke outstanding links.
 - [ ] Seed platform settings (featured genres, etc.) in prod DB
 - [ ] Review RLS policies are correctly applied in prod (`supabase migration list`)
 - [ ] Send invite links to initial artists
