@@ -160,6 +160,38 @@ const handleSubmit = async () => {
     saving.value = false
   }
 }
+
+// Danger zone: account self-deletion
+const supabase = useSupabaseClient()
+const showDeleteModal = ref(false)
+const deleteConfirmation = ref('')
+const deleting = ref(false)
+
+const deleteConfirmed = computed(() => {
+  return deleteConfirmation.value.trim().toLowerCase() === (user.value?.email || '').toLowerCase()
+})
+
+const handleDeleteAccount = async () => {
+  if (!deleteConfirmed.value || deleting.value) return
+
+  deleting.value = true
+  try {
+    await $fetch('/api/settings/delete-account', {
+      method: 'POST',
+      body: { confirmation: deleteConfirmation.value },
+    })
+
+    await supabase.auth.signOut()
+    await navigateTo('/')
+  } catch (e) {
+    toast.add({
+      title: 'Error',
+      description: (e as { data?: { statusMessage?: string } })?.data?.statusMessage || 'Failed to delete account',
+      color: 'red'
+    })
+    deleting.value = false
+  }
+}
 </script>
 
 <template>
@@ -293,6 +325,73 @@ const handleSubmit = async () => {
         </label>
       </div>
     </UCard>
+
+    <!-- Danger Zone -->
+    <UCard class="mt-6 ring-red-500/30">
+      <h2 class="text-xl font-semibold text-red-400 mb-2">Danger Zone</h2>
+      <p class="text-sm text-zinc-400 mb-4">
+        Permanently delete your account and all associated data — your profile, library,
+        playlists, and any artist profiles including their music. This cannot be undone.
+        Artists with unpaid earnings must wait for their payout before deleting.
+      </p>
+      <UButton
+        color="red"
+        variant="outline"
+        @click="showDeleteModal = true"
+      >
+        Delete Account
+      </UButton>
+    </UCard>
+
+    <!-- Delete confirmation modal -->
+    <UModal v-model="showDeleteModal">
+      <UCard>
+        <template #header>
+          <h3 class="text-lg font-semibold text-red-400">Delete your account?</h3>
+        </template>
+
+        <div class="space-y-4">
+          <p class="text-sm text-zinc-300">
+            This permanently deletes your account, profile, library, playlists, and any
+            artist profiles including all uploaded music. Active subscriptions are
+            cancelled. This cannot be undone.
+          </p>
+          <div>
+            <label for="deleteConfirmation" class="block text-sm font-medium text-zinc-300 mb-2">
+              Type your account email <span class="font-mono text-zinc-400">{{ user?.email }}</span> to confirm
+            </label>
+            <UInput
+              id="deleteConfirmation"
+              v-model="deleteConfirmation"
+              type="email"
+              placeholder="your@email.com"
+              :disabled="deleting"
+            />
+          </div>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <UButton
+              color="gray"
+              variant="ghost"
+              :disabled="deleting"
+              @click="showDeleteModal = false; deleteConfirmation = ''"
+            >
+              Cancel
+            </UButton>
+            <UButton
+              color="red"
+              :loading="deleting"
+              :disabled="!deleteConfirmed"
+              @click="handleDeleteAccount"
+            >
+              {{ deleting ? 'Deleting...' : 'Delete Account Permanently' }}
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
 
     <!-- Save Button - Fixed at bottom -->
     <div class="mt-6 flex justify-end">

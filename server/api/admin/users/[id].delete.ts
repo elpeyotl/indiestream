@@ -1,5 +1,6 @@
 // Admin Delete User API - Delete a user and all their data
 import { serverSupabaseClient, serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
+import { deleteUserData } from '~/server/utils/deleteUserAccount'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -35,54 +36,7 @@ export default defineEventHandler(async (event) => {
   const serviceClient = serverSupabaseServiceRole(event)
 
   try {
-    // Delete user's bands (cascades to albums, tracks, listening_history via FK)
-    const { error: bandsError } = await serviceClient
-      .from('bands')
-      .delete()
-      .eq('owner_id', userId)
-
-    if (bandsError) {
-      console.error('Failed to delete bands:', bandsError)
-    }
-
-    // Delete user's listening history
-    const { error: historyError } = await serviceClient
-      .from('listening_history')
-      .delete()
-      .eq('user_id', userId)
-
-    if (historyError) {
-      console.error('Failed to delete listening history:', historyError)
-    }
-
-    // Delete user's library (saved albums, liked tracks)
-    await serviceClient.from('saved_albums').delete().eq('user_id', userId)
-    await serviceClient.from('liked_tracks').delete().eq('user_id', userId)
-
-    // Delete user's follows
-    await serviceClient.from('follows').delete().eq('user_id', userId)
-
-    // Delete user's playlist tracks and playlists
-    await serviceClient.from('playlist_tracks').delete().eq('added_by', userId)
-    await serviceClient.from('playlists').delete().eq('user_id', userId)
-
-    // Delete profile (should cascade from auth.users, but do it explicitly)
-    const { error: profileDeleteError } = await serviceClient
-      .from('profiles')
-      .delete()
-      .eq('id', userId)
-
-    if (profileDeleteError) {
-      console.error('Failed to delete profile:', profileDeleteError)
-    }
-
-    // Delete the auth user using admin API
-    const { error: authError } = await serviceClient.auth.admin.deleteUser(userId)
-
-    if (authError) {
-      console.error('Failed to delete auth user:', authError)
-      throw createError({ statusCode: 500, statusMessage: 'Failed to delete user authentication' })
-    }
+    await deleteUserData(serviceClient, userId)
 
     return { success: true, message: 'User deleted successfully' }
   } catch (e: any) {
